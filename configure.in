@@ -44,6 +44,13 @@ dnl Make sure that VPATH is provided
 MAKE=${MAKE:-make}
 PAC_PROG_MAKE_VPATH
 
+#
+# Check that prefix is different from pwd.  This is a warning 
+# The following isn't quite good enough, since cd to the same directory
+# in different ways may cause pwd to give different output (sigh).
+if test "`(cd $prefix && pwd)`" = "`(cd . && pwd)`" ; then
+   AC_MSG_WARN([The prefix should be different from the build directory])
+fi
 dnl
 dnl Programs for converting postscript to bitmaps or gifs.
 dnl Used in tohtml
