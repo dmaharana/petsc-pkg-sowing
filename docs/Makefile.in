@@ -12,43 +12,43 @@ doc_HTML = install/install.htm tohtml/tohtml.htm bfort/bfort.htm \
 alldocs: $(doc_POSTSCRIPT) $(doc_PDF) $(doc_HTML)
 # Run the first latex into /dev/null to suppress message about missing
 # bib citations and forward references
-install.ps: install.tex
-	latex install 2>&1 >/dev/null </dev/null
-	bibtex install
-	latex install 2>&1 >/dev/null </dev/null
+install.ps: install.tex config.txt
+	-latex install 2>&1 >/dev/null </dev/null
+	-bibtex install
+	-latex install 2>&1 >/dev/null </dev/null
 	latex install
 	dvips install 2>&1 | grep -v pdf: | grep -v 'Unknown keyword'
 tohtml.ps: tohtml.tex
-	latex tohtml 2>&1 >/dev/null </dev/null
-	bibtex tohtml
-	latex tohtml 2>&1 >/dev/null </dev/null
+	-latex tohtml 2>&1 >/dev/null </dev/null
+	-bibtex tohtml
+	-latex tohtml 2>&1 >/dev/null </dev/null
 	latex tohtml
 	dvips tohtml 2>&1 | grep -v pdf: | grep -v 'Unknown keyword'
 bfort.ps: bfort.tex
-	latex bfort 2>&1 >/dev/null </dev/null
-	bibtex bfort
-	latex bfort 2>&1 >/dev/null </dev/null
+	-latex bfort 2>&1 >/dev/null </dev/null
+	-bibtex bfort
+	-latex bfort 2>&1 >/dev/null </dev/null
 	latex bfort
 	dvips bfort 2>&1 | grep -v pdf: | grep -v 'Unknown keyword'
 doctext.ps: doctext/doctext.tex
 	(cd doctext && make && mv doctext.ps .. && mv doctext.pdf ..)
 
 install.pdf: install.tex
-	latex install 2>&1 >/dev/null </dev/null
-	bibtex install
-	latex install 2>&1 >/dev/null </dev/null
+	-latex install 2>&1 >/dev/null </dev/null
+	-bibtex install
+	-latex install 2>&1 >/dev/null </dev/null
 	latex install
 	dvipdfm install
 tohtml.pdf: tohtml.tex
-	latex tohtml 2>&1 >/dev/null </dev/null
-	bibtex tohtml
-	latex tohtml 2>&1 >/dev/null </dev/null
+	-latex tohtml 2>&1 >/dev/null </dev/null
+	-bibtex tohtml
+	-latex tohtml 2>&1 >/dev/null </dev/null
 	latex tohtml
 	dvipdfm tohtml
 bfort.pdf: bfort.tex
-	latex bfort 2>&1 >/dev/null </dev/null
-	bibtex bfort
-	latex bfort 2>&1 >/dev/null </dev/null
+	-latex bfort 2>&1 >/dev/null </dev/null
+	-bibtex bfort
+	-latex bfort 2>&1 >/dev/null </dev/null
 	latex bfort
 	dvipdfm bfort
 doctext.pdf: doctext/doctext.tex

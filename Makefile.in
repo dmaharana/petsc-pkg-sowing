@@ -13,8 +13,10 @@ SHELL = @SHELL@
 all: tohtml bfort doctext mapnames
 
 lib/libsowing.a libs:
+	@if [ ! -d lib ] ; then mkdir lib ; fi
 	(cd src/sys && ${MAKE} )
 lib/libtfilter.a:
+	@if [ ! -d lib ] ; then mkdir lib ; fi
 	(cd src/textfilt && ${MAKE} )
 tohtml: libs
 	(cd src/tohtml && ${MAKE} )
@@ -32,6 +34,7 @@ manpages: bin/doctext
 wwwpages: bin/doctext
 	(cd src && ${MAKE} wwwpages )
 bin/doctext: src/doctext/doctext
+	@if [ ! -d bin ] ; then mkdir bin ; fi
 	ln -s ../src/doctext/doctext bin/doctext
 
 doc: bin/doctext
@@ -137,3 +140,18 @@ distclean:
 	-rm -f lib/*.a config.status config.log config.cache Makerules \
 		Makefile 
 	-rm -f include/sowingconfig.h 
+
+SOWINGCVSHOME = /home/gropp/cvsMaster_z
+# Make sure to update patchlevel.h.in if you change VERSION
+VERSION       = 1.1.7
+dist:
+	@if [ ! -d tmpdir ] ; then mkdir tmpdir ; fi
+	@rm -rf tmpdir/*
+	@if [ -n "${TAG}" ] ; then \
+	    cd tmpdir && cvs -d $(SOWINGCVSHOME) export -r ${TAG} sowing >cvsexp.log 2>&1 ;\
+	else \
+	    cd tmpdir && cvs -d $(SOWINGCVSHOME) export -D 'now' sowing >cvsexp.log 2>&1 ;\
+	fi
+	mv tmpdir/sowing tmpdir/sowing-$(VERSION)
+	cd tmpdir && tar cf - sowing-$(VERSION) | gzip -9 > ../sowing-$(VERSION).tar.gz
+	#rm -rf tmpdir
