@@ -24,14 +24,15 @@ void OutStreamMap::Setup( int in_maxlen )
 {
     int i;
 
-    squote    = 0;
-    equote    = 0;
-    maxlen    = in_maxlen;
-    activetok = new char[maxlen];
-    activetok[0] = 0;
-    curlen    = 0;
-    position  = activetok;
-    maptable  = new SrList();
+    squote	  = 0;
+    equote	  = 0;
+    maxlen	  = in_maxlen;
+    activetok	  = new char[maxlen];
+    activetok[0]  = 0;
+    curlen	  = 0;
+    position	  = activetok;
+    maptable	  = new SrList();
+    print_matched = 0;  // For debugging
 
     for (i=0; i<255; i++) {
 	breaktable[i] = BREAK_OTHER;
@@ -59,7 +60,13 @@ OutStreamMap::OutStreamMap( int in_maxlen )
     Setup( in_maxlen );
     next = 0;
 }
-
+OutStreamMap::OutStreamMap( OutStream *outs, int in_maxlen, int pflag )
+{
+  if (in_maxlen <= 0) in_maxlen = 1024;
+  Setup( in_maxlen );
+  next = outs;
+  print_matched = pflag;
+}
 void OutStreamMap::FlushTokBuf( void )
 {
   if (curlen) {
@@ -135,7 +142,13 @@ int OutStreamMap::PutToken( int nsp, const char *token )
 	activetok[curlen] = 0;
 	}
     if (maptable->Lookup( activetok, &entry ) == 0) {
-	PutLink( activetok, entry );
+      // Allow debugging output of all matched tokens
+      // Eventually, we should instead have a "token stream" operation;
+      // then this filter is simply built on top of that token stream
+      if (print_matched) {
+	printf( "%s\n", activetok );
+      }
+      PutLink( activetok, entry );
 	}
     else {
 	next->PutToken( 0, activetok );
@@ -273,16 +286,17 @@ void TextOutMap::Setup( int in_maxlen )
     breaktable['_'] = BREAK_ALPHA;
 
     // 
-    err          = new ErrHandMsg();
-    lfont	 = 0;
-    nl           = 0;
-    last_was_nl	 = 1;
-    last_was_par = 1;
-    debug_flag   = 0;
-    next         = 0;
-    userops      = 0;
+    err		  = new ErrHandMsg();
+    lfont	  = 0;
+    nl		  = 0;
+    last_was_nl	  = 1;
+    last_was_par  = 1;
+    debug_flag	  = 0;
+    next	  = 0;
+    userops	  = 0;
+    print_matched = 0;
 
-    debug        = 0;
+    debug	  = 0;
 }
 
 TextOutMap::TextOutMap( TextOut *textout )
@@ -296,6 +310,14 @@ TextOutMap::TextOutMap( )
 {
   Setup( 1024 );
   next = 0;
+}
+
+TextOutMap::TextOutMap( TextOut *textout, int pflag )
+{
+  Setup( 1024 );
+  if (debug_flag) textout->Debug( debug_flag );
+  next = textout;
+  print_matched = pflag;
 }
 
 int TextOutMap::PutChar( char c )
@@ -410,6 +432,7 @@ int TextOutMap::PutToken( int nsp, const char *token )
 	}
     if (maptable->Lookup( activetok, &entry ) == 0) {
         if (debug) printf( "Found entry\n" );
+	else if (print_matched) printf( "%s\n", activetok );
         PutLink( activetok, entry );
 	}
     else {

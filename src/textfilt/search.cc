@@ -67,7 +67,7 @@ int SrList::Lookup( const char *name, SrEntry **val )
     p   = table[idx];
     while (p) {
 	if (strcmp( p->name, name ) == 0) {
-	    if (val && *val) *val = p;
+	    if (val) *val = p;
 	    return 0;
 	    }
 	p = p->next;

@@ -62,7 +62,9 @@ int TextOutNroff::PutChar( const char ch )
 	  if (last_was_nl) {
 	    // This is a mess.  We must change the command character
 	    // and then change it back.
-	    out->PutToken( 0, ".cc ,\n.\n,cc .\n" );
+	    //out->PutToken( 0, ".cc ,\n.\n,cc .\n" );
+	    // The prefered solution is to use \&
+	    out->PutToken( 0, "\\&.\n" );
 	    lnl = 1;
 	  }
 	  else 

@@ -13,12 +13,14 @@ class OutStreamMap : public OutStream {
     int  curlen, maxlen;
     char squote, equote;
     SrList *maptable;
+    int print_matched;
     void Setup( int );
     void FlushTokBuf( void );
 
     public:
     OutStreamMap( OutStream * );
     OutStreamMap( OutStream *, int );
+    OutStreamMap( OutStream *, int, int );
     OutStreamMap( int );
     ~OutStreamMap();
     int ReadMap( InStream * );
@@ -39,11 +41,13 @@ class TextOutMap : public TextOut {
     int  curlen, maxlen;
     char squote, equote;
     SrList *maptable;
+    int print_matched;
     void Setup( int );
     void FlushTokBuf( void );
 
     public:
     int  debug;
+    TextOutMap( TextOut *, int );
     TextOutMap( TextOut * );
     TextOutMap( );
     ~TextOutMap();

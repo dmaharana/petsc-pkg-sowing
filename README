@@ -23,6 +23,9 @@ configure --enable-strict --datadir=`pwd`/share --prefix=`pwd`
 Configuring for local use
 
 (bindir = $exec_prefix/bin by default)
-setenv GS /usr/local/bin/gs
-configure --datadir=/home/gropp/data/share --prefix=/home/gropp/bin/solaris \
-  --bindir=/home/gropp/bin/solaris
+#setenv GS /usr/local/bin/gs   (no longer necessary)
+configure --datadir=/homes/gropp/data/share --prefix=/homes/gropp/bin/solaris \
+  --bindir=/homes/gropp/bin/solaris
+make 
+make install
+# Repeat for linux replacing solaris (after deleting config.cache!)

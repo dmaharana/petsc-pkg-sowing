@@ -101,8 +101,7 @@ static long    TRMaxMemAllow = 0;
    trinit - Setup the space package.  Only needed for 
    error messages and flags.
 +*/
-void trinit( rank )
-int rank;
+void trinit( int rank )
 {
     world_rank = rank;
 }
@@ -119,10 +118,7 @@ int rank;
     double aligned pointer to requested storage, or null if not
     available.
  +*/
-void *trmalloc( a, lineno, fname )
-unsigned int a;
-int      lineno;
-char     *fname;
+void *trmalloc( unsigned int a, int lineno, char *fname )
 {
     TRSPACE          *head;
     char             *new;
@@ -189,10 +185,7 @@ char     *fname;
 .  line - line in file where called
 .  file - Name of file where called
  +*/
-void trfree( a_ptr, line, file )
-void *a_ptr;
-int  line;
-char *file;
+void trfree( void *a_ptr, int line, char *file )
 {
     TRSPACE  *head;
     char     *ahead;
@@ -310,8 +303,7 @@ $   Block at address %lx is corrupted
 
    No output is generated if there are no problems detected.
 +*/
-int trvalid( str )
-char *str;
+int trvalid( char *str )
 {
 TRSPACE *head;
 char    *a;
@@ -355,8 +347,7 @@ return errs;
 .   space - number of bytes currently allocated
 .   frags - number of blocks currently allocated
  +*/
-void trspace( space, fr )
-int *space, *fr;
+void trspace( int *space, int *fr )
 {
     /* We use ints because systems without prototypes will usually
        allow calls with ints instead of longs, leading to unexpected
@@ -371,8 +362,7 @@ int *space, *fr;
   Input Parameter:
 .  fp  - file pointer.  If fp is NULL, stderr is assumed.
  +*/
-void trdump( fp )
-FILE *fp;
+void trdump( FILE *fp )
 {
     TRSPACE *head;
     int     id;
@@ -425,17 +415,13 @@ FILE *fp;
 #endif
 #include <search.h>
 typedef struct { int id, size, lineno; char *fname; } TRINFO;
-static int IntCompare( a, b )
-TRINFO *a, *b;
+static int IntCompare( TRINFO *a, TRINFO *b )
 {
 return a->id - b->id;
 }
 static FILE *TRFP;
 /*ARGSUSED*/
-static void PrintSum( a, order, level )
-TRINFO **a;  
-VISIT  order;
-int    level;
+static void PrintSum( TRINFO **a, VISIT order, int level )
 { 
 if (order == postorder || order == leaf) 
     fprintf( TRFP, "[%d]%s[%d] has %d\n", 
@@ -452,8 +438,7 @@ if (order == postorder || order == leaf)
   This routine is the same as trDump on those systems that do not include
   /usr/include/search.h .
  +*/
-void trSummary( fp )
-FILE *fp;
+void trSummary( FILE *fp )
 {
 TRSPACE *head;
 TRINFO  *root, *key, **fnd;
@@ -490,8 +475,7 @@ fprintf( fp, "# [%d] The maximum space allocated was %d bytes [%d]\n",
 	 */
 }
 #else
-void trSummary( fp )
-FILE *fp;
+void trSummary( FILE *fp )
 {
 fprintf( fp, "# [%d] The maximum space allocated was %ld bytes [%ld]\n", 
 	 world_rank, TRMaxMem, TRMaxMemId );
@@ -501,10 +485,9 @@ fprintf( fp, "# [%d] The maximum space allocated was %ld bytes [%ld]\n",
 /*+
   trid - set an "id" field to be used with each fragment
  +*/
-void trid( id )
-int id;
+void trid( int id )
 {
-TRid = id;
+    TRid = id;
 }
 
 /*+C
@@ -518,10 +501,9 @@ TRid = id;
   Note:
   You can add levels together to get combined tracing.
  +*/
-void trlevel( level )
-int level;
+void trlevel( int level )
 {
-TRlevel = level;
+    TRlevel = level;
 }
 
 /*+C
@@ -530,8 +512,7 @@ TRlevel = level;
    Input Parameters:
 .  a      - value to push
 +*/
-void trpush( a )
-int a;
+void trpush( int a )
 {
 if (TRstackp < MAX_TR_STACK - 1)
     TRstack[++TRstackp] = a;
@@ -541,7 +522,7 @@ TRid = a;
 /*+C
   trpop - Pop an "id" value for the tracing space routines
 +*/
-void trpop()
+void trpop( void )
 {
 if (TRstackp > 1) {
     TRstackp--;
@@ -558,10 +539,9 @@ else
 .   level - level of debugging.  Currently, either 0 (no checking) or 1
     (use trvalid at each trmalloc or trfree).
 +*/
-void trDebugLevel( level )
-int level;
+void trDebugLevel( int level )
 {
-TRdebugLevel = level;
+    TRdebugLevel = level;
 }
 
 /*+C
@@ -577,10 +557,7 @@ TRdebugLevel = level;
     Double aligned pointer to requested storage, or null if not
     available.
  +*/
-void *trcalloc( nelem, elsize, lineno, fname )
-unsigned nelem, elsize;
-int      lineno;
-char     *fname;
+void *trcalloc( unsigned nelem, unsigned elsize, int lineno, char *fname )
 {
 void *p;
 
@@ -605,10 +582,7 @@ return p;
     available.  This implementation ALWAYS allocates new space and copies 
     the contents into the new space.
  +*/
-void *trrealloc( p, size, lineno, fname )
-void *p;
-int  size, lineno;
-char *fname;
+void *trrealloc( void *p, int size, int lineno, char *fname )
 {
     void    *pnew;
     char    *pa;
@@ -661,8 +635,7 @@ TRSPACE *trIsort  ANSI_ARGS(( TRSPACE *, int ));
 void trSortBlocks ANSI_ARGS(( void ));
  
 /* Merge two lists, returning the head of the merged list */
-TRSPACE *trImerge( l1, l2 )
-TRSPACE *l1, *l2;
+TRSPACE *trImerge( TRSPACE *l1, TRSPACE *l2 )
 {
 TRSPACE *head = 0, *tail = 0;
 int     sign;
@@ -688,9 +661,7 @@ if (l2) tail->next = l2;
 return head;
 }
 /* Sort head with n elements, returning the head */
-TRSPACE *trIsort( head, n )
-TRSPACE *head;
-int     n;
+TRSPACE *trIsort( TRSPACE *head, int n )
 {
 TRSPACE *p, *l1, *l2;
 int     m, i;
@@ -709,7 +680,7 @@ l2 = trIsort( l2,   n - m );
 return trImerge( l1, l2 );
 }
 
-void trSortBlocks()
+void trSortBlocks( void )
 {
 TRSPACE *head;
 int     cnt;
@@ -724,8 +695,7 @@ TRhead = trIsort( TRhead, cnt );
 }
 
 /* Takes sorted input and dumps as an aggregate */
-void trdumpGrouped( fp )
-FILE *fp;
+void trdumpGrouped( FILE *fp )
 {
 TRSPACE *head, *cur;
 int     nblocks, nbytes;
@@ -753,8 +723,7 @@ while (head) {
 fflush( fp );
 }
 
-void TrSetMaxMem( size )
-int size;
+void TrSetMaxMem( int size )
 {
     TRMaxMemAllow = size;
 }

@@ -14,6 +14,14 @@
    sles_user_ref
 
    chameleon_user_ref
+
+   Options:
+   -map mapname     - Name of map file.  For multiple map files, repeat.
+                      E.g., -map map1 -map map2
+   -o filename      - Set output file.  By default, stdout is used
+   -printmatch      - Print all matched tokens to stdout.  Use
+                      -printmatch -o /dev/null to see ONLY the matched
+                      tokens.
  */
 int main( int argc, char **argv )
 {
@@ -25,6 +33,7 @@ int main( int argc, char **argv )
     const char *mappath;
     char      token[256];
     int       nsp;
+    int       pflag = 0;
 
     /* Allow stdin and stdout as input, output files (so that this can be a 
        filter) */
@@ -32,13 +41,24 @@ int main( int argc, char **argv )
 
     if (!cmd->HasArg( "-debug_paths" )) (void) InstreamDebugPaths( 1 );
 
+    if (!cmd->HasArg( "-printmatch" )) pflag = 1;
+
     /* Source and destination files */
     // ins  = new InStreamFile( "map1.C", "r" );
     ins  = new InStreamFile( );
     ins->SetBreakChar( '\n', BREAK_OTHER );
     ins->SetBreakChar( '\t', BREAK_OTHER );
     //outs = new OutStreamFile( "ccc", "w" );
-    outs = new OutStreamFile( );
+#define MAX_FNAME 1025
+    char fname[MAX_FNAME];
+    if (!cmd->GetArg( "-o", fname, MAX_FNAME )) {
+      outs = new OutStreamFile( fname, "w" );
+      echo = new OutStreamFile( fname, "w" );
+    }
+    else {
+      outs = new OutStreamFile( );
+      echo = new OutStreamFile( );
+    }
 
     if (!cmd->HasArg( "-html" )) {
 	textout    = new TextOutHTML( outs );
@@ -57,8 +77,9 @@ int main( int argc, char **argv )
 
     /* Get the mapping file from the command line */
     while (!cmd->GetArgPtr( "-map", &mappath )) {
-      if (!map)
-	map = new TextOutMap();
+      if (!map) {
+	map = new TextOutMap( 0, pflag );
+      }
       mapins = new InStreamFile( mappath, "r" );
       if (mapins->status) {
 	fprintf( stderr, "Could not read map file %s\n", mappath );
@@ -77,7 +98,6 @@ int main( int argc, char **argv )
       fprintf( stderr, "No map file specified\n" );
       return 1;
     }
-    echo = new OutStreamFile();
     textout->SetOutstream( echo );
     while (!ins->GetToken( 256, token, &nsp )) {
 	map->PutToken( nsp, token );

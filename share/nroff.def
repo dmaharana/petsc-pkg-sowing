@@ -1,6 +1,12 @@
 #
 # This is a sample definition file for nroff output
 # This is a rough guess; I need to look up the nroff codes
+# \&. should be used for a . at the beginning of a line
+# Using \c will suppress a space at the end of a line when introducing
+# or ending a formatting command.  For example
+# foo \c
+# .I bar\c
+# \&.
 # 
 preamble         
 postamble        

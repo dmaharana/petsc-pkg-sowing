@@ -1,0 +1,100 @@
+#! /usr/local/bin/perl5
+#
+# This script searches for invalid function names.
+$debug = 0;
+# Load up a hash with known leaders
+%MPILeaders = ( "MPID_" => 1, "MPIR_" => 1, "mpir_" => 1, "MPI_" => 1, 
+	     "PMPI_" => 1, "mpi_"  => 1, "pmpi_" => 1, 
+	     "p4_"   => 1, "ADIO_" => 1, "MPIO_" => 1, "PMPIO_" => 1,
+	     "SLOG_" => 1, "MPE_"  => 1, "mpe_"  => 1, "CLOG_" => 1,
+	     "ADIOI_"=> 1, "usc_"  => 1, "xx_"   => 1, "mpi1_" => 1,
+	     "mpi2_" => 1, "MPIOI_" => 1, "pmpio_" => 1, "MD_" => 1,
+	     "execer_" => 1, "p2p_" => 1, "MPD_" => 1, "BNR_" => 1 );
+
+@MPINonConformLeaders = ( "alogf", "mpipriv", "XB", "MPICH" );
+
+%PETScLeaders = ( "Petsc_" => 1, "PETSC_" => 1, "VIEWER_" => 1, 
+		  "petsc_" => 1 );
+
+@PETScNonConformLeaders = ( "Petsc", "Viewer", "Xi", "Draw", "Options",
+			    "PLog", "DLLibrary", "FList", "_PLog" );
+
+%Leaders = ();
+@NonConformLeaders = ();
+
+foreach $_ (@ARGV) {
+    if (/-prefix=(.*)/) {
+	# Add contents of file to Leaders
+	open( PREFIXFD, "<$1" ) || die "Could not open $1\n";
+	while (<PREFIXFD>) {
+	    chop;
+	    $symbol = $_;
+	    if (substr($symbol,-1,1) ne "_") {
+		print "Adding $symbol to noncomforming symbols\n" if $debug;
+		$NonConformLeaders[$#NonConformLeaders+1] = $symbol;
+	    }
+	    else {
+		print "Adding $symbol to prefixes\n" if $debug;
+		$Leaders{$symbol} = 1;
+	    }
+	}
+    }
+    elsif (/-clearprefix/) {
+	%Leaders = ();
+    }
+    elsif (/-debug/) {
+	$debug = 1;
+    }
+    elsif (/-mpich/) {
+	%Leaders = %MPILeaders;
+	@NonConformLeaders = @MPINonConformLeaders;
+    }
+    elsif (/-petsc/) {
+	%Leaders = %PETScLeaders;
+	@NonConformLeaders = @PETScNonConformLeaders;
+    }
+    elsif (/-c\+\+/) {
+	# Let C++ libraries have leading underscores.
+	$Leaders{"_"} = 1; 
+    }
+    else {
+	&CheckLibForGlobs( $_ );
+    }
+}
+
+sub CheckLibForGlobs {
+    $library = $_[0];
+
+    open( INFD, "nm $library |" ) || die "Could not run nm $library";
+
+    $found_sym = 0;
+    LINE: while (<INFD>) {
+        if ( /\|GLOB/ && ! /\|UNDEF/) {
+	    # For solaris, the name is the LAST item that starts with |
+  	    /.*\|([^\|]*)$/;
+	    $symbol = $1;
+	    # Symbol head MUST include a trailing _
+	    ($symbol_head) = ($symbol =~ /^([^_]*_)/);
+	    print "Symbol head = [$symbol_head]\n" if $debug;
+	    print "$Leaders{$symbol_head}\n" if $debug;
+	    if (defined($Leaders{$symbol_head})) { next; }
+	    $found_match=0;
+	    foreach $name (@NonConformLeaders) {
+		$shortsym = substr($symbol,0,length($name));
+		#print "$name <=> $shortsym\n";
+		if ($name eq $shortsym) {next LINE;}
+	    }
+
+	    # Put special cases here
+	    #if (/\|XB/) { next; }
+	    if (! $found_sym) { 
+		$found_sym = 1;
+		print "$library\n";
+	    }
+	    print $_;
+        }
+    }
+}
+
+exit(0);
+

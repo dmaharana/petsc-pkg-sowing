@@ -22,6 +22,9 @@
 #include <string.h>
 #endif
 
+/* System name code */
+void SYGetArchType( char *, int );
+
 /* Include space tracing code */
 #include "trspace.h"
 
