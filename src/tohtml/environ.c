@@ -9,6 +9,7 @@
 
 typedef struct _NewEnv {
     int      nargs;
+    int      predef;      /* Is this a predefined environment? */
     char     *btext,      /* Text at begining */
              *etext;      /* Text at ending */
     } NewEnv;
@@ -17,10 +18,13 @@ static SRList *newenv = 0;
 static int DebugEnv = 0;
 static int LatexQuiet = 0;
 
+static int leave_tex_files = 0;
+
 void AddCodeDefn ( FILE * );
 
-void TXSetLatexQuiet( flag )
-int flag;
+static int Debug_environ = 0;
+
+void TXSetLatexQuiet( int flag )
 {
     LatexQuiet = flag;
 }
@@ -63,24 +67,39 @@ void TXDoNewenvironment( TeXEntry *e )
 	TeXAbort( "TXDoNewenvironment", e->name );
 
     if (!newenv) newenv = SRCreate();
+    /* Don't replace names that the user defined in a def file */
+    l       = SRLookup( newenv, nametok, (char *)0, &d );
+    if (l && ((NewEnv*)(l->priv))->predef) {
+	FREE( btext );
+	FREE( etext );
+	return;
+    }
     l       = SRInsert( newenv, nametok, 0, &d );
     new     = NEW(NewEnv);
     new->btext = btext;
     new->etext = etext;
     new->nargs = nargs;
+    new->predef= 0;
     l->priv    = (void *)new;
 }
 
 /* Set an environment's begin and end text.  If btext or etext is null, 
-   ignore it.  If name is not known, insert it */
-void TXSetEnv( char *name, char *btext, char *etext )
+   ignore it.  If name is not known, insert it.
+   Environments set with this function cannot be replaced by 
+   newenvironment commands
+ */
+void TXSetEnv( char *name, char *btext, char *etext, int bnargs )
 {
     int    d;
     LINK   *l;
     NewEnv *new;
 
     if (!newenv) newenv = SRCreate();
-    
+
+    if (Debug_environ) {
+	printf( "Defining environment %s\n", name );
+    }
+
     l       = SRLookup( newenv, name, (char *)0, &d );
     if (!l) {
       l          = SRInsert( newenv, name, 0, &d );
@@ -88,13 +107,15 @@ void TXSetEnv( char *name, char *btext, char *etext )
       new->btext = 0;
       new->etext = 0;
       new->nargs = 0;
+      new->predef= 1;
       l->priv    = (void *)new;
     }
     else 
       new = (NewEnv *)(l->priv);
 
-    if (btext) new->btext = btext;
-    if (etext) new->etext = etext;
+    if (btext)       new->btext = btext;
+    if (etext)       new->etext = etext;
+    if (bnargs >= 0) new->nargs = bnargs;
 }
 
 /*
@@ -238,7 +259,7 @@ void RunLatex( char *envname, char *string, char *name, char *mathmode,
 
 /* Set dummy values for E */
     E.name	 = envname;
-    E.action = 0;
+    E.action     = 0;
     E.ctx	 = 0;
     E.nargs	 = 0;
 
@@ -284,9 +305,9 @@ documentcmd, preamble ? preamble : "{article}" );
 	fprintf( fp, "\\def\\index#1{\\relax}\n" );
 
 	if (string) {
-	    fprintf( fp, "% User command to run\n" );
+	    fprintf( fp, "%% User command to run\n" );
 	    fputs( string, fp );
-	    fprintf( fp, "% End of user command to run\n" );
+	    fprintf( fp, "%% End of user command to run\n" );
 	}
     }
 
@@ -306,6 +327,9 @@ documentcmd, preamble ? preamble : "{article}" );
     else {
 	if (envname) {
 	    int SaveInArg;
+	    char nlstring[4];
+	    int  nltype;
+
 	    fprintf( fp, "%% Beginning of Environment to be handled\n" );
 	    fprintf( fp, "\\begin{%s}\n", envname );
 	    /* We'll start by using SkipEnv ... */
@@ -321,7 +345,14 @@ documentcmd, preamble ? preamble : "{article}" );
 	    /* Turn off "In arg" processing */
 	    SaveInArg = InArg;
 	    InArg     = 0;
+	    /* Use Unix newlines */
+	    strcpy( nlstring, NewLineString );
+	    strcpy( NewLineString, "\n" );
+	    nltype = DoDosFileNewlines;
+	    DoDosFileNewlines = 0;
 	    TeXskipRaw( &E, p, 1 );
+	    strcpy( NewLineString, nlstring );
+	    DoDosFileNewlines = nltype;
 	    InArg = SaveInArg;
 	    /* Restore them */
 	    DoOutputTranslation = 1;
@@ -332,6 +363,8 @@ documentcmd, preamble ? preamble : "{article}" );
 	    fprintf( fp, "%% End of Environment to be handled\n" );
 	}
 	if (mathmode) {
+	    char nlstring[4];
+	    int nltype;
 	    fprintf( fp, "%s\n", mathmode );
 	    /* We'll start by using SkipEnv ... */
 	    foutsave = fpout;
@@ -343,7 +376,14 @@ documentcmd, preamble ? preamble : "{article}" );
 	    DoOutputTranslation = 0;
 	    /* Turn off active tokens */
 	    DoActiveTokens = 0;
+	    /* Use Unix newlines */
+	    strcpy( nlstring, NewLineString );
+	    strcpy( NewLineString, "\n" );
+	    nltype = DoDosFileNewlines;
+	    DoDosFileNewlines = 0;
 	    TeXskipMath( &E, p, 1 );
+	    strcpy( NewLineString, nlstring );
+	    DoDosFileNewlines = nltype;
 	    /* Restore them */
 	    DoOutputTranslation = 1;
 	    DoActiveTokens = 1;
@@ -435,7 +475,7 @@ documentcmd, preamble ? preamble : "{article}" );
 	sprintf( pgm, "/bin/rm -f %s.dvi %s.ps %s.aux %s.log", 
 		 name, name, name, name );
 	system( pgm );
-	if (!problem_with_file) {
+	if (!problem_with_file && !leave_tex_files) {
 	    sprintf( pgm, "/bin/rm -f %s.tex", name );
 	    system( pgm );
 	}
@@ -463,8 +503,7 @@ documentcmd, preamble ? preamble : "{article}" );
    These are in the global variable envJumpNum and in the returned string
    envname.
  */
-void TXStartNumberedEnv( envname )
-char *envname;
+void TXStartNumberedEnv( char *envname )
 {
     int  envnum;
 
@@ -547,8 +586,7 @@ TeXEntry *e;
 /* End the anchor */
 }
 
-void TeXSetEnvJump( envname )
-char *envname;
+void TeXSetEnvJump( char *envname )
 {
     if (envname[0]) {
 	if (!envjumpname) 
@@ -558,8 +596,7 @@ char *envname;
     }
 }
 
-void AddCodeDefn( fout )
-FILE *fout;
+void AddCodeDefn( FILE *fout )
 {
     fprintf( fout, "{\\catcode`\\_=\\active\\gdef_{{\\tt\\char`\\_}}}\n\
 {\\catcode`\\_=\\active\\gdef\\makeustext{\\def_{{\\tt\\char`\\_}}}}\n\

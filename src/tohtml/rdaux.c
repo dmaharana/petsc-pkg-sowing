@@ -320,10 +320,7 @@ LINK *l;
 }
 
 /* Write a menu for the CHILDREN of a given contents pointer */
-void WriteSubChildren( fout, r, depth )
-FILE     *fout;
-Contents *r;
-int      depth;
+void WriteSubChildren( FILE *fout, Contents *r, int depth )
 {
     if (!r || !r->Child) return;	
     TXbmenu( fout );
@@ -350,10 +347,7 @@ int      depth;
 /* Given a link from SRLookup, write pointer text for the immediate children
    (if depth == -1) or children to level depth (depth >= 0) or ALL children
    (depth == 100) */
-void WriteChildren( fout, l, depth )
-FILE *fout;
-LINK *l;
-int  depth;
+void WriteChildren( FILE *fout, LINK *l, int depth )
 {
     Contents *r;
 

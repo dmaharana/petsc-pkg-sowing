@@ -25,10 +25,10 @@ void TXStripCmds ( char *, char * );
 void TXAddToken ( char *, char **, int * );
 void TXConvertMathString ( char **, char **, int *, int );
 
+static int Debug_math_mode = 0;
 
 /* Removes all \ from a string */
-void TXStripCmds( str, strout )
-char *str, *strout;
+void TXStripCmds( char *str, char *strout )
 {
     while (*str) {
 	if (*str == CommandChar) str++;
@@ -37,9 +37,7 @@ char *str, *strout;
     *strout = 0;
 }
 
-void TXAddToken( tok, outstrp, maxstrp )
-char *tok, **outstrp;
-int  *maxstrp;
+void TXAddToken( char *tok, char **outstrp, int *maxstrp )
 {
     int maxstr = *maxstrp;
     char *outstr = *outstrp;
@@ -68,9 +66,8 @@ int  *maxstrp;
  * or a single character is seen (this matches TeX's argument processing when
  * this is used to process a math argument, such as to ^ or _).
  */
-void TXConvertMathString( instrp, outstrp, maxstrp, matched_brace )
-char **instrp, **outstrp;
-int  *maxstrp, matched_brace;
+void TXConvertMathString( char **instrp, char **outstrp, int *maxstrp, 
+			  int matched_brace )
 {
     char *instr = *instrp, *outstr = *outstrp;
     int  maxstr = *maxstrp;
@@ -79,6 +76,7 @@ int  *maxstrp, matched_brace;
 #define FONT_ITALICS 1
 #define FONT_ROMAN   2
 #define FONT_BOLD    3
+#define FONT_FIXED   4
 
     if (matched_brace) {
 	if (*instr != '{') {
@@ -119,10 +117,18 @@ int  *maxstrp, matched_brace;
 		    TXAddToken( "&#183;&#183;&#183;", &outstr, &maxstr );
 		else if (strcmp( tmpname, "times" ) == 0) 
 		    TXAddToken( "&#215;", &outstr, &maxstr );
+		else if (strcmp( tmpname, "circ" ) == 0)
+		    TXAddToken( "&#176;", &outstr, &maxstr );
+		else if (strcmp( tmpname, "_" ) == 0) 
+		    TXAddToken( "_", &outstr, &maxstr );
+		/* or better is &sdot; once HTML 4 is accepted */
 		else if (strcmp( tmpname, "sf" ) == 0) {
 		    /* if (fontstate[bracecnt] == FONT_ITALICS)
 		    TXAddToken( "</I>", &outstr, &maxstr ); */
 		    fontstate[bracecnt] = FONT_ROMAN;
+		}
+		else if (strcmp( tmpname, "tt" ) == 0) {
+		    fontstate[bracecnt] = FONT_FIXED;
 		}
 		else {
 		    /* This shouldn't happen */
@@ -146,6 +152,7 @@ int  *maxstrp, matched_brace;
 	    /* Handle pop from font (need a stack associated with the 
 	       bracecount) */
 	    if (fontstate[bracecnt] != fontstate[bracecnt+1]) {
+		/* Not done yet */
 		;
 	    }
 	    if (matched_brace && bracecnt == 0) break;
@@ -189,10 +196,7 @@ int  *maxstrp, matched_brace;
    a data area so that we can avoid processing as LaTeX when it is
    something as innocuous as Ax = b.
  */
-void TeXskipMath( e, name, doout )
-TeXEntry *e;
-char     *name;
-int      doout;
+void TeXskipMath( TeXEntry *e, char *name, int doout )
 {
     int  nsp, ch;
     FILE *fout = fpout;
@@ -268,9 +272,7 @@ int      doout;
  * We should handle a few more commands.  For example, turning \ldots
  * into ... or \, into <nop> (\, is a spacing command).
  */
-void TXProcessDollar( e, latexmath )
-TeXEntry *e;
-int      latexmath;
+void TXProcessDollar( TeXEntry *e, int latexmath, int checkdollar )
 {
     int ch, nsp;
     int displaymode = 0;
@@ -290,22 +292,28 @@ int      latexmath;
 /* Try to find next MathmodeChar (usually $) */
 
     transold = SCSetTranslate( (int (*)(char *, int ))0 );
-    ch = SCTxtFindNextANToken( fpin[curfile], token, MAX_TOKEN, &nsp );
-
     NumberedEnvironmentType = ENV_EQUATION;
     TeXSetEnvJump( "Equation" );
 
-    if (ch == MathmodeChar) {
-	displaymode = 1;
-	strcpy( mathbuf, "\\[" );
-	/* 4 because we're reserving 2 for the closing marker */
-	mathbufleft -= 4;
+    if (checkdollar) {
+	ch = SCTxtFindNextANToken( fpin[curfile], token, MAX_TOKEN, &nsp );
+
+	if (ch == MathmodeChar) {
+	    displaymode = 1;
+	    strcpy( mathbuf, "\\[" );
+	    /* 4 because we're reserving 2 for the closing marker */
+	    mathbufleft -= 4;
+	}
+	else {
+	    SCPushToken( token );
+	    strcpy( mathbuf, "\\(" );
+	    /* 4 because we're reserving 2 for the closing marker */
+	    mathbufleft -= 4;
+	}
     }
     else {
-	SCPushToken( token );
-	strcpy( mathbuf, "\\(" );
-	/* 4 because we're reserving 2 for the closing marker */
-	mathbufleft -= 4;
+	strcpy( mathbuf, "\\begin{displaymath}" );
+	mathbufleft -= strlen(mathbuf);  /* This is enough for the end */
     }
     while (mathbufleft > 0) {
 	ch = SCTxtFindNextANToken( fpin[curfile], token, MAX_TOKEN, &nsp );
@@ -353,10 +361,29 @@ int      latexmath;
 		strcat( mathbuf, "label{eq-foo}" );
 		numDoableCommands++;
 	    }
+	    else if (strcmp( token, "end" ) == 0) {
+		/* Look for displaymath */
+		if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
+		    TeXAbort( "TXProcessDollar", 0 );
+		else if (strcmp( curtok, "displaymath" ) == 0) {
+		    numDoableCommands++;
+		    break;
+		}
+		else {
+		    /* Restore the token that we read */
+		    SCPushToken( "}" );
+		    SCPushToken( curtok );
+		    SCPushToken( "{" );
+		}
+	    }
 	    /* Here we could handle \ldots and some others ... */
 	    if (strcmp( token, "ldots" ) == 0)
 		numDoableCommands++;
 	    else if (strcmp( token, "sf" ) == 0) 
+		numDoableCommands++;
+	    else if (strcmp( token, "tt" ) == 0) 
+		numDoableCommands++;
+	    else if (strcmp( token, "_" ) == 0) 
 		numDoableCommands++;
 	    else if (strcmp( token, "cdot" ) == 0) 
 		numDoableCommands++;
@@ -364,6 +391,11 @@ int      latexmath;
 		numDoableCommands++;
 	    else if (strcmp( token, "times" ) == 0) 
 		numDoableCommands++;
+	    else if (strcmp( token, "circ" ) == 0) 
+		numDoableCommands++;
+	    /*	    else if (strcmp( token, "{" ) == 0 ||
+		     strcmp( token, "}" ) == 0) 
+		     numDoableCommands++; */
 	}
 
 	/* Remember if the PREVIOUS character was a CommandChar */
@@ -398,10 +430,18 @@ int      latexmath;
 	strncpy( fname, bname, 100 );
 	strncat( fname, ".xbm", 100 );
 	if (!hasBackwack) strcat( mathbuf, "\\" );
-	if (displaymode)
-	    strcat( mathbuf, "]" );
+	if (checkdollar) {
+	    if (displaymode)
+		strcat( mathbuf, "]" );
+	    else 
+		strcat( mathbuf, ")" );
+	}
 	else 
-	    strcat( mathbuf, ")" );
+	    strcat( mathbuf, "end{displaymath}" );
+
+	if (Debug_math_mode) {
+	    printf( "Processing |%s| for math with latex\n", mathbuf );
+	}
 
 	if (LatexAgain || !FileExists( fname )) {
 	    RunLatex( (char *)0, mathbuf, bname, (char *)0, "xbm", 1 );
@@ -416,7 +456,11 @@ int      latexmath;
 	char *strout;
 	int  maxstr;
 
+	if (Debug_math_mode) {
+	    printf( "Processing |%s| for math inline\n", mathbuf );
+	}
 	maxstr = strlen(mathbuf + 2) + 1;
+
 	/* add enough from a number of sub/super scripts */
 	maxstr += (1+num_subs)*15;
 	strout = (char *)MALLOC( maxstr );
@@ -426,8 +470,12 @@ int      latexmath;
 	}
 	/* TXStripCmds( mathbuf + 2, strout ); */
 	/* This routine also handles ^ and _ */
-	{ char *mathbufp = mathbuf + 2, *outstrp = strout;
-	TXConvertMathString( &mathbufp, &outstrp, &maxstr, 0 );
+	{ 
+	    char *mathbufp, *outstrp = strout;
+	    mathbufp = mathbuf;
+	    if (checkdollar) mathbufp += 2;
+	    else mathbufp += strlen("\\begin{displaymath}");
+	    TXConvertMathString( &mathbufp, &outstrp, &maxstr, 0 );
 	}
 	if (displaymode) {
 	    TXmath( e );

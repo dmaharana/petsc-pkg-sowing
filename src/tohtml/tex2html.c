@@ -18,6 +18,10 @@ static char *(itemgifs[5]) = { "purple", "red", "blue", "green", "yellow" } ;
 static int  itemlevel = -1;
 static int IsPreformatted = 0;
 
+static int Debug_image_size = 0;
+void TX_XBM_size( char *, int *, int * );
+void TX_GIF_size( char *, int *, int * );
+
 /* 
    I'd like to push a token in every routine, but the PC version seems to
    run out of stack space (very, very tiny stacks!) 
@@ -53,7 +57,7 @@ int  flag;
 	TeXoutcmd( fout, "<pre>" );
     else {
 	TeXoutcmd( fout, "</pre>" );
-        TeXoutstr( fpout, NewLineString );
+        TeXoutstr( fout, NewLineString );
     }
 }
 
@@ -81,37 +85,34 @@ void TeXoutNewline( FILE *fout )
 /* Note that we change a newline into space-newline; TeX takes newline as a
    space; RTF does not */
     TeXoutcmd( fout, " " );
-    TeXoutstr( fpout, NewLineString );
+    TeXoutstr( fout, NewLineString );
 }
 
 /* Handle \\ in TeX file */
-void TXbw2( e )
-TeXEntry *e;
+void TXbw2( TeXEntry *e )
 {
 /* Usually a linebreak */
     if (!InDocument || !InOutputBody) return;
     TeXoutcmd( fpout, "<BR>" );
 }
 /* I use \bw in LaTeXinfo to generate a \ */
-void TXbw( e )
-TeXEntry *e;
+void TXbw( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;
     TeXoutcmd( fpout, "\\" );
 }
 
-void TXoutbullet( e )
-TeXEntry *e;
+void TXoutbullet( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;
     if (DoGaudy && itemlevel >= 0) {
 	char ctmp[256];
 	if (NoBMCopy)
-	    sprintf( ctmp, "<DT><IMG SRC=\"%s%sball.gif\" ALT=\"*\">%s", 
+	    sprintf( ctmp, "<DT><IMG WIDTH=14 HEIGHT=14 SRC=\"%s%sball.gif\" ALT=\"*\">%s", 
 		     BMURL, itemgifs[itemlevel >= 5 ? 4 : itemlevel],
 		     NewLineString);
 	else
-	    sprintf( ctmp, "<DT><IMG SRC=\"%sball.gif\" ALT=\"*\">%s", 
+	    sprintf( ctmp, "<DT><IMG WIDTH=14 HEIGHT=14 SRC=\"%sball.gif\" ALT=\"*\">%s", 
 		     itemgifs[itemlevel >= 5 ? 4 : itemlevel], 
 		     NewLineString);
 	TeXoutcmd( fpout, ctmp );
@@ -265,8 +266,7 @@ char     *fname;
 }
 #endif
 
-void TXWritePar( fp )
-FILE *fp;
+void TXWritePar( FILE *fp )
 {
     if (!InDocument || !InOutputBody) return;
     if (DebugOutput) fprintf( stdout, "TXWritePar\n" );
@@ -274,23 +274,56 @@ FILE *fp;
     TeXoutstr( fp, NewLineString );
 }
 
-void TXimage( e, fname )
-TeXEntry *e;
-char     *fname;
+void TXimage( TeXEntry *e, char *fname )
 {
+    int height, width;
     if (!InDocument || !InOutputBody) return;
     if (DebugOutput) fprintf( stdout, "TXimage\n" );
-    fprintf( fpout, "<P><IMG SRC=\"%s\"><P>%s", fname, NewLineString );
+    
+    /* Try to get the width and height */
+    width  = -1;
+    height = -1;
+    if (strstr( fname, ".xbm" )) {
+	TX_XBM_size( fname, &width, &height );
+    }
+    else if (strstr( fname, ".gif" )) {
+	TX_GIF_size( fname, &width, &height );
+    }
+
+    if (height == -1 || width == -1) {
+	fprintf( fpout, "<P><IMG SRC=\"%s\"><P>%s", fname, NewLineString );
+    }
+    else {
+	fprintf( fpout, "<P><IMG WIDTH=%d HEIGHT=%d SRC=\"%s\"><P>%s", 
+		 width, height, fname, NewLineString );
+    }
 /* This version makes the images external... */
 /* fprintf( fpout, "<A HREF=\"%s\">push here for picture</a>"\n", fname ); */
 }
 
-void TXInlineImage( e, fname )
-TeXEntry *e;
-char     *fname;
+void TXInlineImage( TeXEntry *e, char *fname )
 {
+    int width, height;
+
     if (!InDocument || !InOutputBody) return;
-    fprintf( fpout, "<IMG SRC=\"%s\">%s", fname, NewLineString );
+
+    /* Try to get the width and height */
+    width  = -1;
+    height = -1;
+    if (strstr( fname, ".xbm" )) {
+	TX_XBM_size( fname, &width, &height );
+    }
+    else if (strstr( fname, ".gif" )) {
+	TX_GIF_size( fname, &width, &height );
+    }
+
+    if (height == -1 || width == -1) {
+	fprintf( fpout, "<IMG SRC=\"%s\">%s", fname, NewLineString );
+    }
+    else {
+	fprintf( fpout, "<IMG WIDTH=%d HEIGHT=%d SRC=\"%s\">%s", 
+		 width, height, fname, NewLineString );
+    }
 /* This version makes the images external... */
 /* fprintf( fpout, "<A HREF=\"%s\">push here for picture</a>"\n", fname ); */
 }
@@ -299,27 +332,56 @@ void TXAnchoredImage( e, anchorname, fname )
 TeXEntry *e;
 char     *anchorname, *fname;
 {
+    int width, height;
+
     if (!InDocument || !InOutputBody) return;
     if (DebugOutput) fprintf( stdout, "TXAnchoredImage\n" );
-    fprintf( fpout, "<P><A NAME=\"%s\"><IMG SRC=\"%s\"></a><P>%s", 
-	     anchorname, fname, NewLineString );
+
+    /* Try to get the width and height */
+    width  = -1;
+    height = -1;
+    if (strstr( fname, ".xbm" )) {
+	TX_XBM_size( fname, &width, &height );
+    }
+    else if (strstr( fname, ".gif" )) {
+	TX_GIF_size( fname, &width, &height );
+    }
+
+    if (height == -1 || width == -1) {
+	fprintf( fpout, "<P><A NAME=\"%s\"><IMG SRC=\"%s\"></a><P>%s", 
+		 anchorname, fname, NewLineString );
+    }
+    else {
+	fprintf( fpout, 
+	     "<P><A NAME=\"%s\"><IMG WIDTH=%d HEIGHT=%d SRC=\"%s\"></a><P>%s", 
+		 anchorname, width, height, fname, NewLineString );
+    }
 }
 
-void TXAnchoredInlineImage( e, anchorname, fname )
-TeXEntry *e;
-char     *anchorname, *fname;
+void TXAnchoredInlineImage( TeXEntry *e, char *anchorname, char *fname )
 {
+    int width, height;
+
     if (!InDocument || !InOutputBody) return;
     if (DebugOutput) fprintf( stdout, "TXAnchoredInlineImage\n" );
+
+    /* Try to get the width and height */
+    width  = -1;
+    height = -1;
+    if (strstr( fname, ".xbm" )) {
+	TX_XBM_size( fname, &width, &height );
+    }
+    else if (strstr( fname, ".gif" )) {
+	TX_GIF_size( fname, &width, &height );
+    }
+
     fprintf( fpout, "<IMG SRC=\"%s\">%s", fname, NewLineString );
 /* This version makes the images external... */
     fprintf( fpout, "<A NAME=\"%s\"><IMG SRC=\"%s\"></a><P>%s", 
 	     anchorname, fname, NewLineString );
 }
 
-void TXmovie( e, movie, icon, text )
-TeXEntry *e;
-char     *movie, *icon, *text;
+void TXmovie( TeXEntry *e, char *movie, char *icon, char *text )
 {
     if (!InDocument || !InOutputBody) return;
     fprintf( fpout, "<A HREF=\"%s\"><IMG align=top src=\"%s\"></A>%s%s", 
@@ -464,29 +526,25 @@ TeXEntry *e;
     TeXoutstr( fpout, NewLineString );
 }
 /* Menus */	
-void TXbmenu( fout )
-FILE *fout;
+void TXbmenu( FILE *fout )
 {
     TeXoutcmd( fout, "<menu>" );
-    TeXoutstr( fpout, NewLineString );
+    TeXoutstr( fout, NewLineString );
 }
-void TXemenu( fout )
-FILE *fout;
+void TXemenu( FILE *fout )
 {
     TeXoutcmd( fout, "</menu>" );
-    TeXoutstr( fpout, NewLineString );
+    TeXoutstr( fout, NewLineString );
 }
 
 /* Description Item */	
-void TXbdesItem( e )
-TeXEntry *e;
+void TXbdesItem( TeXEntry *e )
 {
     TeXoutcmd( fpout, "<dt>" );
     TeXoutstr( fpout, NewLineString );
 }
 
-void TXedesItem( e )
-TeXEntry *e;
+void TXedesItem( TeXEntry *e )
 {
     TeXoutcmd( fpout, "<dd>" );
     TeXoutstr( fpout, NewLineString );
@@ -508,4 +566,72 @@ void TXbcenter( FILE *fpout )
 void TXecenter( FILE *fpout )
 {
     TeXoutcmd( fpout, "</center>" );
+}
+
+void TX_XBM_size( char *fname, int *width, int *height )
+{
+    FILE *f;
+    char lbuf[257];
+    char fullname[1024];
+    /* To get the size, read the first line for the width and
+       the second line for the height (#define name_width value,
+       #define name_height value)
+    */
+    if (splitlevel >= 0) {
+	strcpy( fullname, splitdir );
+	strcat( fullname, "/" );
+	strcat( fullname, fname );
+	fname = fullname;
+    }
+    if (Debug_image_size) printf( "Opening %s\n", fname );
+    if (! (f = fopen( fname, "r" )) ) return;
+    fscanf( f, "#define %s %d\n", lbuf, width );
+    /* We could check that lbuf ends in width */
+    fscanf( f, "#define %s %d\n", lbuf, height );
+    if (Debug_image_size) 
+	printf( "Width = %d height = %d\n", *width, *height );
+    fclose( f );
+}
+
+void TX_GIF_size( char *fname, int *width, int *height )
+{
+    FILE *f;
+    int  w;
+    char c;
+    char fullname[1024];
+
+    /* To get the size, do:
+       giftopnm filename | head -2 | sed 1d 
+       then the remaining text is '^width height$', where ^
+       is the beginning of the line and $ is the end of the line
+    */
+    if (splitlevel >= 0) {
+	strcpy( fullname, splitdir );
+	strcat( fullname, "/" );
+	strcat( fullname, fname );
+	fname = fullname;
+    }
+    if(! (f = fopen( fname, "r" )) ) return;
+
+    /* GIF8[79]a width height
+       width and height are written with 
+       int w;
+       putc( w & 0xff ); putc( (w/256) & 0xff );
+    */
+    /* printf( "Looking at %s\n", fname ); */
+    if (fscanf( f, "GIF8%ca", &c ) < 1 ) {
+	fclose( f );
+	return;
+    }
+    
+    /* printf( "Getting width\n" ); */
+    w = fgetc( f );
+    w += (fgetc( f ) * 256);
+    *width = w;
+    /* printf( "Width = %d, getting height\n", *width ); */
+    w = fgetc( f );
+    w += (fgetc( f ) * 256);
+    *height = w;
+    /* printf( "Height = %d\n" ); */
+    fclose( f );
 }

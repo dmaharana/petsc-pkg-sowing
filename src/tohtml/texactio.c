@@ -228,21 +228,18 @@ char *UserIndexName = 0;
     files
  */
 
-void TXSetDebug( flag )
-int flag;
+void TXSetDebug( int flag )
 {
     DebugArgs     = flag;
     DebugCommands = flag;
 }
 
-void TXSetUseIfTex( flag )
-int flag;
+void TXSetUseIfTex( int flag )
 {
     UseIfTex = flag;
 }
 
-void TXSetLatexUnknown( flag )
-int flag;
+void TXSetLatexUnknown( int flag )
 {
     LatexUnknownEnvs = flag;
 }
@@ -253,31 +250,26 @@ int flag;
     ProcessManPageTokens = flag;
 }
 
-void TXSetLatexTables( flag )
-int flag;
+void TXSetLatexTables( int flag )
 {
     LatexTables = flag;
 }
-void TXSetLatexMath( flag )
-int flag;
+void TXSetLatexMath( int flag )
 {
     LatexMath = flag;
 }
 
-void TXSetSimpleMath( flag )
-int flag;
+void TXSetSimpleMath( int flag )
 {
     SimpleMath = flag;
 }
 
-void TXSetLatexAgain( flag )
-int flag;
+void TXSetLatexAgain( int flag )
 {
     LatexAgain       = flag;
 }
 
-void TXSetFiles( fin, fout )
-char *fin, *fout;
+void TXSetFiles( char *fin, char *fout )
 {
     outfile = (char *)MALLOC( 512 );
     CHKPTR(outfile);
@@ -287,8 +279,7 @@ char *fin, *fout;
     strcpy( InFName[0], fin );
 }
 
-void TeXAbort( routine, msg )
-char *routine, *msg;
+void TeXAbort( char *routine, char *msg )
 {
     fprintf( stdout, "%s:%s\n", routine, msg ? msg : "No message" );
     fprintf( stdout, "File %s line %d\n", 
@@ -343,9 +334,7 @@ void TeXoutstr( FILE *fout, char *str )
     }    
 }
 
-void TeXoutsp( fout, nsp )
-FILE *fout;
-int  nsp;
+void TeXoutsp( FILE *fout, int nsp )
 {
     int i;
     if (!InDocument) return;
@@ -356,9 +345,7 @@ int  nsp;
    nsp is the number of preceding blanks.  Returns the first character in 
    the token (or EOF) 
  */
-int TeXReadToken( token, nsp )
-char *token;
-int  *nsp;
+int TeXReadToken( char *token, int *nsp )
 {
     int ch, ch2, d;
 
@@ -480,8 +467,9 @@ int TeXGetGenArg( FILE *fin, char *token, int maxtoken, char sc, char ec,
 		    fprintf( stdout, "In command %s\n", CmdName );
 		TXPopFile();
 	    }
-	    if (DebugArgs) 
+	    if (DebugArgs) {
 		fprintf( stdout, "ARG(%d):%s\n", GetArgDepth, mtoken );
+	    }
 	    for (i=0; i<nsp; i++) token[i] = ' ';
 	    token    += nsp;
 	    maxtoken -= nsp;
@@ -675,23 +663,20 @@ TeXEntry *e;
 }
 
 /* Output raw HTML (or RTF) */
-void TXraw( e )
-TeXEntry *e;
+void TXraw( TeXEntry *e )
 {
     if (!InDocument) return;
     TeXoutcmd( fpout, (char *)(e->ctx) );
 }	
 
-void TXcomment( e )
-TeXEntry *e;
+void TXcomment( TeXEntry *e )
 {
     SCTxtDiscardToEndOfLine( fpin[curfile] );
     LineNo[curfile]++;
 }
 
 /* Do \char`\\ */
-void TXchar( e )
-TeXEntry *e;
+void TXchar( TeXEntry *e )
 {
     int ch, nsp;
 
@@ -707,9 +692,9 @@ TeXEntry *e;
     POPCURTOK;
 }
 
-/* Remove a LaTeX [...] */
-void TXRemoveOptionalArg( token )
-char *token;
+/* Remove a LaTeX [...].  Leave the token in "token"; if there is
+ no [], set token[0] to 0 */
+void TXRemoveOptionalArg( char *token )
 {
     int ch;
     int nsp;
@@ -722,11 +707,12 @@ char *token;
 	if (TeXGetGenArg( fpin[curfile], token, MAX_TOKEN, '[', ']', 0 ) == -1)
 	    TeXAbort( "TXRemoveOptionalArg", (char *)0 );
     }
+    else
+      token[0] = 0;
 }
 
 /* Remove a LaTeX * (as in \vspace*{3in}) */
-void TXRemoveOptionalStar( token )
-char *token;
+void TXRemoveOptionalStar( char *token )
 {
     int ch;
     int nsp;
@@ -738,8 +724,7 @@ char *token;
 }
 
 /* This is nop, but after removing any optional * */
-void TXnopStar( e )
-TeXEntry *e;
+void TXnopStar( TeXEntry *e )
 {
     PUSHCURTOK;
     TXRemoveOptionalStar( curtok );
@@ -749,8 +734,7 @@ TeXEntry *e;
 
 /* the \\ can have the form \\[dimen] for adding space; this
    routine eats the [...] */
-void TXdoublebw( e )
-TeXEntry *e;
+void TXdoublebw( TeXEntry *e )
 {
     PUSHCURTOK;
     TXRemoveOptionalArg( curtok );
@@ -769,8 +753,7 @@ void TXnewline( TeXEntry *e )
     TXbw2( e );
 }
 /* generate the date.  Probably not in the expected format */
-void TXtoday( e )
-TeXEntry *e;
+void TXtoday( TeXEntry *e )
 {
     char date[100];
     SYGetDate( date );
@@ -778,8 +761,7 @@ TeXEntry *e;
 }
 
 /* For ref to work, we need to install the \label defines in a label table */
-void TXref( e )
-TeXEntry *e;
+void TXref( TeXEntry *e )
 {
     int  refnumber = 0;	
     char *refname;
@@ -830,8 +812,7 @@ TeXEntry *e;
    Note that the anchor need only be around a small part; 
    also, we could ALWAYS place the anchor and only use it as required.
  */
-void TXlabel( e )
-TeXEntry *e;
+void TXlabel( TeXEntry *e )
 {
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
@@ -1191,8 +1172,7 @@ void TXPopFile()
    This implements my \fileinclude{filename} macro which includes the
    entire contents of filename in verbatim form
    */
-void TXfileinclude( e )
-TeXEntry *e;
+void TXfileinclude( TeXEntry *e )
 {
     char line[257];
     FILE *fp;
@@ -1461,8 +1441,7 @@ FILE *fp;
 }
 
 /* Paragraphs are a very restricted form of section */
-void TXparagraph( e )
-TeXEntry *e;
+void TXparagraph( TeXEntry *e )
 {
     int ch;
 
@@ -1492,8 +1471,7 @@ TeXEntry *e;
    \vtt is rather special.  We want to start processing, but most of the 
    code expects to see a \begin{document} ... \end{document}.  
  */
-void TXvtt( e )
-TeXEntry *e;
+void TXvtt( TeXEntry *e )
 {
     if (!InDocument) {
 	TXStyleEPSF( TeXlist, fpin[curfile], fpout );
@@ -1507,8 +1485,7 @@ TeXEntry *e;
 	TXsection( e );
     }
 }
-void TXvt( e )
-TeXEntry *e;
+void TXvt( TeXEntry *e )
 {
     if (!InDocument) {
 	TXStyleEPSF( TeXlist, fpin[curfile], fpout );
@@ -1518,8 +1495,7 @@ TeXEntry *e;
 	TeXskipEnv( e, "_vtt", 1 );
     }
 }
-void TXdetails( e )
-TeXEntry *e;
+void TXdetails( TeXEntry *e )
 {
     TeXoutstr( fpout, "(Press " );
     TXhref( e );
@@ -1585,85 +1561,66 @@ void TeXskipEnv( TeXEntry *e, char *name, int flag )
 	    TXPopFile();
 	}
 	if (ch == EOF) break;
-	if (InVerbatim) {
-	    /* Special case: look only for \end{name} */
-	    if (ch == CommandChar) {
-		last_was_nl  = 0;
-		TeXoutsp( fout, nsp );
-		TeXReadMacroName( curtok );
-		if (strcmp( curtok, "end" ) == 0) {
-		    if (DebugCommands)
-			fprintf( stdout, "Getting argument for end{}\n" );
-		    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
-			TeXAbort( "TXSkipEnv", e->name );
-		    if (strcmp( name, curtok ) == 0) {
-			/* We've found the end of the verbatim */
-			break;
-		    }
-		    else {
-			/* Ignore it */
-			TeXoutstr( fout, "\\end{" );
-			TeXoutstr( fout, curtok );
-			TeXoutstr( fout, "}" );
-		    }
-		}
-		else {
-		    TeXoutstr( fout, "\\" );
-		    TeXoutstr( fout, curtok );
-		}
-		continue;
-	    }
-	}
-	if (ch == CommentChar && !InVerbatim) {
-	    SCTxtDiscardToEndOfLine( fpin[curfile] );
-	    LineNo[curfile]++;
-	    continue;
-	}
-	if (ch == MathmodeChar && !UsingLatexinfo && !InVerbatim) {
-	    TeXoutsp( fout, nsp );
-	    TXProcessDollar( e, LatexMath );
-	}
-	else if (ch == AlignChar && HandleAlign && 
-		 lstack[lSp].env == TXTABULAR) {
-	    TeXPutAlign();
-	}
-	else if (ch == CommandChar) {
+	if (InVerbatim && ch == CommandChar) {
 	    last_was_nl  = 0;
 	    TeXoutsp( fout, nsp );
 	    TeXReadMacroName( curtok );
-	    
-	    if (InVerbatim) {
-		if (strcmp( curtok, "end" ) == 0) {
-		    if (DebugCommands)
-			fprintf( stdout, "Getting argument for end{}\n" );
-		    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
-			TeXAbort( "TXSkipEnv", e->name );
-		    /* Check for a user-defined environment type */
-		    if (LookupEnv( curtok, &btext, &etext, &nargs)) {
-			if (etext) {
-			    if (DebugCommands)
-				fprintf( stdout, "Pushing back |%s|\n", etext );
-			    SCPushToken( etext );
-			}
-		    }
-		    else if (strcmp( curtok, name ) != 0) {
-			if (flag) 
-			    fprintf( ferr, 
-     "%s does not match %s (started at line %d)\n", curtok, name, line_num );
-		    }
-		    else {
-			break;
-		    }
+	    if (strcmp( curtok, "end" ) == 0) {
+		if (DebugCommands)
+		    fprintf( stdout, "Getting argument for end{}\n" );
+		if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
+		    TeXAbort( "TXSkipEnv", e->name );
+		if (strcmp( name, curtok ) == 0) {
+		    /* We've found the end of the verbatim */
+		    break;
 		}
 		else {
-		    if (DestIsHtml)
-			TeXoutstr( fout, "\\" );
-		    else 
-			TeXoutstr( fout, "\\\\" );
+		    /* Ignore it */
+		    TeXoutstr( fout, "\\end{" );
 		    TeXoutstr( fout, curtok );
+		    TeXoutstr( fout, "}" );
 		}
 	    }
 	    else {
+		TeXoutstr( fout, "\\" );
+		TeXoutstr( fout, curtok );
+	    }
+	    continue;
+	}
+
+	if (InVerbatim) {
+	    TeXoutsp( fout, nsp );
+	    if (ch == '\n') {
+		/* In preformatted output, we don't need any pars */
+		TeXoutstr( fout, NewLineString );
+		last_was_nl = 1;
+	    }
+	    else 
+		TeXoutstr( fout, curtok );
+	}
+	else {
+	    if (ch == CommentChar) {
+		SCTxtDiscardToEndOfLine( fpin[curfile] );
+		LineNo[curfile]++;
+		continue;
+	    }
+	    if (ch == MathmodeChar && !UsingLatexinfo) {
+		TeXoutsp( fout, nsp );
+		TXProcessDollar( e, LatexMath, 1 );
+	    }
+	    else if (ch == AlignChar && HandleAlign && 
+		     lstack[lSp].env == TXTABULAR) {
+		/* We want to be prepared to put an alignment command,
+		   but to support the \multicolumn command, we
+		   need to wait until we are sure that the next 
+		   command is not \multicolumn.  Not handled yet */
+		TeXPutAlign();
+	    }
+	    else if (ch == CommandChar) {
+		last_was_nl  = 0;
+		TeXoutsp( fout, nsp );
+		TeXReadMacroName( curtok );
+	    
 		if (strcmp( curtok, "end" ) == 0) {
 		    if (DebugCommands)
 			fprintf( stdout, "Getting argument for end{}\n" );
@@ -1690,23 +1647,21 @@ void TeXskipEnv( TeXEntry *e, char *name, int flag )
 			TeXProcessCommand( curtok, fpin[curfile], fout );
 		}
 	    }
-	}
-	else {
-	    if (flag) {
-		TeXoutsp( fout, nsp );
-		if (ch == '\n') {
-		    if (last_was_nl) {
-			TXWritePar( fout );
-			SCSkipNewlines( fpin[curfile] );
+	    else {
+		if (flag) {
+		    TeXoutsp( fout, nsp );
+		    if (ch == '\n') {
+			if (last_was_nl) {
+			    TXWritePar( fout );
+			    SCSkipNewlines( fpin[curfile] );
+			}
+			else if (lSp >= 0)
+			    (*lstack[lSp].newline)( fout );
+			else
+			    TeXoutNewline( fout );
+			last_was_nl = 1;
 		    }
-		    else if (lSp >= 0)
-			(*lstack[lSp].newline)( fout );
-		    else
-			TeXoutNewline( fout );
-		    last_was_nl = 1;
-		}
-		else { 
-		    if (!InVerbatim) {
+		    else {
 			if (ch == LbraceChar) {
 			    if (BraceCount >= MAX_BLOC) {
 				TeXAbort( "", "Braces too deep" );
@@ -1724,24 +1679,20 @@ void TeXskipEnv( TeXEntry *e, char *name, int flag )
 			       LineNo[curfile], BraceCount ); */
 			    if (BraceCount < 0) {
 				fprintf( ferr, 
-					 "Improperly nested brace at %s line %d in ",
-					 InFName[curfile] ? InFName[curfile]: "",
-					 LineNo[curfile] );
+				 "Improperly nested brace at %s line %d in ",
+				 InFName[curfile] ? InFName[curfile]: "",
+				 LineNo[curfile] );
 				PrintLastSectionName( ferr );
 				/* Reset brace count */
 				BraceCount = 0;
 			    }
 			    TXegroup( e );
-			}
-			else {
+			} else {
 			    TeXoutstr( fout, curtok );
 			}
+			last_was_nl  = 0;
 		    }
-		    else {
-			TeXoutstr( fout, curtok );
-		    }
-		    last_was_nl  = 0;
-		    }
+		}
 	    }
 	}
     }
@@ -1905,13 +1856,12 @@ char *fname;
 /*
    Manage math mode (\[ .. \] or \( ... \) )
  */
-void TXmathmode( e )
-TeXEntry *e;
+void TXmathmode( TeXEntry *e )
 {
 #ifndef FOO
     /* If display math, make it look like $$ starts it */
     if (e->name[0] == '[') SCPushToken( "$" );
-    TXProcessDollar( e, LatexMath );
+    TXProcessDollar( e, LatexMath, 1 );
     return;
 #else
     if (DebugCommands) fprintf( stdout, "Starting math mode processing\n" );
@@ -1953,17 +1903,14 @@ TeXEntry *e;
 int itemizelevel = -1;
 
 /* Copy this envrionment without doing anything */
-void TeXBenign( e, name )
-TeXEntry *e;
-char *name;
+void TeXBenign( TeXEntry *e, char *name )
 {
     TXbgroup( e );
     TeXskipEnv( e, name, 1 );
     TXegroup( e );
 }
 
-void TeXitemize( e )
-TeXEntry *e;
+void TeXitemize( TeXEntry *e )
 {
     itemizelevel++;
     lstack[++lSp].env	    = TXITEMIZE;
@@ -2022,9 +1969,7 @@ TeXEntry *e;
    This handles \begin{list}{itemtext} ... \end{list}
    itemtext is stored in p1 and MUST BE PROCESSED AGAIN
  */
-void TeXDoList( e, itemtext, itemcommands )
-TeXEntry *e;
-char     *itemtext, *itemcommands;
+void TeXDoList( TeXEntry *e, char *itemtext, char *itemcommands )
 {
     itemizelevel++;
     lstack[++lSp].env		= TXLIST;
@@ -2072,8 +2017,7 @@ TeXEntry *e;
     POPCURTOK;
 }
 
-void TeXverbatim( e )
-TeXEntry *e;
+void TeXverbatim( TeXEntry *e )
 {
     /* char comment_char; */
 /* Skip code until find an \end{verbatim}.
@@ -2169,6 +2113,13 @@ TeXEntry *e;
 /* There should be a way to specify these in the basedef file */
     /*    else if (strcmp( curtok, "center" ) == 0) TeXCenter( e ); */
     else if (strcmp( curtok, "benign" ) == 0) TeXBenign( e, "benign" );
+    else if (strcmp( curtok, "displaymath") == 0 && !UsingLatexinfo) {
+	if (LatexMath) {
+	    TXProcessDollar( e, LatexMath, 0 );
+	}
+	else 
+	    TeXBenign( e, "displaymath" );
+    }
 #ifdef FOO
     else if (strcmp( curtok, "centering" ) == 0) TeXBenign( e, "centering" );
     else if (strcmp( curtok, "normalsize" ) == 0) TeXBenign( e, "normalsize" );
@@ -2256,6 +2207,7 @@ TeXEntry *e;
 	    TeXBeginHalignTable();
 	    TeXBenign( e, "tabular" );
 	    TeXEndHalignTable();
+	    --lSp;
 	}
 	else {
 	    TeXtabular( e );
@@ -2439,15 +2391,27 @@ void TXitem( TeXEntry *e )
     }
     else if (lstack[lSp].env == TXLIST) {
       /* We might want to allow bullet to be identified... */
-      /* Remove any [] in the list argument */
-      /* ? TXRemoveOptionalArg( curtok ); */
+      /* Remove any [] in the list argument.  Save the value */
+      /* eventually, if the is a labellength, use an html table to
+         force the correct width */
+      PUSHCURTOK;
+      curtok[0] = 0;
+      TXRemoveOptionalArg( curtok );
       TXWriteStartNewLine( fpout );
       /* This really needs to process the string FIRST before outputting it... */
-      if (lstack[lSp].p1) 
-	SCPushToken( lstack[lSp].p1 );
+      if (curtok[0]) {
+	SCPushToken( curtok );
+      }
+      else {	  
+	/* p1 is the itemtext, which is the text used if there is no optional
+	   argument */
+	if (lstack[lSp].p1) 
+	  SCPushToken( lstack[lSp].p1 );
+      }
       /* TeXoutstr( fpout, lstack[lSp].p1 ); */
       if (lstack[lSp].p2) 
 	SCPushToken( lstack[lSp].p2 );
+      POPCURTOK;
     }
     else {
       /* Assume itemize for now.  This is incorrect for an index */
@@ -2707,19 +2671,16 @@ TeXEntry *e;
     TXmaketitle( e, TitleString, AuthorString );
 }
 
-void TXDef( e )
-TeXEntry *e;
+void TXDef( TeXEntry *e )
 {
     TXAddUserDef( TeXlist, e );
 }
-void TXNewCommand( e )
-TeXEntry *e;
+void TXNewCommand( TeXEntry *e )
 {
     TXDoNewCommand( TeXlist, e );
 }
 
-void TXNewLength( e )
-TeXEntry *e;
+void TXNewLength( TeXEntry *e )
 {
     TXDoNewLength( TeXlist, e );
 }
@@ -3196,11 +3157,8 @@ TeXEntry *e;
 }
 
 /* Initialization code */
-void TXInsertName( list, name, action, nargs, ctx )
-SRList *list;
-char   *name;
-void   (*action)( TeXEntry *), *ctx;
-int    nargs;
+void TXInsertName( SRList *list, char *name, void (*action)( TeXEntry *),
+		   int nargs, void *ctx )
 {
     LINK *l;
     int  d;
@@ -3219,8 +3177,7 @@ int    nargs;
    Initialize the TeX commands. This adds ONLY the ones that are 
    not set by the basedefs.txt file.
  */
-void TXInit( fin, fout )
-FILE *fin, *fout;
+void TXInit( FILE *fin, FILE *fout )
 {
     if (!TeXlist) 
 	TeXlist = SRCreate();
@@ -3406,6 +3363,13 @@ FILE *fin, *fout;
 /* Hypertext */
     TXInsertName( TeXlist, "URL",  TXURL,  1, (void *)0 );
     TXInsertName( TeXlist, "AURL", TXAURL, 2, (void *)0 );
+
+/* TeX accents */
+    InitAccents();
+
+/* HTML Tables */
+    if (HandleAlign) 
+	InitTabular();
 }	
 
 void TeXProcessCommand( char *token, FILE *fin, FILE *fout )
@@ -3438,17 +3402,16 @@ static int ContentsDepth = 100;
 static int WrittenContents = 0;
 static char ContentsLocation[256];
 
-void TeXNoContents()
+void TeXNoContents( void )
 {
     WrittenContents = 1;
 }
-char *ContentsLoc( )
+char *ContentsLoc( void )
 {
     if (!WrittenContents) return 0;
     return ContentsLocation;
 }
-void TeXWriteContents( fout )
-FILE *fout;
+void TeXWriteContents( FILE *fout )
 {
     if (WrittenContents) return;
 /* WRtoauxfile( 0, outfile, 0, "Contents" ); */
@@ -3627,3 +3590,63 @@ char *str;
 	}
     }
 }
+
+/* 
+   Notes on handling \" etc.
+   These are tex commands that modify the next character.  They should 
+   be thought of a commands that look at the next argument, which, since
+   it does not start with a {, is a single letter.  The mapping to HTML is
+   (see http://www.hut.fi/~jkorpela/HTML3.2/latin1.html)
+   \"A &Auml;    &#196;
+   \`A &Agrave;  &#192;
+   \`E &Egrave;  &#200;
+   \`I &Igrave;  &#204;
+   \"O &Ouml;    &#214;
+   \`O &Ograve;  &#210;
+   \"U &Uuml;    &#220;
+   \"a &auml;    &#228;
+   \`a &agrave;  &#224;
+   \`e &egrave;  &#232;
+   \`i &igrave;  &#236;
+   \"o &ouml;    &#246;
+   \`o &ograve;  &#242;
+   \"u &uuml;    &#246;
+   \`u &ugrave;  &#249;
+*/
+#ifdef FOO
+// From TeXSkipEnv.  I believe that this code is dead and can 
+// never be executed
+
+	    if (InVerbatim) {
+		if (strcmp( curtok, "end" ) == 0) {
+		    if (DebugCommands)
+			fprintf( stdout, "Getting argument for end{}\n" );
+		    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
+			TeXAbort( "TXSkipEnv", e->name );
+		    /* Check for a user-defined environment type */
+		    if (LookupEnv( curtok, &btext, &etext, &nargs)) {
+			if (etext) {
+			    if (DebugCommands)
+				fprintf( stdout, "Pushing back |%s|\n", etext );
+			    SCPushToken( etext );
+			}
+		    }
+		    else if (strcmp( curtok, name ) != 0) {
+			if (flag) 
+			    fprintf( ferr, 
+     "%s does not match %s (started at line %d)\n", curtok, name, line_num );
+		    }
+		    else {
+			break;
+		    }
+		}
+		else {
+		    if (DestIsHtml)
+			TeXoutstr( fout, "\\" );
+		    else 
+			TeXoutstr( fout, "\\\\" );
+		    TeXoutstr( fout, curtok );
+		}
+	    }
+	    else {
+#endif

@@ -34,8 +34,7 @@ static int isatletter = 0;
 void OverlapCopy( char *, int );
 
 
-void SCSetDebug( flag )
-int flag;
+void SCSetDebug( int flag )
 {
     DebugScan     = flag;
 }
@@ -55,8 +54,7 @@ int (*f)( char *, int );
    character types; for now, we only support changing the '@' character 
    because this is a common operation
  */
-void SCSetAtLetter( flag )
-int flag;
+void SCSetAtLetter( int flag )
 {
     isatletter = flag;
 }
@@ -80,7 +78,7 @@ static int chartype[256];
 #define TEX_SUPERSCRIPT 7
 #define TEX_SUBSCRIPT 8
 
-void SCInitChartype()
+void SCInitChartype( void )
 {
     int i;
     unsigned char c;
@@ -105,10 +103,7 @@ void SCInitChartype()
    A second complication is that if an 'output' token is pushed back, we
    need to return it.  They are marked as TOK_START ... TOK_END .
   */
-int SCTxtFindNextANToken( fp, token, maxtoken, nsp )
-FILE *fp;
-char *token;
-int  maxtoken, *nsp;
+int SCTxtFindNextANToken( FILE *fp, char *token, int maxtoken, int *nsp )
 {
     int fc, c, Nsp;
     char *tf = token;
@@ -172,14 +167,14 @@ int  maxtoken, *nsp;
     *nsp   = Nsp;
     if (c != EOF && SCTranslate)
 	c = (*SCTranslate)( token, maxtoken );
-    if (DebugScan) 
+    if (DebugScan) {
 	fprintf( OUTFILE, "Returning |%s|\n", tf );
+    }
     return fc;
 }
 
 /* Return the next character */
-int SCTxtGetChar( fp )
-FILE *fp;
+int SCTxtGetChar( FILE *fp )
 {
     int fc, c;
     char token[10];
@@ -203,8 +198,21 @@ FILE *fp;
 	if (DebugScan) {
 	    if (c == EOF) 
 		fprintf( OUTFILE, "Returning EOF\n" );
-	    else
-		fprintf( OUTFILE, "Returning char %c\n", c );
+	    else {
+		if (isprint(c)) {
+		    fprintf( OUTFILE, "Returning char %c\n", c );
+		}
+		else if (iscntrl(c)) {
+		    if (c == '\r') 
+			fprintf( OUTFILE, "Returning char \\r\n" );
+		    else if (c == '\n')
+			fprintf( OUTFILE, "Returning char \\n\n" );
+		    else
+			fprintf( OUTFILE, "Returning char ^%c\n", c + 0100 );
+		}
+		else 
+		    fprintf( OUTFILE, "Returning char 0x%x\n", c );
+	    }
 	}
 	if (c == '\n') LineNo[curfile]++;
 	return c;
@@ -276,8 +284,7 @@ char *token;
 }    
 
 /* This pushes a token, surrounded by TOK_START ... TOK_END */
-void SCPushCommand( token )
-char *token;
+void SCPushCommand( char *token )
 {
     int len, i;
 
@@ -319,8 +326,7 @@ void SCSetCommentChar( char c )
 
 
 /* Skip whitespace and newlines until a non-newline is found. */
-void SCSkipNewlines( fp )
-FILE *fp;
+void SCSkipNewlines( FILE *fp )
 {
     int c;
 

@@ -160,10 +160,10 @@ void RdBaseDef( char *infilename )
 		TXCreateDefn( nargs, TXConvertQuotes( value, '\'' ), 1 ) );
 	}
 	else if (strcmp( cmd, "begin-env" ) == 0) {
-	  TXSetEnv( name, TXConvertQuotes( value, '\'' ), (char *)0 );
+	  TXSetEnv( name, TXConvertQuotes( value, '\'' ), (char *)0, nargs );
 	}
 	else if (strcmp( cmd, "end-env" ) == 0) {
-	  TXSetEnv( name, (char *)0, TXConvertQuotes( value, '\'' ) );
+	  TXSetEnv( name, (char *)0, TXConvertQuotes( value, '\'' ), -1 );
 	}
 	else {
 	    fprintf( stderr, "Unknown command %s in definitions file\n", cmd );

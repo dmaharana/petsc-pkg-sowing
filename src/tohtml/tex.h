@@ -108,7 +108,7 @@ extern char HTML_Suffix[5];
 extern char DirSep;
 extern char DirSepString[2];
 extern int  DoDosFileNewlines;
-extern char NewLineString[3];
+extern char NewLineString[4];
 
 /* Table, Figure, and Equation numbering.
 
@@ -159,6 +159,7 @@ extern char LbraceChar;      /* often { */
 extern char RbraceChar;      /* often } */
 extern char ArgChar;         /* often # */
 extern char AlignChar;       /* often & */
+extern char ActiveChar;      /* often ~ */
 
 /* General globals */
 extern int  DebugCommands;
@@ -209,6 +210,7 @@ extern void TXStartNumberedEnv ( char * );
 extern void TXcaptionHandling ( TeXEntry * );
 extern void TXcaption ( TeXEntry * );
 extern void TeXSetEnvJump ( char * );
+extern void TeXSetEnv( char *, char *, char *, int );
 
 /* label.c */
 extern void InsertLabel ( int, char *, char * );
@@ -217,7 +219,7 @@ extern void ReplaceWhite ( char * );
 
 /* math.c */
 extern void TeXskipMath ( TeXEntry *, char *, int );
-extern void TXProcessDollar ( TeXEntry *, int );
+extern void TXProcessDollar ( TeXEntry *, int, int );
 
 /* rdaux.c */
 extern void OpenAuxFile ( char * );

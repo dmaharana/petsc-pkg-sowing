@@ -281,35 +281,42 @@ void TeXNewAlignCol( void )
     HTabularRow *hrow;
     char buf[256], *align_str;
 
-    hrow = (HTabularRow *)(lstack[lSp].extra_data);
-    switch (hrow->coltype[hrow->curcol]) {
-    case TAB_LEFT: align_str = "\"LEFT\""; break;
-    case TAB_RIGHT: align_str = "\"RIGHT\""; break;
-    default: align_str = "\"CENTER\""; break;
+    if (lstack[lSp].env == TXTABULAR) {
+	hrow = (HTabularRow *)(lstack[lSp].extra_data);
+	switch (hrow->coltype[hrow->curcol]) {
+	case TAB_LEFT: align_str = "\"LEFT\""; break;
+	case TAB_RIGHT: align_str = "\"RIGHT\""; break;
+	default: align_str = "\"CENTER\""; break;
+	}
+	sprintf( buf, "<TD ALIGN=%s>", align_str );
+	TeXoutcmd( fpout, buf );
+	hrow->curcol++;
     }
-    sprintf( buf, "<TD ALIGN=%s>", align_str );
-    TeXoutcmd( fpout, buf );
-    hrow->curcol++;
 }
 
 void TeXPutAlign( void )
 {
     HTabularRow *hrow;
 
-    hrow = (HTabularRow *)(lstack[lSp].extra_data);
-    TeXoutcmd( fpout, "</TD>" );
-    TeXNewAlignCol( );
-    hrow->curcol++;
+    if (lstack[lSp].env == TXTABULAR) {
+	hrow = (HTabularRow *)(lstack[lSp].extra_data);
+	TeXoutcmd( fpout, "</TD>" );
+	/* Only generate this if the next command is *not* multicolumn */
+	TeXNewAlignCol( );
+	hrow->curcol++;
+    }
 }
 
 void TeXEndHalignRow( void )
 {
     HTabularRow *hrow;
 
-    hrow = (HTabularRow *)(lstack[lSp].extra_data);
-    TeXoutcmd( fpout, "</TD></TR>\n<TR>" );
-    hrow->curcol = 0;
-    TeXNewAlignCol( );
+    if (lstack[lSp].env == TXTABULAR) {
+	hrow = (HTabularRow *)(lstack[lSp].extra_data);
+	TeXoutcmd( fpout, "</TD></TR>\n<TR>" );
+	hrow->curcol = 0;
+	TeXNewAlignCol( );
+    }
 }
 
 void TeXBeginHalignTable( void )
@@ -329,3 +336,47 @@ void TeXEndHalignTable( void )
 /* Must redefine \\ while in tabular */
 
 /* We can handle multicol with the colspan="n" in the TD element */
+/* The latex \multicolumn has this meaning:
+      \multicolumn{#columns}{positioning}{text}
+   where positioning is the ALIGN value: l, r, c.
+
+   This isn't quite right, because we generate the <TD ALIGN=xxx> too early.
+   
+ */
+void TXmulticolumn( TeXEntry *e )
+{
+    HTabularRow *hrow;
+    char buf[256], *align_str;
+    int colcount;
+    char aligntype;
+
+    if (lstack[lSp].env == TXTABULAR) {
+	hrow = (HTabularRow *)(lstack[lSp].extra_data);
+	PUSHCURTOK;
+	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
+	    TeXAbort( "TXmulticolumn", e->name );
+	/* Find column count */
+	colcount = atoi( curtok );
+
+	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
+	    TeXAbort( "TXmulticolumn", e->name );
+	/* Find alignment type */
+	switch (curtok[0]) {
+	case 'l': align_str = "\"LEFT\"";   break;
+	case 'r': align_str = "\"RIGHT\"";  break;
+	default:  align_str = "\"CENTER\""; break;
+	}
+	POPCURTOK;
+	
+	sprintf( buf, "<TD ALIGN=%s COLSPAN=%d>", align_str, colcount );
+	TeXoutcmd( fpout, buf );
+	hrow->curcol += colcount;
+    }
+}
+
+void InitTabular( void )
+{
+    /* Don't uncomment this until multicolumn works correctly with the 
+       other alignments */
+/*    TXInsertName( TeXlist, "multicolumn", TXmulticolumn, 3, (void *)0 ); */
+}

@@ -68,8 +68,7 @@ int TXReadDimen( FILE *fin )
     return 0;
 }
 
-void TXdimen( e )
-TeXEntry *e;
+void TXdimen( TeXEntry *e )
 {
     int ch, nsp;
 
@@ -105,8 +104,7 @@ TeXEntry *e;
 }
 
 /* Process things like \penalty 1000 */
-void TXnumber( e )
-TeXEntry *e;
+void TXnumber( TeXEntry *e )
 {
     int ch, nsp;
 
@@ -115,8 +113,7 @@ TeXEntry *e;
 }
 
 /* Process things like \hangafter=1 */
-void TXcounter( e )
-TeXEntry *e;
+void TXcounter( TeXEntry *e )
 {
     int ch, nsp;
     ch = SCTxtFindNextANToken( fpin[curfile], dimentoken, MAX_TOKEN, &nsp );
@@ -129,8 +126,7 @@ TeXEntry *e;
 /*
    Handle \advance\name [by] dimen
  */
-void TXadvance( e )
-TeXEntry *e;
+void TXadvance( TeXEntry *e )
 {
     int ch, nsp;
 
