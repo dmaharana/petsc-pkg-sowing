@@ -1,0 +1,11 @@
+\documentclass{article}
+\newenvironment{funcdef}[1]{\begingroup #1}{\endgroup}
+\begin{document}
+\begin{funcdef}{foo(a,b,c)}
+\funcarg{in}{a}{who cares}
+\end{funcdef}
+\begin{tabular}{lll}
+\multicolumn{3}{c}{Header}\\
+col1&col2&col3
+\end{tabular}
+\end{document}

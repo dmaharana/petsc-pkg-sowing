@@ -3,10 +3,11 @@ ALL: inplace subfiles
 inplace: test1.html test2.html test3.html test4.html test6.html test7.html \
 	test7a.html \
 	test8.html test9.html test10.html test11.html test12.html test13.html \
-	test14.html test15.html test16.html test17.html test18.html 
+	test14.html test15.html test16.html test17.html test18.html \
+	test20.html ../tohtml
 	touch inplace
 subfiles: test1/test1.html test2/test2.html test3/test3.html test4/test4.html \
-	test6/test6.html test7/test7.html
+	test6/test6.html test7/test7.html ../tohtml
 	touch subfiles
 
 # Inplace option
@@ -53,7 +54,8 @@ test17.html: test17.tex
 	../tohtml test17.tex
 test18.html: test18.tex
 	../tohtml test18.tex
-
+test20.html: test20.tex
+	../tohtml -latex test20.tex
 # default
 test1/test1.html: test1.tex
 	../tohtml -default test1.tex
@@ -117,8 +119,9 @@ compare:
 	done
 
 clean:
-	-/bin/rm -rf test[1-9] test1[0-9]
+	-/bin/rm -rf test[1-9] test1[0-9] test2[0-9]
 	-/bin/rm -f test[1-9].html latex.err up.xbm down.xbm. next.xbm
-	-/bin/rm -f test1[0-9].html
+	-/bin/rm -f test1[0-9].html test2[0-9].html 
+	-/bin/rm -f test[0-9].htm test[1-2][0-9].htm
 	-/bin/rm -f previous.xbm *.hux img*.xbm
 	-/bin/rm -f inplace subfiles
