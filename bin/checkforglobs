@@ -17,6 +17,15 @@ $print_full_line = 0;
 	     "execer_" => 1, "p2p_" => 1, "MPD_" => 1, "BNR_" => 1,
 	     "bnr_" => 1, "mpd_" => 1 );
 
+%MPICH2Leaders = ( "MPID_" => 1, "MPIR_" => 1, "mpir_" => 1, "MPI_" => 1, 
+	       "MPIU_" => 1, "MPIDI_" => 1, 
+	     "PMPI_" => 1, "mpi_"  => 1, "pmpi_" => 1, 
+	     "ADIO_" => 1, "MPIO_" => 1, "PMPIO_" => 1,
+	     "ADIOI_"=> 1, "MPIOI_" => 1, "pmpio_" => 1, 
+		  "PMI_" => 1, "PMIU_" => 1, 
+		  );
+
+
 @MPINonConformLeaders = ( "alogf", "mpipriv", "XB", "MPICH", "CLOG" );
 
 %PETScLeaders = ( "Petsc_" => 1, "PETSC_" => 1, "VIEWER_" => 1, 
@@ -58,6 +67,14 @@ foreach $_ (@ARGV) {
     elsif (/-debug/) {
 	$debug = 1;
     }
+    elsif (/-exclude=(.*)/) {
+	# Ignore this filename
+	$excludeFilenames{$1} = 1;
+    }
+    elsif (/-mpich2/) {
+	%Leaders = %MPICH2Leaders;
+	@NonConformLeaders = @MPINonConformLeaders;
+    }
     elsif (/-mpich/) {
 	%Leaders = %MPILeaders;
 	@NonConformLeaders = @MPINonConformLeaders;
@@ -93,6 +110,9 @@ sub CheckLibForGlobs {
 	$found_match = 0;
 	if (/(.*):/) {
 	    $filename = $1;
+	}
+	if (defined($excludeFilenames{$filename})) {
+	    next;
 	}
 	if ($is_solaris) {
 	    if ( /\|GLOB/ && ! /\|UNDEF/) {
