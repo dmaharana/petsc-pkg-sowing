@@ -56,12 +56,12 @@
      \setbox\@tempboxa\hbox{\bf #1}%
      \ifdim \the\wd\@tempboxa > 1in 
      \hbox to \hsize{\vtop{\box\@tempboxa}\hss}
-     \hbox to \hsize{\hskip1in\vtop{\hsize = 5in \vtop{\noindent #2\par}\hfil}}
-     \vspace{2pt}% This isn't correct, but something is needed here.
+     \hbox to \hsize{\hskip1in\vtop{\hsize = 5in \vtop{\noindent #2\par}\hfil}\hfil}
+     %\vspace{3pt}% This isn't correct, but something is needed here.
      \else
      \hbox to \hsize{\vtop{\hbox to 1in{\bf #1\hfil}}%
                      \vtop{\hbox to 5in{%
-                        \hsize = 5in\vtop{\noindent #2\par}\hfil}}}%
+                        \hsize = 5in\vtop{\noindent #2\par}\hfil}}\hfill}%
      \fi}
 %
 % \file{name}
