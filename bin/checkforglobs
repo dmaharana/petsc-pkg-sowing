@@ -5,11 +5,14 @@ $debug = 0;
 $print_full_line = 0;
 # Load up a hash with known leaders
 %MPILeaders = ( "MPID_" => 1, "MPIR_" => 1, "mpir_" => 1, "MPI_" => 1, 
+	       "MPIU_" => 1, 
 	     "PMPI_" => 1, "mpi_"  => 1, "pmpi_" => 1, 
 	     "p4_"   => 1, "ADIO_" => 1, "MPIO_" => 1, "PMPIO_" => 1,
 	     "SLOG_" => 1, "MPE_"  => 1, "mpe_"  => 1, "CLOG_" => 1,
+	       "C2S1_" => 1, 
 	     "ADIOI_"=> 1, "usc_"  => 1, "xx_"   => 1, "mpi1_" => 1,
 	     "mpi2_" => 1, "MPIOI_" => 1, "pmpio_" => 1, "MD_" => 1,
+	       "mpiexec_" => 1, 
 	     "mpdlib_" => 1, "slog_" => 1, "TR_" => 1, 
 	     "execer_" => 1, "p2p_" => 1, "MPD_" => 1, "BNR_" => 1,
 	     "bnr_" => 1, "mpd_" => 1 );
