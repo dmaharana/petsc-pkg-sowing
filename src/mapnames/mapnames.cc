@@ -25,6 +25,19 @@
    -inhtml          - Input is HTML.  Name mapping won't happen within HTML
                       constructions (e.g., between < and >)
  */
+
+class TextOutMapLatex : public TextOutMap {
+
+    public:
+    TextOutMapLatex( TextOut *a, int b ) :TextOutMap( a, b ) {};
+/*
+    TextOutMapLatex( TextOut *, int, int );
+    TextOutMapLatex( );
+    ~TextOutMapLatex();
+*/
+    virtual int PutLink( const char *, SrEntry * );
+};
+
 int main( int argc, char **argv )
 {
     InStream  *ins, *mapins;
@@ -83,7 +96,13 @@ int main( int argc, char **argv )
     /* Get the mapping file from the command line */
     while (!cmd->GetArgPtr( "-map", &mappath )) {
       if (!map) {
-	map = new TextOutMap( 0, pflag );
+	  if (!cmd->HasArg( "-latexout" )) {
+	      map = new TextOutMapLatex( 0, pflag );
+	      /* printf( "Using latex output\n" ); */
+	  }
+	  else {
+	      map = new TextOutMap( 0, pflag );
+	  }
       }
       mapins = new InStreamFile( mappath, "r" );
       if (mapins->status) {
@@ -136,3 +155,26 @@ int main( int argc, char **argv )
     //delete echo;
     return 0;
 }
+
+/* 
+   The following lets us output LaTeX instead of HTML 
+ */ 
+
+typedef struct {
+    char *repname;
+    char *url;
+    } MapData;
+
+int TextOutMapLatex::PutLink( const char *name, SrEntry *entry )
+{
+    MapData *info = (MapData *)entry->extra_data;
+    next->PutToken( 0, "\\href{" );
+    next->PutToken( 0, info->url );
+    next->PutToken( 0, "}{" );
+    next->PutToken( 0, info->repname );
+    next->PutToken( 0, "}" );
+    return 0;
+}
+
+
+/* */
