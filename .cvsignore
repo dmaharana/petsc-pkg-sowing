@@ -1,4 +1,5 @@
 config.log
+autom4te*.cache
 make.log
 *.log
 config.status
