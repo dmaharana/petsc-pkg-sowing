@@ -161,7 +161,7 @@ if test "$haveuname" != 1 -o "$havegethostbyname" != 1 ; then
     AC_CHECK_HEADERS(sys/systeminfo.h)
     #
     # getdomainname is special BECAUSE IT MAY BE USELESS (!Network computing 
-    # indeed - stuff like this is why Windows95/NT WILL WIN). 
+    # indeed - stuff like this is why Windows2000/NT WILL WIN). 
     # We don't even check for it.
 fi
 dnl
