@@ -129,6 +129,7 @@ sub CheckLibForGlobs {
 	if ($is_irix) {
 	    s/^[^\s]*//g;
 	}
+	print $_ if $debug;
 	if ($is_solaris) {
 	    if ( /\|GLOB/ && ! /\|UNDEF/) {
 		# For solaris, the name is the LAST item that starts with |
@@ -137,15 +138,23 @@ sub CheckLibForGlobs {
 		$found_match = 1;
 	    }
 	}
-	elsif(/[0-9A-Fa-f]*\s[TC]\s\s*(.*)/) {
-	    $symbol = $1;
+	elsif(/[0-9A-Fa-f]*\s([TC])\s+(.*)/) {
+	    $symtype = $1;
+	    $symbol = $2;
 	    $found_match = 1;
 	}
+
 	if ($found_match) {
 	    # Symbol head MUST include a trailing _
 	    ($symbol_head) = ($symbol =~ /^([^_]*_)/);
 	    print "Symbol head = [$symbol_head]\n" if $debug;
 	    print "$Leaders{$symbol_head}\n" if $debug;
+	    #
+	    # Here is a good place to check for common (uninitialized) 
+	    # symbols
+	    if ($symtype eq "C") {
+		print "$filename: $symtype\t$symbol\n";
+	    }
 	    if (defined($Leaders{$symbol_head})) { next; }
 	    $found_match=0;
 	    foreach $name (@NonConformLeaders) {
