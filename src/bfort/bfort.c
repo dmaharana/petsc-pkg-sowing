@@ -1128,10 +1128,10 @@ char      *name;
 	    }
 	    args[i]		     = narg;
 	    args[i].type	     = ntypes-1;
-	    args[i].implied_star = curtype->implied_star;
+	    args[i].implied_star     = curtype->implied_star;
 	    args[i].is_char	     = curtype->is_char;
 	    args[i].is_FILE	     = curtype->is_FILE;
-	    args[i].is_native    = curtype->is_native;
+	    args[i].is_native        = curtype->is_native;
 	    if (curtype->type_has_star)
 		args[i].has_star++;
 	    if (args[i].is_char)
