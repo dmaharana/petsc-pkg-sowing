@@ -75,6 +75,7 @@ install:
 	$(INSTALL_DATA)    share/html.def $(datadir)/html.def
 	$(INSTALL_DATA)    share/latex.def $(datadir)/latex.def
 	$(INSTALL_DATA)    share/nroff.def $(datadir)/nroff.def
+	$(INSTALL_DATA)    share/refman.def $(datadir)/refman.def
 	$(INSTALL_DATA)    share/refman.sty $(datadir)/refman.sty
 	$(INSTALL_DATA)    share/doctext/html.def $(datadir)/doctext/html.def
 	$(INSTALL_DATA)    share/doctext/htmltabl.def $(datadir)/doctext/htmltabl.def

@@ -8,6 +8,7 @@
 
 class OutStreamMap : public OutStream {
     
+ protected:
     char breaktable[256];
     char *activetok, *position;
     int  curlen, maxlen;
@@ -17,7 +18,7 @@ class OutStreamMap : public OutStream {
     void Setup( int );
     void FlushTokBuf( void );
 
-    public:
+ public:
     OutStreamMap( OutStream * );
     OutStreamMap( OutStream *, int );
     OutStreamMap( OutStream *, int, int );
@@ -35,7 +36,8 @@ class OutStreamMap : public OutStream {
 
 // We also need a TextOut version
 class TextOutMap : public TextOut {
-    
+
+ protected:    
     char breaktable[256];
     char *activetok, *position;
     int  curlen, maxlen;
@@ -45,7 +47,7 @@ class TextOutMap : public TextOut {
     void Setup( int );
     void FlushTokBuf( void );
 
-    public:
+ public:
     int  debug;
     TextOutMap( TextOut *, int );
     TextOutMap( TextOut * );
@@ -55,7 +57,7 @@ class TextOutMap : public TextOut {
     int PutToken( int, const char * );
     int PutQuoted( int, const char * );
     int PutNewline( void );
-    int PutLink( const char *, SrEntry * );
+    virtual int PutLink( const char *, SrEntry * );
     int SetRegisterValue( int, const char * );
     int ReadMap( InStream * );
     };
