@@ -68,10 +68,18 @@ int flag;
 static int chartype[256];
 
 /* Initialize the chartype array */
+/* Currently unused ?? */
 /* Should change to use TeX's numbers */
 #define TEX_LETTER 1
 #define TEX_NUMBER 2
+
 #define TEX_OTHER  12
+#define TEX_ALIGN 4
+#define TEX_ACTIVE 13
+#define TEX_COMMENT 14
+#define TEX_SUPERSCRIPT 7
+#define TEX_SUBSCRIPT 8
+
 void SCInitChartype()
 {
     int i;

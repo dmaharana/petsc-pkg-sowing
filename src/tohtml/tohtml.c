@@ -166,6 +166,10 @@ int main( int argc, char *argv[] )
 	TXSetLatexUnknown( 1 );
     if (SYArgHasName( &argc, argv, 1, "-cvttables" ))
 	TXSetLatexTables( 1 );
+    if (SYArgHasName( &argc, argv, 1, "-htables" )) {
+	HandleAlign = 1;
+	TXSetLatexTables( 0 );
+    }
     if (SYArgHasName( &argc, argv, 1, "-cvtmath" ))
 	TXSetLatexMath( 1 );
 

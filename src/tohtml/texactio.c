@@ -116,6 +116,9 @@ int imageno	            = 0;
 /* Set LatexAgain to 0 if you want to use the old img files */
 int LatexAgain       = 1;    
 
+/* Set to 1 to generate HTML for tabular environments */
+int HandleAlign      = 0;
+
 int TableNumber = 0, FigureNumber = 0, EquationNumber = 0;
 int NumberedEnvironmentType = ENV_NONE;
 char *envjumpname = 0;
@@ -191,7 +194,6 @@ FILE   *(fpin[10]) = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 FILE   *fpout;
 char   *outfile = 0;
 
-#define MAX_TEX_STACK 20    
 TeXStack stack[MAX_TEX_STACK];
 static int texSp = -1;
 LaTeXStack lstack[MAX_TEX_STACK];    
@@ -217,6 +219,7 @@ char CommentChar     = '%';
 char LbraceChar      = '{';
 char RbraceChar      = '}';
 char ArgChar         = '#';
+char AlignChar       = '&';
 
 /* Special user commands */
 char *UserIndexName = 0;
@@ -754,9 +757,19 @@ TeXEntry *e;
     PUSHCURTOK;
     TXRemoveOptionalArg( curtok );
     POPCURTOK;
-    TXbw2( e );
+    if (HandleAlign && lstack[lSp].env == TXTABULAR)
+	TeXEndHalignRow();
+    else
+	TXbw2( e );
 }
 
+void TXnewline( TeXEntry *e )
+{
+    PUSHCURTOK;
+    TXRemoveOptionalArg( curtok );
+    POPCURTOK;
+    TXbw2( e );
+}
 /* generate the date.  Probably not in the expected format */
 void TXtoday( e )
 TeXEntry *e;
@@ -1610,6 +1623,10 @@ void TeXskipEnv( TeXEntry *e, char *name, int flag )
 	    TeXoutsp( fout, nsp );
 	    TXProcessDollar( e, LatexMath );
 	}
+	else if (ch == AlignChar && HandleAlign && 
+		 lstack[lSp].env == TXTABULAR) {
+	    TeXPutAlign();
+	}
 	else if (ch == CommandChar) {
 	    last_was_nl  = 0;
 	    TeXoutsp( fout, nsp );
@@ -1954,6 +1971,7 @@ TeXEntry *e;
     lstack[lSp].label_node_name = 0;
     lstack[lSp].label_text	    = 0;
     lstack[lSp].line_num = LineNo[curfile];
+    lstack[lSp].extra_data = 0;
     TXbitemize( e );
     TeXskipEnv( e, "itemize", 1 );
     TXeitemize( e );
@@ -1972,6 +1990,7 @@ TeXEntry *e;
     lstack[lSp].label_node_name = 0;
     lstack[lSp].label_text	    = 0;
     lstack[lSp].line_num = LineNo[curfile];
+    lstack[lSp].extra_data = 0;
     TXbenumerate( e );
     TeXskipEnv( e, "enumerate", 1 );
     TXeenumerate( e );
@@ -1990,6 +2009,7 @@ TeXEntry *e;
     lstack[lSp].label_node_name = 0;
     lstack[lSp].label_text	    = 0;
     lstack[lSp].line_num = LineNo[curfile];
+    lstack[lSp].extra_data = 0;
     TXbdescription( e );
     TeXskipEnv( e, "description", 1 );
     TXedescription( e );
@@ -2015,6 +2035,7 @@ char     *itemtext, *itemcommands;
     lstack[lSp].label_node_name	= 0;
     lstack[lSp].label_text	= 0;
     lstack[lSp].line_num        = LineNo[curfile];
+    lstack[lSp].extra_data = 0;
 /* May want description instead of itemize */
 /* TXbitemize( e ); */
     TeXskipEnv( e, "list", 1 );
@@ -2067,6 +2088,7 @@ TeXEntry *e;
     lstack[lSp].label_node_name = 0;
     lstack[lSp].label_text	    = 0;
     lstack[lSp].line_num    = LineNo[curfile];
+    lstack[lSp].extra_data = 0;
 
 /* Verbatim has no comments! */
 /*
@@ -2225,7 +2247,19 @@ TeXEntry *e;
     else if (strcmp( curtok, "tiny" ) == 0) TeXBenign( e, "tiny" );
 #endif
     else if (!LatexTables && (strcmp( curtok, "tabular" ) == 0))
-	TeXtabular( e );
+	if (HandleAlign) {
+	    lstack[++lSp].env = TXTABULAR;
+	    lstack[lSp].newline = TeXoutNewline;
+	    lstack[lSp].line_num = LineNo[curfile];
+	    lstack[lSp].extra_data = 0;
+	    TeXGetTabularDefn();
+	    TeXBeginHalignTable();
+	    TeXBenign( e, "tabular" );
+	    TeXEndHalignTable();
+	}
+	else {
+	    TeXtabular( e );
+	}
     else if (strcmp( curtok, "document" ) == 0) {
 	InDocument = 1;
 	TXStartDoc(1);
@@ -2344,10 +2378,23 @@ TeXEntry *e;
     POPCURTOK;
 } 	
 
-void TXend( e )
-TeXEntry *e;
+void TXend( TeXEntry *e )
 {
-/* Finish processing of an environment */
+    PUSHCURTOK;
+    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
+	TeXAbort( "TXend", e->name );
+    /* Finish processing of an environment */
+    if (lstack[lSp].env == TXTABULAR) {
+	if (strcmp( "tabular", curtok ) != 0) {
+	    fprintf( stderr, "Saw end{%s} but expected tabular\n", curtok );
+	}
+	else {
+	    TeXEndHalignTable();
+	    FREE( lstack[lSp].extra_data );
+	    lSp--;
+	}
+    }
+    POPCURTOK;
 }
 
 void TXitem( TeXEntry *e )
@@ -3277,10 +3324,10 @@ FILE *fin, *fout;
     TXInsertName( TeXlist, "item", TXitem, 1, (void *)0 );
     /* TXInsertName( TeXlist, "bitmap", TXbitmap, 1, (void *)0 ); */
     TXInsertName( TeXlist, "\\", TXdoublebw, 0, (void *)0 );
-    TXInsertName( TeXlist, "newline", TXdoublebw, 0, (void *)0 );
+    TXInsertName( TeXlist, "newline", TXnewline, 0, (void *)0 );
 /* Note that a \linebreak can have an optional argument (the desirability
    of a line break) */
-    TXInsertName( TeXlist, "linebreak", TXdoublebw, 0, (void *)0 );
+    TXInsertName( TeXlist, "linebreak", TXnewline, 0, (void *)0 );
     TXInsertName( TeXlist, "bw", TXbw, 0, (void *)0 );
     TXInsertName( TeXlist, "back", TXbw, 0, (void *)0 );
 
@@ -3308,7 +3355,7 @@ FILE *fin, *fout;
     if (!DestIsHtml)
 	TXInsertName( TeXlist, "par", TXname, 0, TXCopy("par") );
     else
-	TXInsertName( TeXlist, "par", TXdoublebw, 0, (void *)0 );
+	TXInsertName( TeXlist, "par", TXnewline, 0, (void *)0 );
     
     if (DestIsHtml) {
 	char buf[10];
@@ -3497,6 +3544,9 @@ FILE *fin, *fout;
 #ifdef FOO    	
 	    pop stack;
 #endif
+	}
+	else if (ch == AlignChar && HandleAlign) {
+	    TeXPutAlign();
 	}
 	else {
 	    /*

@@ -4,11 +4,38 @@
 #include "tex.h"
 
 /*
-    This file provides simple handling of tabular environments
+    This file provides simple handling of tabular environments.
+
+    There are two versions. The first, oldest version simply processes
+    an entire tabular enviroment, attempting to build a single table 
+    using a preformatted environment.  This was designed for HTML version 1,
+    along with Microsoft RTF, neither of which provided any native support 
+    for tables.
+
+    In the second version (under construction), we allow the use of
+    HTML table tags.  HTML tables aren't as flexible as TeX tables, so this
+    may not always do what you want.  But for many tables, it is superior to 
+    using GIF images created from the TeX.
+
+    The algorithm (designed for LaTeX) is:
+
+    Read tabular; get l, r, c, |, or p commands.  Generate a description of 
+    the row (struct HTabRow { int ncols; align_t *align ; }), and add 
+    the tabular environment to the environment stack.  The current column 
+    number is set to 0 (0-origin indexing).
+
+    Each alignment character (& by default) finishes the previous column
+    and begins the next; the corresponding HTabRow is read to generate the
+    relevant HTML.  A \cr or \\ command finishes a column and row, and begins 
+    the next row.  An \end{tabular} ends finishes a column and row, and 
+    pops the tabular environment.
  */
-/* extern int (*SCSetTranslate ANSI_ARGS(()))ANSI_ARGS(()); */
+/* extern int (*SCSetTranslate ())(); */
 
 #define MAX_CELLS 20
+typedef enum { TAB_LEFT, TAB_RIGHT, TAB_CENTER, TAB_PARAGRAPH, TAB_VBAR } 
+        align_t;
+
 typedef struct _TabularRow {
     struct _TabularRow *next;	
     char               **cell;
@@ -22,6 +49,12 @@ struct {
     TabularRow *Rows;
     } Table;
 
+typedef struct {
+    int ncols;
+    int curcol;
+    align_t coltype[MAX_CELLS];
+} HTabularRow;
+
 static char curcell[MAX_TOKEN];
 static char ltoken[MAX_TOKEN];
 static int DebugTab = 0;
@@ -29,7 +62,50 @@ static int DebugTab = 0;
 /*
   Get the {...} argument, look for l, r, c, p{...} commands
   Get lines, looking for & (separate cols) and \\ (separate rows)
+  */
+static int Ncell = 0;
 
+void TeXGetTabularDefn( void )
+{
+    int         ncell;
+    char        *p;
+    HTabularRow *hrow;
+
+    hrow = (HTabularRow *)MALLOC( sizeof(HTabularRow) );  CHKPTR(hrow);
+
+    ncell = 0;
+    TeXGetArg( fpin[curfile], ltoken, MAX_TOKEN );
+    p = ltoken;
+    while (*p) {
+	switch (*p) {
+	case 'l': hrow->coltype[ncell++] = TAB_LEFT; break;
+	case 'r': hrow->coltype[ncell++] = TAB_RIGHT; break;
+	case 'c': hrow->coltype[ncell++] = TAB_CENTER; break;
+	case 'p': hrow->coltype[ncell++] = TAB_PARAGRAPH; 
+	    /* Skip size argument for now for paragraph */
+	    if (p[1] == '{') {
+		p++;
+		while (*p && *p != '}') p++;
+	    }
+	    break;
+	case '|': break;   /* Ignore borders for now */
+	default:
+	}
+	p++;
+    }
+
+    if (lstack[lSp].env == TXTABULAR) {
+	lstack[lSp].extra_data = hrow;
+	hrow->curcol = 0;
+	hrow->ncols  = ncell;
+    }
+    else {
+	Ncell = ncell;
+	FREE( hrow );
+    }
+}
+
+/*
   At \end{tabular}, format as "preformatted", using the colwid and coltype
   to format each cell.
 
@@ -44,21 +120,15 @@ TeXEntry *e;
     int  ncell;
     TabularRow *row, *next;
     char *p;
-    int  (*savef) ANSI_ARGS(( char *, int ));
+    int  (*savef) ( char *, int );
 
     lastInArg = InArg;
     InArg     = 1;
-    ncell = 0;
-    TeXGetArg( fpin[curfile], ltoken, MAX_TOKEN );
-    p = ltoken;
-    while (*p) {
-	if (*p == '{') while (*p && *p != '}') p++;
-	else if (*p == 'l') ncell++;
-	else if (*p == 'r') ncell++;
-	else if (*p == 'c') ncell++;
-	else if (*p == 'p') ncell++;
-	p++;
-    }
+    
+    TeXGetTabularDefn();
+    /* Horrible temp hack */
+    ncell = Ncell;
+
     Table.ncols = ncell;
     Table.Rows  = 0;
     for (i=0; i<ncell; i++) {
@@ -66,7 +136,7 @@ TeXEntry *e;
     }
 
 /* Needs to change for non-html output */
-    savef = SCSetTranslate( (int (*)ANSI_ARGS(( char *, int )))0 ); 
+    savef = SCSetTranslate( (int (*)( char *, int ))0 ); 
                             /*  SCHTMLTranslateTables ); */
 
     p     = curcell;
@@ -200,3 +270,58 @@ TeXEntry *e;
    (a) c, r, l type
    (b) p type
  */
+
+/* HTML Versions */
+void TeXNewAlignCol( void )
+{
+    HTabularRow *hrow;
+    char buf[256], *align_str;
+
+    hrow = (HTabularRow *)(lstack[lSp].extra_data);
+    switch (hrow->coltype[hrow->curcol]) {
+    case TAB_LEFT: align_str = "\"LEFT\""; break;
+    case TAB_RIGHT: align_str = "\"RIGHT\""; break;
+    default: align_str = "\"CENTER\""; break;
+    }
+    sprintf( buf, "<TD ALIGN=%s>", align_str );
+    TeXoutcmd( fpout, buf );
+    hrow->curcol++;
+}
+
+void TeXPutAlign( void )
+{
+    HTabularRow *hrow;
+
+    hrow = (HTabularRow *)(lstack[lSp].extra_data);
+    TeXoutcmd( fpout, "</TD>" );
+    TeXNewAlignCol( );
+    hrow->curcol++;
+}
+
+void TeXEndHalignRow( void )
+{
+    HTabularRow *hrow;
+
+    hrow = (HTabularRow *)(lstack[lSp].extra_data);
+    TeXoutcmd( fpout, "</TD></TR>\n<TR>" );
+    hrow->curcol = 0;
+    TeXNewAlignCol( );
+}
+
+void TeXBeginHalignTable( void )
+{
+    HTabularRow *hrow;
+    hrow = (HTabularRow *)(lstack[lSp].extra_data);
+    hrow->curcol = 0;
+    TeXoutcmd( fpout, "<TABLE><TR>" );
+    TeXNewAlignCol( );
+}
+
+void TeXEndHalignTable( void )
+{
+    TeXoutcmd( fpout, "</TD></TR></TABLE>\n" );
+}
+
+/* Must redefine \\ while in tabular */
+
+/* We can handle multicol with the colspan="n" in the TD element */

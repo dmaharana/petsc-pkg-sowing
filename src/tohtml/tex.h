@@ -21,7 +21,7 @@ typedef struct _TeXEntry {
 
 /* The latex stack */
 typedef enum { TXITEMIZE, TXDESCRIPTION, TXEXAMPLE, TXVERBATIM, TXENUMERATE,
-	       TXLIST } 
+	       TXLIST, TXTABULAR } 
         EnvType;
 typedef struct {
     EnvType env;
@@ -37,7 +37,13 @@ typedef struct {
     char   *label_text;      /* Text to use in refering to the label */
     /* This is used to keep track of where an environment started */
     int    line_num;
+    /* Special data for processing an environment */
+    void   *extra_data;
     } LaTeXStack;
+
+#define MAX_TEX_STACK 20    
+extern LaTeXStack lstack[MAX_TEX_STACK];
+extern int    lSp;
 
 extern int    curfile;
 extern FILE *(fpin[10]);  /* Input file stack */
@@ -94,6 +100,9 @@ extern int imageno;
 /* Set LatexAgain to 0 if you want to use the old img files */
 extern int LatexAgain;
 
+/* Set to 1 if using HTML table commands */
+extern int HandleAlign;
+
 /* Use these to change to DOS-style names */
 extern char HTML_Suffix[5];
 extern char DirSep;
@@ -149,6 +158,7 @@ extern char CommentChar;     /* often % */
 extern char LbraceChar;      /* often { */
 extern char RbraceChar;      /* often } */
 extern char ArgChar;         /* often # */
+extern char AlignChar;       /* often & */
 
 /* General globals */
 extern int  DebugCommands;
