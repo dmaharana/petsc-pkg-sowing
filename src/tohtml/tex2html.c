@@ -33,23 +33,19 @@ static char buf[40];
 static int InDocument = 0;
 
 
-void TXDoGaudy( flag )
-int flag;
+void TXDoGaudy( int flag )
 {
     DoGaudy = flag;
 }
 
-void TXStartDoc( flag )
-int flag;
+void TXStartDoc( int flag )
 {
     InDocument = flag;
 }
 
 /* Note that once preformatted is switched on, new lines become "real".  Thus,
    we must suppress the "extra" newlines when in preformatted mode */
-void TXpreformated( fout, flag )
-FILE *fout;
-int  flag;
+void TXpreformated( FILE *fout, int flag )
 {
     IsPreformatted = flag;
     if (!InDocument || !InOutputBody) return;
@@ -125,8 +121,7 @@ void TXoutbullet( TeXEntry *e )
    Font changes may not be in groups.  For example, \tt ... \em ... \bf.
    In this case, we must end the previous font by undoing the last font.
  */
-void TXbf( e )
-TeXEntry *e;
+void TXbf( TeXEntry *e )
 {
 /* output start of BoldFace */
     if (!InDocument || !InOutputBody) return;
@@ -139,8 +134,7 @@ TeXEntry *e;
     LastFont     = "b";
 }
 
-void TXem( e )
-TeXEntry *e;
+void TXem( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;
 /* output start of Emphasis (italics) */
@@ -153,8 +147,7 @@ TeXEntry *e;
     LastFont     = "em";
 }
 
-void TXsf( e )
-TeXEntry *e;
+void TXsf( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;
 /* output start of Sans-serif (use rm for html) */
@@ -172,8 +165,7 @@ TeXEntry *e;
    What we'll do for now is issue an error message if you aren't in the
    correct font
  */
-void TXrm( e )
-TeXEntry *e;
+void TXrm( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;
     if (Esp >= 0) {
@@ -191,8 +183,7 @@ TeXEntry *e;
     LastFont     = (char *)0;
 }
 
-void TXbgroup( e )
-TeXEntry *e;
+void TXbgroup( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;
     Esp++;
