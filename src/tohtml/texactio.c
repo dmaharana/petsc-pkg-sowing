@@ -1773,10 +1773,7 @@ void TeXskipEnv( TeXEntry *e, char *name, int flag )
    to match.  If we are doing something like verbatim, we have to
    turn off the comment character (set to null)
 */
-void TeXskipRaw( e, name, doout )
-TeXEntry *e;
-char     *name;
-int      doout;
+void TeXskipRaw( TeXEntry *e, char *name, int doout )
 {
     int  nsp, ch;
     FILE *fout = fpout;
@@ -1790,7 +1787,7 @@ int      doout;
   commentchar = SCGetCommentChar();
   SCSetCommentChar( 0 );
   */
-/*
+    /*
     oldtrans = SCSetTranslate( (int (*)( char *, int ))0 );
     */
     if (DebugCommands) 
@@ -2263,6 +2260,7 @@ TeXEntry *e;
     else if (strcmp( curtok, "document" ) == 0) {
 	InDocument = 1;
 	TXStartDoc(1);
+	TXInitialCommands(); /* Push back any initial commands */
 	TeXBenign( e, "document" );
 	InDocument = 0;
 	TXStartDoc(0);
@@ -3218,14 +3216,23 @@ void TXInit( FILE *fin, FILE *fout )
     TXInsertName( TeXlist, "renewenvironment", TXDoNewenvironment, 0, (void *)0 );
     TXInsertName( TeXlist, "newtheorem", TXDoNewtheorem, 0, (void *)0 );
     TXInsertName( TeXlist, "renewtheorem", TXDoNewtheorem, 0, (void *)0 );
+
+    /* LaTeX conditionals */
+    TXInsertName( TeXlist, "newif", TXNewif, 0, (void *)0 );
+    TXInsertName( TeXlist, "else", TXElse, 0, (void *)0 );
+    TXInsertName( TeXlist, "fi", TXFi, 0, (void *)0 );
+
+    /* Font controls.  Old forms first */
     TXInsertName( TeXlist, "rm", TXrm, 0, (void *)0 );
     TXInsertName( TeXlist, "bf", TXbf, 0, (void *)0 );
     TXInsertName( TeXlist, "em", TXem, 0, (void *)0 );
     TXInsertName( TeXlist, "it", TXem, 0, (void *)0 );
     TXInsertName( TeXlist, "tt", TXtt, 0, (void *)0 );
     TXInsertName( TeXlist, "sf", TXsf, 0, (void *)0 );
+
     TXInsertName( TeXlist, "label",  TXlabel, 1, (void *)0 );
     TXInsertName( TeXlist, "ref",  TXref, 1, (void *)0 );
+
     TXInsertName( TeXlist, "pageref",  TXref, 1, (void *)0 );
     TXInsertName( TeXlist, "documentstyle", TXdocumentstyle, 1, (void *)0 );
     TXInsertName( TeXlist, "documentclass", TXdocumentclass, 1, (void *)0 );
@@ -3238,7 +3245,7 @@ void TXInit( FILE *fin, FILE *fout )
     TXInsertName( TeXlist, "index", TXindex, 1, (void *)0 );
     TXInsertName( TeXlist, "makeindex", TXmakeindex, 0, (void *)0 );
 
-/* These should eventually process the TeX stack */
+    /* These should eventually process the TeX stack */
     TXInsertName( TeXlist, "bgroup",     TXbgroup, 0, (void *)0 );
     TXInsertName( TeXlist, "egroup",     TXegroup, 0, (void *)0 );
 

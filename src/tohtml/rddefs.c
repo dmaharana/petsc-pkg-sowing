@@ -11,6 +11,9 @@
 #define SKIPNONBLANK(bufp) \
 	while (*bufp && !isspace(*bufp)) bufp++;
 
+static char *InitCommands = 0;
+#define MAX_INIT_COMMANDS 2048
+
 /* Remove quotes from the string pointed at by p, moving them in place as 
    necessary */
 static stripquote( char *p )
@@ -158,8 +161,27 @@ void RdBaseDef( char *infilename )
 	else if (strcmp( cmd, "end-env" ) == 0) {
 	  TXSetEnv( name, (char *)0, TXConvertQuotes( value, '\'' ), -1 );
 	}
+	else if (strcmp( cmd, "exec" ) == 0) {
+	    /* Execute this command by pushing it onto an input stack.
+	       Since we're not yet ready to read commands, we must save these
+	       and read them later */
+	    if (!InitCommands) {
+		InitCommands = (char *)MALLOC( MAX_INIT_COMMANDS );
+		InitCommands[0] = '\0';
+	    }
+	    strncat( InitCommands, name, MAX_INIT_COMMANDS );
+	}
 	else {
 	    fprintf( stderr, "Unknown command %s in definitions file\n", cmd );
 	}
+    }
+}
+
+void TXInitialCommands( void )
+{
+    if (InitCommands) {
+	SCPushToken( InitCommands );
+	FREE( InitCommands );
+	InitCommands = 0;
     }
 }

@@ -1,0 +1,7 @@
+\documentclass{article}
+\begin{document}
+\def\fname{test23.tex}%
+\IfFileExists{\fname}{right}{wrong}
+\IfFileExists{test23.tex}{right}{wrong}
+\IfFileExists{foobar}{wrong}{right}
+\end{document}

@@ -15,7 +15,7 @@ PROGRAMS = tohtml tortf
 
 BASEOBJS = search.o texactio.o rdaux.o rdindx.o label.o scan.o \
            refmap.o style.o dimen.o userdef.o tabular.o biblio.o environ.o \
-	   math.o rddefs.o latexinfo.o accent.o
+	   math.o rddefs.o latexinfo.o accent.o simpleif.o
 
 tohtml: tohtml.o  tex2html.o $(BASEOBJS)
 	$(C_LINK) -o tohtml tohtml.o tex2html.o $(BASEOBJS) $(LIBS)

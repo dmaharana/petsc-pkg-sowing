@@ -244,6 +244,7 @@ extern char *TopicFilename ( LINK * );
 /* rddefs.c */
 extern void RdBaseDef ( char * );
 extern char *TXConvertQuotes( char *, char  );
+extern void TXInitialCommands( void );
 
 /* rdindx.c */
 extern void AddToIndex ( char *, char *, int, int );
@@ -268,6 +269,11 @@ extern void SCPushChar ( char );
 extern void SCSetCommentChar ( char );
 extern void SCSkipNewlines ( FILE * );
 extern char SCGetCommentChar ( void );
+
+/* simpleif.c */
+extern void TXNewif( TeXEntry * );
+extern void TXElse( TeXEntry * );
+extern void TXFi( TeXEntry * );
 
 /* style.c */
 extern void TXStyleLatexInfo ( SRList *, FILE *, FILE * );

@@ -83,7 +83,7 @@ void TXStyleTpage( SRList *TeXlist, FILE *fin, FILE *fout )
 {
     TXInsertName( TeXlist, "anltmfalse", TXnop, 0, (void *)0 );
     TXInsertName( TeXlist, "anltmtrue", TXnop, 0, (void *)0 );
-    TXInsertName( TeXlist, "newif", TXnop, 0, (void *)0 );
+/*     TXInsertName( TeXlist, "newif", TXnop, 0, (void *)0 ); */
     TXInsertName( TeXlist, "ifanltm", TXnop, 0, (void *)0 );
     TXInsertName( TeXlist, "ANLG", TXnop, 1, (void *)0 );
     TXInsertName( TeXlist, "ANLEDITED", TXnop, 1, (void *)0 );
