@@ -154,4 +154,3 @@ dist:
 	fi
 	mv tmpdir/sowing tmpdir/sowing-$(VERSION)
 	cd tmpdir && tar cf - sowing-$(VERSION) | gzip -9 > ../sowing-$(VERSION).tar.gz
-	#rm -rf tmpdir
