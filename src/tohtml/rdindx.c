@@ -20,7 +20,7 @@ typedef struct _Index {
 
 static Index *fidx = 0, *fidxtail = 0, *cidx = 0, *cidxtail = 0,
              *idx  = 0, *idxtail = 0;
-extern void SortIndex ANSI_ARGS(( Index * ));
+extern void SortIndex ( Index * );
 
 void AddToIndex( name, section, sec_number, which )
 char *name, *section;

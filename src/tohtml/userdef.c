@@ -14,14 +14,15 @@ static char  ltoken[MAX_TOKEN];
 static char  ldef[MAX_TOKEN];
 static int   DebugDef = 0;
 
+typedef enum { TX_TEXCMD, TX_HTMLCMD } TX_Entry_t;
 typedef struct {
     int      nargs;
     char     *replacement_text;
     char     *input_template;       /* for \def\MPI/{{\sf MPI}} etc */
+    TX_Entry_t kind;      /* Identify html command replacments */
     } Definition;
 
-void TXDebugDef( flag )
-int flag;
+void TXDebugDef( int flag )
 {
     DebugDef = flag;
 }
@@ -30,8 +31,7 @@ int flag;
 /* Reduce mallocs by predefining at least the array of args */
 #define MAX_ARGS 16
 
-void TXDoUser( e )
-TeXEntry *e;
+void TXDoUser( TeXEntry *e )
 {
     Definition *def;
     char       *p, *pstart;
@@ -197,9 +197,7 @@ void TXAddUserDef( SRList *TeXlist, TeXEntry *e )
 
    if [nargs] is missing, it means [0].
  */
-void TXDoNewCommand( TeXlist, e )
-SRList   *TeXlist;
-TeXEntry *e;
+void TXDoNewCommand( SRList *TeXlist, TeXEntry *e )
 {
     int        nargs, ch, nsp, nbrace, j;
     char       *p;
@@ -290,7 +288,7 @@ TeXEntry *e;
 }
 
 /* Create a definition context suitable for TXInsertName */
-void *TXCreateDefn( int nargs, char *ldef )
+void *TXCreateDefn( int nargs, char *ldef, int is_html )
 {
     Definition *def;
     /* Add to known commands */
@@ -298,13 +296,12 @@ void *TXCreateDefn( int nargs, char *ldef )
     def->nargs = nargs;
     def->replacement_text = ldef;
     def->input_template = 0;
+    def->kind = is_html ? TX_HTMLCMD : TX_TEXCMD;
 
     return (void *)def;
 }
 
-void TXDoNewLength( TeXlist, e )
-SRList   *TeXlist;
-TeXEntry *e;
+void TXDoNewLength( SRList *TeXlist, TeXEntry *e )
 {
     int        ch, nsp, nbrace, j;
     char       *p;
@@ -345,8 +342,7 @@ TeXEntry *e;
  * TeX allows you to capture a definition with \let<newcommand>=<oldcommand>
  * or \let<newcommand><oldcommand>
  */
-void TXlet( e )
-TeXEntry *e;
+void TXlet( TeXEntry *e )
 {
     char       *ltoken;
     int        nsp, i, ch;
@@ -392,9 +388,13 @@ TeXEntry *e;
    \makeatletter ... \makeatother
    
    We must be careful to remove the quoting characters.
+
+   We also need the option to skip definitions that provide TeX->HTML
+   mappings.  These should not be output when generating LaTeX output
+   to be used when creating gif files for unknown LaTeX environments
+   and commands.
  */
-void TXDumpUserDefs( fout )
-FILE *fout;
+void TXDumpUserDefs( FILE *fout, int include_hdef )
 {
     LINK       *cur;
     TeXEntry   *e;
@@ -407,20 +407,22 @@ FILE *fout;
 	    e = (TeXEntry *)(cur->priv);
 	    if (e->action == TXDoUser) {
 		d = (Definition *)(e->ctx);
-		if (strchr( cur->topicname, '@' )) 
-		    fprintf( fout, "\\makeatletter\n" );
-		fprintf( fout, "\\def\\%s", cur->topicname );
-		if (d->input_template) 
-		    WriteString( fout, d->input_template );
-		else {
-		    for (j=0; j<d->nargs; j++) 
-			fprintf( fout, "#%d", j + 1 );
+		if (d->kind != TX_HTMLCMD || include_hdef) {
+		    if (strchr( cur->topicname, '@' )) 
+			fprintf( fout, "\\makeatletter\n" );
+		    fprintf( fout, "\\def\\%s", cur->topicname );
+		    if (d->input_template) 
+			WriteString( fout, d->input_template );
+		    else {
+			for (j=0; j<d->nargs; j++) 
+			    fprintf( fout, "#%d", j + 1 );
+		    }
+		    fputs( "{", fout );
+		    WriteString( fout, d->replacement_text );
+		    fputs( "}\n", fout );
+		    if (strchr( cur->topicname, '@' )) 
+			fprintf( fout, "\\makeatother\n" );
 		}
-		fputs( "{", fout );
-		WriteString( fout, d->replacement_text );
-		fputs( "}\n", fout );
-		if (strchr( cur->topicname, '@' )) 
-		    fprintf( fout, "\\makeatother\n" );
 	    }
 	    cur = cur->next;
 	}

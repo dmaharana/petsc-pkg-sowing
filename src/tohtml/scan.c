@@ -26,12 +26,12 @@ static char lbuffer[MAX_LBUFFER+2];
 static int  lp  = -1;
 static int  DebugScan = 0;
 static char commentchar = 0;    /* Causes a flush to EOL if defined */
-static int (*SCTranslate) ANSI_ARGS(( char *, int )) = 0;
+static int (*SCTranslate) ( char *, int ) = 0;
 static int isatletter = 0;
 /* #define OUTFILE fpout */
 #define OUTFILE stdout
 
-void OverlapCopy ANSI_ARGS(( char *, int ));
+void OverlapCopy( char *, int );
 
 
 void SCSetDebug( flag )
@@ -40,10 +40,10 @@ int flag;
     DebugScan     = flag;
 }
 
-int (*SCSetTranslate( f ))ANSI_ARGS(( char *, int ))
-int (*f)ANSI_ARGS(( char *, int ));
+int (*SCSetTranslate( f ))( char *, int )
+int (*f)( char *, int );
 {
-    int (*old) ANSI_ARGS(( char *, int ));
+    int (*old) ( char *, int );
 
     old = SCTranslate;
     SCTranslate = f;

@@ -48,4 +48,5 @@ s_caption  %n.RS
 e_caption  %n.RE
 picture
 mantitle   %n.TH %1 %2 "%3" " " "%4"%n.SH NAME%n%1 
+mantitlemany   %n.TH %1 %2 "%3" " " "%4"%n.SH NAME%n%1 
 location   %n.SH LOCATION%n%1%n

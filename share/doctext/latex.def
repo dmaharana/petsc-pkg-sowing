@@ -35,4 +35,5 @@ e_caption  \end{center}
 picture    \centerline{\epsf{%1}}
 # Only do the actual title
 mantitle   \mantitle{%1}{%2}{%3}%n\manname{%1}%n
+mantitlemany   \mantitle{%1}{%2}{%3}%n\manname{%1}%n
 location   %n\location{%1}%n

@@ -67,9 +67,7 @@ int SYiTestFile( char *, char, uid_t, gid_t );
 .   flen     - size of fullpath
 
 @*/
-void SYGetFullPath( path, fullpath, flen )
-char *path, *fullpath;
-int  flen;
+void SYGetFullPath( char *path, char *fullpath, int flen )
 {
 struct passwd *pwde;
 int           ln;
@@ -145,9 +143,7 @@ strcpy( fullpath, path );
 .   flen     - size of path
 
 @*/
-void SYGetRelativePath( fullpath, path, flen )
-char *path, *fullpath;
-int  flen;
+void SYGetRelativePath( char *fullpath, char *path, int flen )
 {
 char  *p;
 
@@ -169,9 +165,7 @@ strncpy( path, p, flen );
 .   name - contains user name.  Must be long enough to hold the name
 
 @*/
-void SYGetUserName( name, nlen )
-int  nlen;
-char *name;
+void SYGetUserName( char *name, int nlen )
 {
 struct passwd *pw;
 
@@ -222,9 +216,7 @@ strncpy( name, "Unknown", nlen );
 .   name - contains host name.  Must be long enough to hold the name
            This is the fully qualified name, including the domain.
 @*/
-void SYGetHostName( name, nlen )
-int  nlen;
-char *name;
+void SYGetHostName( char *name, int nlen )
 {
 /* This is the perfered form, IF IT WORKS. */
 #if defined(HAVE_UNAME) && defined(HAVE_GETHOSTBYNAME)
@@ -305,9 +297,7 @@ char *name;
 #endif
 }
 #else
-void SYGetHostName( name, nlen )
-int  nlen;
-char *name;
+void SYGetHostName( char *name, nlen )
 {
 #if defined(intelnx)
 #if defined(inteldelta)

@@ -36,7 +36,7 @@ int InArgList = 0;
 int OutputManPage( InStream *ins, TextOut *outs, char *name, char *level, 
 		   const char *filename, char kind, char *date,  
 		   const char *heading, const char *locdir, 
-		   char *matchhstring );
+		   char *matchhstring, int one_per_file );
 int OutputText( InStream *ins, char *matchstring, 
 		TextOut *textout, char *name, char *level, 
 	        const char *filename, char kind, char *date, 
@@ -74,6 +74,7 @@ int main( int argc, char ** argv )
     InStream  *incommands, *ins, *insin, *mapins;
     OutStream *outs;
     TextOutMap *map;
+    int       one_per_file;
 
     cmd = new CmdLine( argc, argv );
 
@@ -213,7 +214,9 @@ in the distribution, where ... is the path to the sowing directory\n\
 	jumpfd = 0;
 
     /* Open user-selected output file */
+    one_per_file = 1;
     if (baseoutfile) {
+      one_per_file = 0; // All output is going to a single file
 	strcpy( outfilename, baseoutfile );
 	outs = new OutStreamFile( outfilename, "w" );
 	if (outs->status) {
@@ -226,6 +229,14 @@ in the distribution, where ... is the path to the sowing directory\n\
 	if (DoDosFileNewlines) textout->SetNewlineString( "\r\n" );
 	// bof isn't correct ? Why?
 	if (basedir) textout->PutOp( "bof", (char *)basedir );
+	else textout->PutOp( "bof", NULL );
+	// Note that bof doesn't include all that is required for
+	// an html head, since in the one-file-per-page form, we
+	// want to include the man page name in the <TITLE> element.
+	// 
+	if (textout->HasOp( "bofmanyend" ) == 0) {
+	    textout->PutOp( "bofmanyend" );
+	}
 	//textout->PutOp( "bop" );
 	}
     
@@ -272,6 +283,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 		}
 	    textout->SetRegisterValue( 0, routine );  // put name in putop register
 	    if (!baseoutfile) {
+	      one_per_file = 1;  // One manual page per "file"
 		MakeFileName( path, routine, lextension, outfilename );
 		outs = new OutStreamFile( outfilename, "w" );
 		if (outs->status) {
@@ -311,10 +323,16 @@ in the distribution, where ... is the path to the sowing directory\n\
 		fprintf( jumpfd, "%s:%s:%d\n", routine, rpath, 
 			 ins->GetLineNum() );
 		}
-	    if (!baseoutfile && basedir) 
+	    if (!baseoutfile) {
+	      // Why do we need this test?
+	      if (basedir) 
 		textout->PutOp( "bof", (char *)basedir );        
+	      else
+		textout->PutOp( "bof", NULL );
+	    }
 	    OutputManPage( ins, textout, routine, lextension, infilename, 
-			   kind, date, heading, locdir, matchstring );
+			   kind, date, heading, locdir, matchstring, 
+			   one_per_file );
 	    if (!baseoutfile) {
 	        textout->PutOp( "eof" );
 	    	textout->Flush();
@@ -344,14 +362,30 @@ in the distribution, where ... is the path to the sowing directory\n\
 int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level, 
 		   const char *filename, char kind, char *date, 
 		   const char *heading, const char *locdir, 
-		   char *matchstring ) 
+		   char *matchstring, int one_per_file ) 
 {
     int  at_end;
 
     // Output the initial information
     textout->PutOp( "bop" );
-    textout->PutOp( "mantitle", name, level, date, (char *)heading );
-
+    // In the single document per page version, particularly for 
+    // html, mantitle must complete the header for the file (e.g.,
+    // it has some bof features).  In the multiple entries per page,
+    // it must not.  We handle this by having different commands for
+    // the two cases.
+    if (one_per_file) {
+      textout->PutOp( "mantitle", name, level, date, (char *)heading );
+    }
+    else {
+	if (textout->HasOp( "mantitlemany" ) == 0) {
+	    textout->PutOp( "mantitlemany", 
+			    name, level, date, (char *)heading );
+	}
+	else {
+	    // If no mantitlemany, just use mantitle (backwards compatibility)
+	    textout->PutOp( "mantitle", name, level, date, (char *)heading );
+	}
+    }
     // Next, output the description
     textout->PutOp( "em_dash" );
     if (DocReadDescription( ins, matchstring, textout, 0, &at_end )) {

@@ -47,8 +47,7 @@ char *TXConvertQuotes( char *value, char cmdchar )
 /*
     Read a file name containing definitions
  */
-void RdBaseDef( infilename )
-char *infilename;
+void RdBaseDef( char *infilename )
 {
     FILE *fp;
     char buf[200], *bufp, *name, *cmd, *value, *p;
@@ -154,8 +153,11 @@ char *infilename;
 	else if (strcmp( cmd, "hdef" ) == 0) {
 	  /* hdef for HTML-containing definition */
 	  /* 4th argument is "cmdstart/end" character */
+	  /* We need to be careful with these - they should not be
+	     used in generating LaTeX source files when creating
+	     gif images */
 	  TXInsertName( TeXlist, name, TXDoUser, nargs, 
-		TXCreateDefn( nargs, TXConvertQuotes( value, '\'' ) ) );
+		TXCreateDefn( nargs, TXConvertQuotes( value, '\'' ), 1 ) );
 	}
 	else if (strcmp( cmd, "begin-env" ) == 0) {
 	  TXSetEnv( name, TXConvertQuotes( value, '\'' ), (char *)0 );

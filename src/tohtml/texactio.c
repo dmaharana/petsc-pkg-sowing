@@ -1180,6 +1180,8 @@ void TXPopFile()
     curfile--;
     if (curfile < 0) {
 	fprintf( stderr, "EOF in input; aborting\n" );
+	fprintf( stderr, 
+"(Reached an end-of-file in the top-level file without an \\end{document})\n" );
 	exit(1);
     }
 }
@@ -2555,8 +2557,10 @@ void TXLoadPackage( const char *p )
 	TXStyleEPSF( TeXlist, fpin[curfile], fpout );
     }
     else if (strcmp( p, "11pt" ) == 0 || 
+	     strcmp( p, "12pt" ) == 0 ||
 	     strcmp( p, "twoside" ) == 0 ||
 	     strcmp( p, "fleqn" ) == 0)
+	/* Standard packages that do not affect HTML formatting */
 	    ;
     /* My private styles ... */
     else if (strcmp( p, "fileinclude" ) == 0) 
@@ -2572,7 +2576,9 @@ void TXLoadPackage( const char *p )
     else if (strcmp( p, "handpage" ) == 0) 
 	TXStyleANLHandpage( TeXlist, fpin[curfile], fpout );
     else {
-	fprintf( ferr, "Unknown documentstyle or package %s\n", p );
+	fprintf( ferr, 
+"Unknown documentstyle or package %s; provide\n\
+%s.def to define the commands\n", p, p );
 	/* Question here is whether we should try to read the document
 	   style file */
     }
@@ -2742,8 +2748,7 @@ TeXEntry *e;
     POPCURTOK;
 }
 
-void TXcite( e )
-TeXEntry *e;
+void TXcite( TeXEntry *e )
 {
     int  urltype;
     char *url, *text;

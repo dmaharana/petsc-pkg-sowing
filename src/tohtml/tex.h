@@ -238,6 +238,7 @@ extern char *TopicFilename ( LINK * );
 
 /* rddefs.c */
 extern void RdBaseDef ( char * );
+extern char *TXConvertQuotes( char *, char  );
 
 /* rdindx.c */
 extern void AddToIndex ( char *, char *, int, int );
@@ -277,6 +278,9 @@ extern void TXStylePsfig ( SRList *, FILE *, FILE * );
 
 /* tabular.c */
 extern void TeXtabular ( TeXEntry * );
+extern void TeXGetTabularDefn( void );
+extern void TeXBeginHalignTable( void );
+extern void TeXEndHalignTable( void );
 
 /* texactio.c */
 extern void TXSetDebug ( int );
@@ -486,8 +490,8 @@ extern void TXAddUserDef ( SRList *, TeXEntry * );
 extern void TXDoNewCommand ( SRList *, TeXEntry * );
 extern void TXDoNewLength ( SRList *, TeXEntry * );
 extern void TXlet ( TeXEntry * );
-extern void TXDumpUserDefs ( FILE * );
-extern void *TXCreateDefn( int nargs, char *ldef );
+extern void TXDumpUserDefs ( FILE *, int );
+extern void *TXCreateDefn( int nargs, char *ldef, int is_html );
 
 #ifdef __MSDOS__
 #define MAX_TOKEN 512

@@ -17,7 +17,7 @@ static SRList *newenv = 0;
 static int DebugEnv = 0;
 static int LatexQuiet = 0;
 
-void AddCodeDefn ANSI_ARGS(( FILE * ));
+void AddCodeDefn ( FILE * );
 
 void TXSetLatexQuiet( flag )
 int flag;
@@ -34,8 +34,7 @@ int flag;
 
    See also TXDoNewtheorem
  */
-void TXDoNewenvironment( e )
-TeXEntry *e;
+void TXDoNewenvironment( TeXEntry *e )
 {
     char *nametok, *btext, *etext, args[10];
     int    nargs, d;
@@ -111,8 +110,7 @@ void TXSetEnv( char *name, char *btext, char *etext )
 
    This creates a special environment
  */
-void TXDoNewtheorem( e )
-TeXEntry *e;
+void TXDoNewtheorem( TeXEntry *e )
 {
     char   *nametok, *btext, *counter;
     int    d;
@@ -146,9 +144,7 @@ TeXEntry *e;
     l->priv    = (void *)new;
 }
 
-int LookupEnv( name, btext, etext, nargs )
-char *name, **btext, **etext;
-int  *nargs;
+int LookupEnv( char *name, char **btext, char **etext, int *nargs )
 {
     int    dummy;
     LINK   *l;
@@ -165,9 +161,7 @@ int  *nargs;
 }
 
 static int DebugDef  = 0;
-void PushBeginEnv( btext, nargs )
-char *btext;
-int nargs;
+void PushBeginEnv( char *btext, int nargs )
 {
     char *(args[10]);
     int  i, argn;
@@ -225,23 +219,21 @@ int nargs;
    Only run latex if runagain is true.  If runagain is FALSE, DO EAT the
    source code that would have been comsumed if runagain was true.
  */
-void RunLatex( envname, string, name, mathmode, kind, runagain )
-char *envname;
-char *string;
-char *name;
-char *kind;    /* = xbm or gif */
-char *mathmode;
-int  runagain;
+/* kind is xbm or gif */
+void RunLatex( char *envname, char *string, char *name, char *mathmode, 
+	       char *kind, int runagain )
 {
     TeXEntry E;
     char *p;
 #ifndef __MSDOS__
     char pgm[256];
     char fname[100];
+    char fdviname[256];
     char ext[10];
     char latex_errname[300];
     char *latex_pgm;
     FILE  *fp, *foutsave;
+    int  problem_with_file = 0;
 #endif
 
 /* Set dummy values for E */
@@ -283,13 +275,19 @@ documentcmd, preamble ? preamble : "{article}" );
 
 	if (predoc && predoc[0]) 
 	    fputs( predoc, fp );
-	TXDumpUserDefs( fp );
+	fprintf( fp, "%% User definitions begin here\n" );
+	TXDumpUserDefs( fp, 0 );
+	fprintf( fp, "%% User definitions end here\n" );
 
 	/* Disable things like \index */
+	fprintf( fp, "%% Disable other commands\n" );
 	fprintf( fp, "\\def\\index#1{\\relax}\n" );
 
-	if (string) 
+	if (string) {
+	    fprintf( fp, "% User command to run\n" );
 	    fputs( string, fp );
+	    fprintf( fp, "% End of user command to run\n" );
+	}
     }
 
     if (!runagain) {
@@ -308,6 +306,7 @@ documentcmd, preamble ? preamble : "{article}" );
     else {
 	if (envname) {
 	    int SaveInArg;
+	    fprintf( fp, "%% Beginning of Environment to be handled\n" );
 	    fprintf( fp, "\\begin{%s}\n", envname );
 	    /* We'll start by using SkipEnv ... */
 	    foutsave = fpout;
@@ -330,6 +329,7 @@ documentcmd, preamble ? preamble : "{article}" );
 	    FREE( p );
 	    fpout    = foutsave;
 	    fprintf( fp, "\\end{%s}\n", envname );
+	    fprintf( fp, "%% End of Environment to be handled\n" );
 	}
 	if (mathmode) {
 	    fprintf( fp, "%s\n", mathmode );
@@ -378,9 +378,15 @@ documentcmd, preamble ? preamble : "{article}" );
 	}
 
 	/* Should check return status */
-	system( pgm );
+	if (system( pgm )) {
+	    /* Something went wrong */
+	    fprintf( ferr, "Latex command %s %s.tex returned nonzero\n", 
+		     latex_pgm, name );
+	    problem_with_file = 1;
+	}
 	/* Some dvips send to the PRINTER by default! */
 	/* Add -q to make quiet */
+	
 	if (LatexQuiet) {
 	    sprintf( pgm, "dvips %s -o %s.ps >>%s 2>&1", 
 		     name, name, latex_errname );
@@ -388,38 +394,51 @@ documentcmd, preamble ? preamble : "{article}" );
 	else {
 	    sprintf( pgm, "dvips %s -o %s.ps", name, name );
 	}
-	system( pgm );
-	/* Add "figure" as third argument to get color output */
-	/* Could use pstoxbm instead */
-	if (strcmp( kind, "gif" ) == 0) {
-	    if (LatexQuiet)
-		sprintf( pgm, "%spstogif %s.ps %s.gif >>%s 2>&1", 
-			 PSPATH, name, name, latex_errname );
-	    else
-		sprintf( pgm, "%spstogif %s.ps %s.gif", PSPATH, name, name );
-	    strcpy( ext, "gif" );
+	strcpy( fdviname, name );
+	strcat( fdviname, ".dvi" );
+	if (!SYiFileExists( fdviname, 'r' )) {
+	    /* Could not find the dvi file */
+	    problem_with_file = 1;
+	    fprintf( ferr, "No DVI file created for %s.tex\n", name );
 	}
-	else {
-	    if (LatexQuiet) 
-		sprintf( pgm, "%spstoxbm %s.ps %s.xbm >>%s 2>&1", 
-			 PSPATH, name, name, latex_errname );
-	    else
-		sprintf( pgm, "%spstoxbm %s.ps %s.xbm", PSPATH, name, name );
-	    strcpy( ext, "xbm" );
+        else {
+	    system( pgm );
+	    /* Add "figure" as third argument to get color output */
+	    /* Could use pstoxbm instead */
+	    if (strcmp( kind, "gif" ) == 0) {
+		if (LatexQuiet)
+		    sprintf( pgm, "%spstogif %s.ps %s.gif >>%s 2>&1", 
+			     PSPATH, name, name, latex_errname );
+		else
+		    sprintf( pgm, "%spstogif %s.ps %s.gif", PSPATH, name, name );
+		strcpy( ext, "gif" );
+	    }
+	    else {
+		if (LatexQuiet) 
+		    sprintf( pgm, "%spstoxbm %s.ps %s.xbm >>%s 2>&1", 
+			     PSPATH, name, name, latex_errname );
+		else
+		    sprintf( pgm, "%spstoxbm %s.ps %s.xbm", PSPATH, name, name );
+		strcpy( ext, "xbm" );
+	    }
+	    system( pgm );
+	    /* Note that the result of the run might be name%d.ext, 
+	       for example img2101.xbm and img2102.xbm, instead of img201.xbm
+	    */
+	    if (splitlevel >= 0) {
+		sprintf( pgm, "/bin/mv %s.%s %s", name, ext, splitdir );
+		/* The mv sometimes fails... */
+		fprintf( stdout, "%s\n", pgm );
+		system ( pgm );
+	    }
 	}
+	sprintf( pgm, "/bin/rm -f %s.dvi %s.ps %s.aux %s.log", 
+		 name, name, name, name );
 	system( pgm );
-	/* Note that the result of the run might be name%d.ext, 
-	   for example img2101.xbm and img2102.xbm, instead of img201.xbm
-	   */
-	if (splitlevel >= 0) {
-	    sprintf( pgm, "/bin/mv %s.%s %s", name, ext, splitdir );
-	    /* The mv sometimes fails... */
-	    fprintf( stdout, "%s\n", pgm );
-	    system ( pgm );
+	if (!problem_with_file) {
+	    sprintf( pgm, "/bin/rm -f %s.tex", name );
+	    system( pgm );
 	}
-	sprintf( pgm, "/bin/rm %s.tex %s.dvi %s.ps %s.aux %s.log", 
-		 name, name, name, name, name );
-	system( pgm );
     }
 #else
 /* Just skip the environment */

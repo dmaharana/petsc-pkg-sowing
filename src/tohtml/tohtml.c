@@ -331,7 +331,7 @@ int main( int argc, char *argv[] )
 
     if (DebugDef) {
 	fprintf( stdout, "User definitions in TeX format are:\n" );
-	TXDumpUserDefs( stdout );
+	TXDumpUserDefs( stdout, 1 );
     }
     return 0;
 }

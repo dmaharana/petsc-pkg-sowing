@@ -65,6 +65,10 @@ static int DebugTab = 0;
   */
 static int Ncell = 0;
 
+void TeXNewAlignCol( void );
+void TeXPutAlign( void );
+void TeXEndHalignRow( void );
+
 void TeXGetTabularDefn( void )
 {
     int         ncell;
@@ -112,8 +116,7 @@ void TeXGetTabularDefn( void )
   Use code similar to "skipenv", since we need to process commands that
   we may see.
  */    
-void TeXtabular( e )
-TeXEntry *e;
+void TeXtabular( TeXEntry *e )
 {
     int  i, j, nsp, ch, lastInArg;
     FILE *fout = fpout;

@@ -74,6 +74,7 @@ class TextOut {
     virtual int PutOp( const char *, char * );
     virtual int PutOp( const char *, char *, int );
     virtual int PutOpError( const char *, const char * );
+    virtual int HasOp( const char * );
 
     /* Miscellaneous */
     virtual int Debug( int );

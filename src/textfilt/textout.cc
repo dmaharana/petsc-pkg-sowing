@@ -64,6 +64,16 @@ int TextOut::MatchCommand( const char *cmdname, int i1, SrEntry **entry )
 	}
 }
 
+int TextOut::HasOp( const char *cmdname )
+{
+    SrEntry *entry;
+
+    PutChar( 0 );
+    if (!userops && next) 
+        return next->HasOp( cmdname );
+    return MatchCommand( cmdname, TEXT_I_IGNORE, &entry );
+}
+
 // 
 // All of the PutOp commands use PutChar( 0 ) to flush any local buffers
 //

@@ -79,9 +79,7 @@ TeXEntry *e;
     TXmaketitle( e, TitleString, AuthorString );
 }
 
-void TXStyleTpage( TeXlist, fin, fout )
-SRList *TeXlist;
-FILE *fin, *fout;
+void TXStyleTpage( SRList *TeXlist, FILE *fin, FILE *fout )
 {
     TXInsertName( TeXlist, "anltmfalse", TXnop, 0, (void *)0 );
     TXInsertName( TeXlist, "anltmtrue", TXnop, 0, (void *)0 );
@@ -92,6 +90,7 @@ FILE *fin, *fout;
     TXInsertName( TeXlist, "ANLTitle", TXANLTitle, 4, (void *)0 );
     TXInsertName( TeXlist, "ANLTMTitle", TXANLTitle, 4, (void *)0 );
     TXInsertName( TeXlist, "ANLPreprintTitle", TXANLTitle, 4, (void *)0 );
+    TXInsertName( TeXlist, "tpagetopskip", TXdimen, 0, (void *) 0 );
 }
 
 void TXStyleTools( TeXlist, fin, fout )

@@ -21,9 +21,9 @@
 
 #define MATH_BUF_SIZE 4*4096
 /* Forward refs */
-void TXStripCmds ANSI_ARGS(( char *, char * ));
-void TXAddToken ANSI_ARGS(( char *, char **, int * ));
-void TXConvertMathString ANSI_ARGS(( char **, char **, int *, int ));
+void TXStripCmds ( char *, char * );
+void TXAddToken ( char *, char **, int * );
+void TXConvertMathString ( char **, char **, int *, int );
 
 
 /* Removes all \ from a string */
@@ -196,13 +196,13 @@ int      doout;
 {
     int  nsp, ch;
     FILE *fout = fpout;
-    int  (*oldtrans)ANSI_ARGS(( char *, int ));
+    int  (*oldtrans)( char *, int );
 /*     extern int (*SCSetTranslate( ))(); */
 
 /* First, remove any newlines */
     SCSkipNewlines( fpin[curfile] );
 
-    oldtrans = SCSetTranslate( (int (*)ANSI_ARGS((char *, int )))0 );
+    oldtrans = SCSetTranslate( (int (*)(char *, int ))0 );
 
     if (name[0] != MathmodeChar && name[1] != '(' && name[1] != '[') {
 	NumberedEnvironmentType = ENV_EQUATION;
@@ -283,13 +283,13 @@ int      latexmath;
     int  mathbufleft;
     char token[MAX_TOKEN];
     int num_subs = 0;
-    int (*transold)ANSI_ARGS(( char *, int));
+    int (*transold)( char *, int);
 
     mathbuf = (char *)MALLOC( MATH_BUF_SIZE );   CHKPTR(mathbuf);
     mathbufleft = MATH_BUF_SIZE - 1;
 /* Try to find next MathmodeChar (usually $) */
 
-    transold = SCSetTranslate( (int (*)ANSI_ARGS((char *, int )))0 );
+    transold = SCSetTranslate( (int (*)(char *, int ))0 );
     ch = SCTxtFindNextANToken( fpin[curfile], token, MAX_TOKEN, &nsp );
 
     NumberedEnvironmentType = ENV_EQUATION;

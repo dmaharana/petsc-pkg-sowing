@@ -39,11 +39,11 @@ static int DebugMap = 0;
 /* These routines process the name buffer */
 
 /* Forward refs */
-void GetMapTagName ANSI_ARGS(( char **, char * ));
-char *GetMapName ANSI_ARGS(( char ** ));
-char *GetMapURL ANSI_ARGS(( char ** ));
-char *CpyString ANSI_ARGS(( char * ));
-int MapKind ANSI_ARGS(( char * ));
+void GetMapTagName ( char **, char * );
+char *GetMapName ( char ** );
+char *GetMapURL ( char ** );
+char *CpyString ( char * );
+int MapKind ( char * );
 
 void GetMapTagName( P, namep )
 char **P, *namep;
