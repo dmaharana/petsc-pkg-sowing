@@ -41,6 +41,7 @@ void TXDoGaudy( int flag )
 void TXStartDoc( int flag )
 {
     InDocument = flag;
+    if (DebugOutput) printf( "Set InDocument to %d\n", flag );
 }
 
 /* Note that once preformatted is switched on, new lines become "real".  Thus,
