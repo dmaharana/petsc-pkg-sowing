@@ -153,6 +153,9 @@ int DocReadFuncSynopsis( InStream *ins, OutStream *outs )
     int  nl_break;
     int  us_break;
     int maxlen = 255, nsp;
+    int findingForm = 1;
+    int exitOnSemicolon = 0;
+    int parenCount = 0;
 
     // Must handle newline as non-space
     
@@ -162,9 +165,16 @@ int DocReadFuncSynopsis( InStream *ins, OutStream *outs )
     ins->SetBreakChar( '_', BREAK_ALPHA );
     // Stop when we find *either* a { or a ; 
     // The semicolon test lets us handle prototype definitions
-    while (!ins->GetToken( maxlen, token, &nsp ) && token[0] != '{'
-	   && token[0] != ';' ) { 
+    // Note that a semicolon should stop the scanning ONLY 
+    // when in pre-ansi, non-prototype form.
+    while (!ins->GetToken( maxlen, token, &nsp ) && token[0] != '{') {
+      //	   && ( !inProtoForm || token[0] != ';' ) { 
       // Eventually we need to combine these into a single lookup list.
+      // Handle the special case of int foo (...);
+      if (exitOnSemicolon) {
+	if (token[0] == ';') break;
+	exitOnSemicolon = 0;
+      }
       if (strcmp( token, "register" ) == 0) {
 	/* Skip blanks */
 	while (!ins->GetChar( &ch ) && isspace(ch) ) ;
@@ -176,6 +186,20 @@ int DocReadFuncSynopsis( InStream *ins, OutStream *outs )
 	ins->UngetChar( ch );
       }
       else {
+	// Check for parenthesis to determine whether we're in 
+	// prototype form
+	if (token[0] == '(') parenCount++;
+	else if (token[0] == ')') {
+	  if (parenCount == 1) {
+	    if (findingForm) {
+	      // if the NEXT char is a ;, we have a terminal prototype
+	      exitOnSemicolon = 1;
+	    }
+	    findingForm = 0;
+	  }
+	  parenCount --;
+	}
+
 	// Check for \n and do PutNewline instead.
 	if (token[0] == '\n') {
 	  outs->PutToken( nsp, NewlineString );

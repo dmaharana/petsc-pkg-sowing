@@ -61,6 +61,6 @@ extern char NewlineString[3];
 #define VERBATIM    '$'
 
 // Don't forget to update these
-#define DOCTEXT_VERSION "1.1.6"
-#define DOCTEXT_DATE    "March 19, 2003"
+#define DOCTEXT_VERSION "1.1.7"
+#define DOCTEXT_DATE    "September 12, 2003"
 #endif
