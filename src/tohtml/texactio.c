@@ -4,6 +4,8 @@
 #include "search.h"
 #include "tex.h"
 
+/* #define DBGMSG(a) if (DebugCommands) { fprintf( stdout, ... what goes here .. ); } */
+
 extern LINK *GetNextLink ( LINK * );
 /*
    This is a simple program to translate mostly ASCII text code from 
@@ -601,10 +603,7 @@ int TeXGetGenArg( FILE *fin, char *token, int maxtoken, char sc, char ec,
 }
 
 /* Get a TeX argument */
-int TeXGetArg( fin, token, maxtoken )
-FILE *fin;
-char *token;
-int  maxtoken;
+int TeXGetArg( FILE *fin, char *token, int maxtoken )
 {
     int rc = TeXGetGenArg( fin, token, maxtoken, LbraceChar, RbraceChar, 1 );
     if (rc < 0) {
@@ -613,8 +612,15 @@ int  maxtoken;
     return rc;
 }
 
-void TXnop( e )
-TeXEntry *e;
+/* This is a version of TeXGetArg that aborts on failure */
+void TeXMustGetArg( FILE *fin, char *token, int maxtoken, 
+		    char *caller, char *texcmd )
+{
+    if (TeXGetGenArg( fin, token, maxtoken, LbraceChar, RbraceChar, 1 ) < 0) {
+	TeXAbort( caller, texcmd );
+}
+
+void TXnop( TeXEntry *e )
 {
   int i;
 	
@@ -632,8 +638,7 @@ TeXEntry *e;
   POPCURTOK;
 }
 
-char *TXCopy( s )
-char *s;
+char *TXCopy( char *s )
 {
     char *n;
     n = MALLOC( strlen( s ) + 1 );
@@ -642,21 +647,18 @@ char *s;
 }
 	
 /* Place the argument in the location stored in the ctx */
-void TXsavearg( e )
-TeXEntry *e;
+void TXsavearg( TeXEntry *e )
 {
     PUSHCURTOK;
     strncpy( CmdName, e->name, 64 );
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
-	    TeXAbort( "TXsavearg", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXsavearg", e->name );
     strcpy( (char *)(e->ctx), curtok );
     CmdName[0] = 0;
     POPCURTOK;
 }
 
 /* Replace \name with a string */
-void TXname( e )
-TeXEntry *e;
+void TXname( TeXEntry *e )
 {
     if (!InDocument) return;
     TeXoutstr( fpout, (char *)(e->ctx) );
@@ -772,8 +774,7 @@ void TXref( TeXEntry *e )
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
     strcmp( CmdName, "ref" );
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-      TeXAbort( "TXref", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXref", e->name );
     if (!InDocument) {
       POPCURTOK;
       return;
@@ -818,8 +819,7 @@ void TXlabel( TeXEntry *e )
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
     strcpy( CmdName, "label" );
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-      TeXAbort( "TXlabel", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXlabel", e->name );
     /* goken in ref refers to the value of LabelName */
     ReplaceWhite( curtok );
 
@@ -845,8 +845,7 @@ void TXlabel( TeXEntry *e )
 }
 
 /* Just use the section names as the reference */
-void TXhref( e )
-TeXEntry *e;
+void TXhref( TeXEntry *e )
 {
     LINK *RefedSection;
     int  dummy;
@@ -858,8 +857,7 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-      TeXAbort( "TXhref", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "THhref", e->name );
     ReplaceWhite( curtok );
     RefedSection = SRLookup( topicctx, curtok, (char *)0, &dummy );
     if (!RefedSection) {
@@ -876,8 +874,7 @@ TeXEntry *e;
 /* \hrefa has a second argument that is used in the LaTeX version as the
    replacement text */
     if (e->nargs > 1) {
-	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	    TeXAbort( "TXhref", e->name );
+	TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXhref", e->name );
     }
     POPCURTOK;
     CmdName[0] = 0;
@@ -923,8 +920,7 @@ TeXEntry *e;
     PUSHCURTOK;
     /* We must allow comments (any arbitrary character) */
     PushCommentChar( '\0' );
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	TeXAbort( "TXcode", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXcode", e->name );
     PopCommentChar();
     TXbgroup( e );
     TXfont_tt( e );
@@ -943,8 +939,7 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	    TeXAbort( "TXroutine", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXroutine", e->name );
     AddToIndex( curtok, CurNodename, CurSeqnum - 1, 0 );
     TXbgroup( e );
     TXfont_tt( e );
@@ -962,8 +957,7 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	TeXAbort( "TXdfn", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXdfn", e->name );
     TXbgroup( e );
     TXem( e );
     TeXoutstr( fpout, curtok );
@@ -979,8 +973,7 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	    TeXAbort( "TXvar", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXvar", e->name );
     TXbgroup( e );
     TXem( e );
     TeXoutstr( fpout, curtok );
@@ -996,8 +989,7 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	TeXAbort( "TXfile", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXfile", e->name );
     TXbgroup( e );
     TXfont_ss( e );
     TeXoutstr( fpout, curtok );
@@ -1037,8 +1029,7 @@ TeXEntry *e;
 
 /* This is "as-is", but with a surrounding group 
  */
-void TXasisGrouped( e )
-TeXEntry *e;
+void TXasisGrouped( TeXEntry *e )
 {
     int  i;
 
@@ -1100,8 +1091,7 @@ TeXEntry *e;
    can use \input filename.  Need to check for that case and add it
    to the list of 'predoc' commands
    */
-void TXinclude( e )
-TeXEntry *e;
+void TXinclude( TeXEntry *e )
 {
     char *p;
     int  ch;
@@ -1109,18 +1099,27 @@ TeXEntry *e;
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
     curtok[0] = 0;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	TeXAbort( "TXinclude", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXinclude", e->name );
     if (strlen(curtok) == 0) {
-	/* Get next space-delimited token */
+	/* Get next space-delimited token that is not a right brace*/
+	/* (What are the rules on input?) */
 	while ((ch = SCTxtGetChar( fpin[curfile] )) != -1 && 
-	       isspace(ch) && ch != '\n');
+	       isspace(ch) && ch != '\n' && ch != RbraceChar);
 	p    = curtok;
 	*p++ = ch;
-	while ((ch = SCTxtGetChar( fpin[curfile] )) != -1 && !isspace(ch)) 
+	while ((ch = SCTxtGetChar( fpin[curfile] )) != -1 && !isspace(ch)
+	       && ch != RbraceChar) 
 	    *p++ = ch;
 	*p = 0;
 	/* We still need to EVALUATE any TeX commands in this string !!! */
+	/* Need a command to evaluate a buffer */
+	/* We cheat by pushing back { curtok } and making getarg to all
+	   of the work */
+	SCPushChar( RBraceChar );
+	SCPushTok( curtok );
+	SCPushChar( LBraceChar );
+	TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+		       "TXinclude", e->name );
     }
     if (DebugCommands) 
 	fprintf( stdout, "About to open |%s|\n", curtok );
@@ -1150,7 +1149,7 @@ TeXEntry *e;
     POPCURTOK;
 }
 
-void TXPopFile()
+void TXPopFile( void )
 {
     if (DebugCommands) {
 	fprintf( stdout, "Popping file from stack!\n" );
@@ -1181,8 +1180,8 @@ void TXfileinclude( TeXEntry *e )
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
     curtok[0] = 0;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	TeXAbort( "TXfileinclude", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+		   "TXfileinclude", e->name );
     if (DebugCommands) 
 	fprintf( stdout, "About to open |%s|\n", curtok );
 
@@ -1214,14 +1213,57 @@ void TXfileinclude( TeXEntry *e )
     fclose( fp );
     POPCURTOK;
 }
+/* 
+   TXIfFileExists - Implement the LaTeX command:
+   if file #1 exists, do #2 else do #3
+
+   This routine may not be nested.
+ */
+void TXIfFileExists( TeXEntry *e )
+{
+    FILE *fp;
+    int  rc;
+
+    if (DebugCommands) 
+	fprintf( stdout, "Getting argument for %s\n", e->name );
+    PUSHCURTOK;
+    curtok[0] = 0;
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+		   "TXIfFileExists", e->name );
+    fp = fopen( curtok, "r" );
+    /* We need to read these args *but not evaluate them* until after
+       they are pushed back */
+    if (fp) {
+	char savetok[MAX_TOKEN];
+	fclose( fp );
+	/* Use genarg because we want to suppress evaluation */
+	if (TeXGetGenArg( fin, savetok, MAX_TOKEN, 
+			   LbraceChar, RbraceChar, 0 )) 
+	    TeXAbort( "TXIfFileExists", e->name );
+	if (TeXGetGenArg( fin, curtok, MAX_TOKEN, 
+			   LbraceChar, RbraceChar, 0 )) 
+	    TeXAbort( "TXIfFileExists", e->name );
+	/* Push back the second token */
+	SCPushToken( savetok );
+    }
+    else {
+	if (TeXGetGenArg( fin, curtok, MAX_TOKEN, 
+			   LbraceChar, RbraceChar, 0 ))
+	    TeXAbort( "TXIfFileExists", e->name );
+	if (TeXGetGenArg( fin, curtok, MAX_TOKEN, 
+			   LbraceChar, RbraceChar, 0 ))
+	    TeXAbort( "TXIfFileExists", e->name );
+	/* Push back the third token */
+	SCPushToken( curtok );
+    }
+    POPCURTOK;
+}
 
 static LINK *LastSection = 0;
 int splitlevel = -1;
 char splitdir[100];
 
-void TXSetSplitLevel( sl, dir )
-int  sl;
-char *dir;
+void TXSetSplitLevel( int sl, char *dir )
 {
     splitlevel = sl;
     strcpy( splitdir, dir );
@@ -1293,8 +1335,8 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	TeXAbort( "TXsection(arg)", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+		   "TXsection(arg)", e->name );
     strncpy( CurNodename, curtok, 255 );
 
 /* debug */
@@ -1397,8 +1439,7 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	    TeXAbort( "TXsection", (char *)0 );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXsection", (char *)0 );
     strncpy( CurNodename, curtok, 255 );
 
     WriteHeadPage( fpout );
@@ -1452,8 +1493,8 @@ void TXparagraph( TeXEntry *e )
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	TeXAbort( "TXparagraph(arg)", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+		   "TXparagraph(arg)", e->name );
     
     /* Output a new paragraph */
     TXWritePar( fpout );
@@ -1568,8 +1609,8 @@ void TeXskipEnv( TeXEntry *e, char *name, int flag )
 	    if (strcmp( curtok, "end" ) == 0) {
 		if (DebugCommands)
 		    fprintf( stdout, "Getting argument for end{}\n" );
-		if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
-		    TeXAbort( "TXSkipEnv", e->name );
+		TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+			       "TXSkipEnv", e->name );
 		if (strcmp( name, curtok ) == 0) {
 		    /* We've found the end of the verbatim */
 		    break;
@@ -1624,8 +1665,8 @@ void TeXskipEnv( TeXEntry *e, char *name, int flag )
 		if (strcmp( curtok, "end" ) == 0) {
 		    if (DebugCommands)
 			fprintf( stdout, "Getting argument for end{}\n" );
-		    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
-			TeXAbort( "TeXSkipEnv", e->name );
+		    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN,
+				   "TeXSkipEnv", e->name );
 		    if (LookupEnv( curtok, &btext, &etext, &nargs)) {
 			if (etext) {
 			    if (DebugCommands)
@@ -1777,8 +1818,8 @@ int      doout;
 	    if (strcmp( curtok, "\\end" ) == 0) {
 		if (DebugCommands)
 		    fprintf( stdout, "Getting argument for end{}\n" );
-		if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-		    TeXAbort( "TXSkipRaw", e->name );
+		TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+			       "TXSkipRaw", e->name );
 		/* Check for a user-defined environment type */
 		if (strcmp( curtok, name ) != 0) {
 		    if (doout) 
@@ -2092,8 +2133,8 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for begin{}\n" );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	TeXAbort( "TXbegin argument", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+		   "TXbegin argument", e->name );
     if (strcmp( curtok, "iftex" ) == 0) {
 	if (UseIfTex) TeXBenign( e, "iftex" );
 	else          TeXiftex( e );
@@ -2131,8 +2172,8 @@ TeXEntry *e;
 #endif
     else if (strcmp( curtok, "slide" ) == 0) {
 	/* Strip the color arg */
-	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	    TeXAbort( "TXbegin slide", e->name );
+	TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+		       "TXbegin slide", e->name );
 	/* Pick the equivalent slide format */
 	TXvt( e );
 	/* Need a new page ... */
@@ -2154,8 +2195,8 @@ TeXEntry *e;
     }
     else if (strcmp( curtok, "thebibliography" ) == 0) {
 	/* Eat the next argument */
-	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	    TeXAbort( "TXbegin thebibliography", e->name );
+	TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+		       "TXbegin thebibliography", e->name );
 	/* Need to act as if "Section{Bibliography}" seen */
 	SCPushToken( "{Bibliography}" );
 	e->ctx = (void*)MinSectionKind;
@@ -2235,10 +2276,10 @@ TeXEntry *e;
 	  itemtext     = (char *)MALLOC( MAX_TOKEN );    CHKPTR(itemtext);
 	  itemcommands = (char *)MALLOC( MAX_TOKEN );    CHKPTR(itemcommands);
 	  */
-	if (TeXGetArg( fpin[curfile], itemtext, MAX_TOKEN ) == -1) 
-	    TeXAbort( "TXbegin list itemtext", e->name );
-	if (TeXGetArg( fpin[curfile], itemcommands, MAX_TOKEN ) == -1) 
-	    TeXAbort( "TXbegin list itemcommands", e->name );
+	TeXMustGetArg( fpin[curfile], itemtext, MAX_TOKEN, 
+		       "TXbegin list itemtext", e->name );
+	TeXMustGetArg( fpin[curfile], itemcommands, MAX_TOKEN, 
+		       "TXbegin list itemcommands", e->name );
 	TeXDoList( e, itemtext, itemcommands );
 	/*
 	  FREE( itemtext );
@@ -2333,8 +2374,7 @@ TeXEntry *e;
 void TXend( TeXEntry *e )
 {
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	TeXAbort( "TXend", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXend", e->name );
     /* Finish processing of an environment */
     if (lstack[lSp].env == TXTABULAR) {
 	if (strcmp( "tabular", curtok ) != 0) {
@@ -2423,38 +2463,32 @@ void TXitem( TeXEntry *e )
 }
 
 /* Process index entries */
-void TXcindex( e )
-TeXEntry *e;
+void TXcindex( TeXEntry *e )
 {
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-      TeXAbort( "TXcindex", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXcindex", e->name );
     AddToIndex( curtok, CurNodename, CurSeqnum - 1, 1 );
     POPCURTOK;
 }
 
-void TXfindex( e )
-TeXEntry *e;
+void TXfindex( TeXEntry *e )
 {
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-      TeXAbort( "TXfindex", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXfindex", e->name );
     AddToIndex( curtok, CurNodename, CurSeqnum - 1, 0 );
     POPCURTOK;
 }
 
-void TXindex( e )
-TeXEntry *e;
+void TXindex( TeXEntry *e )
 {
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-      TeXAbort( "TXindex", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXindex", e->name );
     AddToIndex( curtok, CurNodename, CurSeqnum - 1, 2 );
     POPCURTOK;
 }
@@ -2467,8 +2501,7 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-      TeXAbort( "TXprintindex", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXprintindex", e->name );
     which = 0;
     if (strcmp( curtok, "cp" ) == 0) which = 1;
     WriteIndex( fpout, which );
@@ -2556,8 +2589,7 @@ void TXusepackage( TeXEntry *e )
 
     PUSHCURTOK;
     strncpy( CmdName, e->name, 64 );
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
-	    TeXAbort( "TXusepackage", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXusepackage", e->name );
     strcat( preamble, "\\usepackage{" );
     strcat( preamble, curtok );
     strcat( preamble, "}" );
@@ -2613,8 +2645,8 @@ void TXdocumentstyle( TeXEntry *e )
 	p = ptr + 1;
       }
     }
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-      TeXAbort( "TXdocumentstyle", (char *)0 );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+		   "TXdocumentstyle", (char *)0 );
     strcat( preamble, "{" );
     strcat( preamble, curtok );
     strcat( preamble, "}" );
@@ -2638,13 +2670,11 @@ void TXdocumentclass( TeXEntry *e )
 #define MAX_TITLE 1000
 #define MAX_AUTHOR 1000
 static char TitleString[MAX_TITLE], AuthorString[MAX_AUTHOR];
-void TXtitle( e )
-TeXEntry *e;
+void TXtitle( TeXEntry *e )
 {
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
-    if (TeXGetArg( fpin[curfile], TitleString, MAX_TITLE ) == -1) 
-	TeXAbort( "TXtitle", e->name );
+    TeXMustGetArg( fpin[curfile], TitleString, MAX_TITLE, "TXtitle", e->name );
 }
 
 void TXauthor( e )
@@ -2652,8 +2682,8 @@ TeXEntry *e;
 {
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
-    if (TeXGetArg( fpin[curfile], AuthorString, MAX_AUTHOR ) == -1) 
-	TeXAbort( "TXauthor", e->name );
+    TeXMustGetArg( fpin[curfile], AuthorString, MAX_AUTHOR, 
+		   "TXauthor", e->name );
 }
 void TXdate( e )
 TeXEntry *e;
@@ -2661,8 +2691,7 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	TeXAbort( "TXdata", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXdata", e->name );
     POPCURTOK;
 }
 void TeXmaketitle( e )
@@ -2685,26 +2714,21 @@ void TXNewLength( TeXEntry *e )
     TXDoNewLength( TeXlist, e );
 }
 
-void TXURL( e )
-TeXEntry *e;
+void TXURL( TeXEntry *e )
 {
     PUSHCURTOK;
-	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	    TeXAbort( "TXURL", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXURL", e->name );
     TXWriteHyperLink( fpout, curtok, curtok, 0 );
     POPCURTOK;
 }
 
-void TXAURL( e )
-TeXEntry *e;
+void TXAURL( TeXEntry *e )
 {
     char nametok[512];
 
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	TeXAbort( "TXAURL", e->name );
-    if (TeXGetArg( fpin[curfile], nametok, MAX_TOKEN ) == -1) 
-	TeXAbort( "TXAURL", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXAURL", e->name );
+    TeXMustGetArg( fpin[curfile], nametok, MAX_TOKEN, "TXAURL", e->name );
     TXWriteHyperLink( fpout, nametok, curtok, 0 );
     POPCURTOK;
 }
@@ -2719,8 +2743,7 @@ void TXcite( TeXEntry *e )
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	TeXAbort( "TXcite", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXcite", e->name );
 /* Must handle the case of citations separated by commas */
     p = curtok;
     pn = 0;
@@ -2752,8 +2775,7 @@ void TXcite( TeXEntry *e )
 /* \hcitea has a second argument that is used in the LaTeX version as the
    replacement text */
     if (e->nargs > 1) {
-	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	    TeXAbort( "TXhcite", e->name );
+	TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXhcite", e->name );
     }
     POPCURTOK;
 }
@@ -2940,8 +2962,7 @@ void TXepsfbox( TeXEntry *e )
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	TeXAbort( "TXepsfbox", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXepsfbox", e->name );
 
 /* Save the filename */
     strncpy( imagefile, curtok, 255 );
@@ -3111,8 +3132,7 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	    TeXAbort( "TXpsfig", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXpsfig", e->name );
 
     p = curtok;
     /* Look for file= and figure= */
@@ -3144,13 +3164,10 @@ static char mpgtoken[256], giftoken[256];
 void TXanimation( e )
 TeXEntry *e;
 {
-    if (TeXGetArg( fpin[curfile], mpgtoken, 256 ) == -1) 
-	TeXAbort( "TXanimation", e->name );
-    if (TeXGetArg( fpin[curfile], giftoken, 256 ) == -1) 
-	TeXAbort( "TXanimation", e->name );
+    TeXMustGetArg( fpin[curfile], mpgtoken, 256, "TXanimation", e->name );
+    TeXMustGetArg( fpin[curfile], giftoken, 256, "TXanimation", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
-	TeXAbort( "TXanimation", e->name );
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXanimation", e->name );
     TXmovie( e, mpgtoken, giftoken, curtok );
     POPCURTOK;
     TXWriteStartNewLine( fpout );
@@ -3242,6 +3259,7 @@ void TXInit( FILE *fin, FILE *fout )
     TXInsertName( TeXlist, "maketitle", TeXmaketitle, 0, (void *)0 );
     TXInsertName( TeXlist, "include", TXinclude, 1, (void *)0 );
     TXInsertName( TeXlist, "input", TXinclude, 1, (void *)0 );
+    TXInsertName( TeXlist, "IfFileExists", TXIfFileExists, 3, (void *)0 );
     TXInsertName( TeXlist, "char", TXchar, 0, (void *)0 );
     TXInsertName( TeXlist, "bibitem", TXbibitem, 1, (void *)0 );
 
@@ -3621,8 +3639,8 @@ char *str;
 		if (strcmp( curtok, "end" ) == 0) {
 		    if (DebugCommands)
 			fprintf( stdout, "Getting argument for end{}\n" );
-		    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
-			TeXAbort( "TXSkipEnv", e->name );
+		    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+				   "TXSkipEnv", e->name );
 		    /* Check for a user-defined environment type */
 		    if (LookupEnv( curtok, &btext, &etext, &nargs)) {
 			if (etext) {

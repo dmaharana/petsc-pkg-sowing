@@ -27,16 +27,14 @@ typedef struct _RTFNode {
 /* Forward defs */
 int SRHashFcn ( SRList *, char * );
 
-int SRHashFcn( lctx, name )
-SRList *lctx;
-char   *name;
+int SRHashFcn( SRList *lctx, char *name )
 {
     int fcn = 0;
     while (*name) fcn += *name++;
     return fcn % lctx->hashsize;
 }
 
-SRList *SRCreate()
+SRList *SRCreate( void )
 {
     SRList *new;
     int    i;
@@ -53,8 +51,7 @@ SRList *SRCreate()
     return new;
 }
 
-void SRDestroy( lctx )
-SRList *lctx;
+void SRDestroy( SRList *lctx )
 {
     LINK *cur, *next;
     int  i;
@@ -73,10 +70,7 @@ SRList *lctx;
 
 /* This needs to return a pointer to the link, OR have a routine to call
    to manage the private data area */
-LINK *SRLookup( lctx, topicname, entryname, number )
-SRList *lctx;
-char *topicname, *entryname;
-int  *number;
+LINK *SRLookup( SRList *lctx, char *topicname, char *entryname, int *number )
 {
     LINK *cur;
     int  match;
@@ -126,10 +120,7 @@ int  *number;
    make a copy of it (so that we can elimiinate any potential blanks
    in the name) 
  */
-LINK *SRInsert( lctx, topicname, entryname, number )
-SRList *lctx;
-char *topicname, *entryname;
-int  *number;
+LINK *SRInsert( SRList *lctx, char *topicname, char *entryname, int *number )
 {
     LINK *cur, *new, *prev;
     int  match;
@@ -236,10 +227,8 @@ int  *number;
 }
 
 /* This is just SRInsert without the lookup */
-LINK *SRInsertAllowDuplicates( lctx, topicname, entryname, number )
-SRList *lctx;
-char *topicname, *entryname;
-int  *number;
+LINK *SRInsertAllowDuplicates( SRList *lctx, char *topicname, char *entryname,
+			       int *number )
 {
     LINK *cur, *new, *prev;
     int  match;
@@ -350,9 +339,7 @@ int  *number;
 
 
 /* Dump the names of all objects referenced only once */
-void SRDump( lctx, fp )
-SRList *lctx;
-FILE   *fp;
+void SRDump( SRList *lctx, FILE *fp )
 {
     LINK *cur;
     int  i;
@@ -370,9 +357,7 @@ FILE   *fp;
 }
 
 /* Dump the names of all objects */
-void SRDumpAll( lctx, fp )
-SRList *lctx;
-FILE   *fp;
+void SRDumpAll( SRList *lctx, FILE *fp )
 {
     LINK *cur;
     int  i;

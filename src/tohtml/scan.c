@@ -227,9 +227,7 @@ int SCTxtGetChar( FILE *fp )
 }
 
 /* This does a move of s by n to the right */
-void OverlapCopy( s, n )
-int  n;
-char *s;
+void OverlapCopy( char *s, int n )
 {
     int len = strlen(s), i;
 
@@ -243,8 +241,7 @@ char *s;
    This is appropriate for use by TeXoutstr when it needs to write 
    to the input buffer
  */
-void SCAppendToken( token )
-char *token;
+void SCAppendToken( char *token )
 {
     int len, i, j;
     if (DebugScan)
@@ -265,8 +262,7 @@ char *token;
 
 /* 
  */
-void SCPushToken( token )
-char *token;
+void SCPushToken( char *token )
 {
     int len, i;
 

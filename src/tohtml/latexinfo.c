@@ -15,8 +15,7 @@ extern int lSp;
 
 /* latexinfo defines xref and pxref which use the section names rather 
    than labels.  */
-void TXxref( e )
-TeXEntry *e;
+void TXxref( TeXEntry *e )
 {
     LINK *RefedSection;
     int  dummy;
@@ -46,8 +45,7 @@ TeXEntry *e;
     POPCURTOK;
 }	
 
-void TXpxref( e )
-TeXEntry *e;
+void TXpxref( TeXEntry *e )
 {
     LINK *RefedSection;
     int  dummy;
@@ -103,22 +101,19 @@ void TeXexample( TeXEntry *e )
     lSp--;
 }   
 
-void TeXiftex( e )
-TeXEntry *e;
+void TeXiftex( TeXEntry *e )
 {
 /* Skip code until find an \end{iftex} */	
     TeXskipEnv( e, "iftex", 0 );
 }   
 
-void TeXtex( e )
-TeXEntry *e;
+void TeXtex( TeXEntry *e )
 {
 /* Skip code until find an \end{tex} */	
     TeXskipEnv( e, "tex", 0 );
 }   
 
-void TeXmenu( e )
-TeXEntry *e;
+void TeXmenu( TeXEntry *e )
 {
     TeXskipEnv( e, "menu", 0 );
 }	
