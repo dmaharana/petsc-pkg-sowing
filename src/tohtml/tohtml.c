@@ -464,8 +464,7 @@ int  refnumber;
 /*
     Write out the end of a topic
  */
-void WriteEndofTopic( fp )
-FILE *fp;
+void WriteEndofTopic( FILE *fp )
 {
     if (!InDocument) return;
     if (DebugOutput) fprintf( stdout, "WriteEndofTopic\n" );
@@ -528,11 +527,8 @@ int  maxtoken;
      In an info file, we don't need to do this because the file has already
      been processed.  See ProcessInfoFile().       
  */
-void ProcessFile( argc, argv, fpin, fpout, process )
-int  argc;
-char **argv;
-FILE *fpin, *fpout;
-void (*process)( int, char **, FILE *, FILE * );
+void ProcessFile( int argc, char **argv, FILE *fpin, FILE *fpout, 
+		  void (*process)( int, char **, FILE *, FILE *) )
 {
     SCSetTranslate( SCHTMLTranslate );
     WriteHeader( fpout );
@@ -540,8 +536,7 @@ void (*process)( int, char **, FILE *, FILE * );
     WriteTrailer( fpout );
 }
 
-void RemoveExtension( str )
-char *str;
+void RemoveExtension( char *str )
 {
     char *p;
 
