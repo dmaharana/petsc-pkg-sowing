@@ -22,6 +22,8 @@
    -printmatch      - Print all matched tokens to stdout.  Use
                       -printmatch -o /dev/null to see ONLY the matched
                       tokens.
+   -inhtml          - Input is HTML.  Name mapping won't happen within HTML
+                      constructions (e.g., between < and >)
  */
 int main( int argc, char **argv )
 {
@@ -34,6 +36,7 @@ int main( int argc, char **argv )
     char      token[256];
     int       nsp;
     int       pflag = 0;
+    int       input_is_html = 0;
 
     /* Allow stdin and stdout as input, output files (so that this can be a 
        filter) */
@@ -42,6 +45,8 @@ int main( int argc, char **argv )
     if (!cmd->HasArg( "-debug_paths" )) (void) InstreamDebugPaths( 1 );
 
     if (!cmd->HasArg( "-printmatch" )) pflag = 1;
+
+    if (!cmd->HasArg( "-inhtml" )) input_is_html = 1;
 
     /* Source and destination files */
     // ins  = new InStreamFile( "map1.C", "r" );
@@ -100,7 +105,25 @@ int main( int argc, char **argv )
     }
     textout->SetOutstream( echo );
     while (!ins->GetToken( 256, token, &nsp )) {
-	map->PutToken( nsp, token );
+        // As a special feature, we should accept a mode where the input
+        // file is in HTML format, and in that case, we just skip until
+        // we see the closing angle bracket
+      //printf( "token [0] = %c\n", token[0] );
+        if (input_is_html && token[0] == '<') {
+	  //printf( "In html input\n" );
+	  map->PutQuoted(0, "\0" );  // This accomplishes a flush
+	  map->next->PutToken( nsp, token );
+	  while (!ins->GetToken( 256, token, &nsp )) {
+	    map->next->PutToken( nsp, token );
+	    if (token[0] == '>') break;
+	    token[0] = 0;
+	  }
+	  //printf( "\nLeaving html input\n" );
+	  if (token[0] != '>') break;
+        } 
+        else {
+	    map->PutToken( nsp, token );
+        }
 	//	echo->PutToken( 0, "[" );
 	//echo->PutToken( 0, token );
 	//echo->PutToken( 0, "]" );
@@ -109,6 +132,7 @@ int main( int argc, char **argv )
     delete ins;
     delete outs;
     delete map;
-    delete echo;
+    // echo is already deleted by when the stream that it is attached to is.
+    //delete echo;
     return 0;
 }
