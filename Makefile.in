@@ -65,61 +65,76 @@ install:
 	$(INSTALL_PROGRAM) src/doctext/doctext $(bindir)/doctext
 	$(INSTALL_PROGRAM) src/doctext/doc2lt $(bindir)/doc2lt
 	$(INSTALL_PROGRAM) src/tohtml/tohtml  $(bindir)/tohtml
-	$(INSTALL_PROGRAM) bin/pstoxbm $(bindir)/pstoxbm
-	$(INSTALL_PROGRAM) bin/pstogif $(bindir)/pstogif
-	$(INSTALL_DATA)    share/pstoppm.ps $(datadir)/pstoppm.ps
+	if [ "`cd bin && pwd`" != "`cd $(bindir) && pwd`" ] ; then \
+	    $(INSTALL_PROGRAM) bin/pstoxbm $(bindir)/pstoxbm ; \
+	    $(INSTALL_PROGRAM) bin/pstogif $(bindir)/pstogif ; \
+	fi
 	$(INSTALL_PROGRAM) src/bfort/bfort $(bindir)/bfort
 	$(INSTALL_PROGRAM) src/mapnames/mapnames $(bindir)/mapnames
-	$(INSTALL_DATA)    share/basedefs.txt $(datadir)/basedefs.txt
-	$(INSTALL_DATA)    share/blueball.gif $(datadir)/blueball.gif
-	$(INSTALL_DATA)    share/greenball.gif $(datadir)/greenball.gif
-	$(INSTALL_DATA)    share/purpleball.gif $(datadir)/purpleball.gif
-	$(INSTALL_DATA)    share/redball.gif $(datadir)/redball.gif
-	$(INSTALL_DATA)    share/yellowball.gif $(datadir)/yellowball.gif
-	$(INSTALL_DATA)    share/next.xbm $(datadir)/next.xbm
-	$(INSTALL_DATA)    share/up.xbm $(datadir)/up.xbm
-	$(INSTALL_DATA)    share/previous.xbm $(datadir)/previous.xbm
-	$(INSTALL_DATA)    share/html.def $(datadir)/html.def
-	$(INSTALL_DATA)    share/latex.def $(datadir)/latex.def
-	$(INSTALL_DATA)    share/nroff.def $(datadir)/nroff.def
-	$(INSTALL_DATA)    share/refman.def $(datadir)/refman.def
-	$(INSTALL_DATA)    share/refman.sty $(datadir)/refman.sty
-	$(INSTALL_DATA)    share/doctext/html.def $(datadir)/doctext/html.def
-	$(INSTALL_DATA)    share/doctext/htmltabl.def $(datadir)/doctext/htmltabl.def
-	$(INSTALL_DATA)    share/doctext/htmlargtbl.def \
-				$(datadir)/doctext/htmlargtbl.def
-	$(INSTALL_DATA)    share/doctext/latex.def $(datadir)/doctext/latex.def
-	$(INSTALL_DATA)    share/doctext/latexargtbl.def \
-				$(datadir)/doctext/latexargtbl.def
-	$(INSTALL_DATA)	   share/doctext/nroff.def $(datadir)/doctext/nroff.def
-	-$(INSTALL_DATA)    man/man1/tohtml.1 $(man1dir)/tohtml.1
-	-$(INSTALL_DATA)    man/man1/doctext.1 $(man1dir)/doctext.1
-	-$(INSTALL_DATA)    man/man1/bfort.1 $(man1dir)/bfort.1
+	if [ "`cd share && pwd`" != "`cd $(datadir) && pwd`" ] ; then \
+	    $(INSTALL_DATA)    share/pstoppm.ps $(datadir)/pstoppm.ps ;\
+	    $(INSTALL_DATA)    share/basedefs.txt $(datadir)/basedefs.txt ;\
+	    $(INSTALL_DATA)    share/blueball.gif $(datadir)/blueball.gif ;\
+	    $(INSTALL_DATA)    share/greenball.gif $(datadir)/greenball.gif ;\
+	    $(INSTALL_DATA)    share/purpleball.gif $(datadir)/purpleball.gif ;\
+	    $(INSTALL_DATA)    share/redball.gif $(datadir)/redball.gif ;\
+	    $(INSTALL_DATA)    share/yellowball.gif $(datadir)/yellowball.gif ;\
+	    $(INSTALL_DATA)    share/next.xbm $(datadir)/next.xbm ;\
+	    $(INSTALL_DATA)    share/up.xbm $(datadir)/up.xbm ;\
+	    $(INSTALL_DATA)    share/previous.xbm $(datadir)/previous.xbm ;\
+	    $(INSTALL_DATA)    share/html.def $(datadir)/html.def ;\
+	    $(INSTALL_DATA)    share/latex.def $(datadir)/latex.def ;\
+	    $(INSTALL_DATA)    share/nroff.def $(datadir)/nroff.def ;\
+	    $(INSTALL_DATA)    share/refman.def $(datadir)/refman.def ;\
+	    $(INSTALL_DATA)    share/refman.sty $(datadir)/refman.sty ;\
+	    $(INSTALL_DATA)    share/doctext/html.def $(datadir)/doctext/html.def ;\
+	    $(INSTALL_DATA)    share/doctext/htmltabl.def $(datadir)/doctext/htmltabl.def ;\
+	    $(INSTALL_DATA)    share/doctext/htmlargtbl.def \
+				$(datadir)/doctext/htmlargtbl.def ;\
+	    $(INSTALL_DATA)    share/doctext/latex.def $(datadir)/doctext/latex.def ;\
+	    $(INSTALL_DATA)    share/doctext/latexargtbl.def \
+				$(datadir)/doctext/latexargtbl.def ;\
+	    $(INSTALL_DATA)	   share/doctext/nroff.def $(datadir)/doctext/nroff.def ;\
+	fi
+	-if [ "`cd man/man1 && pwd`" != "`cd $(man1dir) && pwd`" ] ; then \
+	    $(INSTALL_DATA)    man/man1/tohtml.1 $(man1dir)/tohtml.1 ;\
+	    $(INSTALL_DATA)    man/man1/doctext.1 $(man1dir)/doctext.1 ;\
+	    $(INSTALL_DATA)    man/man1/bfort.1 $(man1dir)/bfort.1 ;\
+	fi
 
 uninstall:
+	-/bin/rm $(bindir)/mapnames
 	-/bin/rm $(bindir)/doctext
 	-/bin/rm $(bindir)/tohtml
 	-/bin/rm $(bindir)/bfort
-	-/bin/rm $(datadir)/basedefs.txt
-	-/bin/rm $(datadir)/blueball.gif
-	-/bin/rm $(datadir)/greenball.gif
-	-/bin/rm $(datadir)/purpleball.gif
-	-/bin/rm $(datadir)/redball.gif
-	-/bin/rm $(datadir)/yellowball.gif
-	-/bin/rm $(datadir)/next.xbm
-	-/bin/rm $(datadir)/up.xbm
-	-/bin/rm $(datadir)/previous.xbm
-	-/bin/rm $(datadir)/html.def
-	-/bin/rm $(datadir)/latex.def
-	-/bin/rm $(datadir)/nroff.def
-	-/bin/rm $(datadir)/refman.sty
-	-/bin/rm $(datadir)/doctext/html.def
-	-/bin/rm $(datadir)/doctext/htmltabl.def
-	-/bin/rm $(datadir)/doctext/latex.def
-	-/bin/rm $(datadir)/doctext/nroff.def
-	-/bin/rm $(man1dir)/tohtml.1
-	-/bin/rm $(man1dir)/doctext.1
-	-/bin/rm $(man1dir)/bfort.1
+	-if [ "`cd bin && pwd`" != "`cd $(bindir) && pwd`" ] ; then \
+	    /bin/rm $(bindir)/pstoxbm ; \
+	    /bin/rm $(bindir)/pstogif ; \
+	fi
+	-if [ "`cd share && pwd`" != "`cd $(datadir) && pwd`" ] ; then \
+	     /bin/rm $(datadir)/basedefs.txt ;\
+	     /bin/rm $(datadir)/blueball.gif ;\
+	     /bin/rm $(datadir)/greenball.gif ;\
+	     /bin/rm $(datadir)/purpleball.gif ;\
+	     /bin/rm $(datadir)/redball.gif ;\
+	     /bin/rm $(datadir)/yellowball.gif ;\
+	     /bin/rm $(datadir)/next.xbm ;\
+	     /bin/rm $(datadir)/up.xbm ;\
+	     /bin/rm $(datadir)/previous.xbm ;\
+	     /bin/rm $(datadir)/html.def ;\
+	     /bin/rm $(datadir)/latex.def ;\
+	     /bin/rm $(datadir)/nroff.def ;\
+	     /bin/rm $(datadir)/refman.sty ;\
+	     /bin/rm $(datadir)/doctext/html.def ;\
+	     /bin/rm $(datadir)/doctext/htmltabl.def ;\
+	     /bin/rm $(datadir)/doctext/latex.def ;\
+	     /bin/rm $(datadir)/doctext/nroff.def ;\
+	fi
+	-if [ "`cd man/man1 && pwd`" != "`cd $(man1dir) && pwd`" ] ; then \
+	    /bin/rm $(man1dir)/tohtml.1 ;\
+	    /bin/rm $(man1dir)/doctext.1 ;\
+	    /bin/rm $(man1dir)/bfort.1 ;\
+	fi
 
 testing:
 	(cd src/bfort/testing && ${MAKE} testing)
