@@ -31,6 +31,10 @@ N*/
    table example
 .ve
 
+.fin
+    This is in quotation format
+.fout
+
 .N Fnode
 
 .k break, pointers

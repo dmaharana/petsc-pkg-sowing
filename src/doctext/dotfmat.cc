@@ -13,6 +13,7 @@
     .p filename   Picture (PS files)
     .cb           Begin picture caption
     .ce           End picture caption                   
+    .f            Execute user-defined function (e.g., .fin, .fout)
 
     Soon to be added:
     .c citeref    Citation reference (eventually, we will be able to
@@ -295,7 +296,7 @@ int ProcessKeywords( InStream *ins, TextOut *textout, int *lastWasNl )
     /* Pass the keywords to the keyword routine */
     ins->GetLine( buf, 1024 );
     
-    textout->PutOp( "section", "Keywords" );
+    textout->PutOp( "section", (char*)"Keywords" );
     textout->PutToken( 0, buf );
     textout->PutOp( "linebreak" ); // lastwasNL?
     
@@ -313,10 +314,28 @@ int ProcessSeeAlso( InStream *ins, TextOut *textout, int *lastWasNl )
     /* Pass the tokens to the seealso routine */
     ins->GetLine( buf, 1024 );
     
-    textout->PutOp( "section", "See Also" );
+    textout->PutOp( "section", (char *)"See Also" );
     textout->PutToken( 0, buf );
     textout->PutOp( "linebreak" ); // lastwasNL?
     return 0;
+}
+
+/* Process a .fname command */
+int ProcessUserCmd( InStream *ins, TextOut *textout, int *lastWasNl )
+{
+    char buf[256];
+
+    /* Get command name */
+    SkipWhite( ins );
+
+    if (ins->GetLine( buf, 256 )) {
+	fprintf( stderr, "Could not read user command %s\n",
+		 GetCurrentFileName() );
+	return 1;
+	}
+    /* Remove newline from end of buffer (should have a Chop function) */
+    buf[strlen(buf)-1] = 0;
+    return textout->PutOp( buf );
 }
 
 int ProcessDotFmt( char arg_kind, InStream *ins, TextOut *textout, 
@@ -339,6 +358,7 @@ int ProcessDotFmt( char arg_kind, InStream *ins, TextOut *textout,
         case 'c': return ProcessCaption( ins, textout, lastWasNl );
         case 'k': return ProcessKeywords( ins, textout, lastWasNl );
         case 's': return ProcessSeeAlso( ins, textout, lastWasNl );
+        case 'f': return ProcessUserCmd( ins, textout, lastWasNl );
 
         default:
     	      fprintf( stderr, "Unknown dot command `%c' in file %s(%s)\n", 

@@ -10,5 +10,6 @@ int ProcessPicture( InStream *, TextOut *, int * );
 int ProcessKeywords( InStream *, TextOut *, int * );
 int ProcessSeeAlso( InStream *, TextOut *, int * );
 int ProcessDotFmt( char, InStream *, TextOut *, int * );
+int ProcessUserCmd( InStream *, TextOut *, int * );
 
 #endif
