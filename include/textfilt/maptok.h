@@ -14,6 +14,7 @@ class OutStreamMap : public OutStream {
     char squote, equote;
     SrList *maptable;
     void Setup( int );
+    void FlushTokBuf( void );
 
     public:
     OutStreamMap( OutStream * );
@@ -39,6 +40,7 @@ class TextOutMap : public TextOut {
     char squote, equote;
     SrList *maptable;
     void Setup( int );
+    void FlushTokBuf( void );
 
     public:
     int  debug;
@@ -47,6 +49,7 @@ class TextOutMap : public TextOut {
     ~TextOutMap();
     int PutChar( const char );
     int PutToken( int, const char * );
+    int PutQuoted( int, const char * );
     int PutNewline( void );
     int PutLink( const char *, SrEntry * );
     int SetRegisterValue( int, const char * );

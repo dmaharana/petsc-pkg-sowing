@@ -59,6 +59,21 @@ OutStreamMap::OutStreamMap( int in_maxlen )
     Setup( in_maxlen );
     next = 0;
 }
+
+void OutStreamMap::FlushTokBuf( void )
+{
+  if (curlen) {
+    SrEntry *entry;
+    if (maptable->Lookup( activetok, &entry ) == 0) {
+      PutLink( activetok, entry );
+    }
+    else {
+      next->PutToken( 0, activetok );
+    }
+    curlen = 0;
+  }
+}
+
 /* 
  * This routine works by putting a token into the internal buffer.
  * Once it knows that it can (found a delimiter), it tries to look it
@@ -78,18 +93,10 @@ int OutStreamMap::PutToken( int nsp, const char *token )
 
     /* Spaces are a delimiter.  Try to flush activetok, and rerun PutToken */
     if (nsp) {
-	if (curlen) {
-	    if (maptable->Lookup( activetok, &entry ) == 0) {
-		PutLink( activetok, entry );
-		}
-	    else {
-		next->PutToken( 0, activetok );
-		}
-	    curlen = 0;
-	    }
-	next->PutToken( nsp, (char *)0 );
-	return PutToken( 0, token );
-	}
+      FlushTokBuf();
+      next->PutToken( nsp, (char *)0 );
+      return PutToken( 0, token );
+    }
 
     /* Copy token to activetok while the breaktable entries are the same.
        Careful of the BREAK_OTHER and BREAK_SPACE case.
@@ -143,7 +150,8 @@ int OutStreamMap::PutQuoted( int nsp, const char *token )
 {
   //  if (debug_flag && token && *token)
   //    printf( "OutStreamMap::PutQuoted %s\n", token );
-    return next->PutQuoted( nsp, token );
+  FlushTokBuf();
+  return next->PutQuoted( nsp, token );
 }
 
 int OutStreamMap::PutChar( char c )
@@ -229,7 +237,7 @@ int OutStreamMap::PutLink( const char *name, SrEntry *entry )
     next->PutToken( 0, "\">" );
     next->PutToken( 0, info->repname );
     next->PutToken( 0, "</A>" );
-	return 0;
+    return 0;
 }
 OutStreamMap::~OutStreamMap()
 {
@@ -309,6 +317,19 @@ int TextOutMap::PutNewline( void )
   return rc;
 }
 
+void TextOutMap::FlushTokBuf( void )
+{
+  if (curlen) {
+    SrEntry *entry;
+    if (maptable->Lookup( activetok, &entry ) == 0) {
+      PutLink( activetok, entry );
+    }
+    else {
+      next->PutToken( 0, activetok );
+    }
+    curlen = 0;
+  }
+}
 int TextOutMap::PutToken( int nsp, const char *token )
 {
     SrEntry *entry;
@@ -324,18 +345,10 @@ int TextOutMap::PutToken( int nsp, const char *token )
 
     /* Spaces are a delimiter.  Try to flush activetok, and rerun PutToken */
     if (nsp) {
-	if (curlen) {
-	    if (maptable->Lookup( activetok, &entry ) == 0) {
-	        PutLink ( activetok, entry );
-		}
-	    else {
-		next->PutToken( 0, activetok );
-		}
-	    curlen = 0;
-	    }
-	next->PutToken( nsp, (char *)0 );
-	return PutToken( 0, token );
-	}
+      FlushTokBuf();
+      next->PutToken( nsp, (char *)0 );
+      return PutToken( 0, token );
+    }
 
     /* Copy token to activetok while the breaktable entries are the same.
        Careful of the BREAK_OTHER and BREAK_SPACE case.
@@ -488,6 +501,14 @@ int TextOutMap::PutLink( const char *name, SrEntry *entry )
     }
     return 0;
 }
+int TextOutMap::PutQuoted( int nsp, const char *token )
+{
+  //  if (debug_flag && token && *token)
+  //    printf( "OutStreamMap::PutQuoted %s\n", token );
+  FlushTokBuf();
+  return next->PutQuoted( nsp, token );
+}
+
 TextOutMap::~TextOutMap()
 {
     delete activetok;
