@@ -10,8 +10,10 @@
  * of OutStreams 
  */
 class OutStream {
-    /* Private data for stream */
-    void     *extra_data;
+//    /* Private data for stream */
+//    void     *extra_data;
+
+    protected:
     int      bufmode;
     int      debug_flag;
 
@@ -39,8 +41,6 @@ class OutStream {
 #include <stdio.h>
 class OutStreamFile : public OutStream {
     FILE *fp;
-    int  bufmode;
-    int      debug_flag;
 
     public:
     OutStreamFile( void );
@@ -55,13 +55,11 @@ class OutStreamFile : public OutStream {
 class OutStreamBuf : public OutStream {
     char *buffer, *position;
     int  curlen, maxlen;
-    int  bufmode;
-    int      debug_flag;
 
     public:
     OutStreamBuf( int );
     ~OutStreamBuf( void );
-    int PutChar( char );
+    int PutChar( const char );
     char *GetBuffer( void );
     void Reset( void );
     const char *MyName( void );

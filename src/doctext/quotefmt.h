@@ -13,6 +13,10 @@ class TextOutQFmt : public TextOut {
 	int PutChar( const char );
 	int PutToken( int, const char * );
 	int PutOp( const char * );
+	int PutOp( const char *, char *, char *, int );
+	int PutOp( const char *, char *, char *, char *, char * );
+	int PutOp( const char *, char * );
+	int PutOp( const char *, char *, int );
 	int Flush( );
     };
 #endif

@@ -6,6 +6,10 @@
 int OutStream::PutToken( int nsp, const char *token )
 {
     int i;
+    if (debug_flag && token && *token) {
+      printf( "(Generic)%s::PutToken %s\n", MyName(), token );
+      printf( "debug_flag = %d\n", debug_flag );
+    }
     for (i=0; i<nsp; i++) PutChar( ' ' );
     if (token)
 	while (*token) PutChar( *token++ );
@@ -14,7 +18,9 @@ int OutStream::PutToken( int nsp, const char *token )
 
 int OutStream::PutQuoted( int nsp, const char *token )
 {
-    return PutToken( nsp, token );
+  if (debug_flag && token && *token) 
+    printf( "(Generic)%s::PutQuoted %s\n", MyName(), token );
+  return PutToken( nsp, token );
 }
 
 int OutStream::PutChar( const char ch )
@@ -63,6 +69,7 @@ int OutStream::Debug( int flag )
 {
   int old_flag = debug_flag;
 
+  printf( "New debug_flag = %d\n", flag );
   debug_flag = flag;
   return old_flag;
 }
@@ -83,18 +90,18 @@ OutStreamFile::OutStreamFile( const char *path, const char *mode )
         status = 0;
     else
         status = -1;
-    next = 0;
-    bufmode = 0;
+    next       = 0;
+    bufmode    = 0;
     debug_flag = 0;
 }
 
 
 OutStreamFile::OutStreamFile( )
 {
-    fp	 = stdout;
-    status = 0;
-    next = 0;
-    bufmode = 0;
+    fp	       = stdout;
+    status     = 0;
+    next       = 0;
+    bufmode    = 0;
     debug_flag = 0;
 }
 

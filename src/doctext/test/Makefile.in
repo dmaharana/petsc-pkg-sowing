@@ -31,12 +31,15 @@ runtests:
 	../doctext -skipprefix C -date "2/10/2000" tst.f
 	../doctext -ignore EXPORT_API -date "2/10/2000" tst2.c
 	../doctext -html \
-		-mpath man3 -heading PETSc \
-		-defn /home/bsmith/petsc/docs/tex/doctext/html.def \
-		-locdir foodir \
-                -mapref /home/bsmith/petsc/docs/manualpages/manualpages.cit \
-		-defn /home/bsmith/petsc/docs/manualpages/sec/eop.Vec \
-		-date "2/10/2000" mesh.c
+	        -defn fhtml.def -outfile tstreg.html tst1.c
+
+#	../doctext -html \
+#		-mpath man3 -heading PETSc \
+#		-defn /home/bsmith/petsc/docs/tex/doctext/html.def \
+#		-locdir foodir \
+#                -mapref /home/bsmith/petsc/docs/manualpages/manualpages.cit \
+#		-defn /home/bsmith/petsc/docs/manualpages/sec/eop.Vec \
+#		-date "2/10/2000" mesh.c
 compare:
 	-@for file in testref/* ; do \
 	if test $$file = "testref/CVS" ; then continue ; fi ; \

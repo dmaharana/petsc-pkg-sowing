@@ -23,7 +23,11 @@
  *    be defined.
  * %f Insert end-font-string, if any (not an error if none defined)
  * %e="..." Define end-font-string.  Max of 32 characters
- * %u1, %u2 etc.  Just like %1, but upper case the string.
+ * %u1, %u2, etc.  Just like %1, but upper case the string.
+ * %r1, %r2, etc.  The values of registers defined with %a or SetOutRegister
+ * %rq1, etc. is like %r1, but the output is quoted (so that filters further 
+ * downstream do not try to process the data)
+ * %a1="..." define register 1.  Ditto for a2, etc.
  * %m="..." Define mode.  This is used for text systems that have special
  * processing modes, such as verbatim in LaTeX, where character processing
  * is changed.
@@ -172,6 +176,7 @@ int TextOut::SetDebug( int flag )
 int TextOut::SetOutstream( OutStream *in_outs )
 {
     out = in_outs;
+    if (debug_flag) out->Debug(debug_flag);
     if (next) next->SetOutstream( in_outs );
     return 0;
 }
@@ -296,11 +301,41 @@ int TextOut::PutCommand( char *cmdstring,
 	    l_was_nl     = last_was_nl;
 	    last_was_nl  = 0;
 	    switch (ch2) {
+	        int regnum, r_quoted;
 		case '%': out->PutChar( ch ); break;
 	        case '1': OutString( s1 ); break;
                 case '2': OutString( s2 ); break;
                 case '3': OutString( s3 ); break;
                 case '4': OutString( s4 ); break;
+  	        case 'a': 
+		  /* Get the register number and string value */
+		  ch2 = *cmdstring++;
+		  regnum = ch2 - '0';
+		  if (regnum < 0 || regnum >= MAX_TEXT_REGNUM) return 1;
+		  cmdstring = GetDQtext( cmdstring, cmdreg[regnum], 
+					 MAX_TEXT_REGISTER );
+		  //printf( "stng=%s\n", cmdreg[regnum] );
+		  /* if cmdstring == 0, an error was found */
+		  if (!cmdstring) return 1;
+		  
+		  break;
+	        case 'r':
+	          /* Get the register number and output the value in that
+		     register */
+		  ch2 = *cmdstring++;
+		  r_quoted = (ch2 == 'q');
+		  if (r_quoted) ch2 = *cmdstring++;
+		  //if (debug_flag & r_quoted) 
+		  //  printf( "quoted output\n" );
+		  regnum = ch2 - '0';
+		  if (regnum < 0 || regnum >= MAX_TEXT_REGNUM) return 1;
+		  //printf( "stng_out%d=%s\n", regnum, cmdreg[regnum] );
+		  if (r_quoted) 
+		    out->PutQuoted( 0, cmdreg[regnum] );
+		  else
+		    out->PutToken( 0, cmdreg[regnum] );
+		  break;
+
    	        case 'e': 
 		  /* Get replacement string; (="...") set lfont */
 		  cmdstring = GetDQtext( cmdstring, font_str, 32 );
@@ -395,9 +430,11 @@ int TextOut::PutToken( int nsp, const char *token )
 
 int TextOut::PutQuoted( int nsp, const char *token )
 {
-    if (token && *token) UpdateNL( 0 );
-    if (next) return next->PutQuoted( nsp, token );
-    else      return out->PutQuoted( nsp, token );
+  if (debug_flag && token && *token) 
+    printf( "Generic puttoken for %s\n", token );
+  if (token && *token) UpdateNL( 0 );
+  if (next) return next->PutQuoted( nsp, token );
+  else      return out->PutQuoted( nsp, token );
 }
 
 int TextOut::PutNewline( )
@@ -424,6 +461,15 @@ const char *TextOut::SetMode( const char * str )
   // printf( "Setting mode to %s\n", str ? str : "NULL" );
   return (const char *)savemode;
 }
+
+int TextOut::SetRegisterValue( int regnum, const char * val )
+{
+  //printf( "reg val %d is %s\n", regnum, val );
+  if (strlen(val) >= MAX_TEXT_REGISTER) return 1;
+  strncpy( cmdreg[regnum], val, MAX_TEXT_REGISTER-1 );
+  return 0;
+}
+
 //
 // This is used to propagate newline changes down the list
 // Do we need up as well?

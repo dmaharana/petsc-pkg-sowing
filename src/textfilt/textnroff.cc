@@ -21,7 +21,7 @@ int TextOutNroff::Setup( )
     nl           = 0;
     last_was_nl	 = 1;
     last_was_par = 1;
-    debug_flag   = 1;
+    debug_flag   = 0;
     next         = 0;
     strcpy( newline_onoutput, "\n" );
     userops	 = new SrList( 127 );
@@ -77,5 +77,5 @@ int TextOutNroff::PutToken( int nsp, const char *token )
      while (*token) {
 	 PutChar( *token++ );
 	 }
-	 return 0;
+     return 0;
 }

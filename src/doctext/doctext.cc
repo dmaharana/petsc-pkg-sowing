@@ -185,6 +185,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 	delete mapins;
 	}
     if (map) {
+	if (DebugDoc) map->Debug(1);
         map->next = textout;
 	textout   = map;
     }
@@ -225,6 +226,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 	if (DoDosFileNewlines) textout->SetNewlineString( "\r\n" );
 	// bof isn't correct ? Why?
 	if (basedir) textout->PutOp( "bof", (char *)basedir );
+	textout->PutOp( "bop" );
 	}
     
     /* process all of the files */
@@ -268,6 +270,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 		SaveName( ins, routine );
 		continue;
 		}
+	    textout->SetRegisterValue( 0, routine );  // put name in putop register
 	    if (!baseoutfile) {
 		MakeFileName( path, routine, lextension, outfilename );
 		outs = new OutStreamFile( outfilename, "w" );

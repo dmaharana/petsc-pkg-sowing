@@ -13,3 +13,4 @@ install.ps
 install
 tohtml
 bfort
+Makefile

@@ -75,7 +75,29 @@ find $TMPDIR/sowingcopy/sowing \( -name 'RCS' -o -name '*.o' -o -name '#*#' -o \
 /bin/rm -f $TMPDIR/sowingcopy/sowing/make.log
 /bin/rm -f $TMPDIR/sowingcopy/sowing/docs/*.log
 /bin/rm -f $TMPDIR/sowingcopy/sowing/docs/*.hux
-/bin/rm -f $TMPDIR/sowingcopy/sowing/src/findlibs
+/bin/rm -rf $TMPDIR/sowingcopy/sowing/src/findlibs
+
+#
+# Update the documentation files
+rm -f $TMPDIR/.f
+sed -e 's%/homes/gropp/bin/share/tex/%%g' \
+    $TMPDIR/sowingcopy/sowing/docs/doctext/doctext.tex  > $TMPDIR/.f
+mv $TMPDIR/.f $TMPDIR/sowingcopy/sowing/docs/doctext/doctext.tex
+cp /homes/gropp/bin/share/tex/code.sty $TMPDIR/sowingcopy/docs/doctext
+cp /homes/gropp/bin/share/tex/fileinclude.sty $TMPDIR/sowingcopy/docs/doctext
+cp /homes/gropp/bin/share/tex/url.sty $TMPDIR/sowingcopy/docs/doctext
+sed -e 's%/homes/gropp/bin/share/tex/%%g' \
+    $TMPDIR/sowingcopy/sowing/docs/install.tex  > $TMPDIR/.f
+mv $TMPDIR/.f $TMPDIR/sowingcopy/sowing/docs/install.tex
+sed -e 's%/homes/gropp/bin/share/tex/%%g' \
+    $TMPDIR/sowingcopy/sowing/docs/bfort.tex  > $TMPDIR/.f
+mv $TMPDIR/.f $TMPDIR/sowingcopy/sowing/docs/bfort.tex
+sed -e 's%/homes/gropp/bin/share/tex/%%g' \
+    $TMPDIR/sowingcopy/sowing/docs/tohtml.tex  > $TMPDIR/.f
+mv $TMPDIR/.f $TMPDIR/sowingcopy/sowing/docs/tohtml.tex
+cp /homes/gropp/bin/share/tex/code.sty $TMPDIR/sowingcopy/docs
+cp /homes/gropp/bin/share/tex/fileinclude.sty $TMPDIR/sowingcopy/docs
+cp /homes/gropp/bin/share/tex/url.sty $TMPDIR/sowingcopy/docs
 
 if [ $notar = "yes" ] ; then exit 0 ; fi
 #

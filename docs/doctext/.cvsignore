@@ -8,3 +8,4 @@ doctext.ps
 *.blg
 doctext
 doctext.err
+Makefile

@@ -13,6 +13,9 @@
 
 #define TEXT_I_IGNORE -2
 
+#define MAX_TEXT_REGNUM 10
+#define MAX_TEXT_REGISTER 64
+
 /* Base class */
 class TextOut {
 
@@ -36,9 +39,13 @@ class TextOut {
     int       debug_flag;
     TextOut   *next;
 
+    /* Text Registers */
+    char      cmdreg[MAX_TEXT_REGNUM][MAX_TEXT_REGISTER];
+
     // Basic control 
     virtual int SetDebug( int );
     virtual const char *SetMode( const char * );
+    virtual int SetRegisterValue( int, const char * );
     virtual int SetOutstream( OutStream * );
     virtual ~TextOut();
     virtual int Flush();

@@ -21,7 +21,7 @@ TextOutQFmt::TextOutQFmt( TextOut *in_outs )
     nl		 = 0;
     last_was_nl	 = 0;
     last_was_par = 0;
-    debug_flag	 = 1;
+    debug_flag	 = 0;
     userops	 = 0;
 
 }
@@ -92,6 +92,26 @@ int TextOutQFmt::PutOp( const char *command )
 	 em_cnt = 0;
         }
     return next->PutOp( command );
+}
+int TextOutQFmt::PutOp( const char *command, char *s1, char *s2, int i1 )
+{
+  return next->PutOp( command, s1, s2, i1 );
+}
+
+int TextOutQFmt::PutOp( const char *command, char *s1, char *s2, char *s3, 
+			char *s4 )
+{
+  return next->PutOp( command, s1, s2, s3, s4 );
+}
+
+int TextOutQFmt::PutOp( const char *command, char *s1 )
+{
+  return next->PutOp( command, s1 );
+}
+
+int TextOutQFmt::PutOp( const char *command, char *s1, int i1 )
+{
+  return next->PutOp( command, s1, i1 );
 }
 
 int TextOutQFmt::Flush()

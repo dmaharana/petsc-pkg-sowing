@@ -49,6 +49,7 @@ class TextOutMap : public TextOut {
     int PutToken( int, const char * );
     int PutNewline( void );
     int PutLink( const char *, SrEntry * );
+    int SetRegisterValue( int, const char * );
     int ReadMap( InStream * );
     };
 

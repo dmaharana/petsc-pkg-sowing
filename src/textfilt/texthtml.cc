@@ -20,7 +20,7 @@ int TextOutHTML::Setup( )
     nl           = 0;
     last_was_nl	 = 1;
     last_was_par = 1;
-    debug_flag   = 1;
+    debug_flag   = 0;
     next         = 0;
     strcpy( newline_onoutput, "\n" );
     userops	 = new SrList( 127 );

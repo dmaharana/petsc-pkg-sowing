@@ -1105,6 +1105,13 @@ characters or less.
 understood by the particular output format.  For example, the LaTeX
 output routines understand the mode \code{verbatim} and use that to
 change how characters are output.
+\item[a0="..."]Define the value of string register zero.  The string may be up
+  to 63 characters long.  There are 10 registers, commands \code{a1} through
+  \code{a9} access the other nine.  The value of \code{a0} is set to the name
+  of the function or macro by \code{doctext}, and normally should not be
+  changed. 
+\item[r1]Insert the value of string register zero.  Similarly for \code{r1}
+  through \code{r9}.
 \end{description}
 To continue \code{replacement-text} to another line, end the line with
 the \bw\ character.  A single space at the end of a line may be

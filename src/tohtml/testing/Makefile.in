@@ -90,6 +90,7 @@ compare:
 	if test $$file = "testref/CVS" ; then continue ; fi ; \
 	if test -d $$file ; then \
 	    for f in $$file/* ; do \
+		if test $$f = "$$file/CVS" ; then continue ; fi ; \
 		newf=`echo $$f | sed -e 's%^testref/%%g'` ; \
 		xten=`echo $$newf | sed -e 's/.*\.//g'` ; \
 		if test $$xten = "xbm" ; then continue ; fi ; \

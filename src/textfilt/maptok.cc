@@ -136,11 +136,13 @@ int OutStreamMap::PutToken( int nsp, const char *token )
     /* We've flushed the token */
     curlen = 0;
     }
-	return 0;
+    return 0;
 }
 
 int OutStreamMap::PutQuoted( int nsp, const char *token )
 {
+  //  if (debug_flag && token && *token)
+  //    printf( "OutStreamMap::PutQuoted %s\n", token );
     return next->PutQuoted( nsp, token );
 }
 
@@ -268,7 +270,7 @@ void TextOutMap::Setup( int in_maxlen )
     nl           = 0;
     last_was_nl	 = 1;
     last_was_par = 1;
-    debug_flag   = 1;
+    debug_flag   = 0;
     next         = 0;
     userops      = 0;
 
@@ -278,6 +280,7 @@ void TextOutMap::Setup( int in_maxlen )
 TextOutMap::TextOutMap( TextOut *textout )
 {
   Setup( 1024 );
+  if (debug_flag) textout->Debug( debug_flag );
   next = textout;
 }
 
@@ -404,7 +407,7 @@ int TextOutMap::PutToken( int nsp, const char *token )
     curlen = 0;
     activetok[0] = 0;
     }
-	return 0;
+    return 0;
 }
 int TextOutMap::ReadMap( InStream *ins )
 {
@@ -491,4 +494,10 @@ TextOutMap::~TextOutMap()
     delete maptable;
     if (next)
 	delete next;
+}
+int TextOutMap::SetRegisterValue( int regnum, const char * val )
+{
+  if (next)
+    next->SetRegisterValue( regnum, val );
+  return 0;
 }
