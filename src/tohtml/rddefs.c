@@ -11,6 +11,20 @@
 #define SKIPNONBLANK(bufp) \
 	while (*bufp && !isspace(*bufp)) bufp++;
 
+/* Remove quotes from the string pointed at by p, moving them in place as 
+   necessary */
+static stripquote( char *p )
+{
+    char *pnew;
+    if (p[0] != '"') return;
+
+    pnew = p + 1;
+    while (*pnew && *pnew != '"') {
+	*p++ = *pnew++;
+    }
+    *p = 0;
+}
+
 /* 
    Convert a string that contains literal output quotes to the internal form
  */
@@ -105,14 +119,7 @@ void RdBaseDef( char *infilename )
 	if (cmd[0] == 0 || cmd[0] == ' ') continue;
 	
 	/* If name is in quotes, remote the quotes */
-	if (name[0] == '"') {
-	    p = name+1;
-	    while (*p && *p != '"') {
-		p[-1] = p[0];
-		p++;
-	    }
-	    p[-1] = 0;
-	}
+	stripquote( name );
 
 	/* printf( "|%s| |%s| |%d| |%s|\n", cmd, name, nargs, value ); */
 
@@ -124,14 +131,7 @@ void RdBaseDef( char *infilename )
 	    TXInsertName( TeXlist, name, TXdimen, 0, (void *)0 );
 	}
 	else if (strcmp( cmd, "name" ) == 0) {
-	    if (value[0] == '"') {
-		p = value+1;
-		while (*p && *p != '"') {
-		    p[-1] = p[0];
-		    p++;
-		}
-		p[-1] = 0;
-	    }
+	    stripquote( value );
 	    TXInsertName( TeXlist, name, TXname, nargs, 
 			  (void *)TXCopy(value) );
 	}
@@ -139,14 +139,7 @@ void RdBaseDef( char *infilename )
 	    TXInsertName( TeXlist, name, TXasis, nargs, (void *)0 );
 	}
 	else if (strcmp( cmd, "raw" ) == 0) {
-	    if (value[0] == '"') {
-		p = value+1;
-		while (*p && *p != '"') {
-		    p[-1] = p[0];
-		    p++;
-		}
-		p[-1] = 0;
-	    }
+	    stripquote( value );
 	    TXInsertName( TeXlist, name, TXraw, nargs, 
 			  (void *)TXCopy(value) );
 	}

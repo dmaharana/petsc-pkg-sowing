@@ -35,6 +35,10 @@ static void InitAcutes( void );
 static void InitTildes( void );
 static void InitCircs( void );
 
+#ifndef STRDUP 
+#define STRDUP strdup
+#endif
+
 void TXoutAccent( TeXEntry * );
 
 void InitAccents( void )
@@ -111,71 +115,71 @@ void TXoutAccent( TeXEntry *e )
 
 static void InitUmlauts( void )
 {
-    umlauts['A']  = strdup( "&#196;" ); /* &Auml;  capital A, dieresis or umlaut mark */
-    umlauts['E']  = strdup( "&#203;" ); /* &Euml;  &#203;  capital E, dieresis or umlaut mark  */
-    umlauts['I']  = strdup( "&#207;" ); /* &Iuml;  &#207;  capital I, dieresis or umlaut mark  */
-    umlauts['O']  = strdup( "&#214;" ); /* &Ouml;  &#214;  capital O, dieresis or umlaut mark  */
-    umlauts['U']  = strdup( "&#220;" ); /* &Uuml;  &#220;  capital U, dieresis or umlaut mark  */
-    umlauts['a']  = strdup( "&#228;" ); /* &auml;  &#228;  small a, dieresis or umlaut mark    */
-    umlauts['e']  = strdup( "&#235;" ); /* &euml;  &#235;  small e, dieresis or umlaut mark    */
-    umlauts['i']  = strdup( "&#239;" ); /* &iuml;  &#239;  small i, dieresis or umlaut mark    */
-    umlauts['o']  = strdup( "&#246;" ); /* &ouml;  &#246;  small o, dieresis or umlaut mark    */
-    umlauts['u']  = strdup( "&#252;" ); /* &uuml;  &#252;  small u, dieresis or umlaut mark    */
-    umlauts['y']  = strdup( "&#255;" ); /* &yuml;  &#255;  small y, dieresis or umlaut mark    */
+    umlauts['A']  = STRDUP( "&#196;" ); /* &Auml;  capital A, dieresis or umlaut mark */
+    umlauts['E']  = STRDUP( "&#203;" ); /* &Euml;  &#203;  capital E, dieresis or umlaut mark  */
+    umlauts['I']  = STRDUP( "&#207;" ); /* &Iuml;  &#207;  capital I, dieresis or umlaut mark  */
+    umlauts['O']  = STRDUP( "&#214;" ); /* &Ouml;  &#214;  capital O, dieresis or umlaut mark  */
+    umlauts['U']  = STRDUP( "&#220;" ); /* &Uuml;  &#220;  capital U, dieresis or umlaut mark  */
+    umlauts['a']  = STRDUP( "&#228;" ); /* &auml;  &#228;  small a, dieresis or umlaut mark    */
+    umlauts['e']  = STRDUP( "&#235;" ); /* &euml;  &#235;  small e, dieresis or umlaut mark    */
+    umlauts['i']  = STRDUP( "&#239;" ); /* &iuml;  &#239;  small i, dieresis or umlaut mark    */
+    umlauts['o']  = STRDUP( "&#246;" ); /* &ouml;  &#246;  small o, dieresis or umlaut mark    */
+    umlauts['u']  = STRDUP( "&#252;" ); /* &uuml;  &#252;  small u, dieresis or umlaut mark    */
+    umlauts['y']  = STRDUP( "&#255;" ); /* &yuml;  &#255;  small y, dieresis or umlaut mark    */
 }
 
 static void InitGraves( void )
 {
-    graves['A'] = strdup( "&#192;" ); /* &Agrave;  &#192;  capital A, grave accent  */
-    graves['E'] = strdup( "&#200;" ); /* &Egrave;  &#200;  capital E, grave accent  */
-    graves['I'] = strdup( "&#204;" ); /* &Igrave;  &#204;  capital I, grave accent  */
-    graves['O'] = strdup( "&#210;" ); /* &Ograve;  &#210;  capital O, grave accent  */
-    graves['U'] = strdup( "&#217;" ); /* &Ugrave;  &#217;  capital U, grave accent  */
-    graves['a'] = strdup( "&#224;" ); /* &agrave;  &#224;  small a, grave accent    */
-    graves['e'] = strdup( "&#232;" ); /* &egrave;  &#232;  small e, grave accent    */
-    graves['i'] = strdup( "&#236;" ); /* &igrave;  &#236;  small i, grave accent    */
-    graves['o'] = strdup( "&#242;" ); /* &ograve;  &#242;  small o, grave accent    */
-    graves['u'] = strdup( "&#249;" ); /* &ugrave;  &#249;  small u, grave accent    */
+    graves['A'] = STRDUP( "&#192;" ); /* &Agrave;  &#192;  capital A, grave accent  */
+    graves['E'] = STRDUP( "&#200;" ); /* &Egrave;  &#200;  capital E, grave accent  */
+    graves['I'] = STRDUP( "&#204;" ); /* &Igrave;  &#204;  capital I, grave accent  */
+    graves['O'] = STRDUP( "&#210;" ); /* &Ograve;  &#210;  capital O, grave accent  */
+    graves['U'] = STRDUP( "&#217;" ); /* &Ugrave;  &#217;  capital U, grave accent  */
+    graves['a'] = STRDUP( "&#224;" ); /* &agrave;  &#224;  small a, grave accent    */
+    graves['e'] = STRDUP( "&#232;" ); /* &egrave;  &#232;  small e, grave accent    */
+    graves['i'] = STRDUP( "&#236;" ); /* &igrave;  &#236;  small i, grave accent    */
+    graves['o'] = STRDUP( "&#242;" ); /* &ograve;  &#242;  small o, grave accent    */
+    graves['u'] = STRDUP( "&#249;" ); /* &ugrave;  &#249;  small u, grave accent    */
 }
 
 static void InitAcutes( void )
 {
-    acutes['A'] = strdup( "&#193;" ); /* &Aacute;  &#193;  capital A, acute accent   */
-    acutes['E'] = strdup( "&#201;" ); /* &Eacute;  &#201;  capital E, acute accent   */
-    acutes['I'] = strdup( "&#205;" ); /* &Iacute;  &#205;  capital I, acute accent   */
-    acutes['O'] = strdup( "&#211;" ); /* &Oacute;  &#211;  capital O, acute accent   */
-    acutes['U'] = strdup( "&#218;" ); /* &Uacute;  &#218;  capital U, acute accent   */
-    acutes['Y'] = strdup( "&#221;" ); /* &Yacute;  &#221;  capital Y, acute accent   */
-    acutes['a'] = strdup( "&#225;" ); /* &aacute;  &#225;  small a, acute accent     */
-    acutes['e'] = strdup( "&#233;" ); /* &eacute;  &#233;  small e, acute accent     */
-    acutes['i'] = strdup( "&#237;" ); /* &iacute;  &#237;  small i, acute accent     */
-    acutes['o'] = strdup( "&#243;" ); /* &oacute;  &#243;  small o, acute accent     */
-    acutes['u'] = strdup( "&#250;" ); /* &uacute;  &#250;  small u, acute accent     */
-    acutes['y'] = strdup( "&#253;" ); /* &yacute;  &#253;  small y, acute accent     */
+    acutes['A'] = STRDUP( "&#193;" ); /* &Aacute;  &#193;  capital A, acute accent   */
+    acutes['E'] = STRDUP( "&#201;" ); /* &Eacute;  &#201;  capital E, acute accent   */
+    acutes['I'] = STRDUP( "&#205;" ); /* &Iacute;  &#205;  capital I, acute accent   */
+    acutes['O'] = STRDUP( "&#211;" ); /* &Oacute;  &#211;  capital O, acute accent   */
+    acutes['U'] = STRDUP( "&#218;" ); /* &Uacute;  &#218;  capital U, acute accent   */
+    acutes['Y'] = STRDUP( "&#221;" ); /* &Yacute;  &#221;  capital Y, acute accent   */
+    acutes['a'] = STRDUP( "&#225;" ); /* &aacute;  &#225;  small a, acute accent     */
+    acutes['e'] = STRDUP( "&#233;" ); /* &eacute;  &#233;  small e, acute accent     */
+    acutes['i'] = STRDUP( "&#237;" ); /* &iacute;  &#237;  small i, acute accent     */
+    acutes['o'] = STRDUP( "&#243;" ); /* &oacute;  &#243;  small o, acute accent     */
+    acutes['u'] = STRDUP( "&#250;" ); /* &uacute;  &#250;  small u, acute accent     */
+    acutes['y'] = STRDUP( "&#253;" ); /* &yacute;  &#253;  small y, acute accent     */
 }
 
 static void InitTildes( void )
 {
-    tildes['A'] = strdup( "&#195;" ); /* &Atilde;  &#195;  capital A, tilde   */
-    tildes['N'] = strdup( "&#209;" ); /* &Ntilde;  &#209;  capital N, tilde   */
-    tildes['O'] = strdup( "&#213;" ); /* &Otilde;  &#213;  capital O, tilde   */
-    tildes['a'] = strdup( "&#227;" ); /* &atilde;  &#227;  small a, tilde     */
-    tildes['n'] = strdup( "&#241;" ); /* &ntilde;  &#241;  small n, tilde     */
-    tildes['o'] = strdup( "&#245;" ); /* &otilde;  &#245;  small o, tilde     */
+    tildes['A'] = STRDUP( "&#195;" ); /* &Atilde;  &#195;  capital A, tilde   */
+    tildes['N'] = STRDUP( "&#209;" ); /* &Ntilde;  &#209;  capital N, tilde   */
+    tildes['O'] = STRDUP( "&#213;" ); /* &Otilde;  &#213;  capital O, tilde   */
+    tildes['a'] = STRDUP( "&#227;" ); /* &atilde;  &#227;  small a, tilde     */
+    tildes['n'] = STRDUP( "&#241;" ); /* &ntilde;  &#241;  small n, tilde     */
+    tildes['o'] = STRDUP( "&#245;" ); /* &otilde;  &#245;  small o, tilde     */
 }
 
 static void InitCircs( void )
 {
-    circs['A'] = strdup( "&Acirc;" ); /*   &#194;  capital A, circumflex accent   */
-    circs['E'] = strdup( "&Ecirc;" ); /*   &#202;  capital E, circumflex accent   */
-    circs['I'] = strdup( "&Icirc;" ); /*   &#206;  capital I, circumflex accent   */
-    circs['O'] = strdup( "&Ocirc;" ); /*   &#212;  capital O, circumflex accent   */
-    circs['U'] = strdup( "&Ucirc;" ); /*   &#219;  capital U, circumflex accent   */
-    circs['a'] = strdup( "&acirc;" ); /*   &#226;  small a, circumflex accent   */
-    circs['e'] = strdup( "&ecirc;" ); /*   &#234;  small e, circumflex accent   */
-    circs['i'] = strdup( "&icirc;" ); /*   &#238;  small i, circumflex accent   */
-    circs['o'] = strdup( "&ocirc;" ); /*   &#244;  small o, circumflex accent   */
-    circs['u'] = strdup( "&ucirc;" ); /*   &#251;  small u, circumflex accent   */
+    circs['A'] = STRDUP( "&Acirc;" ); /*   &#194;  capital A, circumflex accent   */
+    circs['E'] = STRDUP( "&Ecirc;" ); /*   &#202;  capital E, circumflex accent   */
+    circs['I'] = STRDUP( "&Icirc;" ); /*   &#206;  capital I, circumflex accent   */
+    circs['O'] = STRDUP( "&Ocirc;" ); /*   &#212;  capital O, circumflex accent   */
+    circs['U'] = STRDUP( "&Ucirc;" ); /*   &#219;  capital U, circumflex accent   */
+    circs['a'] = STRDUP( "&acirc;" ); /*   &#226;  small a, circumflex accent   */
+    circs['e'] = STRDUP( "&ecirc;" ); /*   &#234;  small e, circumflex accent   */
+    circs['i'] = STRDUP( "&icirc;" ); /*   &#238;  small i, circumflex accent   */
+    circs['o'] = STRDUP( "&ocirc;" ); /*   &#244;  small o, circumflex accent   */
+    circs['u'] = STRDUP( "&ucirc;" ); /*   &#251;  small u, circumflex accent   */
 }
 
 /*

@@ -186,6 +186,9 @@ extern int  toknum;
 
 /* Functions */
 
+/* accent.c */
+void InitAccents( void );
+
 /* biblio.c */
 extern void TXbibitem ( TeXEntry * );
 extern void InsertBib ( int, char * );
