@@ -266,11 +266,12 @@ int  runagain;
 
 	/* Make the page long enough that it will generate a single output page */
 	fprintf( fp, "\
-\\documentstyle%s\n\
+\\%s%s\n\
 \\pagestyle{empty}\n\
 \\thispagestyle{empty}\n\
 \\vsize=20in\\setlength{\\textheight}{20in}\n\
-\\begin{document}\n", preamble ? preamble : "{article}" );
+\\begin{document}\n", 
+documentcmd, preamble ? preamble : "{article}" );
 /* Add the definition of \code and \file, just in case.  This really should
    be set if format is -slide, along with other slide items. */
 	AddCodeDefn( fp );

@@ -384,6 +384,8 @@ TeXEntry *e;
 
    If the name contains an @, bracket with 
    \makeatletter ... \makeatother
+   
+   We must be careful to remove the quoting characters.
  */
 void TXDumpUserDefs( fout )
 FILE *fout;
@@ -403,12 +405,14 @@ FILE *fout;
 		    fprintf( fout, "\\makeatletter\n" );
 		fprintf( fout, "\\def\\%s", cur->topicname );
 		if (d->input_template) 
-		    fputs( d->input_template, fout );
+		    WriteString( fout, d->input_template );
 		else {
 		    for (j=0; j<d->nargs; j++) 
 			fprintf( fout, "#%d", j + 1 );
 		}
-		fprintf( fout, "{%s}\n", d->replacement_text );
+		fputs( "{", fout );
+		WriteString( fout, d->replacement_text );
+		fputs( "}\n", fout );
 		if (strchr( cur->topicname, '@' )) 
 		    fprintf( fout, "\\makeatother\n" );
 	    }

@@ -135,6 +135,7 @@ int IgnoreCatcode = 1;
 int LineNo[10] = { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 char *(InFName[10]) = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 int BraceCount = 0;
+char CmdName[65];
 
 /* These hold the current section being processed, so that LABELS to this
    section may be entered into the label table (and hence to the aux file for
@@ -451,6 +452,7 @@ static char *(mem_stack[MAX_MEM_STACK]);
 /* 
    Return 1 for found argument, 0 for no arg, and -1 for error.
  */
+static int GetArgDepth=0;
 int TeXGetGenArg( FILE *fin, char *token, int maxtoken, char sc, char ec, 
 		  int doeval )
 {
@@ -463,6 +465,7 @@ int TeXGetGenArg( FILE *fin, char *token, int maxtoken, char sc, char ec,
     int  depth = 0, found;
     TeXEntry E;
 
+    GetArgDepth++;
     found = 0;
     save_buf  = ArgBuffer;
     ALLOC_TOKEN(local_buf);
@@ -493,9 +496,12 @@ int TeXGetGenArg( FILE *fin, char *token, int maxtoken, char sc, char ec,
 		/* This is almost certainly an error */
 		fprintf( stdout, "EOF while reading an argument in file %s[%d]\n",
 			 InFName[curfile], LineNo[curfile] );
+		if (CmdName[0]) 
+		    fprintf( stdout, "In command %s\n", CmdName );
 		TXPopFile();
 	    }
-	    if (DebugArgs) fprintf( stdout, "ARG:%s\n", mtoken );
+	    if (DebugArgs) 
+		fprintf( stdout, "ARG(%d):%s\n", GetArgDepth, mtoken );
 	    for (i=0; i<nsp; i++) token[i] = ' ';
 	    token    += nsp;
 	    maxtoken -= nsp;
@@ -525,7 +531,8 @@ int TeXGetGenArg( FILE *fin, char *token, int maxtoken, char sc, char ec,
 	    }
 	    else if (mtoken[0] == '\\') {
 		TeXReadMacroName( mtoken );
-		if (DebugArgs) fprintf( stdout, "ARGcmd:\\%s\n", mtoken );
+		if (DebugArgs) 
+		    fprintf( stdout, "ARGcmd(%d):\\%s\n", GetArgDepth, mtoken );
 		/* DONT REPROCESS RTF commands */
 		/* NEEDS TO BE CHANGED FOR HTML */
 		if (0) {
@@ -570,7 +577,8 @@ int TeXGetGenArg( FILE *fin, char *token, int maxtoken, char sc, char ec,
 		}
             }
 	    else {
-		if (DebugArgs) fprintf( stdout, "->ARG:%s\n", mtoken );
+		if (DebugArgs) 
+		    fprintf( stdout, "->ARG(%d):%s\n", GetArgDepth, mtoken );
 		strcpy( token, mtoken );
 		token    += strlen( mtoken );
 		maxtoken -= strlen( mtoken );
@@ -620,6 +628,7 @@ int TeXGetGenArg( FILE *fin, char *token, int maxtoken, char sc, char ec,
 	fprintf( stdout, "|\n" );
     }
 /* else just use the single token */
+    GetArgDepth--;
     return found;
 }
 
@@ -669,9 +678,11 @@ void TXsavearg( e )
 TeXEntry *e;
 {
     PUSHCURTOK;
+    strncpy( CmdName, e->name, 64 );
     if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
 	    TeXAbort( "TXsavearg", e->name );
     strcpy( (char *)(e->ctx), curtok );
+    CmdName[0] = 0;
     POPCURTOK;
 }
 
@@ -788,6 +799,7 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
+    strcmp( CmdName, "ref" );
     if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
       TeXAbort( "TXref", e->name );
     if (!InDocument) {
@@ -816,6 +828,7 @@ TeXEntry *e;
 		 InFName[curfile] ? InFName[curfile]: "",
 		 LineNo[curfile] );
     POPCURTOK;
+    CmdName[0] = 0;
 }
 
 /* 
@@ -833,6 +846,7 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
+    strcpy( CmdName, "label" );
     if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
       TeXAbort( "TXlabel", e->name );
     /* goken in ref refers to the value of LabelName */
@@ -856,6 +870,7 @@ TeXEntry *e;
       WriteLabeltoauxfile( -1, envjumpname, curtok, buf );
     }
     POPCURTOK;
+    CmdName[0] = 0;
 }
 
 /* Just use the section names as the reference */
@@ -868,6 +883,7 @@ TeXEntry *e;
     char *topicfile;
 
     if (!InDocument) return;	
+    strcpy( CmdName, "href" );
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
@@ -878,7 +894,7 @@ TeXEntry *e;
     if (!RefedSection) {
 	fprintf( stderr, "Could not find %s in topicctx\n", curtok );
 	POPCURTOK;
-	    return;
+	return;
     }
     topicfile = TopicFilename( RefedSection );
     if (topicfile)
@@ -893,7 +909,8 @@ TeXEntry *e;
 	    TeXAbort( "TXhref", e->name );
     }
     POPCURTOK;
-	}	
+    CmdName[0] = 0;
+}	
 
 void TXmore( e )
 TeXEntry *e;
@@ -907,19 +924,21 @@ TeXEntry *e;
  * This is ugly, but there are several places where comment characters are used
  * We should really combine them
  */
-static char SavedCommentChar;
-static char SavedCommentChar2;
+#define MAX_COMMENT_DEPTH 25
+static char SavedCommentChar[MAX_COMMENT_DEPTH];
+static char SavedCommentChar2[MAX_COMMENT_DEPTH];
+static int comment_depth=0;
 void PushCommentChar( char new_c )
 {
-    SavedCommentChar = CommentChar;
-    SavedCommentChar2 = SCGetCommentChar();
+    SavedCommentChar[comment_depth] = CommentChar;
+    SavedCommentChar2[comment_depth++] = SCGetCommentChar();
     CommentChar = new_c;
     SCSetCommentChar( new_c );
 }
 void PopCommentChar( void )
 {
-    CommentChar = SavedCommentChar;
-    SCSetCommentChar( SavedCommentChar2 );
+    CommentChar = SavedCommentChar[--comment_depth];
+    SCSetCommentChar( SavedCommentChar2[comment_depth] );
 }
 
 void TXcode( e )
@@ -927,6 +946,7 @@ TeXEntry *e;
 {
 /* output in "code" font */
     if (!InDocument) return;	
+    strcpy( CmdName, "code" );
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
@@ -940,6 +960,7 @@ TeXEntry *e;
     TeXoutstr( fpout, curtok );
     TXegroup( e );
     POPCURTOK;
+    CmdName[0] = 0;
 }
 
 void TXroutine( e )
@@ -947,6 +968,7 @@ TeXEntry *e;
 {
 /* output in "code" font */
     if (!InDocument) return;	
+    strcpy( CmdName, "routine" );
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
@@ -958,7 +980,8 @@ TeXEntry *e;
     TeXoutstr( fpout, curtok );
     TXegroup( e );
     POPCURTOK;
-	}
+    CmdName[0] = 0;
+}
 
 void TXdfn( e )
 TeXEntry *e;
@@ -968,14 +991,14 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	    TeXAbort( "TXdfn", e->name );
+    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
+	TeXAbort( "TXdfn", e->name );
     TXbgroup( e );
     TXem( e );
     TeXoutstr( fpout, curtok );
     TXegroup( e );
     POPCURTOK;
-	}
+}
 
 void TXvar( e )
 TeXEntry *e;
@@ -1002,14 +1025,14 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	    TeXAbort( "TXfile", e->name );
+    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
+	TeXAbort( "TXfile", e->name );
     TXbgroup( e );
     TXfont_ss( e );
     TeXoutstr( fpout, curtok );
     TXegroup( e );
     POPCURTOK;
-	}
+}
 
 void TXatletter( e )
 TeXEntry *e;
@@ -1051,6 +1074,7 @@ TeXEntry *e;
     TXbgroup( e );
     if (DebugCommands)
 	fprintf( stdout, "Getting %d arguments for %s\n", e->nargs, e->name );
+    strncpy( CmdName, e->name, 64 );
     for (i=0; i<e->nargs; i++) {
 	if (TeXGetArg( fpin[curfile], asistoken, MAX_TOKEN ) == -1) {
 	    fprintf( stdout, "Failed to get argument for %s\n", e->name );
@@ -1061,6 +1085,7 @@ TeXEntry *e;
 	}
     }
     TXegroup( e );
+    CmdName[0] = 0;
 }
 
 /* This is like asis, but handles the "to <dimension>", which may be \hsize */
@@ -1085,6 +1110,7 @@ TeXEntry *e;
     TXbgroup( e );
     if (DebugCommands)
 	fprintf( stdout, "Getting %d arguments for %s\n", e->nargs, e->name );
+    strncpy( CmdName, e->name, 64 );
     for (i=0; i<e->nargs; i++) {
 	if (TeXGetArg( fpin[curfile], asistoken, MAX_TOKEN ) == -1) {
 	    fprintf( stdout, "Failed to get argument for %s\n", e->name );
@@ -1094,6 +1120,7 @@ TeXEntry *e;
 	    TeXoutstr( fpout, asistoken );
     }
     TXegroup( e );
+    CmdName[0] = 0;
 }
 
 /* Handle \input and \include commands */
@@ -2312,8 +2339,7 @@ TeXEntry *e;
 /* Finish processing of an environment */
 }
 
-void TXitem( e )
-TeXEntry *e;
+void TXitem( TeXEntry *e )
 {
     char buf[12];
 /* Process an item based on the current environment */
@@ -2327,6 +2353,7 @@ TeXEntry *e;
 	if (DebugCommands)
 	    fprintf( stdout, "Getting argument for item in description\n" );
 	PUSHCURTOK;
+	strncpy( CmdName, e->name, 64 );
 	if (TeXGetGenArg( fpin[curfile], curtok, MAX_TOKEN, '[', ']', 1 ) != 1) {
 	  /* It is legal to forget the [], but probably unintended */
 	  fprintf( stdout, 
@@ -2335,6 +2362,7 @@ TeXEntry *e;
 	  strcpy( curtok, " " );
 	  /* TeXAbort( "TXbegin description", e->name ); */
 	}
+	CmdName[0] = 0;
 	TeXoutstr( fpout, curtok );
 	TXegroup( e );
 	TXedesItem( e );
@@ -2436,15 +2464,18 @@ TeXEntry *e;
    style inorder to process code in latex mode */
 char *preamble = 0;
 char *predoc   = 0;
+char *documentcmd = 0;
 
 void TXdocumentstyle( e )
 TeXEntry *e;
 {
+    static char name[] = "documentstyle";
     char *p, *ptr, *p1;
     preamble    = (char *)MALLOC( 2000 ); CHKPTR(preamble);
     predoc	    = (char *)MALLOC( 2000 ); CHKPTR(predoc);
     predoc[0]   = 0;
     preamble[0] = 0;
+    if (!documentcmd) documentcmd = name;
 
     PUSHCURTOK;
     if (TeXGetGenArg( fpin[curfile], curtok, MAX_TOKEN, '[', ']', 1 ) == 1) {
@@ -2503,7 +2534,17 @@ TeXEntry *e;
     strcat( preamble, "{" );
     strcat( preamble, curtok );
     strcat( preamble, "}" );
+    if (strcmp( curtok, "linfoem" ) == 0) {
+	TXStyleLatexInfo( TeXlist, fpin[curfile], fpout );
+    }
     POPCURTOK;
+}
+
+void TXdocumentclass( TeXEntry *e )
+{
+    static char name[] = "documentclass";
+    TXdocumentstyle( e );
+    documentcmd = name;
 }
 
 /* Code for the title etc */
@@ -2533,10 +2574,10 @@ TeXEntry *e;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
-	    TeXAbort( "TXdata", e->name );
+    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
+	TeXAbort( "TXdata", e->name );
     POPCURTOK;
-	}
+}
 void TeXmaketitle( e )
 TeXEntry *e;
 {
@@ -3084,6 +3125,7 @@ FILE *fin, *fout;
     TXInsertName( TeXlist, "ref",  TXref, 1, (void *)0 );
     TXInsertName( TeXlist, "pageref",  TXref, 1, (void *)0 );
     TXInsertName( TeXlist, "documentstyle", TXdocumentstyle, 1, (void *)0 );
+    TXInsertName( TeXlist, "documentclass", TXdocumentclass, 1, (void *)0 );
     TXInsertName( TeXlist, "title",  TXtitle, 1, (void *)0 );
     TXInsertName( TeXlist, "author",  TXauthor, 1, (void *)0 );
     TXInsertName( TeXlist, "date",  TXdate, 1, (void *)0 );

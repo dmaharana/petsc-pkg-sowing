@@ -119,6 +119,7 @@ int  maxtoken, *nsp;
    we NEVER push comment characters back onto the input, so this will ALWAYS
    read from the file */
     if (c == commentchar) {
+	if (DebugCommands) fprintf( stdout, "Discarding to end of line\n" );
 	SYTxtDiscardToEndOfLine( fp );
 	LineNo[curfile]++;
 	c = '\n';
@@ -186,6 +187,8 @@ FILE *fp;
 		SCPushToken( token + 1 );
 	}
 	if (c == commentchar) {
+	    if (DebugCommands) 
+		fprintf( stdout, "Discarding to end of line\n" );
 	    SYTxtDiscardToEndOfLine( fp );
 	    c = '\n';
         }
@@ -301,6 +304,8 @@ void SCPushChar( char ch )
 
 void SCSetCommentChar( char c )
 {
+    if (DebugCommands) fprintf( stdout, "Setting comment char %c\n", 
+				(c > 20) ? c : 'x');
     commentchar = c;
 }	
 
@@ -328,6 +333,8 @@ FILE *fp;
 	c = SYTxtGetChar( fp );
 	if (c == EOF) return;
 	if (c == commentchar) {
+	    if (DebugCommands) 
+		fprintf( stdout, "Discarding to end of line\n" );
 	    SYTxtDiscardToEndOfLine( fp );
 	    c = '\n';
 	}
@@ -371,6 +378,8 @@ FILE *fp;
 	c = SYTxtGetChar( fp );
 	if (c == EOF) return;
 	if (c == commentchar) {
+	    if (DebugCommands) 
+		fprintf( stdout, "Discarding to end of line\n" );
 	    SYTxtDiscardToEndOfLine( fp );
 	    c = '\n';
 	}

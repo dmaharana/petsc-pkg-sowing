@@ -23,7 +23,7 @@ FILE *fin, *fout;
     SCSetCommentChar( 0 );
 
     UsingLatexinfo = 1;
-
+    /* printf ("Using Latexinfo Style\n" ); */
     TXInsertName( TeXlist, "dfn", TXdfn, 0, (void *)0 );
     TXInsertName( TeXlist, "var", TXdfn, 0, (void *)0 );
     TXInsertName( TeXlist, "routine", TXroutine, 1, (void *)0 );
@@ -36,6 +36,9 @@ FILE *fin, *fout;
     TXInsertName( TeXlist, "printindex", TXprintindex, 1, (void *)0 );
     TXInsertName( TeXlist, "newindex", TXnop, 1, (void *)0 );
     TXInsertName( TeXlist, "$", TXname, 0, TXCopy("$") );
+    /* No comment character in TeXinfo style */
+    SCSetCommentChar( (char) 0 );
+    CommentChar = (char) 0;
 }    
 
 void TXStyleFunclist( TeXlist, fin, fout )

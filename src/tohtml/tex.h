@@ -35,6 +35,7 @@ extern int InOutputBody;
 extern int LineNo[10];    /* Line number in current file (LineNo[curfile]) */
 extern char *(InFName[10]); /* Names of files currently open */
 extern int BraceCount;
+extern char CmdName[65];   /* Used to hold a command name for error reporting */
 
 extern int InArg;         /* Set to 1 if in TXGenGetArg; tells the 
 			     output routines to write into ArgBuffer
@@ -49,7 +50,7 @@ extern int HTMLv3;        /* HTML version 3(.2) rather than earlier */
 extern char *preamble;    /* documentstyle, etc */
 extern char *predoc;      /* Important TeX commands encountered before the
 			     \begin{document} */
-
+extern char *documentcmd;
 extern int DoGaudy;       /* If true, generate more colorful output */
 
 /* These control the format of a citation name.  We should probably use
@@ -327,6 +328,7 @@ extern void TXindex ( TeXEntry * );
 extern void TXprintindex ( TeXEntry * );
 extern void TXmakeindex ( TeXEntry * );
 extern void TXdocumentstyle ( TeXEntry * );
+extern void TXdocumentclass ( TeXEntry * );
 extern void TXtitle ( TeXEntry * );
 extern void TXauthor ( TeXEntry * );
 extern void TXdate ( TeXEntry * );
