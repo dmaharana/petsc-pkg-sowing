@@ -24,6 +24,7 @@ TextOutQFmt::TextOutQFmt( TextOut *in_outs )
     debug_flag	 = 0;
     userops	 = 0;
 
+    action_flag  = 1;
 }
 
 const char * TextOutQFmt::SetMode( const char *str )
@@ -33,43 +34,45 @@ const char * TextOutQFmt::SetMode( const char *str )
 
 int TextOutQFmt::PutChar( const char ch )
 {
-    if (last_tt) {
-    	// Last character was tt_char.  Handle it first
-        last_tt = 0;
-    	if (ch == tt_char) {
-    	    return next->PutChar( ch );
+    if (action_flag) {
+	if (last_tt) {
+	    // Last character was tt_char.  Handle it first
+	    last_tt = 0;
+	    if (ch == tt_char) {
+		return next->PutChar( ch );
 	    }
-	else {
-	    if (tt_cnt++ == 0) 
-	    	next->PutOp( "tt" );
 	    else {
-	    	next->PutOp( "rm" );
-	    	tt_cnt = 0;
+		if (tt_cnt++ == 0) 
+		    next->PutOp( "tt" );
+		else {
+		    next->PutOp( "rm" );
+		    tt_cnt = 0;
 	        }
 	    }
         }
-    else if (ch == tt_char) {
-      last_tt = 1;
-      return 0;
-    }
-    if (last_em) {
-    	// Last character was em_char.  Handle it first
-        last_em = 0;
-    	if (ch == em_char) {
-    	    return next->PutChar( ch );
+	else if (ch == tt_char) {
+	    last_tt = 1;
+	    return 0;
+	}
+	if (last_em) {
+	    // Last character was em_char.  Handle it first
+	    last_em = 0;
+	    if (ch == em_char) {
+		return next->PutChar( ch );
 	    }
-	else {
-	    if (em_cnt++ == 0) 
-	    	next->PutOp( "em" );
 	    else {
-	    	next->PutOp( "rm" );
-	    	em_cnt = 0;
+		if (em_cnt++ == 0) 
+		    next->PutOp( "em" );
+		else {
+		    next->PutOp( "rm" );
+		    em_cnt = 0;
 	        }
 	    }
         }
-    else if (ch == em_char) {
-      last_em = 1;
-      return 0;
+	else if (ch == em_char) {
+	    last_em = 1;
+	    return 0;
+	}
     }
     // Allow PutChar( 0 ) to flush
     if (ch) 
@@ -116,8 +119,10 @@ int TextOutQFmt::PutOp( const char *command, char *s1, int i1 )
 
 int TextOutQFmt::Flush()
 {
-    if (last_tt || last_em)
-        PutChar( 0 );
+    if (action_flag) {
+	if (last_tt || last_em)
+	    PutChar( 0 );
+    }
     return next->Flush();
 }
 
@@ -127,4 +132,12 @@ int TextOutQFmt::PutToken( int nsp, const char *token )
     for (i=0; i<nsp; i++) PutChar( ' ' );
     while (*token) PutChar( *token++ );
 	return 0;
+}
+
+int TextOutQFmt::SetAction( int flag )
+{
+    int old_flag = action_flag;
+
+    action_flag = flag;
+    return old_flag;
 }

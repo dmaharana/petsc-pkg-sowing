@@ -171,9 +171,14 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 
 /* Process a verbatim mode line (either $ ... or .<haven't decided>) */
 /* Use s_doctext_verbatim and e_doctext_verbatim commands */
+// While in verbatim mode, we may want to suppress any processing of
+// quote characters.  We need to add that as an option to the
+// quotefmt.cc routines.  The problem is that textout is the super class,
+// so we don't have a control for the operation.
 int ProcessVerbatimFmt( InStream *ins, TextOut *textout, int *lastWasNl )
 {
     char ch;
+    int quote_flag;
 
     /* Raw mode output. */
     if (ins->GetChar( &ch )) return 1;
@@ -224,6 +229,7 @@ int ProcessNameFmt( InStream *ins, TextOut *textout, int *lastWasNl )
 }
 
 /* Process a .vb ... .ve block */
+// This really needs to be able to turn off quote-format processing.
 int ProcessVerbatimBlockFmt( InStream *ins, TextOut *textout, int *lastWasNl )
 {
   char ch;

@@ -17,7 +17,7 @@
 #define MAX_PATH_LEN     1024
 
 // Match characters should be changeable.  These are the defaults
-#define MATCH_STRING "/*[@MDIN]"
+#define MATCH_STRING "/*[@MDINSE]"
 
 // Leading string (null for C, could be // for C++, C for Fortran, # for
 // perl or shells)
@@ -41,6 +41,8 @@ extern char NewlineString[3];
 #define MACRO       'M'
 #define INCLUDE     'I'
 #define TEXT        'N'
+#define ENUMDEF     'E'
+#define STRUCTDEF   'S'
 
 // Special lead character types (only in the first column in a comment)
 #define ARGUMENT    '.'

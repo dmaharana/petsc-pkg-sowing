@@ -32,6 +32,7 @@ runtests:
 	../doctext -ignore EXPORT_API -date "2/10/2000" tst2.c
 	../doctext -html \
 	        -defn fhtml.def -outfile tstreg.html tst1.c
+	../doctext estest.h
 
 #	../doctext -html \
 #		-mpath man3 -heading PETSc \

@@ -226,7 +226,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 	if (DoDosFileNewlines) textout->SetNewlineString( "\r\n" );
 	// bof isn't correct ? Why?
 	if (basedir) textout->PutOp( "bof", (char *)basedir );
-	textout->PutOp( "bop" );
+	//textout->PutOp( "bop" );
 	}
     
     /* process all of the files */
@@ -289,7 +289,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 		if (DebugDoc) textout->Debug(1);
 // debugging
 		textout->SetOutstream( outs );
-		textout->PutOp( "bop" );
+		//textout->PutOp( "bop" );
 		}
 	    // We may also want to generate a separate index entry for each
 	    // "D" object.  Why doesn't this happen?
@@ -349,6 +349,7 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
     int  at_end;
 
     // Output the initial information
+    textout->PutOp( "bop" );
     textout->PutOp( "mantitle", name, level, date, (char *)heading );
 
     // Next, output the description
@@ -373,7 +374,25 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
 	if (DocReadFuncSynopsis( ins, textout->out )) return 1;
 	textout->PutOp( "e_synopsis" );
 	ins->SetLoc( position );
-	}
+    }
+    else if (kind == ENUMDEF || kind == STRUCTDEF) {
+	// This is a simple way to get a struct or enum
+	// definition into a doctext block.  Eventually we'll want
+	// to handle enums differently by simply extracting the names
+	long position;
+	ins->GetLoc( &position );
+	// Skip to func synopsis simply skips to the end of the comment
+	// block
+	if (!at_end)
+	    DocSkipToFuncSynopsis( ins, matchstring );
+	// s_synopsis should do Synopsis: <begin verbatim> and
+	// e_synopsis should do <end verbatim> in most cases.
+	textout->PutOp( "s_synopsis" );
+        OutputIncludeInfo( textout );
+	if (DocReadTypeDefinition( ins, textout->out )) return 1;
+	textout->PutOp( "e_synopsis" );
+	ins->SetLoc( position );
+    }
 
     // Finally, output the rest of the text
     if (!at_end) 

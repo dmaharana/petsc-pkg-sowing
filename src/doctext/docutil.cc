@@ -288,6 +288,61 @@ int DocReadMacroSynopsis( InStream *ins, char *matchstring, OutStream *outs,
     return 0;
 }
 
+//
+// Read the definition and send to the out stream.  
+// Also strip any ignore tokens.
+// This handles
+// text { text including ; } name ;
+// e.g.,
+//   typedef enum { foo, bar, last } name;
+// and
+//   typedef struct { int foo; char bar; } name;
+//
+int DocReadTypeDefinition( InStream *ins, OutStream *outs )
+{
+    char ch;
+    char token[256];
+    int  nl_break;
+    int  us_break;
+    int in_brace = 0;
+    int maxlen = 255, nsp;
+
+    // Must handle newline as non-space
+    
+    nl_break = ins->breaktable['\n'];
+    us_break = ins->breaktable['_'];
+    ins->SetBreakChar( '\n', BREAK_OTHER );
+    ins->SetBreakChar( '_', BREAK_ALPHA );
+    while (!ins->GetToken( maxlen, token, &nsp )) {
+      
+      // Eventually we need to combine these into a single lookup list.
+      if (IgnoreString && strcmp( token, IgnoreString ) == 0) {
+	/* Skip blanks */
+	while (!ins->GetChar( &ch ) && isspace(ch) ) ;
+	ins->UngetChar( ch );
+      }
+      else {
+	// Check for \n and do PutNewline instead.
+	if (token[0] == '\n') {
+	  outs->PutToken( nsp, NewlineString );
+	}
+	else
+	  outs->PutToken( nsp, token );
+      }
+
+      // If that was the last character, exit
+      if (in_brace == 0 && token[0] == ';') {
+	break;
+      }
+      if (token[0] == '{') in_brace++;
+      else if (token[0] == '}') in_brace--;
+    }
+    outs->PutToken( nsp, NewlineString );
+    ins->SetBreakChar( '\n', nl_break );
+    ins->SetBreakChar( '_', us_break );
+    return 0;
+}
+
 // Read C and/or X
 static int HasX = 0;
 static int HasC = 0;
