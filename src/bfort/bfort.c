@@ -1649,8 +1649,15 @@ else {
 	strcmp( token, "PetscReal")  == 0 ||
 	strcmp( token, "PetscTruth") == 0 ||
 	strcmp( token, "BCArrayPart") == 0 ||
-	strcmp( token, "PetscLogDouble") == 0)
-        type->is_native = 1;
+	strcmp( token, "PetscLogDouble") == 0 ||
+	strcmp( token, "PetscInt") == 0 ||
+        strcmp( token, "PetscMPIInt") == 0 ||
+        strcmp( token, "PetscErrorCode") == 0 ||
+        strcmp( token, "PetscCookie") == 0 ||
+        strcmp( token, "PetscEvent") == 0 ||
+        strcmp( token, "PetscBLASInt") == 0 ||
+        strcmp( token, "PetscSysInt") == 0)
+	type->is_native = 1;
     /* PETSc types that are implicitly pointers are specified here */
     /* This really needs to take the types from a file, so that
        it can be configured for each package.  See the search code in 
