@@ -50,6 +50,7 @@ int HandleArgs( CmdLine *cmd, const char **path, const char **extension,
 		const char **heading, const char **locdir );
 void PrintHelp( void );
 
+#define MAX_DATE_LEN 50
 int main( int argc, char ** argv )
 {
     char *outfilename;
@@ -59,7 +60,8 @@ int main( int argc, char ** argv )
     const char *keypath, *mappath, *defnpath, *cmdpath;
     char matchstring[20];
     char lextension[10];
-    char date[50];
+    char date[MAX_DATE_LEN];
+    int  masterdate;
     const char *heading=0;
     const char *incfile=0;
     const char *indexfile=0, *infilename=0, *basedir=0, *baseoutfile=0, 
@@ -86,6 +88,7 @@ int main( int argc, char ** argv )
 	        &locdir ); 
     // if (!path) path = "./";
     if (!idxdir) idxdir = ".";
+    masterdate = !cmd->GetArg( "-date", date, MAX_DATE_LEN );
 
     if (!cmd->GetArgPtr( "-keyword", &keypath )) {
 	KeywordOpen( keypath );
@@ -220,7 +223,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 	if (DebugDoc) outs->Debug(1);
 	textout->SetOutstream( outs );
 	if (DoDosFileNewlines) textout->SetNewlineString( "\r\n" );
-	// bof isn't correct
+	// bof isn't correct ? Why?
 	if (basedir) textout->PutOp( "bof", (char *)basedir );
 	}
     
@@ -236,7 +239,13 @@ in the distribution, where ... is the path to the sowing directory\n\
 	// In case we have a large pushback
         ins = new InStreamBuf( 16000, insin );
 
-	SYLastChangeToFile( infilename, date, (struct tm *)0 ); 
+	// We'd like to override this, particularly for testing, but also
+	// for specifying a data for a release rather than the last change
+	// to a file.
+	if (!masterdate)
+	  SYLastChangeToFile( infilename, date, (struct tm *)0 ); 
+	// else already copied masterdate to date.
+	  
 	ClearIncludeFile( );
 	/* At this point, we can trim the filename of any leading trash, 
 	   such as "./".  Later.... */
@@ -304,6 +313,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 	    OutputManPage( ins, textout, routine, lextension, infilename, 
 			   kind, date, heading, locdir, matchstring );
 	    if (!baseoutfile) {
+	        textout->PutOp( "eof" );
 	    	textout->Flush();
 		delete outs;
 	        }
@@ -315,7 +325,8 @@ in the distribution, where ... is the path to the sowing directory\n\
 	delete ins;
     }
     if (baseoutfile) {
-      // textout->PutOp( "eof" );
+      // This was commented out.  Why?
+      textout->PutOp( "eof" );
       delete outs;
     }
     if (map) delete map;
