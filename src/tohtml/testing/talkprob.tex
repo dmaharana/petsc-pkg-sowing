@@ -1,0 +1,645 @@
+
+\newenvironment{mainpts}{\begin{list}{$\bullet$}{\setlength{\leftmargin}{.30in}}}{\end{list}}
+\newenvironment{secpts}{\begin{list}{--}{\setlength{\leftmargin}{.35in}}}{\end{list}}
+
+\newif\ifpictures
+\picturesfalse
+%\picturestrue
+
+\vtitle{High Performance Computing Research Facility}
+\begin{center}
+\logo
+Bill Gropp \\
+Rusty Lusk\\[1.5in]
+\end{center}
+%\vspace{2in}
+\vfill
+\ve
+
+\vtts{Outline}
+  \begin{mainpts}
+    \item Hardware
+    \item Software
+    \item Projects
+    \item Applications
+    \item Plans
+  \end{mainpts}
+\ve
+
+\vtts{The IBM SP at Argonne}
+\begin{small}
+\begin{mainpts}
+  \item 128 Power-1 nodes
+  \item SP2 switch
+  \item 8 file servers
+  \item 220 GB RAID
+  \item Fiber Channel from some nodes to file servers
+  \item 6 TB tape with robot
+  \item Futures Lab:  networking, multimedia laboratory
+  \item CAVE 3D immersive virtual reality environment
+  \item HiPPI from file servers to RAID, tape, CAVE, Futures Lab
+\end{mainpts}
+\end{small}
+\ve
+
+\vtts{The IBM SP at Argonne}
+\begin{small}
+\centerline{\epsfxsize=5in\epsfbox{sp2config.eps}}
+\end{small}
+\ve
+
+\vtts{System Software}
+\begin{small}
+\begin{mainpts}
+  \item AIX 3.2.5  (HiPPI support in 4.1?)
+  \item Parallel Operating Environment (POE)
+  \item Assorted message-passing and other libraries
+  \item Scheduler
+  \item I/O Software
+\end{mainpts}
+\end{small}
+\ve
+
+\vtts{Message-Passing Libraries for the SP}
+\begin{small}
+Variety of message-passing libraries used
+%Users use a variety of libraries, all of which use the switch efficiently.
+%Most are extremely portable, which contributed to the speed with which the
+%SP became useful.
+\begin{mainpts}
+  \item p4:  Argonne portable system
+  \item Chameleon:  Argonne portable system
+  \item MPI:  Multiple implementations of the Message-Passing Interface
+    standard: 
+    \begin{secpts}
+      \item MPI-CH:  Argonne-Miss.~State freely available portable
+implementation 
+      \item MPI-F:  Yorktown implementation
+      \item MPI-K(?):  Kingston product beta
+    \end{secpts}
+  \item Fortran-M:  Argonne extensions to Fortran
+  \item CC++:  Concurrent version of C++
+  \item MPL:  IBM's proprietary library, successor to EUI and EUI-H
+\end{mainpts}
+All use switch efficiently
+
+Most are extremely portable and enabled rapid use of the SP
+\URL{http://www.mcs.anl.gov/Projects/sp1/guide-r2/guide-r2.html}
+\end{small}
+\ve
+
+\vtts{The Argonne Scheduler}
+\begin{small}
+The SP came without a batch scheduler appropriate for a production use
+supercomputer.  Argonne has supplied one.
+\begin{mainpts}
+  \item Provides for both interactive and batch jobs
+  \item Provides exclusive access to nodes, for peak performance
+  \item Provides predictable job initiation and termination
+  \item Provides friendly interface to keep users happy
+  \item Provides node-hour accounting
+\end{mainpts}
+We are working with IBM to provide some of the same functionality in
+LoadLeveler.  Meanwhile, other sites with large SP's have installed the
+Argonne scheduler.
+
+\URL{http://www.mcs.anl.gov/home/rayl/scheduler/scheduler.html}
+\end{small}
+\ve
+
+\vtts{I/O Software}
+\begin{small}
+\begin{mainpts}
+  \item PIOFS for parallel I/O from nodes to file servers
+
+	Several groups investigating; still unstable
+
+%/piofs is now back up and running.  Due to a problem with the 
+%servers, allof the current data was lost.  I have also 
+%installed the latest version, so hopefully we won't be running
+%into these same problems.  
+  \item UniTree for managing server-RAID-tape hierarchy
+
+	\begin{secpts}
+	\item 500 GB stored in 15K files
+	
+	\item CAVE has direct access to UniTree files
+
+	\item Working well as archival file system
+
+	\item Parallel file support through Chameleon (ANL) IO library 
+	\end{secpts}
+
+	
+\end{mainpts}
+\URL{http://www.mcs.anl.gov/Projects/unitree/unitree.html}
+\end{small}
+\ve
+
+\vtts{Collaborative Projects with IBM}
+\begin{small}
+%A number of specific joint projects have been initiated, and are beginning to
+%produce results.
+\begin{mainpts}
+  \item Experimental switch configuration (servers as nodes)
+  \item Scalable I/O Initiative
+  \item Message-passing libraries for high-performance applications
+  \item Scalable Unix Tools
+  \item TOE
+  \item Ease of use
+  \item Competitive analysis
+  \item Multimedia
+  \item Integrated thread and communication libraries
+  \end{mainpts}
+\end{small}
+\ve
+
+\vtts{Servers as Nodes}
+% Gail hasn't seen this page yet
+
+\begin{small}
+Attaching our rs6000 970 I/O servers into the SP switch fabric was a success
+and brought us the following advantages
+
+\begin{mainpts}
+\item  Allowed us to test and run Hippi, ATM, and fibrechannel on our SP
+   without having to buy the SP2 Wide nodes.
+
+\item  Directly connected the switch network fabric to Argonne's I/O subsystem 
+
+\item  Users can now write directly from the SP into our I/O subsystem
+   at 70 MB/sec.  The switch will allow us to reach higher numbers,
+   however we are limited by our IBM 9570 disk array configuration and
+   performance.  
+
+%   I doubt you want to mention this, but so you know,  Unitree is set up
+%   on only 2 of the 4 disk arrays.  The other 2 are being used 
+%   the parallel file system.  Each array has only 1 hippi card in it.
+%   I have found we can only drive this card at about 35 MB/sec.  We could
+%   bring the other two arrays into Unitree to double our existing
+%   performance, but it would be a major configuration change and we
+%   would lose using 2 arrays for other uses. (piofs, sgi filesystem using
+%   the new maxstrat code, or just using them for raw performance tests)
+
+\item  install was relatively easy and the 970s worked immediately.  We 
+   have seen no major problems with running tb2 switch cards in 
+   a non-SP rs6000.
+\end{mainpts}
+\end{small}
+\ve
+
+\vtts{Scalable I/O Initiative}
+\begin{small}
+Multi-institution, multi-vendor, multi-agency
+effort to attack the problem of high performance I/O for scalable parallel
+systems
+
+Working groups:\\
+(1) Applications, (2) performance measurement, (3) compilers and languages, 
+(4) operating
+systems and file systems, and (5) integration and testbeds.
+
+ANL contributions:
+\begin{mainpts}
+\item 128 node IBM SP testbed
+\item several applications participating in SIO
+\item PIOFS Beta test
+\item SIO API work (e.g., Chameleon interface to Unitree)
+\item languages and runtime system 
+\end{mainpts}
+
+\URL{http://www.ccsf.caltech.edu/~jpool/SIO/SIO.html}
+\URL{http://www.mcs.anl.gov/home/gropp/scalable/integration/index.html}
+\end{small}
+\ve
+
+\vtts{Message-passing libraries}
+\begin{small}
+\begin{mainpts}
+\item Functionality
+
+\begin{secpts}
+\item ANL identified probe and recv\&call as necessary for many message-passing
+applications
+
+\item ANL provided test cases and beta test for both
+\end{secpts}
+
+\item Standards (MPI)
+\begin{secpts}
+\item ANL provided MPICH for IBM's MPIF implementation, and was an MPIF beta
+site 
+
+\item Developing proposals and prototypes for dynamic process management
+\end{secpts}
+\end{mainpts}
+
+\URL{http://www.mcs.anl.gov/Projects/mpi/index.html}
+\URL{http://www.mcs.anl.gov/Projects/mpi/mpi2/mpi2}
+\end{small}
+\ve
+
+\vtts{Scalable Unix Tools}
+\begin{small}
+\begin{mainpts}
+\item Inspired by visit to Kingston to test 128 SP1 in 1993.
+
+\item Natural extensions of common Unix commands to parallel, distributed
+memory 
+systems.
+
+\item {\tt fps} and its parallel counterpart, {\tt pfps}, provide a
+way to manage the ``space'' of processes
+
+\item Adopted as first project by the Ptools Constortium project (co-sponsored by IBM and Meiko)
+
+\item An incompatible version for system managers provided by IBM with SP2
+software (includes {\tt pfps}).
+\end{mainpts}
+
+\URL{http://www.llnl.gov/ptools/ptools.html}
+\URL{http://www.mcs.anl.gov/home/lusk/ptools}
+\end{small}
+\ve
+
+\vtts{TOE (Tragedy of Errors)}
+\begin{small}
+Goal: Present a friendly and inviting interface to the user by making error
+messages meaningful or by preventing the error from occurring.
+
+Examples\\
+\begin{tiny}
+\begin{mainpts}
+\item 275 Occurrences
+\begin{verbatim}
+Message catalog not found during Catalog Initialization Routine.
+Your NLSPATH is probably not set correctly. Message Catalog name = "pepoe.cat".
+current NLSPATH = "/usr/lib/nls/msg/%L/%N:/usr/lib/nls/msg/prime/%N".
+NLSPATH strings after expansion of variables = ""
+If NLSPATH is set correctly, check LANG or LC_MESSAGES variables
+\end{verbatim}
+
+\item 4 Occurrences
+\begin{verbatim}
+D1<L3>: pm_respond: Input file ready!
+\end{verbatim}
+
+\item 158 Occurrences
+\begin{verbatim}
+INFO: 0031-656  I/O file STDOUT closed by task <task_number>
+\end{verbatim}
+
+\item 2 Occurrences
+\begin{verbatim}
+ERROR: 0031-619  A=80=FF=F8|: Killed
+\end{verbatim}
+
+\item 7 Occurrences
+\begin{verbatim}
+ERROR: 0031-619  : Error number 73
+\end{verbatim}
+\end{mainpts}
+\end{tiny}
+
+Error handling code in IBM's POE makes it easy to capture these messages.
+\end{small}
+\ve
+
+\vtts{Ease of use}
+Goal: Make parallel computers easier to use.
+\ve
+
+\vtts{Competitive Analysis}
+Outstanding issue (resolved tomorrow?) to look at the state of the art in
+parallel computing in
+more depth (to avoid a repetition of the ``probe'' and ``recv\&call''
+problems). 
+
+\ve
+
+\vtts{Multimedia}
+Bob Olson
+\ve
+
+\vtts{Nexus: Integrating Messaging and Multithreading}
+
+\begin{small}
+\begin{mainpts}
+\item Multithreaded runtime system designed as
+  a compiler target for parallel languages
+
+\item  Used by compilers for CC++, Fortran M, HPF/M.
+
+\item  Integrates multithreading, asynchronous communication, multiple
+  address spaces/process, dynamic process management, multiple
+  communication protocols, and shared-memory constructs
+
+\item  Argonne/Yorktown/Caltech project is investigating optimizations
+  for SP2 and integration with MPI.
+\end{mainpts}
+\URL{http://www.mcs.anl.gov/nexus/}
+\end{small}
+\ve
+
+\vtts{Multithreading and Scalable I/O}
+
+\begin{small}
+\begin{mainpts}
+\item Builds on Nexus
+
+\item Exploits multithreading as means of overlapping I/O with
+  computation and communication in parallel codes
+%    \begin{secpts}
+%    \item Colocate computation and I/O processes
+%    \item Asynchronous 2-phase I/O operations
+%    \item Noncollective I/O operations
+%    \end{secpts}
+
+\item Three related research efforts
+    \begin{secpts}
+    \item Multithreaded version of PASSION (Syracuse)
+    \item Multithreaded version of Jovian (Maryland)
+    \item Parallel I/O library for chemistry (PNL)
+    \end{secpts}
+
+\item Challenges
+    \begin{secpts}
+    \item Efficient preemptive messaging on SP2 (needs AIX 4.1,
+	and integrating of messaging with threading?)
+    \item Ability to block threads on parallel file system
+	operations
+    \end{secpts}
+\end{mainpts}
+\URL{http://www.mcs.anl.gov/dbpp/}
+\end{small}
+\ve
+
+% Most are in ~pieper/SP-REPORT and have -report after them.
+\vtts{Applications}
+
+\begin{small}
+\begin{mainpts}
+  \item Nuclear Physics
+  \item Computational Biology
+  \item Computational Chemistry
+  \item Astrophysics
+  \item Materials Science
+  \item Electromagnetics
+  \item Genetic Algorithms
+  \item Superconductivity
+  \item Tools and Math Libraries
+  \item SP Information Retrieval
+\end{mainpts}
+\URL{http://www.mcs.anl.gov/Projects/sp1/report}
+\end{small}
+\ve
+
+\vtts{Nuclear Physics}
+\begin{small}
+\begin{mainpts}
+\item Goal:
+Determine phenomenological nuclear
+potentials that can be 
+used in calculating results of experiments on nuclei and properties of the
+crust of neutron stars.  
+
+%\centerline{\epsfbox{nuclear.ps}}
+\item Participants:
+\begin{secpts}
+\item Argonne
+\item Univ of Illinois at Urbanna
+\end{secpts}
+\end{mainpts}
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/nuclear-intro.html}
+\end{small}
+\ve
+
+\vtts{Computational Biology}
+\begin{small}
+
+
+\begin{mainpts}
+\item Goal: Develop computational tools needed to effectively address major
+problems of interest to biologists
+
+\item Computational Enzymology
+
+Study the reaction pathways for an important enzyme (first step toward
+rational drug design)
+
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/bash1.html}
+\item Accurate
+Phylogenetic Framework for
+Biology 
+
+Generate a phylogenetic tree based on the Ribosomal Database Project (vital in
+understanding evolution of life)
+
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/overbeek.html}
+
+\end{mainpts}
+
+\end{small}
+\ve
+
+\vtts{Computational Chemistry}
+\begin{small}
+\begin{mainpts}
+\item Goal: Develop algorithms and tools needed to exploit teraflops computers
+in modeling macroscopic processes of the environment
+
+\item Quantum dynamics 
+
+Computation of the detailed quantum dynamics of a scattering event for $OH + CO
+\rightarrow H + CO_2$.
+
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/GRAY/text.html}
+\item Parallel CHARMM
+
+Parallelization of widely used macromolecular system simulator
+
+Joint work with PNL and five inductrial firms
+
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/shin2/shin2.html}
+\end{mainpts}
+\end{small}
+\ve
+
+\vtts{Convective penetration in stellar interiors}
+%\ifpictures
+%\centerline{\epsfxsize=5in\epsfbox{../SP1/1800.cps}}
+%\else
+%\vskip 5in
+%\fi
+
+\begin{small}
+\begin{mainpts}
+\item Goal: Simulate turbulent convection, which plays central role in dynamic
+activity of stars, planets, and supernovae
+
+\item Apporach: Develop parallel code using higher-order Gudunov method and
+nonlinear multigrid  elliptic solver
+
+\item Participants:
+\begin{secpts}
+\item Argonne
+\item Univ. of Chicago
+\end{secpts}
+
+
+%(Thanks to Andrea Malagoli, Anshu Dubey, and Fausto Cattaneo, University of
+%Chicago ({\tt malagoli@liturchi.uchicago.edu})
+\end{mainpts}
+
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/MALAGOLI/mal.sp1_report_94.html}
+
+\end{small}
+\ve
+
+\vtts{Materials Science}
+\begin{small}
+\begin{mainpts}
+\item Goal: Develop theory to explain nature of glasses, a first stop in
+predicting mechanical and thermal properties
+
+\item Develop large dynamic models of glasses
+
+\begin{secpts}
+\item allow in-depth study
+\item provide high-accuracy data to evaluate theories
+\end{secpts}
+
+\item Participants:\\
+Univ of Illinois at Urbanna
+\end{mainpts}
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/kieffer-report.html}
+\end{small}
+\ve
+
+\vtts{Electromagnetics}
+\begin{small}
+\begin{mainpts}
+\item Widely used in industrial applications such as MRI and semiconductors
+\item Current limitations
+\begin{secpts}
+\item accuracy
+\item problem size
+\item solution time
+\end{secpts}
+\item Approach
+\begin{secpts}
+\item integral equations
+\item high-performance computers
+\end{secpts}
+\item Results:
+\begin{secpts}
+\item parallel CORAL code competitive with traditional methods
+\end{secpts}
+%\item Use CAVE for 3D visualization
+\item Participants
+\begin{secpts}
+\item Argonne 
+\item Tampere University
+\end{secpts}
+\end{mainpts}
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/levine-report.html}
+\end{small}
+\ve
+
+\vtts{Genetic Algorithms}
+\begin{small}
+\begin{mainpts}
+\item First application of genetic algorithms to the set  partitioning problem
+(SPP), particularly the airline crew scheduling problem.
+
+\item Significant conclusions:
+\begin{secpts}
+\item     For such an important
+    real-world problem with significant economic implications, {\em  genetic
+algorithms are a viable solution methodology}.
+\item     On up to 128 processors, {\em GAs scale very well} and show great
+promise on larger MPP     systems.
+\item      GAs can be
+used on {\em much longer strings} than previously     known, opening the way
+for 
+additional applications of GA technology in the future.  
+\item      A genetic algorithm hybridized with a hill-climbing heuristic
+outperformed other methods
+\end{secpts}
+\end{mainpts}
+
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/levine-genetic.html}
+\end{small}
+\ve
+
+\vtts{Superconductivity}
+\begin{small}
+\begin{mainpts}
+\item  Birth of a Vortex
+
+One of the main obstacles in the development of practical high-temperature
+superconducting 
+materials is dissipation. Dissipation is caused by the motion of magnetic flux
+quanta called {\em vortices}.
+Numerical simulation allows close-up views of the entry and subsequent
+diffusion of vortices into a superconductor. 
+ 
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/super.html}
+
+\item Twin Boundaries -
+
+Natural defect that can improve the
+current-carrying capabilities of high-temperature superconductors by
+inhibiting flux motion. 
+Simulation allows detailed view of the actual vortex dynamics in the presence
+of twin boundaries.  
+
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/twin.html}
+\end{mainpts}
+\end{small}
+\ve
+
+\vtts{Tools and Math Libraries}
+\begin{small}
+\begin{mainpts}
+\item Parallel Software for Large-Scale Eigenproblems
+
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/bischof-report/bischof-report.html}
+
+\item Multithreading and Scalable
+Input/Output
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/ian.html}
+
+\item Nexus
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/foster.html}
+
+\end{mainpts}
+\end{small}
+\ve
+
+\vtts{SP Information Retrieval}
+\begin{small}
+\begin{mainpts}
+\item Petabyte Access and Storage
+Solutions (PASS) seeks to develop {\em scalable
+solutions to the problems of data retrieval} and analysis.
+\item Demonstration project with Fermilab and Argonne
+\end{mainpts}
+
+\URL{http://www.mcs.anl.gov/Projects/sp1/report/may-report.html}
+\end{small}
+\ve
+
+\vtts{Gap}
+Plans go here (Rusty?)
+\ve
+
+\vtts{Summary}
+\begin{small}
+\begin{mainpts}
+  \item IBM SP at Argonne a big success
+  \item Collaboration working well
+  \item More successes at hand
+\end{mainpts}
+\end{small}
+\ve

@@ -1,0 +1,45 @@
+ALL: tohtml
+SHELL       = /bin/sh
+prefix      = @prefix@
+exec_prefix = @exec_prefix@
+CC = @CC@
+
+.SUFFIXES:
+.SUFFIXES: .c .o
+
+LIBS      =  ../../lib/libsowing.a
+CPPFLAGS    = -I../../include -DPSPATH='"@bindir@/"' \
+              -DBMSOURCE='"@datadir@/"' \
+	      -DBASEDEF='"@datadir@/basedefs.txt"'
+ALL_CFLAGS = @optflags@ $(CFLAGS)
+LDIR      = 
+CLEANFILES = tohtml tortf 
+
+BASEOBJS = search.o texactio.o rdaux.o rdindx.o label.o scan.o \
+           refmap.o style.o dimen.o userdef.o tabular.o biblio.o environ.o \
+	   math.o rddefs.o latexinfo.o
+
+tohtml: tohtml.o  tex2html.o $(BASEOBJS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o tohtml \
+		tohtml.o tex2html.o $(BASEOBJS) $(LIBS)
+
+xwdsize: xwdsize.o
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o xwdsize xwdsize.o -lX11
+
+manpages:
+	../../bin/doctext -quotefmt -mpath ../../man/man1 -ext 1 tohtml.c
+wwwpages:
+	../../bin/doctext -html -quotefmt -mpath ../../www/www1 -ext 1 tohtml.c
+
+clean:
+	-/bin/rm -f *.o *~ $(CLEANFILES)
+	-/bin/rm -f tohtml\ win32/debug/*
+.c.o:
+	$(CC) -c $(CPPFLAGS) $(ALL_CFLAGS) $<
+
+INSTALL_PROGRAM = $(INSTALL)
+INSTALL_DATA    = $(INSTALL)
+install:
+	$(INSTALL_PROGRAM) tohtml @bindir@/tohtml
+	$(INSTALL_PROGRAM) xwdsize @bindir@/xwdsize
+	$(INSTALL_DATA) basedefs.txt @datadir@/basedefs.txt

@@ -1,0 +1,76 @@
+% These are the definitions for the reference manual
+% THIS IS A SPECIAL VERSION FOR THE DOCTEXT DOCUMENT!
+%
+% Things to change:
+% 1.  While within argument text, insure that left margins line up
+%     (currently, subsequent lines at extreme left margin)
+% *** DONE ***
+% 2.  Too much space after synopsis
+% 3.  Index the main page (add index commands to mantitle)
+% 4.  ``Notes'' needs to be a uniform distance after ``input parameters''
+% 5.  Tabs and spaces are ignored in lines beginning with ``$''
+% *** DONE *** (fixed by new doctext?)
+%
+% Set the sizes
+%\textheight=9in
+%\textwidth=6.1in
+%\oddsidemargin=.2in
+%\topmargin=-.50in
+%\hsize=\textwidth
+%
+% Handle # and _ in text
+% 13 == active
+\def\nopound{\catcode`\#=13}
+{\nopound\gdef#{{\tt \char`\#}}}
+\catcode`\_=11
+\def\nosubscript{\catcode`\_=13}
+\catcode`\_=13
+\gdef_{{\tt\char`\_}}
+\catcode`\_=11
+%
+% \mantitle{name}{level}{date}
+\def\pagerule{\hbox to \hsize{\leaders\hrule height 2pt \hfil}}
+\def\mantitle#1#2#3{\pagerule\nobreak\hbox to \hsize{{\bf #1}\hfil{\bf #1}}\nobreak\pagerule}
+%
+% \manname{name}
+%\def\manname#1{\section*{#1}}
+\def\manname#1{\noindent {\bf #1}}
+%
+% \location{filename}
+\def\location#1{\subsection*{Location}\file{#1}\par}
+%
+% \startarg{argname}{meaning}
+\def\startarg#1#2{\ifvmode\else\par\fi
+     \setbox\@tempboxa\hbox{\bf #1}%
+     \ifdim \the\wd\@tempboxa > 1in 
+     \hbox to \hsize{\vtop{\box\@tempboxa}\hss}
+     \hbox to \hsize{\hskip1in\hfil\vtop{\hsize = 5in \noindent #2\par}\hfil}
+     \else
+     \hbox to \hsize{\vtop{\hbox to 1in{\bf #1\hfil}}\hfil%
+                     \vtop{\hbox to 5in{%
+                        \hsize = 5in\vtop{\noindent #2\par}\hfil}}}%
+     \fi}
+%
+% \file{name}
+%\def\file#1{{\tt #1}}
+%
+% \subhead{name}
+\def\subhead#1{\ifvmode\else\par\fi\vspace{5pt}\subsection*{#1}}
+%
+% \endmanpage
+\def\endmanpage{\ifvmode\else\par\fi\vspace{15pt}}
+%
+% \nextline
+\def\nextline{\ifvmode\else\hfill\hbox{}\linebreak\fi}
+%
+% Surround verbatim with these to get the proper effect (which is...?)
+\def\startvb{\relax}
+\def\endvb{\relax}
+%
+% Redefine \\ to be a paragraph break with the appropriate fill (should
+% change doctext to generate \nl instead)
+%\def\nl{\hfill\\}
+%
+% Allow a looser tolerance for paragraph formation
+\pretolerance=300
+\tolerance=500

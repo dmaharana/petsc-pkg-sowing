@@ -1,0 +1,13 @@
+/*@
+   Swap - Swaps two pointers
+
+   Parameters:
+.  ptr1,ptr2 - Pointers to swap
+@*/
+void Swap( ptr1, ptr2 )
+void **ptr1, **ptr2;
+{
+void *tmp = *ptr1;
+*ptr1 = *ptr2;
+*ptr2 = tmp;
+}

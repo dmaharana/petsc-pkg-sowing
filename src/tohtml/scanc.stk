@@ -1,0 +1,82 @@
+#include <stdio.h>
+#include "tools.h"
+
+/*
+    This file contains routines for re-scanning data.  It also handles stacks
+    of input files
+ */
+
+#define MAX_LBUFFER 1000 
+typedef struct {
+    FILE *fp;
+    char lbuffer[MAX_LBUFFER];
+    int  llen=0;
+    int  lp  = 0;
+    } InputFiles;
+static InputFiles IF[10];
+static int        curfile = 0;
+static int        DebugScan = 0;
+
+/* This is a version of SYTxtFindNextANToken that first looks in lbuffer */
+int SCTxtFindNextANToken( fp, token, maxtoken, nsp )
+FILE *fp;
+char *token;
+int  maxtoken, *nsp;
+{
+int fc, c, Nsp, nchar;
+char *tf = token;
+
+if (IF[curfile].lp >= IF[curfile].llen) {
+    IF[curfile].llen = 0;
+    IF[curfile].lp   = 0;
+    }
+
+if (IF[curfile].llen == 0) 
+    return SYTxtFindNextANToken( fp, token, maxtoken, nsp );
+
+Nsp = 0;
+while (IF[curfile].lp < IF[curfile].llen && 
+       isspace(IF[curfile].lbuffer[IF[curfile].lp])) {
+    IF[curfile].lp++;
+    Nsp++;
+    }	
+
+
+fc = c = IF[curfile].lbuffer[IF[curfile].lp++];
+*token++ = c;
+nchar    = 1;
+if (isalnum(c)) {
+    while (nchar < maxtoken && IF[curfile].lp < IF[curfile].llen) {
+    	c = IF[curfile].lbuffer[IF[curfile].lp++];
+        if (isalnum(c)) {
+	    *token++ = c;
+            nchar++;
+	    }
+        else {
+            IF[curfile].lbuffer[--IF[curfile].lp] = c;
+	    break;
+	    }
+        }
+    }
+*token++ = '\0';
+*nsp     = Nsp;
+
+/* fprintf( stdout, "Returning pushed-back %s\n", tf ); */
+return fc;
+}
+
+void SCPushToken( token )
+char *token;
+{
+int len = strlen(token);
+int i;
+
+if (DebugScan)
+    fprintf( stdout, "Pushing back %s [%d]\n", token, IF[curfile].llen ); 
+/* Should really check for at end of buffer */
+for (i=0; i<len; i++) {
+    IF[curfile].lbuffer[IF[curfile].llen++] = token[i];
+    }
+}    
+
+

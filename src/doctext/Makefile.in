@@ -1,0 +1,89 @@
+ALL: doctext doc2lt
+#
+#  (C) 1996 by Argonne National Laboratory.
+#      All rights reserved.  See COPYRIGHT in top-level directory.
+#
+
+##### User configurable options #####
+
+CCC         = @CXX@
+AR          = @AR@ cr
+RANLIB      = @RANLIB@
+CPPFLAGS    = -I../../include/textfilt -I../../include
+ALL_CFLAGS = @optflags@ $(CFLAGS)
+### End User configurable options ###
+# Without the empty .suffixes, some makes choose the wrong rules
+.SUFFIXES:
+.SUFFIXES: .o .C .cxx
+
+SHELL = /bin/sh
+
+LIBS = ../../lib/libtfilter.a 
+
+EXECS = doctext doc2lt
+
+default: $(EXECS)
+
+doctext: doctext.o docutil.o keyword.o dotfmat.o incfiles.o quotefmt.o \
+	textb.o $(LIBS)
+	$(CCC) -o doctext doctext.o docutil.o keyword.o dotfmat.o \
+	incfiles.o quotefmt.o textb.o $(LIBS)
+
+doc2lt: doc2lt.o docutil.o $(LIBS)
+	$(CCC) -o doc2lt doc2lt.o docutil.o $(LIBS)
+
+manpages:
+	../../bin/doctext -quotefmt -mpath ../../man/man1 -ext 1 doctext.cxx
+	../../bin/doctext -quotefmt -mpath ../../man/man1 -ext 1 doc2lt.cxx
+wwwpages:
+	../../bin/doctext -html -quotefmt -mpath ../../www/www1 -ext 1 doctext.cxx
+	../../bin/doctext -html -quotefmt -mpath ../../www/www1 -ext 1 doc2lt.cxx
+
+#
+# These were generated with gcc -MM -I../../include/textfilt *.C
+doc2lt.o: doc2lt.C ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
+ ../../include/textfilt/cmdline.h docutil.h docpath.h \
+ ../../include/textfilt/inutil.h ../../include/textfilt/maptok.h
+doctext.o: doctext.C doc.h ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
+ ../../include/textfilt/cmdline.h docutil.h dotfmt.h \
+ ../../include/textfilt/inutil.h ../../include/textfilt/maptok.h \
+ keyword.h ../../include/textfilt/tfile.h docpath.h quotefmt.h \
+ incfiles.h
+docutil.o: docutil.C ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h
+dotfmat.o: dotfmat.C ../../include/textfilt/instream.h \
+ ../../include/textfilt/textout.h ../../include/textfilt/outstream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
+ ../../include/textfilt/inutil.h docutil.h dotfmt.h keyword.h
+incfiles.o: incfiles.C doc.h ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
+ incfiles.h
+keyword.o: keyword.C ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
+ doc.h
+quotefmt.o: quotefmt.C quotefmt.h ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h
+textb.o: textb.C ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h
+
+.c.o:
+	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) -c $*.c
+
+.cxx.C:
+	ln -s $*.cxx $*.C
+.C.o:
+	$(CCC) -c $(CPPFLAGS) $(ALL_CFLAGS) $*.C
+
+clean:
+	/bin/rm -f *.o *~ $(EXECS) 
+	(cd test ; if [ -s Makefile ] ; then $(MAKE) clean ; fi )
+	-/bin/rm -f doctext\ win32/debug/*

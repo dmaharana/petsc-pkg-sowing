@@ -1,0 +1,1164 @@
+%\tracingall
+\documentclass[twoside]{linfoem}
+\usepackage{epsf,refman2,tpage}
+\c\documentstyle[epsf,refman2,twoside,tpage,addtensf,latexinfo]{article} 
+\c If you have latex2e, then you don't have a complete simulation of LaTeX.
+\c The following detects that and tries to fix it.
+\c Unfortunately, this needs to be done BEFORE loading latexinfo.  And since
+\c rawfonts isn't part of LaTeX (only latex2e), we can't use it in the
+\c document style command.
+\c \ifx\tensf\relax\usepackage[only,tensf]{rawfonts}\fi
+\c \documentstyle[epsf,../refman2,twoside,../funclist,tpage,../tools,../../tex/latexinfo]{article} 
+\c -*-latexinfo-*-
+\c \anltmtrue
+\anltmfalse
+\c\pagestyle{empty}
+\c
+\c We really need a ``usage'' macro for the routines and macros
+\def\usage#1{}
+\c
+\c the definition of \file should be changed so that it adds an
+\c \penalty 1000\hskip 0pt +1fil \penalty -10000
+\c before the actual text (allowing a line that the file name would stick
+\c out of to instead be raggedright, a not perfect but better approach).
+\c
+\c
+\c See /home/beumer/GROPP/TMS/doctext.tex
+\c
+\let\DOESupport\DefaultSupport
+
+\c\def\tie{\nobreak\ \nobreak}
+\def\bw{{\tt\char`\\}}
+% Give the URL for a document (WWW version makes URL active)
+\def\URL#1{#1}
+
+\textheight=9in
+\textwidth=6.5in
+\oddsidemargin=0in
+\evensidemargin=0in
+\topmargin=-0.5in
+\hsize=\textwidth
+
+\begin{document}
+\c latex2e's compatibility mode wants this
+\c \makeatletter
+\c  \global\let \@nodocument \relax
+\c \makeatother
+\c 
+\newindex{fn}
+
+\begin{ifinfo}
+\c %**start of header
+\title{Users Manual for doctext:\\
+Producing Documentation from Source Code}
+\author{William Gropp\\
+Mathematics and Computer Science Division\\
+Argonne National Laboratory}
+
+\date{\today}
+
+\c %**end of header
+
+\maketitle
+\end{ifinfo}
+
+\begin{iftex}
+\ANLTMTitle{Users Manual for doctext:\\
+Producing Documentation from Source Code}{\em William Gropp\\
+Mathematics and Computer Science Division}{206-Rev 3}{February 1999}
+\c {March 1995}
+\c {Rev 1 April 1997}
+
+\end{iftex}
+
+\clearpage
+
+\c \vskip 0pt plus 1filll
+\c Copyright \copyright{} 1995 Argonne National Laboratory
+\c
+\c \clearpage
+\c \pagenumbering{roman}
+\c \setcounter{page}{3}
+\c \pagestyle{plain}
+\c \tableofcontents
+\c \clearpage
+
+\pagenumbering{arabic}
+\pagestyle{plain}
+\thispagestyle{plain}
+
+\setfilename{../doctext.info}
+
+\node Top,        Introduction, (dir), (dir)
+\c    nodename,   next,          previous, up
+
+\c ---------------------------------------------------------------------------
+\begin{iftex}
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\c \thispagestyle{empty}
+
+\begin{center}
+{\large\bf Users Manual for doctext:\\
+Producing Documentation from Source Code\\}
+\vspace{.2in}
+by \\
+\vspace{.2in}
+{\it
+William Gropp\\
+}
+\end{center}
+
+\vspace{.2in}
+
+\addcontentsline{toc}{section}{Abstract}
+\begin{abstract}
+\noindent 
+One of the major problems that software library writers face, particularly in
+a research environment, is the generation of documentation. 
+Producing good,
+professional-quality documentation is tedious and time consuming.  
+Often, no documentation is
+produced.   For many users, however, much of the need for
+documentation may be satisfied by a brief description of the purpose and use
+of the routines and their arguments.  Even for more complete,
+hand-generated documentation, 
+this information provides a convenient starting point.   We
+describe here a tool that may be used to generate documentation about programs
+written in the C language.  It uses a structured comment convention that
+preserves the original C source code and does not require any additional
+files.  The markup language is designed to be an almost invisible 
+structured comment in the C source code, retaining readability in the
+original source.
+Documentation in a form suitable for the Unix man program (nroff), LaTeX, and
+the World Wide Web can be produced.  
+The output format is controlled by easily modified tables, permitting
+customization of the output.
+Support for other languages is also provided, though with fewer features.
+\end{abstract}
+\end{iftex}
+
+
+\clearpage
+\c ---------------------------------------------------------------------------
+
+
+
+\c ---------------------------------------------------------------------------
+
+\node Introduction,doctext,Top,Top
+\section{Introduction}
+\label{chap:intro}
+\c Generating good documentation is a task that requires skill and hard
+\c work.  
+The tools described in this report are intended to help you create
+simple man-page-style documentation quickly and easily. 
+Specifically, the program \code{doctext} takes C programs
+and generates nroff (Unix man page format), LaTeX \cite{Lamport86}, or HTML
+files.  All of the 
+information is  
+embedded in structured comments, allowing the documentation to be maintained
+along with the code.
+The design of the special markup language commands emphasizes
+readability of the original source code (the structured comment).  This
+approach differs from approaches such as \code{web} \cite{web}, where
+special processing must be applied to produce a readable version of the
+source code. Such approaches can do much more than \code{doctext} but
+are really aimed at documenting the source code of a program rather than
+the use of the program.  Further, because those approaches are so 
+intrusive, users tend to avoid them.  The approach in \code{doctext} provides
+an effective comprimise between usability and functionality.
+
+The \code{doctext} approach has been independently adopted by Java; the
+\code{javadoc} 
+program provides HTML documentation from Java source.  \code{doctext} predates
+Java and provides more formats (LaTeX and nroff as well as HTML) and
+formatting commands.
+
+\node The doctext Program,,,Top
+\section{The doctext Program}
+The \code{doctext} program reads C programs and
+generates documentation.  Command-line options provide control over the
+output.  Fine tuning of the output can be accomplished by changing files that
+define the output form for each of the commands that \code{doctext} recognizes.
+
+\node Getting Started,,,The doctext Program
+\subsection{Getting Started}
+Using \code{doctext} is easy.  For example, the command
+\begin{example}
+doctext foo.c
+\end{example}
+will generate Unix man pages for all of the commented routines in the file
+\file{foo.c}.
+But before this will do you any good, you will need to add some structured
+comments to your file.
+
+\node Structure Comments,,,The doctext Program
+\subsection{Structured Comments}
+The \code{doctext} program searches for C comments of the form \code{/*}{\em c} \code{...}
+{\em c}\code{*/}, where {\em c} is a single character indicating the type of
+documentation.  The available types are \code{@} for
+routines, \code{M} for macros, and \code{D} for
+other miscellaneous documentation (such as introductions or descriptions of
+programs rather than routines).
+In all cases, the structured comment has this form:
+\begin{example}
+/*@ 
+    name - short description
+
+    heading 1:
+
+    heading 2:
+
+    ...
+@*/
+\end{example}
+The structured comment for a routine must immediately precede the declaration
+of the routine (either K\&R or ANSI-style prototypes).
+Figure \ref{fig:example} shows the structured comment and the routine being
+documented.
+
+\begin{figure}
+\begin{example}
+/*@
+   Swap - Swaps two pointers
+
+   Parameters:
+.  ptr1,ptr2 - Pointers to swap
+@*/
+void Swap( ptr1, ptr2 )
+void **ptr1, **ptr2;
+\{
+void *tmp = *ptr1;
+*ptr1 = *ptr2;
+*ptr2 = tmp;
+\}
+\end{example}
+\caption{C code for a Swap routine with \protect\code{doctext}-style
+structured comment}\label{fig:example} 
+\end{figure}
+
+The man (nroff-style) output of this is shown in Figure \ref{fig:swap-man},
+and the LaTeX output is shown in Figure \ref{fig:swap-latex}.
+
+\begin{figure}
+\centerline{\epsfysize=3in\epsfbox{swap2.eps}}
+\caption{Unix-style man page for the Swap routine}\label{fig:swap-man}
+\end{figure}
+
+\begin{figure}
+\begin{minipage}{\hsize}
+\input Swap.tex
+\end{minipage}
+\caption{LaTeX page for the Swap routine}\label{fig:swap-latex}
+\end{figure}
+
+The body of the structured comment follows simple rules.  Any line that ends
+in a colon (\code{:}) generates a section title with the line as the title.
+In the example of \code{Swap}, the line \code{Parameters:} generates a section
+in the man page with title {\bf Parameters}.
+
+The first column within a structured comment has a special meaning.  A period
+followed by a space indicates that the line 
+begins the description of an argument (ended by another argument or a blank
+line).  This line has a special format.  The first space-separated token is
+taken as the argument.  The next character should be a dash (\code{-}).  After
+the dash comes the text.  The \code{Swap} example shows this for the arguments
+\code{ptr1,ptr2}.
+Other commands are described below in Section \ref{sec-formatting}.
+
+\node C Routines,,,The doctext Program
+\subsection{C Routines}
+C routines are indicated by the structured comment \code{/*@ ... @*/}.
+The \code{doctext} program provides a synopsis automatically by reading the declarations
+of the routine.  
+Arguments are specified as described in \xref{Describing Arguments}.  
+
+\node C Macros,,,The doctext Program
+\subsection{C Macros}
+C macros are indicated by the structured comment \code{/*M ... M*/}.
+Unlike the case of C routines, macro definitions do not provide any
+information on the types of the arguments.
+Thus, the body of a structured comment
+for a C macro 
+should include a {\em synopsis} section, containing a declaration of the
+macro as if it were a C routine.  For example, if the \code{Swap} example were
+implemented as a macro, the structured comment for it would look like
+\begin{example}
+/*M
+   Swap - Swaps two pointers
+
+   Parameters:
+.  ptr1,ptr2 - Pointers to swap
+
+   Synopsis:
+   void Swap( ptr1, ptr2 )
+   void **ptr1, **ptr2;   
+M*/
+\end{example}
+It is important that the word {\em Synopsis} be used; \code{doctext} and
+related programs (\code{bfort} and \code{doc2lt}) use this name to find the
+C-like declaration for the macro. 
+
+\node Miscellaneous Documentation,,,The doctext Program
+\subsection{Miscellaneous Documentation}
+In addition to routines, a library will often have a few additional manual
+pages, for example, an overview of the members of the library or instructions
+on installing or debugging the library.  In order to allow the same tools to
+be used 
+for all of the documentation, a comment of the form \code{/*D ... D*/} may
+appear anywhere and will generate a manual page.  
+
+\node Indicating Special Limitations,,,The doctext Program
+\subsection{Indicating Special Limitations}
+Two modifiers to the structured comments indicate special 
+behavior of the function.  The modifiers must come after the character that
+indicates a routine, macro, or documentation.
+The modifier \code{C} indicates that this routine is available only in C (and
+not from Fortran).  For example, the \code{Swap} program cannot be used in
+Fortran, so its structured comment should be
+\begin{example}
+/*@C
+  ....
+@*/
+\end{example}
+
+The modifier \code{X} indicates that the routine requires the
+X11 Window System.  This is intended primarily for the program \code{bfort}
+\cite{bfort}, which is used to generate Fortran interfaces for systems that do
+not have X11. 
+
+The modifiers \code{C} and \code{X} may be used together and may be specified
+in either order (i.e., \code{CX} or \code{XC}).
+
+\node Indicateing Include Files,,,The doctext Program
+\subsection{Indicating Include Files}
+It is often very important to indicate what include files need to be used with
+a particular routine.  This may be accomplished with a special structured
+comment of the form \code{/*I}{\em include-file-name}\code{I*/}.
+For example, to indicate that the routine requires that \file{<sys/time.h>}
+has been included, use
+\begin{example}
+#include <sys/time.h>          /*I <sys/time.h> I*/
+\end{example}
+in the C file.
+A user-include can be specified as
+\begin{example}
+#include "system/nreg.h"      /*I "system/nreg.h" I*/
+\end{example}
+This approach of putting the structured include comment on the same line as
+the include of the file ensures that if the source file is changed by removing
+the include, the documentation will reflect that change.
+Includes are added to the synopsis of all routines in the file that
+contains the include comment.
+
+\node Special Formatting,,,Top
+\section{Special Formatting}\label{sec-formatting}
+The structured comment format for \code{doctext} was designed to have a small
+impact on the appearance of the C source code.  As such, it provides minimal
+formatting for the generated manual pages.  
+Three important cases
+are provided: describing
+arguments, verbatim output, and common blocks of text.  
+In addition, there are some additional formatting controls for things like
+emphasis (italics text) and fixed-width fonts.
+This section describes all of these in more detail.
+
+\node Describing Arguments, , ,Special Formatting
+\subsection{Describing Arguments}
+Arguments to routines and command-line options for programs are described by
+using a plus (\code{+}), period (\code{.}), and minus (\code{-})
+in the first column, followed by one or more spaces.
+The name of the argument or command line variable is next.
+Several arguments may be placed together, separated with spaces and/or commas.
+To include a hyphen (\code{-}) in the argument, 
+prefix it with a backslash (\bw).
+Follow this with one or more spaces, then a dash (\code{-}), optional spaces,
+and finally the 
+text of the description.   The description may use multiple lines.
+The \code{+} should be used to start an argument list and \code{-} should be
+used to end the list.  The period (\code{.}) should be used for all other
+arguments in the list.
+For example,
+\begin{example}
++ a - Pointer to
+      the data item
+. i, j - Sizes of data item
+. str - Another argument value
+- \bw-arg value - Sample command-line argument
+\end{example}
+The \code{+} and \code{-} are optional but recommended.  They permit better
+formatting of lists of arguments.  
+
+\node Common Blocks of Text, , ,Special Formatting
+\subsection{Common Blocks of Text}
+In some cases, it is useful to repeat a body of text in many man pages.  For
+example, there may be a common argument that has a lengthy description.  A
+common block of text is defined with 
+\begin{example}
+/*N name
+   text
+N*/
+\end{example}
+The {\em name} may be any blank-delimited string.  
+
+To insert this block of text into a man page, use the \code{.N} format command
+\begin{example}
+/*@
+    ...
+
+.N name
+
+    ...
+@*/
+\end{example}
+The definition must precede all uses.  Once defined, the definition is
+remembered; if multiple files are processed and the first file contains a
+definition of a named block, all subsequently processed files may refer to
+that named block.
+This feature allows different replacement texts for different situations.  For
+example, the replacement text for a man page should contain the entire
+text, whereas the replacement text for a manual (LaTeX) may reference a
+common section.  
+
+For example, the MPICH implementation of MPI uses this to define all of the 
+error conditions.  A file \file{errnotes} contains lines like
+\begin{example}
+/*N Errors
+Errors:
+
+ ... text about MPI errors ...
+
+N*/
+/*N MPI_SUCCESS
+. MPI_SUCCESS - No error; MPI routine completed successfully.
+N*/
+/*N MPI_ERR_BUFFER
+. MPI_ERR_BUFFER - Invalid buffer pointer.  Usually a null buffer where
+  one is not valid.
+*N/
+\end{example}
+Each MPI man page ends with references to the name blocks for the errors that
+the particular MPI routine may return.  \code{MPI_Send} has the
+following commands at the end of its structured comment:
+\begin{example}
+.N Errors
+.N MPI_SUCCESS
+.N MPI_ERR_COMM
+.N MPI_ERR_COUNT
+.N MPI_ERR_TYPE
+.N MPI_ERR_TAG
+.N MPI_ERR_RANK
+\end{example}
+
+
+\node Line Breaks, , ,Special Formatting
+\subsection{Line Breaks}
+A new line may be begun with the \code{.n } command at the beginning of a
+line.  The rest of the line is read.  For example, to provide a list of items,
+use
+\begin{example}
+.n This is the first item
+.n This is the second item
+.n This is the third item
+.n
+\end{example}
+Note that a final line containing only \code{.n} is used to ensure that
+the next line of text begins on a new line rather than at the end of the
+third line.
+
+\node Verbatim Blocks of Text, , ,Special Formatting
+\subsection{Verbatim Blocks of Text}
+To display a block of text in a fixed-width font, use the \code{.vb}
+command to begin the block and \code{.ve} command to end the block.  
+These commands, like the other dot commands, must begin in the first
+column.  For example, to display two lines of shell commands, use this
+text in the structured comment:
+\begin{example}
+.vb
+  cd .
+  echo "I'm here"
+.ve
+\end{example}
+
+\node Emphasis, , ,Special Formatting
+\subsection{Emphasis}
+To emphasize some text, include it between back quotes: \code{`this text
+is emphasized`}.  Emphasized text may appear in italics ({\em this text
+is emphasized}) or in bold face ({\bf this text is emphasized}).
+(Whether italics or bold face is used depends on the implementation and the
+output format).
+This effect requires the use of the \code{-quotefmt} command-line option; if
+the option is not used, back quotes are intrepreted as a simple character.
+To get a single back-quote when \code{-quotefmt} is used, double the quote:
+\code{``}.
+
+\node Code and Filename Font, , ,Special Formatting
+\subsection{Code and Filename Font}
+To display some text in a font appropriate for code and filenames,
+include it between single forward quotes: \code{'this text is code'}.
+This will appear in a form such as {\tt this text is code}.
+This effect requires the use of the \code{-quotefmt} command-line option.
+To get a single quote when \code{-quotefmt} is used, double the quote:
+\code{''}.
+
+\node Pictures, , ,Special Formatting
+\subsection{Pictures}
+This section described a proposed feature; comments are welcome. 
+
+In the HTML and LaTeX formats, pictures (Postscript files) can be
+included by using the \code{.p} command:
+\begin{example}
+ .p filename
+\end{example}
+The file must be a Postscript file.
+A caption for the picture can be included with the \code{.cb} and
+\code{.ce} command.  This caption is not displayed in the Unix man-page
+document but does appear in the LaTeX and HTML versions.  For example,
+\begin{example}
+ .p sample-out.ps
+ .cb
+  This image shows the output of the 'foo' command
+  Note particularly ...
+ .ce
+\end{example}
+(not yet implemented)
+
+\node Verbatim, , ,Special Formatting
+\subsection{Verbatim}
+A dollar (\code{$}) in the first column indicates a verbatim line. In most
+situations, this can be used for forcing a line break at the end of the line.
+An example is
+\begin{example}
+$ This is a test
+$ 
+$    Here is a sample command line
+$
+$ And the start of the description about
+  it.
+\end{example}
+This version of verbatim is deprecated and supported for backward
+compatibility. 
+
+\node Keywords, , ,Special Formatting
+\subsection{Keywords}
+Keywords may be specified with the command \code{.k}{\em list of keywords}.
+For example, to indicate that keywords {\em test, example, help} belong to the
+current routine or item, use
+\begin{example}
+.k test, example, help
+\end{example}
+To improve the readability of the source, you may use \code{.keywords} instead
+of just \code{.k}.
+
+The command line option \code{-keyword filename} causes the keywords to be
+appended to the specified file; this can be used to produce a keyword list.
+
+\node Other Formatting Options, , ,Special Formatting
+\subsection{Other Formatting Options}
+The program \code{doctext} is designed so that it is easy to add additional
+formatting commands of the form \code{.}{\em command}.  
+Other commands beyond those described in this document may be
+added in the future, so you should not rely on any particular behavior of
+\code{.}{\em character}.  For example, \code{.seealso} has been added to
+provide a common reference for related information.
+If you need some particular formatting
+option, please send the suggestion to \code{gropp@mcs.anl.gov}.
+
+\node Command Line Arguments,,,Top
+\section{Command Line Arguments}
+To use \code{doctext}, you need only to give it the name of the files
+to process:
+\begin{example}
+doctext *.[ch]
+\end{example}
+Command-line options to \code{doctext} allow you to change the details of
+how 
+\code{doctext} generates output.
+
+A complete list of the command line options follows.  Some of these will
+be used often (e.g., \code{-ext} and \code{-mpath}); others are
+needed only in special cases (e.g., \code{-outfile}).
+
+The choice of output format is selected with these switches:
+\begin{description}
+\item[-latex]
+Generate LaTeX output rather than man (nroff) format files.
+\item[-html]
+Generate HTML (WWW) output rather than man (nroff) format files.
+\end{description}
+If neither of these is used, the output is in man (nroff) format.
+
+The following options control some aspects of the appearance and content of the
+generated page, as well as the name of the output file.
+\begin{description}
+\item[-mpath path]
+Set the path where the man pages will be written.
+\item[-ext n]
+Set the extension (1-9,l, etc.).  The default value is 3.  This is the man page
+chapter and is used as the extension on the filename.  For example,
+\code{doctext} creates the file \file{Swap.3} for the \code{Swap} routine.
+\item[-heading name]
+Name for the heading (middle of top line).  The default value is \code{PETSc}.
+This is used only for Unix man-page (nroff) format.
+\item[-nolocation]
+Suppress the generation of a line that indicates the source file that
+contained the structured comment.
+\item[-quotefmt]
+Enable the use of single quotes and back quotes to use code and emphasis
+fonts.
+\item[-dosnl]
+End every line with return-newline instead of just newline.  This makes that
+file easier to read on Windows systems, and is quite helpful for HTML output.
+\item[-defn filename]Load the output definitions in file \file{filename}, in
+  addition to the defaults.  
+\item[-I filename]
+\code{filename} contains the public includes needed by these routines; it will
+automatically be added to the synopsis of the routines.  The file should
+contain exactly the text to be added to the synopsis.  For example, to specify
+that the include \code{<stdio.h>} be included, use a file with only the text
+\code{#include <stdio.h>} in it.
+\end{description}
+
+The following options control the generation of additional data about
+HTML-format 
+output that may be used by other programs to automatically generate links to
+the files created by \code{doctext}.
+\begin{description}
+\item[-index filename]
+Generate an index file appropriate for \code{tohtml} \cite{tohtml} (for
+generating WWW files). 
+This {\em appends} to any existing file; make sure that you don't add
+duplicate entries.
+\item[-indexdir dirname]
+Set the root directory for the index file entries.  This allows you to 
+specify an absolute URL for the generated files to be used in the generated
+index,  for example, 
+\begin{example}
+-index foo.cit -indexdir "http:/www.mcs.anl.gov/home/gropp/man"
+\end{example}
+\item[-mapref filename]Use file \file{filename} as a source of names that
+  should be automatically mapped to URLs.  One source of a properly formatted
+  mapref file is the output from \code{doctext} in the file specified with the
+  \code{-index filename} command.
+\c \item[-jumpfile filename]
+\c Generate a jump file appropriate for emacs-19 and the command 
+\c lookup-petsc-routine-from-text.  
+\end{description}
+
+The following options control the output filenames and the list of files to process.
+\begin{description}
+\item[-outfile filename]
+Put the man pages in the indicated file.  Normally, a separate file is
+created for each routine.  This may be appropriate for HTML output.
+The output filename is normally made up of the name of the routine, followed
+by the extension (\code{-ext n}) for nroff, \code{.tex} for LaTeX, or
+\code{.html} for HTML files.
+\item[-keyword filename]
+Append the keywords (from \code{.k} commands) to the given file.  If the
+filename is \file{-}, use standard output.
+\end{description}
+
+
+The following options control the input format of the file, allowing
+\code{doctext} to be used with documentation in source files for Fortran or
+shell scripts.
+\begin{description}
+\item[-skipprefix name]Set the characters to be skipped at the beginning of
+  each line.  The default is the empty string.  Use 
+\begin{example}
+    -skipprefix C
+\end{example}
+for Fortran 77 programs.  You can use \code{-skipprefix \#} for shell scripts
+and \code{-skipprefix \bw!} for Fortran 90 programs.
+
+For example, with \code{-skipprefix C}, a Fortran program can use the M (not
+@) mode:
+\begin{example}
+C/*M
+C fortranfoo - An example of using Fortran with doctext
+C
+C Input Parameters:
+C
+C+ foo - bar
+C. bar - stool
+C- stool - pidgeon
+CM*/
+      function fortranfoo( foo, bar stool )
+      integer foo, bar stool
+      end
+\end{example}
+
+This option is new and has not been extensively tested.  
+
+\item[-ignore name]Skip over \code{name} when processing a function
+  definition.  This is particularly useful when a special (non-standard)
+  keyword is needed to build a dynamic link library (DLL) (e.g., Microsoft
+  C/C++) or 
+  to simplify the construction of export lists (IBM's AIX).  For example, say
+  that \code{EXPORT} is used to indicate a routine that will be exported as
+  part of a DLL.  The source code then looks like
+\begin{example}
+/*@ myroutine - a routine visible as part of a DLL
+ @*/
+EXPORT void myroutine( int a )
+\end{example}
+Using the command line option \code{-ignore EXPORT} will cause \code{doctext}
+to skip the \code{EXPORT} keyword; the synopsis will contain only 
+\begin{example}
+    void myroutine( int a )
+\end{example}
+
+\end{description}
+
+After the command-line arguments come the names of the files from which
+documents are to be extracted.
+
+\node Man Pages for Hypertext Documents,,,Top
+\section{Man Pages for Hypertext Documents}
+One of the most difficult tasks in creating extensive hypertext is generating
+the initial documents and providing an easy way to link to them.  
+For the the hypertext to be useful, there must be an easy
+way to create links to the generated documents.  This section describes how to
+do this.  The information produced by \code{doctext} may be used by
+\code{tohtml} \cite{tohtml} to generate documents that have extensive
+cross-links to 
+hypertext versions of their man pages.
+Special formatting options for HTML pages are also discussed.
+
+\node Generating Collections of Linked Web Pages,,,Man Pages for Hypertext Documents
+\subsection{Generating Collections of Linked Web Pages}
+To generate HTML man pages for a collection of source files in
+\file{/home/me/foo}, 
+do the following:
+\begin{verbatim}
+cd
+mkdir www
+mkdir www/man3
+cd foo
+doctext -html -index ../foo.cit \
+        -indexdir http://www.mcs.anl.gov/me/foo/www/man3 \
+        -mpath ../www/man3 *.[ch]
+cd ..
+\end{verbatim}
+This puts the HTML files into the directory \file{www/man3} and the index (in
+the correct format for the \code{-mapman} option of \code{tohtml}) into the
+file 
+\file{foo.cit}.   
+The \code{-indexdir} option is used to specify the ultimate location for the
+files (in this case, the directory \code{me/foo/www/man3} at the Web site
+\code{www.mcs.anl.gov}). 
+Once you are
+sure that the files are correct, you can move them into the Web area with
+\begin{example}
+cp -r www /mcs/www/home/me
+\end{example}
+(assuming that \file{/mcs/www} corresponds to \code{http://www.mcs.anl.gov} in
+the \code{-indexdir} argument).
+
+To generate an HTML listing of the routines, you can execute the following
+script, with, of course, the appropriate changes to the text:
+\begin{verbatim}
+#! /bin/sh
+echo '<TITLE>Web pages for My Routines</TITLE>' >> www/index.html
+echo '<H1>Web pages for My Routines</H1>' >> www/index.html
+echo '<H2>My Routines</H2>'  >> www/index.html
+echo '<MENU>' >> www/index.html
+ls -1 www/man3 | \
+    sed -e 's%^\(.*\).html$$%<LI><A HREF="man3/\1.html">\1</A>%g' \
+        >> www/index.html
+echo '</MENU>' >> www/index.html
+\end{verbatim}
+This example may be found in the file \file{mkhtml.sam} in the source
+directory for \code{doctext}.
+
+If you have only a few routines to document, you can dispense with the second
+directory level above (the \file{man3}).  However, you might find it valuable
+to follow (at least loosely) the Unix man page format, with commands and
+installation instructions in \file{man1} and routines spread across
+\file{man2} through \file{man8}.
+
+\node Alternate Formatting for HTML,,,Man Pages for Hypertext Documents
+\subsection{Alternate Formatting for HTML}
+\label{sec:alternatehtml}
+The appearance of arguments can be improved in HTML by using an HTML table.
+The command line argument \code{-defn htmlargtbl.def} will cause a table to be
+used in HTML mode for argument lists that begin with \code{+} and end with
+\code{-}.  
+
+You can also completely control the type of HTML that is generated.
+\code{doctext} uses definition files that define what HTML is produced for
+each \code{doctext} command.  These files, for HTML, are \file{html.def} in
+the directories specified by \code{TEXTFILT_PATH} (for basic operations) and
+\code{DOCTEXT_PATH} (for doctext-specific operations).  These are defined when
+\code{doctext} is built; the defaults are \file{/usr/local/share} and
+\file{/usr/local/share/doctext}.  You can override any
+of these definitions by creating your own file and specifying it with the
+\code{-defn filename} argument.  In addition, you can prepend or postpend your
+own commands to the predefined commands.  For example, to add an index link to
+the bottom of every page, put the following definition in a file:
+\begin{example}
++eop    %n<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+\end{example}
+This says to prepend (the \code{+} is before the end-of-page command
+\code{eop}) the HTML code given.  The \code{%n} generates a newline.
+Placeing a \code{+} after the commands postpends the definition.
+
+\node Making a Reference Manual,,,Top
+\section{Making a Reference Manual}
+With the \code{-latex} option of \code{doctext}, it is easy to create a
+reference manual containing the manual pages produced by \code{doctext}.
+The style file \code{refman.sty} (in \file{share/refman.sty}) provides the
+necessary LaTeX definitions.  Below is an example skeleton for a reference
+manual: 
+
+\begin{verbatim}
+\documentstyle[refman]{article}
+
+... page size commands ... 
+
+\begin{document}
+
+... title page commands ...
+
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+
+\pagenumbering{arabic}
+\pagestyle{headings}
+
+\section{Introduction}
+... regular text ...
+
+\section{My commands}
+\input ref/ref1
+
+... additional sections ...
+\end{document}
+\end{verbatim}
+
+To generate the LaTeX files for the individual man pages using
+\code{doctext}, you can use the following commands:
+\begin{example}
+doctext -latex -mpath ref/ref1 *.c
+\end{example}
+followed by
+\begin{example}
+cd ref
+ls ref1 | sort | sed 's/^/\bw input /g' > ref1.tex
+\end{example}
+
+If named replacement blocks of text (\code{.N name}) are used, it may be
+appropriate to use a different definition for the manual from that used
+for the man page.  For example, if the file \file{common.txt} contains
+\begin{example}
+/*N defs
+    Definitions are described in Section 2.
+N*/
+\end{example}
+then changing the \code{doctext} command to 
+\begin{example}
+doctext -latex -mpath ref/ref1 common.txt *.c
+\end{example}
+will cause each \code{.N defs} command to include the text ``Definitions
+are described in Section 2.''
+
+\node Making the man Pages Available,,,Top
+\section{Making the man Pages Available}
+In order to make the regular man pages available, a
+directory tree containing directories \file{man}, \file{man/man1}, etc. (for
+all of the man page extensions used) needs to be created.
+In addition, a ``whatis'' database should be built within the primary man
+directory so that \code{man -k topic}
+will find the command or routines with \code{topic} in their description.
+This is done with the program \file{/usr/etc/catman} or \file{makewhatis}.  If
+either of these programs is not
+available, the ``whatis'' database cannot be created.
+The following C-shell code will create the database:
+\begin{example}
+unalias cd
+if (-e /usr/etc/catman) then
+    (cd man ; /usr/etc/catman -w -M . )
+else if (-e `which makewhatis`) then
+    (cd man ; makewhatis -M `pwd`)
+endif
+\end{example}
+
+Some \code{catman} programs may behave erroneously; at least one system,
+instead of using the \code{.SH NAME} entry, looks for \code{.SH NAME ...
+.SH}.  What this means is that if the first text after the routine's
+description is not a section title (i.e., a line ending with a colon), the
+\code{catman} program will generate an incorrect whatis database.
+
+It is easy to provide an X11 interface to the man pages by using \code{xman}
+and the \code{MANPATH} variable.  Here is a simple shell script that provides
+access to the man pages in \file{/home/me/man}:
+
+\begin{example}
+#! /bin/sh
+MANPATH=/home/me/man
+export MANPATH
+xman -notopbox -helpfile /home/me/man/me.help "$@" &
+\end{example}
+
+In order to get \code{man} and \code{xman} to display the correct names for
+the various sections (corresponding to the directories \file{man/man1},
+\file{man/man2}, etc.), a file \file{man/mandesc} is required.  Here is the
+\file{man/mandesc} for the PETSc package:
+
+\begin{example}
+r(r)Introduction
+1(1)Sparse Matrix Routines
+2(2)Vector Routines
+3(3)Simplified Solvers
+4(4)Iterative Methods
+5(5)High Level Communications
+6(6)Low Level Communications
+7(7)System Calls
+8(8)Miscellaneous
+9(9)Domains and Grids
+b(b)BLAS
+x(x)X Window System Tools
+n(n)Nonlinear Solvers
+no default sections
+\end{example}
+
+Finally, \code{xman} displays a help page when it starts.  To change the file,
+use the \code{-helpfile} argument and provide a simple text file (not a man)
+page.  
+
+\node Customizing the Output Format,,,Top
+\section{Customizing the Output Format}
+The text formating commands that \code{doctext} uses for its output are
+controlled by several files.  For each output format (nroff, html, and latex)
+there are two sets of definitions files.  The first set are the ones common to
+all of the tools in the sowing package, and are in the directory
+\file{share}. The files are
+\begin{description}
+\item[html.def]HTML commands
+\item[latex.def]LaTeX commands
+\item[nroff.def]Nroff (man) commands
+\end{description}
+In addition, the directory \file{share/doctext} contains special
+versions of these same files.  \code{doctext} uses the files in
+\file{share/doctext} by default (see the file
+\file{sowing/src/doctext/docpath.h}).  You can override or add to these
+commands with the \code{-defn filename} argument.  The environment variable
+\code{DOCTEXT_PATH} may be used to point to a different set of definition
+files.  
+
+Small changes can be made by using the \code{-defn filename} switch to load a
+file that redefines a few of the commands.  The file \file{htmlargtbl.def},
+mentioned above for using the HTML table commands for arguments, is an
+example.  Similarly, the file \file{latexargtbl.def} can be used to place the
+argument definitions in a LaTeX \code{tabular} environment.  Using the
+\code{-defn} argument to override a few definitions is usually preferable to
+replacing all of the definitions.
+
+\node The Doctext Commands,,,Customizing the Output Format
+\subsection{The Doctext Commands}
+\code{Doctext} uses named commands for all of its output.  For each of these
+commands, there is a definition that tells \code{doctext} what to do
+for each of these.  For example, when \code{doctext} outputs a section
+(from a line ending in a \code{:}), \code{doctext} uses the
+\code{section} command.  The default definition for this when
+generating HTML is
+\begin{example}
+  section    %n<H2>%1</H2>%n
+\end{example}
+This instructs \code{doctext} to output a newline if it isn't already
+at the start of a line (the \code{%n}); followed by standard HTML for
+a level 2 heading, followed by another newline.  The \code{%1} in the
+argument string stands for the first argument to the \code{section}
+command.  To change the output style, you need only replace the
+command definitions.  The next two sections detail the commands and
+the command language.
+
+\node Commands,,,Customizing the Output Format
+\subsection{Commands}
+\label{sec:outputcommands}
+\begin{description}
+\item[blank]Generate a blank space.  This is usually just a blank space.
+\item[bof]Beginning of file command.  This is called when a new file
+is created.  There is one argument: the name of the directory.
+\item[bop]Beginning of page command.  This is called when starting a
+new manual page.
+\item[definition]There is one argument, the one-line description of the
+  routine. Used only by \code{doc2lt}.
+\item[em]Begin emphasis (or italic) style text.  See the command
+syntax for the discussion of how font modes like this are exited.
+\item[em_dash]Generate an em dash (---).
+\item[end_par]Generate an end-of-paragraph.
+\item[eof]End of file command.  This is called just before
+\code{doctext} closes a file.
+\item[eop]End of page command.  This is called at the end of a man
+page.
+\item[key]There is one argument, the name of the routine that a
+man page is being generated for.  Used only by \code{doc2lt}
+\item[linebreak]Generate a forced line break.
+\item[location]Show the location of the file the generated this man
+page.  The argument is the filename.
+\item[mantitle]Generate the man page title.  This takes four string
+arguments.  They are, in order
+    \begin{description}
+    \item[name]Name of the routine
+    \item[level]Man page section (e.g., \code{3})
+    \item[date]Date of last change to file
+    \item[heading]man section name (from the \code{-heading} argument
+    to \code{doctext}).
+    \end{description}
+\item[picture]This command takes the name of a file as argument and
+will be used in future versions of \code{doctext} to allow the
+inclusion of graphics in man pages.
+\item[postamble]Used only by \code{doc2lt}
+\item[preamble]Used only by \code{doc2lt}
+\item[rm]Change font style to roman.
+\item[section]Generate a man page section header.  There are two
+arguments.  The string argument is the name of the section; the
+integer argument is the level of the section.  The default section
+level is two.
+\item[synopsis]Generate the \code{Synopsis} section of the man page.
+The argument is the synopsis text.  Used only by \code{doc2lt}.
+\item[tt]Change font style to fixed width.
+\end{description}
+In addition to the above commands, there are a number of commands that
+come in pairs, with a start (\code{s_xxx}) and an end (\code{e_xxx})
+term.  
+\begin{description}
+\item[s_arg]Begin an argument (\code{.} format command).
+\item[s_defn]Begin the definition of an argument.
+\item[s_arg_list]Begin a list of argument (the \code{+} format
+command).  This doesn't include the argument itself; that is begun
+with the \code{s_arg_inlist} command.
+\item[s_arg_inlist]Begin an argument within an argument list (started
+with \code{s_arg_list}).
+\item[s_defn_inlist]Begin the definition of an argument in an argument
+list.
+\item[s_caption]Begin the text for a caption.  This is intended for
+use with the \code{picture} command, and is not supported.
+\item[s_doctext_verbatim]Begin the single-line verbatim mode (the
+\code{$} command).
+\item[s_synopsis]Begin the synopsis section.
+\item[s_verbatim]Begin a multiline verbatim section (\code{.vb}).
+\end{description}
+
+\node The Definition Command Language,,,Customizing the Output Format
+\subsection{The Definition Command Language}
+The command language for the definitions is very simple.  Each line
+has the form
+\begin{example}
+command-name replacement-text
+\end{example}
+The \code{command-name} is any of the names in
+Section\tie\ref{sec:outputcommands}. 
+Comment lines may be included anywhere and start with \code{#}.
+The \code{replacement-text} is almost literal text, except for
+\code{%} escapes.  These escapes are almost all single letters; for
+example, \code{%n} and \code{%1}.  The complete list of escapes
+is
+\begin{description}
+\item[\code{%}]Output the \code{%} character
+\item[1]Insert the first string argument
+\item[2]Insert the second string argument
+\item[3]Insert the third string argument
+\item[4]Insert the fourth string argument
+\item[i]Insert the first integer argument
+\item[n]Insert a newline onlyh if not at an newline
+\item[u1]Insert the first string argument, but in uppercase.
+Similarly for \code{u2} through \code{u4}.
+\item[p]Insert end-of-paragraph string only if not at an
+end-of-paragraph.
+\item[f]Insert the end of font string.  This string is defined by the
+\code{%e=} command.
+\item[N="..."]Replace newlines with the string given in quotes.  The
+string can be 32 characters or less.
+\item[e="..."]Define the end of font string.  The string can be 32
+characters or less.
+\item[m="..."]Define the output mode.  This is a string that is
+understood by the particular output format.  For example, the LaTeX
+output routines understand the mode \code{verbatim} and use that to
+change how characters are output.
+\end{description}
+To continue \code{replacement-text} to another line, end the line with
+the \bw\ character.  A single space at the end of a line may be
+represented with \bw<blank>.
+
+Sometimes you will not want to replace a command; instead, you will
+want to insert your replacement text either before or after the
+standard text.  You can do this by placing a \code{+} either before or
+after the \code{command-name}.  An example of this is in
+Section\tie\ref{sec:alternatehtml}. 
+
+\node Examples of Command Definition,,,Customizing the Output Format
+\subsection{Examples of Command Definition}
+This first example shows how to place the argument names and
+definitions into a table when generating HTML output.  This works only
+with the argument list commands (start a list with \code{+} and end it
+with \code{-}).  Here are the definitions:
+\begin{example}
+# You can get this by specifying -defn htmlargtbl.def to doctext.
+s_arg_list    %n<TABLE BORDER=0>
+s_arg_inlist  %n<TR><TD WIDTH=20></TD><TD ALIGN=LEFT VALIGN=TOP><B>
+e_arg_inlist  </B></TD>
+s_defn_inlist <TD VALIGN=TOP>
+# The br is used to break the line in the event that the browser doesn't
+# support tables.  It is better than nothing.
+e_defn_inlist <BR></TD></TR>
+e_arg_list    </TABLE>%n
+\end{example}
+This example uses only the \code{%n} escape.  The definitions are
+ordered as they would be used by \code{doctext}.
+
+This second example makes \code{tt} text one size larger when
+generating HTML:
+\begin{example}
+tt     %f<TT><FONT SIZE=+1>%e="</FONT></TT>"
+\end{example}
+The \code{%f} command is used to terminate any previous font style
+command.  The \code{%e} command defines how to terminate this font
+style.
+
+\node Installing doctext,,,Top
+\section{Installing doctext}
+The \code{doctext} program is part of the a sowing package.
+(An earlier version was part of the PETSc package of tools for
+scientific computing.)
+The program is available from
+\URL{ftp://ftp.mcs.anl.gov/pub/sowing/sowing.tar.gz}. 
+Directories and files such as \file{refman.sty} 
+referred to in this manual are provided
+in this implementation and may be found in the installation.
+To build, 
+\begin{example}
+    gunzip -c sowing.tar.gz | tar xf -
+    cd sowing
+    ./configure 
+    make
+\end{example}
+The \code{doctext} program is in the \file{sowing/src/doctext} directory.
+
+\code{doctext} requires a C++ compiler; most testing has been done with
+\code{gcc}.  
+
+Please send any comments to \code{gropp@mcs.anl.gov}.
+
+\c Currently on the list of requested features are:
+\c preserve spaces in <PRE> in HTML (nearly impossible)
+\c comment on erroneous use of &nbsp;?
+\c see  http://www.hut.fi/~jkorpela/HTML3.2 for why LISTING not used
+
+\addcontentsline{toc}{section}{Acknowledgment}
+\section*{Acknowledgment}
+The author thanks Lois Curfman McInnes and Barry Smith for their careful
+reading and vigorous use of the \code{doctext} manual and program and
+Ewing Lusk for valuable suggestions about additional functionality.
+
+\begin{tex}
+\addcontentsline{toc}{section}{References}
+\bibliography{tools}
+\bibliographystyle{plain}
+\end{tex}
+
+\end{document}

@@ -1,0 +1,36 @@
+\documentstyle{article}
+\begin{document}
+
+\newtheorem{example}{Example}[section]
+
+\section{First Section}
+
+\begin{example}
+  A simple example involving \(math\).
+\end{example}
+
+Simple math
+\( a + b \)
+Less simple (braces)
+\( \{ a + b \}\)
+And with ldots
+\( Foo( a + b + \ldots ) \)
+Even worse, with subscripts and superscripts 
+\( A_1 + B^2 = C_{old} \)
+
+Here is a block of text that caused some problems (overwrites in the
+math handling):
+
+When manipulating a preconditioning matrix, \( A \) , BlockSolve95
+internally works with a scaled and permuted matrix, \( \hat{A} = P
+D^{-1/2} A D^{-1/2},\) where \( D \) is the diagonal of \( A \) , and \( P \) is a
+permutation matrix determined by a graph coloring for efficient
+parallel computation.  Thus, when solving a linear system, \( Ax=b \),
+using ILU/ICC preconditioning and the matrix format {\tt MATMPIROWBS}
+for {\em both} the linear system matrix and the preconditioning
+matrix, one actually solves the scaled and permuted system \( \hat{A}
+\hat{x} = \hat{b} \) , where \( \hat{x} = P D^{1/2} x \) and \(\hat{b} = P
+D^{-1/2} b\) . 
+
+
+\end{document}

@@ -1,0 +1,47 @@
+To: Barry Smith <bsmith@mcs.anl.gov>
+cc: Steve Tuecke <tuecke@mcs.anl.gov>,
+    "Brian R. Toonen" <toonen@mcs.anl.gov>, itf@mcs.anl.gov,
+    Rusty Lusk <lusk@mcs.anl.gov>
+Subject: Re: configure generating database? 
+In-Reply-to: Message from Barry Smith <bsmith@mcs.anl.gov> 
+   of "Wed, 10 Dec 1997 11:19:11 -0600."              <Pine.SUN.3.95.971210111519.4018E-100000@eagle.mcs.anl.gov> 
+Date: Wed, 10 Dec 1997 13:12:13 -0600
+From: William Gropp <gropp@mcs.anl.gov>
+
+Actually, there is already a (simple) database format - the config.cache file
+that configure generates.  As a starter, we could put together a simple
+configure script that contains the generic configure macros, along with the
+things that we find that we need.  We'll need to be a little careful about
+choices of compilers, since chosing gcc or cc or xlC etc may give different
+results (along with things like -64 or -n32 on IRIX).  Configure scripts can
+easily use this just as they use the standard config.cache now.  Other
+programs can use it easily: the file is an sh script assiging values to
+variables, and can either be processed directly or searched for the specific
+information.  As a concrete suggestions, how about
+
+/tmp/alice/config/database.<compiler>.<archflags>
+
+e.g., 
+
+/tmp/alice/config/database.gcc.default
+/tmp/alice/config/database.cc.n32
+/tmp/alice/config/database.f77.default
+/tmp/alice/config/database.xlf.qautodbl
+
+I used /tmp to make the data machine specific.  There should also be a 
+distillation directory
+
+/home/alice/config/<machinekind>/database.<compiler>.<archflags>
+
+where <machinekind> would be things like sun4.1, solaris2.6, irix6.3, aix4.2,
+etc.  
+
+A job would run nightly (and with support's help, on reboot), that would
+update the tables in /tmp.  Another job would update the distillation data.
+
+This isn't very sophisticated, but it is easily implemented using (mostly)
+existing tools.  
+
+Comments?
+
+Bill

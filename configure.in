@@ -1,0 +1,193 @@
+dnl
+dnl This is an autoconf version 2 configure file
+dnl
+dnl Caching is usually WRONG for systems with cross-mounted file systems
+dnl (the cache file may correspond to a different system).  Since configure
+dnl is not on a performance-critical path, go for robustness over speed.
+dnl
+define([AC_CACHE_LOAD], )dnl
+define([AC_CACHE_SAVE], )dnl
+dnl
+dnl We may prefer to allow an alternate cache to be specified; in that case,
+dnl we may want to set cache_file to /dev/null instead of defining load/save
+dnl as empty.
+dnl
+AC_INIT(Makefile.in)
+AC_PREREQ(2.12)
+AC_CONFIG_HEADER(include/sowingconfig.h:config.h.in)
+
+CONFIGURE_OPTIONS="$ac_configure_args"
+AC_SUBST(CONFIGURE_OPTIONS)
+dnl Special features
+dnl If this is set and needed, add -DNEEDS_STDLIB_PROTOTYPES to optflags
+check_for_needs_stdlib_proto=0
+dnl If this is set and needed, add -munalign-doubles
+check_for_needs_unalign=0
+dnl
+AC_ARG_ENABLE(strict,[
+--enable-strict - turn on strict debugging when using gcc],
+optflags="$optflags -g -Dlint";check_for_needs_stdlib_proto=1;check_for_needs_unalign=1;gcc_opts="-Wall -Wstrict-prototypes -Wmissing-prototypes")
+dnl -munaligned-doubles is a SPARC-specific option
+AC_ARG_ENABLE(echo,[
+--enable-echo   - Turn on strong echoing],set -x)
+AC_SUBST(optflags)
+AC_ARG_ENABLE(inplace,[
+--enable-inplace - build the sowing program to run in the 
+                   distribution directories, not the installation ($ac_default_prefix) 
+                   directories],prefix=`pwd`)
+
+dnl Checks for programs.
+AC_PROG_RANLIB
+AC_PROG_INSTALL
+AC_CHECK_PROGS(AR,ar)
+AC_PROG_CC
+dnl C++ is needed for the newer textfilter programs
+AC_PROG_CXX
+dnl
+dnl Add gcc checking options if present
+if test -n "$gcc_opts" -a "$GCC" = "yes" ; then
+    optflags="$optflags $gcc_opts"
+fi
+
+dnl
+dnl Programs for converting postscript to bitmaps or gifs.
+dnl Used in tohtml
+AC_PATH_PROG(LATEX,latex)
+dnl
+dnl Warning! This may find the wrong version of Ghostscript
+dnl
+AC_PATH_PROG(GS,gs)
+if test -z "$GS" ; then
+    echo "Programs to convert Postscript to GIF or XBM require Ghostscript"
+    echo "Version 3."
+    echo "Set the environment variable GS to an appropriate version of"
+    echo "Ghostscript (implementing the writeppmfile operator)."
+# We found out how to both detect the version and generate the ppm output
+# with later versions of gs.
+#else
+#    gsversion=`$GS -version | sed -n 1p | \
+#	sed -e 's/Aladdin//g' -e 's/Ghostscript//g' -e 's/(.*)//g'`
+#    gsmajorversion=`echo $gsversion | sed -e 's/[ ]*\([0-9]\)\.[0-9]*/\1/g'`
+#    if test "$gsmajorversion" -gt 3 ; then
+#        echo "! The version of Ghostscript found is $gsversion ."
+#        echo "! This version may not support the operators used to create"
+#	echo "! GIF and xbm files needed by tohtml."
+#        echo "! Programs to convert Postscript to GIF or XBM require Ghostscript"
+#        echo "! Version 3."
+#        echo "! Set the environment variable GS to an appropriate version of"
+#        echo "! Ghostscript (implementing the writeppmfile operator)."
+#    fi
+fi
+AC_PATH_PROG(PNMCROP,pnmcrop)
+AC_PATH_PROG(PBMTOXBM,pbmtoxbm)
+AC_PATH_PROG(PPMTOGIF,ppmtogif)
+
+dnl Checks for libraries.
+dnl AC_CHECK_LIB(X11,XDrawLine)
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h sys/time.h unistd.h pwd.h stdlib.h netdb.h)
+
+if test $check_for_needs_stdlib_proto = 1 ; then
+    AC_MSG_CHECKING(that stdlib prototypes are needed)
+    dnl Autoconf's main program is called with no args.
+    AC_TRY_COMPILE([
+#define NO_MAIN_PROTOTYPE
+#include "include/protofix.h"
+#include <stdlib.h>
+#include <unistd.h>],void f(){},AC_MSG_RESULT(yes);optflags="$optflags -DNEEDS_STDLIB_PROTOTYPES",AC_MSG_RESULT(no))
+fi
+
+if test $check_for_needs_unalign = 1 ; then
+    AC_MSG_CHECKING(whether -munaligned-doubles is accepted)
+    CFLAGSSAV="$CFLAGS"
+    CFLAGS="$CFLAGS -munaligned-doubles"
+    AC_TRY_COMPILE([
+#include <stdlib.h>
+#include <unistd.h>],void f(){},AC_MSG_RESULT(yes);,AC_MSG_RESULT(no);CFLAGS="$CFLAGSSAV")
+fi
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_UID_T
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+AC_STRUCT_TM
+
+dnl Checks for library functions.
+dnl AC_FUNC_SETVBUF_REVERSED
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS(getcwd gethostname getwd mkdir)
+dnl
+dnl See if mkdir accepts -p
+AC_MSG_CHECKING(that mkdir accepts -p)
+if mkdir -p foo/bar/foo/bar ; then
+   AC_MSG_RESULT(yes)
+   /bin/rm -rf foo
+   MKDIR="mkdir -p"
+else
+   AC_MSG_RESULT(no)
+   MKDIR="mkdir"
+fi
+AC_SUBST(MKDIR)
+AC_CHECK_FUNC(uname)
+if test "$ac_cv_func_uname" = "yes" ; then
+    haveuname=1
+fi
+AC_CHECK_FUNC(gethostbyname)
+if test "$ac_cv_func_gethostbyname" = "yes" ; then
+    havegethostbyname=1
+fi
+if test -z "$havegethostbyname" ; then
+    # Try again after adding libnsl.  We do it this way instead of just
+    # testing for nsl because some systems (IRIX for one) generate many
+    # warning messages when libnsl and libc are combined (!)
+    AC_CHECK_LIB(nsl,gethostbyname,LIB_LIST="$LIB_LIST -lnsl";havelibnsl=1)
+    if test "$havelibnsl" = 1 ; then
+	echo "Checking for gethostbyname in libnsl"
+        AC_CHECK_FUNC(gethostbyname)
+	if test "$ac_cv_func_gethostbyname" = "yes" ; then
+             havegethostbyname=1
+	fi
+    fi
+fi
+
+# If we have uname and gethostbyname, we can skip getdomainname ...
+if test "$haveuname" != 1 -o "$havegethostbyname" != 1 ; then
+    AC_CHECK_FUNCS(sysinfo)
+    #
+    # systeminfo is needed for sysinfo 
+    AC_CHECK_HEADERS(sys/systeminfo.h)
+    #
+    # getdomainname is special BECAUSE IT MAY BE USELESS (!Network computing 
+    # indeed - stuff like this is why Windows95/NT WILL WIN). 
+    # We don't even check for it.
+fi
+dnl
+dnl C++ versions
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_CHECK_HEADERS(time.h sys/param.h)
+AC_CHECK_FUNCS(realpath readlink)
+AC_LANG_RESTORE
+
+dnl Checks for system services.
+
+dnl
+dnl Autoconf doesn't expand certain values, expecting them to be used
+dnl in only shell scripts or Makefiles.
+dnl
+if test x$prefix != xNONE ; then
+    eval expanded_datadir=$datadir
+else
+    prefix=$ac_default_prefix
+    eval expanded_datadir=$datadir
+    prefix="NONE"
+fi
+AC_SUBST(expanded_datadir)
+
+AC_OUTPUT(Makefile src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile docs/Makefile include/textfilt/textpath.h include/patchlevel.h, chmod a+x bin/pstoxbm bin/pstogif)
+dnl
+dnl,sed -e '1d' bin/pstoxbm > bin/pstoxbm1;mv bin/pstoxbm1 bin/pstoxbm
+

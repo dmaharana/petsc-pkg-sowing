@@ -1,0 +1,63 @@
+#! /bin/sh
+#
+# Find the libraries needed in Fortran by running both the C and Fortran 
+# compilers, using the -v option to extract the commands.  This works
+# for many but not all machines
+#
+# Create the sample programs
+trap  '/bin/rm -f t1$$.c t1$$.f t1$$c t1$$u t1$$f t1$$.o t1$$' 0 2 3 10
+cat > t1$$.f <<EOF
+      program main
+      end
+EOF
+cat > t1$$.c <<EOF
+      int main() { return 0; }
+EOF
+if test -z "$CC" ; then 
+    echo "Set CC to contain C compiler"
+    CC=cc
+fi
+if test -z "$FC" ; then
+    echo "Set FC to contain Fortran compiler"
+    FC=f77
+fi
+# Compile and link with the -v option; extract library options
+# We split on , as well as blank because some systems (AIX4) use exec 
+# notation with , separating args.
+$CC -o t1$$ -v t1$$.c 2>&1 | grep '/ld' | tr ' ,' '\012\012' | \
+    sed -n -e '/^-l/p' -e '/^-L/p' > t1$$c
+$FC -o t1$$ -v t1$$.f 2>&1 | grep '/ld' | tr ' ,' '\012\012' | \
+    sed -n -e '/^-l/p' -e '/^-L/p' > t1$$f
+#
+# Now, remove common libraries/search paths
+cat t1$$c t1$$f | sort | uniq -u > t1$$u
+#
+# Finally, since the ORDER is important, we extract those lines from
+# the original t1$$f file
+#echo 'u'
+#cat t1$$u
+#echo 'f'
+#cat t1$$f
+#echo 'c'
+#cat t1$$c
+#set -x
+#echo 'results'
+foundany=0
+for line in `cat t1$$f` ; do
+    #line=`echo $line | sed -e 's/-/\\\\-/'`
+    pureline=`echo $line | sed -e 's/-/./'`
+#    if grep "'""$line\$""'" t1$$u 2>&1 >/dev/null ; then
+    if grep "$pureline\$" t1$$u 2>&1 >/dev/null ; then
+        echo "$line"
+        foundany=1
+    fi
+done
+#
+if test $foundany = 0 ; then
+    echo 'u'
+    cat t1$$u
+    echo 'f'
+    cat t1$$f
+    echo 'c'
+    cat t1$$c
+fi

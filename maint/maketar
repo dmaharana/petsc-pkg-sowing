@@ -1,0 +1,78 @@
+#! /bin/sh
+#
+# Make a tar file of the SOWING code, removing the RCS files etc.
+#
+TMPDIR=/sandbox/gropp
+notar=0
+echo "If you are making a distribution version, update src/doctext/doc.h"
+echo "and include/patchlevel.h.in for version number and date."
+
+#
+# Generate version number for file name
+m1=`grep 'PATCHLEVEL ' include/patchlevel.h.in | awk '{print $3}'`
+m2=`grep 'PATCHLEVEL_MINOR ' include/patchlevel.h.in | awk '{print $3}'`
+m3=`grep 'PATCHLEVEL_SUBMINOR ' include/patchlevel.h.in | awk '{print $3}'`
+Version="$m1.$m2.$m3"
+#
+set -x
+#
+# Use tar to copy to $TMPDIR
+if [ -d $TMPDIR/sowingcopy ] ; then
+    /bin/rm -rf $TMPDIR/sowingcopy/sowing
+else
+    mkdir $TMPDIR/sowingcopy
+fi
+cd $TMPDIR/sowingcopy
+tar cf - -C /homes/gropp sowing | tar xf -
+#
+# Update a few files
+#
+rm $TMPDIR/sowingcopy/sowing/aclocal.m4
+cp /home/MPI/mpich/aclocal.m4 $TMPDIR/sowingcopy/sowing
+rm $TMPDIR/sowingcopy/sowing/tarch
+cp /home/MPI/mpich/util/tarch $TMPDIR/sowingcopy/sowing
+#
+# Remove the RCS files, old executables, and debris
+cd $TMPDIR/sowingcopy/sowing
+rm -f config.cache config.log
+if [ -s Makefile ] ; then
+    make clean
+fi
+# The sed for ' win32' to '\\ win32' handles blanks in the filenames
+find $TMPDIR/sowingcopy/sowing \( -name 'RCS' -o -name '*.o' -o -name '#*#' -o \
+              -name '*~' -o -name 'mputil.mp*' -o -name Makefile -o \
+	      -name makefile -o -name '*.exe' -o -name core -o \
+	      -name '*.obj' -o -name '*.pdb' -o -name '*.lib' -o \
+	      -name '*.ilk' -o -name '*.pch' \) -print | \
+	sed -e 's/ win32/\\ win32/g' | sed 's%^%/bin/rm -rf %g' | sh
+# Remove some directories
+/bin/rm -rf  $TMPDIR/sowingcopy/sowing/related
+/bin/rm -rf  $TMPDIR/sowingcopy/sowing/maint
+/bin/rm -rf  $TMPDIR/sowingcopy/sowing/docs/coding
+#
+# Remove the configure-generated files
+/bin/rm -f $TMPDIR/sowingcopy/sowing/tohtml/tohtmlpath.h
+/bin/rm -f $TMPDIR/sowingcopy/sowing/bin/pstoxbm
+/bin/rm -f $TMPDIR/sowingcopy/sowing/bin/pstogif
+/bin/rm -f $TMPDIR/sowingcopy/sowing/doctext/docpath.h
+/bin/rm -f $TMPDIR/sowingcopy/sowing/include/textfilt/textpath.h
+/bin/rm -f $TMPDIR/sowingcopy/sowing/include/patchlevel.h
+/bin/rm -f $TMPDIR/sowingcopy/sowing/include/sowingconfig.h
+#
+/bin/rm -f $TMPDIR/sowingcopy/sowing/make.log
+/bin/rm -f $TMPDIR/sowingcopy/sowing/docs/*.log
+/bin/rm -f $TMPDIR/sowingcopy/sowing/docs/*.hux
+
+#
+# rebuild the tar file
+cd $TMPDIR/sowingcopy
+if [ $notar = 1 ] ; then exit 0 ; fi
+#
+# Rename the directory
+mv $TMPDIR/sowingcopy/sowing $TMPDIR/sowingcopy/sowing-$Version
+tar cf - sowing-$Version | gzip > $TMPDIR/sowing-$Version.tar.gz
+cp $TMPDIR/sowing-$Version.tar.gz /home/ftp/pub/sowing
+cd $TMPDIR
+/bin/rm -rf $TMPDIR/sowingcopy $TMPDIR/sowing-$Version.tar.gz &
+echo "sowing-$Version.tar.gz is in ftp:pub/sowing"
+

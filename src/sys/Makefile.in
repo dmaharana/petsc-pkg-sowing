@@ -1,0 +1,36 @@
+ALL: lib
+OBJS = arch.o txt.o daytime.o file.o tr.o getopts.o
+SHELL   = /bin/sh
+RANLIB = @RANLIB@ 
+CC = @CC@
+AR = @AR@
+
+.SUFFIXES:
+.SUFFIXES: .c .o
+
+LIBS      =  
+CPPFLAGS    = -I../../include 
+ALL_CFLAGS = @optflags@ $(CFLAGS)
+LDIR      = 
+CLEANFILES = 
+
+BASEOBJS = 
+
+clean:
+	-/bin/rm -f *.o *~ $(CLEANFILES)
+.c.o:
+	$(CC) -c $(CPPFLAGS) $(ALL_CFLAGS) $<
+	$(AR) cr ../../lib/libsowing.a $*.o
+lib: $(OBJS)
+	$(RANLIB) ../../lib/libsowing.a
+
+manpages:
+
+wwwpages:
+
+source_names:
+	@echo $(CSOURCES)
+
+INSTALL_PROGRAM = $(INSTALL)
+INSTALL_DATA    = $(INSTALL)
+install:

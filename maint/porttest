@@ -1,0 +1,19 @@
+#! /bin/sh
+#
+# Do a test build on a variety of platforms
+#
+echo "Solaris"
+rsh -n fire /home/gropp/sowing/maint/testbuild
+#
+echo "IRIX"
+rsh -n yukon /home/gropp/sowing/maint/testbuild
+#
+# No C++ compiler installed
+#echo "DEC Alpha"
+#rsh -n ptera /home/gropp/sowing/maint/testbuild
+#
+echo "FreeBSD"
+rsh -n dogbert /home/gropp/sowing/maint/testbuild
+#
+echo "AIX 4"
+rsh -n quad /home/gropp/sowing/maint/testbuild

@@ -1,0 +1,30 @@
+ALL: n1f.c n2f.c
+SHELL = /bin/sh
+
+TESTOUTPUT = n1f.c n2f.c tstpgmaf.c
+n1f.c: n1.c 
+	../bfort -ferr -mnative -anyname -ansi -I pubinc -mpi n1.c
+
+n2f.c: n2.c 
+	../bfort -ferr -mapptr -mnative -anyname -ansi -I pubinc -mpi n2.c
+
+tstpgmaf.c: tstpgma.c 
+	../bfort -mnative -ansi -nomsgs -anyname -mapptr -mpi -ferr \
+	         -ptrprefix Petsc -ptr64 HAVE_64BIGS -fcaps HAVE_FORTRAN_CAPS \
+		 -fuscore HAVE_FORTRAN_UNDERSCORE tstpgma.c
+
+testing: $(TESTOUTPUT)
+	-@for file in $(TESTOUTPUT) ; do \
+	   file=`basename $$file .c` ; \
+	   if diff -b $$file.c $${file}base.c >/dev/null 2>&1 ; then \
+		: ; \
+	   else \
+		echo "File $$file is different" ; \
+		diff -b  $$file.c $${file}base.c ; \
+	   fi ; \
+	done
+
+clean:
+	/bin/rm -f n1f.c n2f.c
+
+

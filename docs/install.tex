@@ -1,0 +1,503 @@
+\documentstyle[11pt,epsf,doctext/tpage]{article}
+%% This is the MPICH installation guide!
+\textwidth=6.0in
+\textheight=9.0in
+\hoffset=-0.5in
+\voffset=-1.0in
+\parskip=.1in
+\renewcommand{\floatpagefraction}{0.9}
+\newcommand{\sowing}{{\tt sowing}}
+\newcommand{\Sowing}{{\tt Sowing}}
+\def\note#1{\marginpar{#1}}
+%
+% The following is needed for the acknowledgements contents entry
+%
+\makeatletter
+\def\l@chapter{\hfil}
+\makeatother
+%
+% Directory and definitions for help text
+\def\helpdir{/home/MPI/mpich/help/src}
+\def\question{{\bf Q: }}
+\def\answer{{\bf A: }}
+\def\ttURL#1{{\tt\URL{#1}}}
+
+\let\DOESupport\DefaultSupport
+
+\begin{document}
+\ANLTMTitle{Installation Guide for \code{sowing},\\ Tools for developing and
+  distributing programs}{\em William Gropp and Ewing Lusk}{ANL-00/0}{September 1997}
+
+\clearpage
+\pagenumbering{roman}
+\setcounter{page}{3}
+\pagestyle{plain}
+{\parskip=0pt
+\tableofcontents
+\bigskip
+\bigskip
+This {\em Guide\/} corresponds to Version 0.1 of {\tt sowing}.  It was
+processed by \LaTeX\ on \today.
+\clearpage
+}
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\addcontentsline{toc}{section}{Abstract}
+\begin{abstract}
+ Tool building and distribution is important.
+\end{abstract}
+
+This document describes how to obtain and install {\tt
+  sowing~\cite{sowing}, a collection of portable tools for developing and
+distributing software.  Details on using each of the tools is provided in
+separate users manuals \cite{bfort,doctext,tohtml}.
+
+\section{Quick Start}
+\label{sec:quickstart}
+
+Here is a set of steps for setting up and minimally testing \code{sowing}.
+Details and instructions for a more thorough tour of \code{sowing}'s features,
+including installing, validating, benchmarking, and using the tools, are given
+in the following sections.  
+\begin{enumerate}
+\item If you have \code{gunzip}, get \file{sowing.tar.gz}; otherwise, get 
+\file{sowing.tar.Z} by anonymous \code{ftp} from
+  \code{ftp.mcs.anl.gov} in the directory \code{pub/sowing}.
+\item \code{gunzip -c sowing.tar | tar xovf -} or 
+\code{zcat sowing.tar.Z | tar xovf -}
+\item \code{cd sowing}
+\item \code{configure}  This will attempt to choose an appropriate default
+  architecture and ``device'' for you.  If the defaults are not what you want,
+  see Section~\ref{sec:configuring}
+\item \code{make >& make.log} (in C-shell syntax).  
+At this point you have built the sowing programs.  
+\item (Optional)  Run the tests
+  (See Section~\ref{sec:thorough} for how to do this).  
+\item (Optional)  If you wish to install \code{sowing} in a public place so
+  that others may use it, use
+\begin{verbatim}
+  \code{make install}
+\end{verbatim}
+to install \code{sowing}.  Following standard practice with \code{configure},
+the directories for the installation are chosen when you use configure with
+the \code{--prefix} and \code{--datadir} options.
+\end{enumerate}
+
+In the following
+sections we go through these steps in more detail, and describe other aspects
+of the \code{sowing} distribution you might want to explore.
+
+\section{Obtaining and Unpacking the Distribution}
+\label{sec:unpacking}
+
+\code{sowing} can be obtained by anonymous \code{ftp} from the site
+\code{ftp.mcs.anl.gov}.  Go to the directory \code{pub/sowing} and \code{get}
+the file \code{sowing.tar.gz}.  This file name is a link to the most recent
+verstion of \code{sowing}.  Currently it is about 1 Megabyte in size.  The
+file is a {\tt gzip}ped tar file, so it may be unpacked with
+\begin{verbatim}
+    gunzip -c sowing.tar.gz | tar xvf -
+\end{verbatim}
+If you do not have {\tt gunzip}, but do have {\tt uncompress}, then you must
+get {\tt sowing.tar.Z} instead, and use either 
+\begin{verbatim}
+    zcat sowing.tar.Z | tar xvf -
+\end{verbatim}
+or 
+\begin{verbatim}
+    uncompress sowing.tar.Z
+    tar xvf sowing.tar
+\end{verbatim}
+This will create a single directory called \code{sowing}, containing in various
+subdirectories the entire distribution, including all of the source code, some
+documentation (including this {\em Guide}), \code{man} pages and the \code{sowing}
+environment described in Section~\ref{sec:environment}.
+In particular, you should see the following files and directories:
+\begin{description}
+\item[{\tt COPYRIGHT}] Copyright statement.  This code is free but not public
+  domain.  It is copyrighted by the University of Chicago.
+\item[{\tt Makefile.in}] Template for the \file{Makefile}, which will be
+  produced when you   run \code{configure}.
+\item[{\tt README}] Basic information and instructions for configuring.
+\item[{\tt aclocal.m4}] Used for building \file{configure} from \file{configure.in};
+ not needed for most installations.
+\item[{\tt bin}] Home for executable files like \code{pstogif} and \code{pstoxbm}.
+\item[{\tt configure}] The script that you run to create Makefiles throughout the
+  system. 
+\item[{\tt configure.in}] Input to \code{autoconf} that produces \code{configure}.
+\item[{\tt docs}] Documentaiton, including this {\em Installation Guide\/} and
+  the users guides.
+\item[{\tt include}] The include libraries.
+\item[{\tt lib}] The machine-dependent libraries, after they are built.
+\item[{\tt man}] Man pages for \code{MPI}, \code{MPE}, and internal routines.
+\item[{\tt ref}] Contains Postscript versions of the \code{man} pages.
+\item[{\tt src}] The source code for the portable part of \code{sowing}.
+  There are subdirectories for the various tools.
+\end{description}
+
+If you have problems, check the \sowing\ home page on the Web at
+\gb\ttURL{http://www.mcs.anl.gov/Projects/sowing} .  This page has pointers
+to lists of known bugs and patchfiles.  If you don't find what you need here,
+send mail to \code{mpi-bugs@mcs.anl.gov}.
+
+\section{Documentation}
+\label{sec:documentation}
+
+This distribution of \sowing\ comes with complete \code{man} pages for the
+programs.  The command \code{sowingman} in \code{sowing/bin} is a good
+interface to the man pages.\footnote{The {\tt sowingman} command is created by
+  the configure process described later.}
+The \code{sowing/ref} directory contains printable versions
+of the man pages for the programs, in compressed PostScript form.
+The \code{sowing/docs} directory contains this {\em Installation Guide\/} and
+also the users guides.
+
+\section{Configuring {\tt sowing}}
+\label{sec:configuring}
+
+The next step is to configure \sowing\ for your particular computing
+environment.  \sowing\ can be built for most Unix systems; many of the
+programs can also be built for Microsoft Windows.
+
+Configuration of \sowing\ is done with the \code{configure} script contained in
+the top-level directory.  This script is automatically generated by the Gnu
+\code{autoconf} program from the file \code{configure.in}, but you do not need
+to have \code{autoconf} yourself.
+
+The configure script documents itself in the following way.  If you type
+\begin{verbatim}
+    configure --help
+\end{verbatim}
+you will get a complete list of arguments and their meanings.  So the
+simplest way to document the options for {\tt configure} is to just show
+its output here:
+\bigskip
+
+\fileinclude{config.txt}
+
+Normally, you should use \code{configure} with as few arguments as you can.
+
+Some sample invocations of \code{configure} are shown below.  In many case,
+the detailed invocations below are the defaults, which you would get if you
+invoked \code{configure} with no arguments.
+
+To build and test in-place, using strict checking with the Gnu C and C++
+compilers: 
+\begin{verbatim}
+configure --enable-strict --datadir=`pwd`/share --prefix=`pwd`
+\end{verbatim}
+
+\section{Compiling \sowing}
+\label{sec:compiling}
+
+Once \code{configure} has determined the features of your system, all we have
+to do now is 
+\begin{verbatim}
+    make
+\end{verbatim}
+This will clean all the directories of previous object files (if any), compile
+the source code, build all necessary
+libraries, and build the programs.  If anything goes wrong, check
+Section~\ref{sec:problems} to see if there is anything said there about your
+problem.  If not, follow the directions in Section \ref{sec:bugreports} for
+submitting a bug report.  To simplify checking for problems, it is a good idea
+to use 
+\begin{verbatim}
+    make >& make.log &
+\end{verbatim}
+Specific (non-default) targets can also be made.  See the \code{Makefile} to
+see what they are.
+
+After running this {\tt make}, the size of the distribution will be about 3
+Megabytes (depending on the particular machine it is being compiled for). 
+
+\section{Thorough Testing}
+\label{sec:thorough}
+\label{sec-tests}
+
+Each program directory contains a \code{testing} directory contains tests of
+the program.
+The command
+\begin{verbatim}
+    make testing
+\end{verbatim}
+in the \code{sowingt} directory will cause these programs to be
+compiled, linked, executed, and their output to be compared with the expected
+output.  Linking all these test programs takes up considerable space, so you
+might want to do 
+\begin{verbatim}
+    make clean
+\end{verbatim}
+afterwards.  
+
+If you have a problem, first check the troubleshooting guides and the lists of
+known problems.  If you still need help, send detailed information to
+\code{mpi-bugs@mcs.anl.gov}. 
+
+\section{Installing \sowing\ for Others to Use}
+\label{sec:installing}
+This step is optional.  
+Once you have tested all parts of the \Sowing\ distribution, you may install
+\sowing\ into 
+a publically available directory, and disseminate information for other users,
+so that everyone can use the shared installation.
+To install the libraries and include files in a
+publicly available place, choose a directory, such as \code{/usr/local/sowing},
+change to the top-level \code{sowing} directory, and do
+\begin{verbatim}
+    make install
+\end{verbatim}
+The \code{man} pages will have been copied with the installation, so you might
+want to add \code{/usr/local/mpi/man} to the default system \code{MANPATH}.
+The man pages can be conveniently browsed with the \code{mpiman} command,
+found in the \code{sowing/bin} directory.
+
+A good way to handle multiple releases of \code{sowing} is to install
+them into directories whose names include the version number and then
+set a link from \code{sowing} to that directory.  For example, if the
+current version is 1.0, the installation commands to install into
+\file{/usr/local} are 
+\begin{verbatim}
+configure --prefix=/usr/local/sowing-1.0
+make
+make install 
+rm /usr/local/sowing
+ln -s /usr/local/sowing-1.1.0 /usr/local/sowing
+\end{verbatim}
+
+
+\subsection{Installing documentation}
+The SOWING implementation comes with several kinds of documentation.
+Installers are encouraged to provide site-specific information, such
+as the location of the installation (particularly if it is not in
+\file{/usr/local/sowing}).
+
+\subsubsection{Man pages}
+A complete set of Unix man pages for the SOWING implementation are in
+\file{sowing/man}.  \file{man/man1} contains the sowing programs.
+The command \file{sowing/bin/sowingman} is a script that runs \code{xman}
+on these man pages.
+
+\subsubsection{Web versions of man pages}
+Web (HTML) versions are available from
+\URL{ftp://ftp.mcs.anl.gov/pub/sowing/sowingwww.tar.Z}.  They are available
+at \URL{http://www.mcs.anl.gov/sowing/www}.
+A sample Web page is shown below, and is also available in
+\file{sowing/docs/sowingsite.html} 
+
+\fileinclude{/home/gropp/sowing/docs/sowingsite.html}
+
+\section{Problems}
+\label{sec:problems}
+
+This section describes some commonly encountered problems and
+their solutions.  It also describes machine-dependent considerations.
+You should also check the Users Guide, where problems related to compiling,
+linking, and running MPI programs (as opposed to building the SOWING
+implementation) are  discussed.
+
+\subsection{Submitting bug reports}
+\label{sec:bugreports}
+Any problem that you can't solve by checking this section should be sent to
+\code{mpi-bugs@mcs.anl.gov}.  
+Please include:
+\begin{itemize}
+\item     The version of SOWING (e.g., 1.0)
+
+\item     The output of 
+\begin{verbatim}
+        uname -a
+\end{verbatim}
+     for your system.  If you are on an SGI system, also
+\begin{verbatim}
+        hinv
+\end{verbatim}
+
+\item     If the problem is with configure  run with the \code{--enable-echo} argument 
+     (e.g., \code{configure --enable-echo} )
+
+\end{itemize}
+If you have more than one problem, please
+send them in separate messages; this simplifies our handling of problem
+reports. 
+ 
+The rest of this  section contains some information on trouble-shooting
+\sowing. 
+Some of 
+these describe problems that are peculiar to some environments and give
+suggested work-arounds.
+Each section is organized in question and answer format, with questions that
+relate to more than one environment (workstation, operating system, etc.)
+first, followed by questions that are specific to a particular environment.
+Problems with workstation clusters are collected together as well.
+
+\subsection{Problems configuring}
+
+\subsubsection{General}
+\begin{enumerate}
+% Primative shell (no procedures)
+\item \input{\helpdir/all/m1.txt}
+
+\item 
+\question 
+The configure reports the compiler as being broken, but there is
+no problem with the compiler (it runs the test that supposedly failed without
+trouble).
+
+\answer 
+You may me using the Bash shell (\file{/bin/bash}) as a replacement for
+the Bourne shell (\file{/bin/sh}).  We have reports that, at least under
+LINUX, Bash does not properly handle return codes in expressions.  One fix is
+to use a different shell, such as \file{/bin/ash}, on those systems.
+
+This won't work on some LINUX systems ({\em every} shell is broken).  We have
+reports that the following will work:
+\begin{enumerate}
+\item In \file{configure}, change \code{trap 'rm -f confdefs*' 0} to 
+\code{trap 'rm -f confdefs*' 1}
+\item After configure finishes, remove the file \file{confdefs.h} manually.
+\end{enumerate}
+
+\item 
+\question 
+configure reports errors of the form
+\begin{verbatim} 
+checking gnumake... 1: Bad file number
+\end{verbatim}
+
+\answer 
+Some versions of the \code{bash} shell do not handle output redirection
+correctly.  Either upgrade your version of \code{bash} or run configure under
+another shell (such as \code{/bin/sh}).  Make sure that the version of
+\code{sh} that you use is not an alias for \code{bash}.  \code{configure} 
+trys to detect this situation and will normally issue an error message.
+
+\end{enumerate}
+
+\subsection{Problems building {\tt sowing}}
+\subsubsection{General}
+\begin{enumerate}
+\item 
+\question 
+When running make on \code{sowing}, I get this error:
+\begin{verbatim}
+ar: write error: No such file or directory
+*** Error code 1
+\end{verbatim}
+I've looked, and all the files are accessible and have the proper permissions.
+
+\answer 
+Check the amount of space in \file{/tmp}.  This error is sometimes
+generated when there is insufficient space in \file{/tmp} to copy the archive
+(this is a step that \code{ar} takes when updating a library).  The command
+\code{df /tmp} will show you how much space is available.  Try to insure that
+at least twice the size of the library is available.
+
+\item \question
+When running make on \code{sowing}, I get errors when executing \code{ranlib}.
+
+\answer
+Many systems implement \code{ranlib} with the \code{ar} command, and they use
+the \file{/tmp} directory by default because it ``seems'' obvious that using
+\file{/tmp} would be faster (\file{/tmp} is often a local disk).
+Unfortunately, a large number of systems have ridiculously small \file{/tmp}
+partitions, and making any use of \file{/tmp} is very risky.  In some
+cases, the \code{ar} commands used by SOWING will succeed because they 
+use the \code{l} option---this forces \code{ar} to use the local directory 
+instead of \file{/tmp}.  The \code{ranlib} command, on the other hand, may use
+\file{/tmp} and cannot be fixed.
+
+In some cases, you will find that the \code{ranlib} command is unnecessary. 
+In these cases, you can reconfigure with \code{-noranlib}.  If you must use
+\code{ranlib}, either reduce the space used in \file{/tmp} or increase the
+size of the \file{/tmp} partition (your system administrator will need to do
+this).  There should be at least 20--30 MBytes free in \file{/tmp}.
+
+\item
+\question
+When doing the link test, the link fails and does not seem to find any of the
+sowing system routines:
+\noindent
+\begin{verbatim}
+  /homes/them/burgess/sowing/lib/IRIX32/ch_p4/mpicc \
+                                         -o overtake overtake.o test.o 
+  ld: WARNING 126: The archive \
+     /homes/them/burgess/sowing/lib/IRIX32/ch_p4/libmpi.a \
+                                   defines no global symbols. Ignoring.
+  ld: WARNING 84: /usr/lib/libsun.a is not used for resolving any symbol.
+ld: ERROR 33: Unresolved data symbol "MPI_COMM_WORLD" -- \
+                                          1st referenced by overtake.o.
+ld: ERROR 33: Unresolved text symbol "MPI_Send" -- \
+                                          1st referenced by overtake.o.
+...
+\end{verbatim}
+
+\answer
+Check that the \code{ar} and \code{ranlib} programs are compatible.  One site
+installed the Gnu \code{ranlib} in such a way that it would be used with the
+vendors \code{ar} program, with which it was incompatible.  Use the
+\code{-noranlib} option to \code{configure} if this is the case.
+
+\end{enumerate}
+
+\subsubsection{SGI}
+\begin{enumerate}
+\item 
+\question 
+The build on an SGI Power Challenge fails with 
+\begin{verbatim}
+Signal: SIGSEGV in Back End Driver phase.
+> ### Error:
+> ### Signal SIGSEGV in phase Back End Driver -- processing aborted
+> f77 ERROR:  /usr/lib64/cmplrs/be died due to signal 4
+> f77 ERROR:  core dumped
+> *** Error code 2 (bu21)
+> *** Error code 1 (bu21)
+> *** Error code 1 (bu21)
+\end{verbatim}
+
+\answer Our information is that setting the environment variable \code{SGI_CC} to
+\code{-ansi} will fix this problem.
+
+\end{enumerate}
+
+\subsubsection{DEC ULTRIX}
+\begin{enumerate}
+\item
+\question
+When trying to build, the \code{make} aborts early during the cleaning phase:
+\begin{verbatim}
+amon:SOWING/sowing>make clean
+        /bin/rm -f *.o *~ nupshot
+*** Error code 1
+\end{verbatim}
+
+\answer
+This is a bug in the shell support on some DEC ULTRIX systems.  You may be
+able to work around this with
+
+\begin{verbatim}
+setenv PROG_ENV SYSTEM_FIVE
+\end{verbatim}
+Configuring with \code{-make=s5make} may also work.
+
+\end{enumerate}
+
+
+\section*{Acknowledgments}
+\addcontentsline{toc}{section}{Acknowledgments}
+
+The work described in this report has benefited from conversations with and
+use by a large number of people.
+Particular thanks goes to Barry Smith and Lois McInnes for valuable help
+in the implementation and development of sowing.
+
+\bibliographystyle{plain}
+\bibliography{paper}
+
+\end{document}
+
+
+
+

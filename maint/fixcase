@@ -1,0 +1,38 @@
+#! /bin/sh
+find . -name 'makefile' -print | \
+    sed -e 's/^\(.*\)makefile/mv \1makefile \1Makefile/g' | sh
+find . -name 'makefile.in' -print | \
+    sed -e 's/^\(.*\)makefile\.in/mv \1makefile\.in \1Makefile\.in/g' | sh
+if [ -s toto ] ; then mv todo ToDo ; fi
+if [ -s readme ] ; then mv readme README ; fi
+find . -name '*.cxx' -print | \
+    sed -e 's/^\(.*\)\.cxx/if diff \1.cxx \1.c ; then rm \1.c ; fi/g' |\
+    sh 2>/dev/null
+cd docs/doctext
+if [ -s swap.3 ] ; then mv swap.3 Swap.3 ; fi
+if [ -s swap.tex ] ; then mv swap.tex Swap.tex ; fi
+cd ../..
+cd src/doctext
+if [ -s readme ] ; then mv readme README ; fi
+cd ../..
+cd src/doctext/test/testref
+if [ -s name.2 ] ; then mv name.2 Name.2 ; fi
+if [ -s name.3 ] ; then mv name.3 Name.3 ; fi
+if [ -s name.html ] ; then mv name.html Name.html ; fi
+if [ -s name.tex ] ; then mv name.tex Name.tex ; fi 
+if [ -s name2.2 ] ; then mv name2.2 Name2.2 ; fi
+if [ -s name2.tex ] ; then mv name2.tex Name2.tex ; fi
+if [ -s name2.3 ] ; then mv name2.3 Name2.3 ; fi
+if [ -s name2.html ] ; then mv name2.html Name2.html ; fi
+if [ -s name2.tex ] ; then mv name2.tex Name2.tex ; fi
+if [ -s routine.2 ] ; then mv routine.2 Routine.2 ; fi
+if [ -s routine.3 ] ; then mv routine.3 Routine.3 ; fi
+if [ -s routine.html ] ; then mv routine.html Routine.html ; fi
+if [ -s routine.tex ] ; then mv routine.tex Routine.tex ; fi
+if [ -s sygetarchtype.2 ] ; then mv sygetarchtype.2 SYGetArchType.2 ; fi
+if [ -s sygetarchtype.3 ] ; then mv sygetarchtype.3 SYGetArchType.3 ; fi
+if [ -s sygetarchtype.tex ] ; then mv sygetarchtype.tex SYGetArchType.tex ; fi
+if [ -s sygetarchtype.html ] ; then mv sygetarchtype.html SYGetArchType.html ; fi
+cd ../../../..
+cd src/tohtml
+if [ -s readme ] ; then mv readme README ; fi

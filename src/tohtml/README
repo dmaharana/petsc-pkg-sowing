@@ -1,0 +1,9 @@
+Installing tohtml
+
+tohtml is a tool to convert LaTeX into HTML.  It is built using some older
+tools, and has grown rather haphazardly over time.  On the plus side, it can
+handle large documents and understands some modern HTML features such as
+subscripts and superscripts.
+
+To build, first edit the Makefile:
+

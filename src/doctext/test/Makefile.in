@@ -1,0 +1,50 @@
+ALL: runtests
+SHELL = /bin/sh
+
+FILES =test.nam tstpgm.c tstpgma.c tstpgmc.c tstpgm.h allfmt.c tst1.c
+
+runtests: 
+	/bin/rm -f *.3 *.2 *.tex *.html
+	(DOCTEXT_HEADING=PETSc; export DOCTEXT_HEADING ; ../doctext $(FILES) )
+	../doctext -html $(FILES)
+	../doctext -latex $(FILES)
+	../doctext -I pubinc -index f1.cit -quotefmt -heading MTEST \
+		-ext 2 $(FILES)
+	../doctext -I pubinc -outfile f.tex -quotefmt -latex -heading MTEST \
+		$(FILES)
+	../doctext -I pubinc -outfile f.html -quotefmt -html -heading MTEST \
+		-mapref tst.cit $(FILES)
+	(DOCTEXT_PATH="defn" ; \
+	export DOCTEXT_PATH ; \
+	../doctext  -I pubinc -outfile f2.html -quotefmt -html -heading MTEST \
+		-mapref tst.cit $(FILES) ; )
+	../doctext  -I pubinc -outfile f3.html -quotefmt -html -heading MTEST \
+		-mapref tst.cit -defn eopindex.def $(FILES)
+	../doctext -html -defn htmlargtbl.def -dosnl tst1.c
+	../doctext -html -outfile tstcolor.html -defn htmlargtbl.def \
+		-defn htmlcolor.def -dosnl tst1.c
+	../doctext -html -skipprefix C -dosnl tst.f
+	../doctext -skipprefix C tst.f
+	../doctext -ignore EXPORT_API tst2.c
+	../doctext -html \
+		-mpath man3 -heading PETSc \
+		-defn /home/bsmith/petsc/docs/tex/doctext/html.def \
+		-locdir foodir \
+                -mapref /home/bsmith/petsc/docs/manualpages/manualpages.cit \
+		-defn /home/bsmith/petsc/docs/manualpages/sec/eop.Vec \
+		mesh.c
+compare:
+	-@for file in testref/* ; do \
+	f2=`basename $$file` ; \
+	if diff -rb $$f2 $$file >/dev/null 2>&1 ; then \
+	    : ; \
+	else \
+	    echo "File $$file is different" ; \
+	    diff -rb $$f2 $$file ; \
+	fi ; \
+	done
+
+testing: runtests compare
+check: runtests compare
+clean:
+	/bin/rm -f *.o *~ *.3 *.2 *.html *.tex

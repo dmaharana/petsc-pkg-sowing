@@ -1,0 +1,39 @@
+#include <sys/time.h> /*I <sys/time.h> I*/
+/*N
+ Fnode
+
+ Notes on Fnodes:
+ This is a sample that includes 
+.vb
+    verbatim 
+    processing
+.ve
+N*/
+
+/*@
+  fancy - Shows all fancy formatting
+
+  Input Parameters:
+. x, y - Coords
+. a - the `really` important value
+
+  Output Parameters:
+. p1 - pointer
+
+  Notes:
+  This system uses the line
+.n break mechanism
+.n
+  as well as
+.vb
+   a     verbatim
+   table example
+.ve
+
+.N Fnode
+
+.k break, pointers
+@*/
+void f1( int a, char *b )
+{
+}

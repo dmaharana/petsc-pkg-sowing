@@ -1,0 +1,45 @@
+Structure of manpage output:
+
+doctext
+-----------------------------------------------------------------------
+bof   - beginning of file
+bop   - beginning of page (manpage)
+mantitle
+em_dash - used to separate name from description
+
+s_synopsis - beginning of Synopsis
+e_synopsis - end of Synopsis
+
+section - (name:)
+
+s_arg  - argument and definition (. arg - definition )
+e_arg
+s_defn
+e_defn
+
+tt - Fonts for quoted text handleing (-quotefmt)
+em
+rm
+
+linebreak - basic control
+blank
+end_par
+
+link - hyperlink (-mapref)
+
+s_verbatim - start verbatim mode
+e_verbatim - end verbatim mode
+
+location - location of file
+
+eop   - end of page (manpage)
+eof   - end of file
+
+------------------------------------------------------------------------
+doc2lt uses
+
+preamble
+key
+synopsis
+definition
+postamble

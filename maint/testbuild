@@ -1,0 +1,7 @@
+#! /bin/sh
+#
+cd /home/gropp/sowing
+configure --enable-strict --datadir=`pwd`/share --prefix=`pwd`
+make clean
+make 
+make testing

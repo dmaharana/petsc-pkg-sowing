@@ -1,0 +1,85 @@
+ALL: default
+#
+#  (C) 1997 by Argonne National Laboratory.
+#      All rights reserved.  See COPYRIGHT in top-level directory.
+#
+
+##### User configurable options #####
+
+CCC         = @CXX@
+AR          = @AR@ cr
+RANLIB      = @RANLIB@
+SHELL = /bin/sh
+CPPFLAGS = -I../../include/textfilt -I../../include
+ALL_CFLAGS = @optflags@ $(CFLAGS)
+### End User configurable options ###
+.SUFFIXES:
+.SUFFIXES: .o .C .cxx
+
+
+LIBS = ../../lib/libtfilter.a 
+
+CSOURCES = cmdline.C file.C instream.C outstream.C search.C maptok.C \
+	   textout.C texthtml.C textnroff.C texttex.C \
+	   inutil.C errhand.C
+COBJECTS = cmdline.o file.o instream.o outstream.o search.o maptok.o \
+	   textout.o texthtml.o textnroff.o texttex.o \
+	   inutil.o errhand.o
+INCLUDE  = ../include/tfilter.h
+
+default: $(LIBS)
+
+manpages:
+
+wwwpages:
+
+source_names:
+	@echo $(CSOURCES)
+
+#
+# Dependencies on the include files.
+#
+#$(COBJECTS) :  $(INCLUDE)
+#
+# These where generated with gcc -MM -I../include *.C
+cmdline.o: cmdline.C ../../include/textfilt/cmdline.h
+errhand.o: errhand.C ../../include/textfilt/errhand.h
+file.o: file.C ../../include/textfilt/tfile.h
+instream.o: instream.C ../../include/textfilt/instream.h
+inutil.o: inutil.C ../../include/textfilt/instream.h
+maptok.o: maptok.C ../../include/textfilt/maptok.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/textout.h ../../include/textfilt/srlist.h \
+ ../../include/textfilt/errhand.h
+outstream.o: outstream.C ../../include/textfilt/outstream.h
+search.o: search.C ../../include/textfilt/srlist.h
+texthtml.o: texthtml.C ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
+ ../../include/textfilt/textpath.h
+textnroff.o: textnroff.C ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
+ ../../include/textfilt/textpath.h
+textout.o: textout.C ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h
+texttex.o: texttex.C ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
+ ../../include/textfilt/textpath.h
+
+.c.o:
+	$(CC) -c $(CPPFLAGS) $(ALL_CFLAGS) $*.c
+
+.cxx.C:
+	ln -s $*.cxx $*.C
+.C.o:
+	$(CCC) -c $(CPPFLAGS) $(ALL_CFLAGS) $*.C
+
+../../lib/libtfilter.a: $(COBJECTS) 
+	$(AR) $@ $?
+	$(RANLIB) $@
+
+clean:
+	/bin/rm -f *.o *~ 

@@ -1,0 +1,92 @@
+\documentstyle{article}
+\newcommand{\commentOut}[1]{{}}
+\newcommand{\FooBar}{{}}
+
+\def\MPI/{MPI}
+
+\begin{document}
+\section{A sample}\label{Sample-doc}
+
+Pi = \( \pi \).
+
+\begin{figure}[htbp]
+    \centerline{Foo!}
+    \caption{Integrating to find the value of \protect\( \pi \protect\)}
+    \label{fig:pi}
+\end{figure}
+
+Here is \MPI/.
+\commentOut{
+\begin{verbatim}
+           First Execution
+
+    0             1               2
+                        /-----  send
+                recv <-/
+broadcast     broadcast       broadcast
+  send ---\
+           \--> recv
+\end{verbatim}
+
+\begin{verbatim}
+           Second Execution
+
+   0              1               2
+broadcast
+  send ---\
+           \-->  recv
+               broadcast       broadcast
+                           /---  send
+                 recv <---/
+\end{verbatim}
+} % end commentOut -- NOTE that above was wrong!
+
+Here is an enumeration
+\begin{enumerate}
+\item[] global max on integer and floating point data types
+\item[] global min on integer and floating point data types
+\item[] global sum on integer and floating point data types
+\item[] global product on integer and floating point data types
+\item[] global AND on logical and integer data types
+\item[] global OR on logical and integer data types
+\item[] global XOR on logical and integer data types
+\item[] rank of process with maximum value
+\item[] rank of process with minimum value
+\item[] user defined (associative) operation
+\item[] user defined (associative and commutative) operation
+\end{enumerate}
+which ended here.  And now, a displayed equation
+\[
+A x = n
+\]
+This is an inline \( \epsilon = \mu \) equation.  This is an inline equation
+with only regular text \( a = ( 1,2 ) \), and this one has braces \( \{ (1,2),
+(3,4)\} \).  Here are the same things, but using the dollar notation:
+
+$$
+A x = n
+$$
+This is an inline $ \epsilon = \mu $ equation.  This is an inline equation
+with only regular text $ a = ( 1,2 ) $, and this one has braces $ \{ (1,2),
+(3,4)\} $.
+
+
+This is an inline equation with dollars: {\sf $<$type$>$}.
+
+\begin{eqnarray}
+a & b & c \\
+d & e & f \\
+\end{eqnarray}
+\begin{verbatim}
+foo
+\end{verbatim}
+%\end{document}
+this is a test
+
+\begin{figure}
+some stuff
+\caption{This is a test}\label{fig-foo}
+\end{figure}
+
+This refers to Figure \ref{fig-foo}, which may be found in \ref{Sample-doc}.
+\end{document}

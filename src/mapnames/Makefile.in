@@ -1,0 +1,38 @@
+ALL: default
+#
+#  (C) 1996 by Argonne National Laboratory.
+#      All rights reserved.  See COPYRIGHT in top-level directory.
+#
+
+##### User configurable options #####
+
+CCC         = @CXX@
+AR          = @AR@
+RANLIB      = @RANLIB@
+CPPFLAGS    = -I../../include/textfilt -I../../include
+ALL_CFLAGS  = @optflags@ $(CFLAGS)
+.SUFFIXES: .o .C .cxx
+### End User configurable options ###
+
+SHELL = /bin/sh
+
+LIBS = ../../lib/libtfilter.a 
+
+EXECS = mapnames
+
+default: $(EXECS)
+
+mapnames: mapnames.o
+	$(CCC) -o mapnames mapnames.o $(LIBS)
+.c.o:
+	$(CC) $(CFLAGS) -c $*.c
+
+.cxx.C:
+	ln -s $*.cxx $*.C
+.C.o:
+	$(CCC) $(CPPFLAGS) $(ALL_CFLAGS) -c $*.C
+.cxx.o:
+	ln -s $*.cxx $*.C
+	$(CCC) $(CPPFLAGS) $(ALL_CFLAGS) -c $*.C
+clean:
+	/bin/rm -f *.o *~ $(EXECS) ccc

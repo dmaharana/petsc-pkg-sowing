@@ -1,0 +1,488 @@
+\documentstyle[epsf,../../info2rtf/anlhtext,../refman2,twoside,../funclist,../tpage,../tools,../../tex/latexinfo]{article} 
+\c -*-latexinfo-*-
+\c \anltmtrue
+\anltmfalse
+\c\pagestyle{empty}
+\c
+\c We really need a ``usage'' macro for the routines and macros
+\def\usage#1{}
+\c
+\c the definition of \file should be changed so that it adds an
+\c \penalty 1000\hskip 0pt +1fil \penalty -10000
+\c before the actual text (allowing a line that the file name would stick
+\c out of to instead be raggedright, a not perfect but better approach).
+\c
+\c
+\c See /home/beumer/GROPP/TMS/bfort.tex
+\c
+\let\DOESupport\DefaultSupport
+
+\def\tie{\nobreak\ \nobreak}
+\def\bw{{\tt\char`\\}}
+
+\textheight=9in
+\textwidth=6.5in
+\oddsidemargin=0in
+\evensidemargin=0in
+\topmargin=-0.5in
+\hsize=\textwidth
+
+\begin{document}
+\bibliographystyle{plain}
+\newindex{fn}
+
+\begin{ifinfo}
+\c %**start of header
+\title{Users Manual for bfort:\\
+Producing Fortran Interfaces to C Source Code}
+\author{William Gropp\\
+Mathematics and Computer Science Division\\
+Argonne National Laboratory}
+
+\date{\today}
+
+\c %**end of header
+
+\maketitle
+\end{ifinfo}
+
+\begin{iftex}
+\ANLTMTitle{Users Manual for bfort:\\
+Producing Fortran Interfaces to C Source Code}{\em William Gropp\\
+Mathematics and Computer Science Division}{208}{March 1995}
+
+\end{iftex}
+
+\clearpage
+
+\c \vskip 0pt plus 1filll
+\c Copyright \copyright{} 1995 Argonne National Laboratory
+\c
+\c \clearpage
+\c \pagenumbering{roman}
+\c \setcounter{page}{3}
+\c \pagestyle{plain}
+\c \tableofcontents
+\c \clearpage
+
+\pagenumbering{arabic}
+\pagestyle{plain}
+\thispagestyle{plain}
+
+\setfilename{../bfort.info}
+
+\node Top,        Introduction, (dir), (dir)
+\c    nodename,   next,          previous, up
+
+\c ---------------------------------------------------------------------------
+\begin{iftex}
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\c \thispagestyle{empty}
+
+\begin{center}
+{\large\bf Users Manual for bfort:\\
+Producing Fortran Interfaces to C Source Code\\}
+\vspace{.2in}
+by \\
+\vspace{.2in}
+{\it
+William Gropp\\
+}
+\end{center}
+
+\vspace{.2in}
+
+\addcontentsline{toc}{section}{Abstract}
+\begin{abstract}
+\noindent 
+In many applications, the most natural computer language to write in may 
+be different from the most natural language to provide a library in.  For
+example, many scientific computing applications are written in Fortran, while
+many software libraries---particularly those dealing with complicated data
+structures or dynamic memory management---are written in C.  
+Providing an interface so that Fortran programs can call routines written in C
+can be a tedious and error-prone process.  We describe here a tool that 
+automatically generates a Fortran-callable wrapper for routines written
+in C, using only a small, structured comment and the declaration of the
+routine in C.  This tool has been used on two large software packages, PETSc
+and the MPICH implementation of MPI.
+\end{abstract}
+\end{iftex}
+
+
+\clearpage
+\c ---------------------------------------------------------------------------
+
+
+
+\c ---------------------------------------------------------------------------
+
+\node Introduction,bfort,Top,Top
+\section{Introduction}
+\label{chap-intro}
+The program described in this report is intended to help you create
+interfaces to routines written in C that are callable from Fortran.
+Specifically, the program \code{bfort} takes files containing C programs and
+generates a new file for each routine that contains a C routine, callable from
+Fortran, that will correctly call the original C routine.  The interface,
+often called a wrapper routine or just wrapper, handles the issues of Fortran
+routine name, variables passed by value instead of reference, and values 
+generated and returned by the C library that are pointers to opaque objects.
+
+\section{Getting Started}
+Using \code{bfort} is easy.  For example, the command
+\begin{example}
+bfort foo.c
+\end{example}
+will generate Fortran interfaces for all of the commented routines in the file
+\file{foo.c}.
+But before this will do you any good, you will need to add some structured
+comments to your file.
+
+\section{Structured Comments}
+The program \code{bfort} searches for C comments of the form \code{/*}{\em c}
+\code{...} 
+{\em c}\code{*/}, where {\em c} is a single character indicating the type of
+documentation.  The available types include  \code{@} for
+routines and \code{M} for C macros.
+These structured comments can be used by \code{doctext} \cite{doctext} to
+automatically generate manual pages and may containing additional information.
+In all cases, the structured comment has the form
+\begin{example}
+/*@ 
+    name - short description
+
+    heading 1:
+
+    heading 2:
+
+    ...
+@*/
+\end{example}
+The structured comment for a routine must immediately precede the declaration
+of the routine (currently only K\&R-style declarations; ANSI-style prototypes
+will be supported in a later release).
+Figure \ref{fig-example} shows the structured comment and the routine being
+documented.
+
+\subsection{C Routines}
+C routines are indicated by the structured comment \code{/*@ ... @*/}.
+The program \code{bfort} uses the name in the first line (\code{Add} in this
+example) to 
+generate the name of the routine for which a wrapper is being provided.
+
+\begin{figure}
+\begin{example}
+/*@
+   Add - Add two values
+
+   Parameters:
+.  a1,a2 - Values to add
+@*/
+int Add( a1, a2 )
+int  a1, a2;
+\{
+return a1 + s2;
+\}
+\end{example}
+\caption{C code for an {\tt Add} routine with \protect\code{bfort}-style
+structured comment}\label{fig-example} 
+\end{figure}
+
+\subsection{C Macros}
+C macros are indicated by the structured comment \code{/*M ... M*/}.
+Unlike the case of C routines, macro definitions do not provide any
+information on the types of the arguments.
+Thus, the body of a structured comment
+for a C macro 
+should include a {\em synopsis} section, containing a declaration of the
+macro as if it were a C routine.  For example, if the \code{Add} example were
+implemented as a macro, the structured comment for it would look like
+\begin{example}
+/*M
+   Add - Add two values
+
+   Parameters:
+.  a1,a2 - Values to add
+
+   Synopsis:
+   int Add( a1, a2 )
+   int a1, a2;
+M*/
+\end{example}
+It is important that the word {\em Synopsis} be used; \code{bfort} and
+related programs (\code{doctext} and \code{doc2lt}) use this name to find the
+C-like declaration for the macro. 
+
+\subsection{Indicating Special Limitations}
+Two modifiers to the structured comments indicate special 
+behavior of the function.  The modifiers must come after the character that
+indicates a routine, macro, or documentation.
+The modified \code{C} indicates that this routine is available only in C (and
+not from Fortran).  If this modifier is present, \code{bfort} will not
+generate a wrapper for the routine.  For example, a routine that returns a
+pointer to memory cannot be called from standard Fortran 77, so its
+structured comment should be 
+\begin{example}
+/*@C
+  ....
+@*/
+\end{example}
+
+The other modifier is \code{X}; this indicates that the routine requires the
+X11 Window System.  This is used by \code{bfort} to provide an \code{#ifdef}
+around the call in case X11 include files are not available.
+
+The modifiers \code{C} and \code{X} may be used together and may be specified
+in either order (i.e., \code{CX} or \code{XC}).
+
+\subsection{Indicating Include Files}
+It is often very important to indicate which include files need to be used with
+a particular routine.  For this purpose, you may add a special structured
+comment of the form \code{/*I}{\em include-file-name}\code{I*/}.
+For example, to indicate that the routine requires that \file{<sys/time.h>}
+has been included, use
+\begin{example}
+#include <sys/time.h>          /*I <sys/time.h> I*/
+\end{example}
+in the C file.
+A user-include can be specified as
+\begin{example}
+#include "system/nreg.h"      /*I "system/nreg.h" I*/
+\end{example}
+This approach of putting the structured include comment on the same line as
+the include of the file ensures that if the source file is changed by removing
+the include, the documentation and Fortran wrappers will reflect that change.
+
+\section{Command Line Arguments}
+To use \code{bfort}, you need only to give it the name of the files
+to process.  For example, to process every \code{.c} and \code{.h} file in the
+current directory, use
+\begin{example}
+bfort *.[ch]
+\end{example}
+Command-line options to \code{bfort} allow you to change the details of
+how 
+\code{bfort} generates output.
+
+A complete list of the command line options follows.  Some of these will
+be used often (e.g., \code{-anyname}); others are
+needed only in special cases (e.g., \code{-ferr}).
+
+\vspace{5pt}
+The following option controls the location of the output file:
+\begin{description}
+\item[-dir name]Directory for output file
+\end{description}
+In all cases, the name of the output file is the name of the input file with
+an \code{f} suffix.  For example, if the input file is \file{foo.c}, the file
+containing the generated wrappers is \file{foof.c}.
+
+\vspace{5pt}
+The following options control the kind of messages that \code{bfort} produces
+about the 
+generated interfaces. 
+\begin{description}
+\item[-nomsgs]Do not generate messages for routines that cannot be converted
+              to Fortran.
+\item[-nofort]Generate messages for all routines/macros without a Fortran
+              counterpart.
+\end{description}
+
+\vspace{5pt}
+The following options provide special control over the form of the interface
+and the 
+generated file.
+\begin{description}
+\item[-anyname]Generate a single wrapper that can handle the three most common
+               cases: trailing underscore, no underscore, and all caps.  
+               The choice is based on whether one of the following macro names
+               is defined.
+\begin{description}
+\item[FORTRANCAPS]Names are upper case with no trailing underscore.
+\item[FORTRANUNDERSCORE]Names are lower case with trailing underscore.
+\item[FORTRANDOUBLEUNDERSCORE]Names are lower case, with {\em two} trailing
+      underscores.  This is needed when some versions of \code{f2c} are 
+      used to generate C for Fortran routines.  Note that \code{f2c} uses two
+      underscores {\em only} when the name already contains an underscore
+      (on at least one FreeBSD system that uses \code{f2c}).
+      To handle this case, the generated code contains the second
+      underscore only when the name already contains one.
+\end{description}
+In addition, if \code{-mpi} is used, the MPI profiling names are 
+also generated, surrounded by \code{MPI_BUILD_PROFILING}.
+
+\item[-ferr]Fortran versions return the value of the routine as the last
+              argument (an integer).  This is used in MPI and is a 
+              common approach for handling error returns.
+
+\item[-I name]Give the name of a file that contains \code{#include}
+statements that are necessary to compile the wrapper.
+
+\item[-mapptr]Generate special code to convert Fortran integers to and from
+pointers used by the C routines.  The special code is used only if the macro
+\code{POINTER_64_BITS} is defined.  
+It is also used to determine whether pointers are too long to
+fit in a 32-bit Fortran integer.  (You have to insert a call to 
+\code{__RmPointer( pointer )} into the routines that destroy the pointer.)
+The routines for managing the pointers are in \file{ptrcvt.c}.
+
+\item[-mnative]Multiple indirects (\code{int ***} are native datatypes; that
+is, there is no coercion to the basic type).
+
+\item[-mpi]Recognize special MPI \cite{mpi-final} datatypes (some MPI
+datatypes are pointers by definition). 
+
+\item[-ptrprefix name]Change the prefix for names of functions to convert
+to/from pointers.   The default value of \code{name} is \code{__}.
+
+\item[-voidisptr]Consider \code{void *} as a pointer to a structure.
+\end{description}
+
+\begin{description}
+\item[-ansiheader]Generate ANSI-C style headers instead of Fortran interfaces.
+  This is useful in creating ANSI prototypes  without converting the code to 
+  ANSI prototype form.
+  These use a trick to provide both ANSI and non-ANSI prototypes.
+  The declarations are wrapped in \code{ANSI_ARGS}, the definition of which 
+  should be
+\begin{verbatim}
+#ifdef ANSI_ARG
+#undef ANSI_ARG
+#endif
+#ifdef __STDC__
+#define ANSI_ARGS(a) a
+#else
+#define ANSI_ARGS(a) ()
+#endif
+\end{verbatim}
+\end{description}
+
+After the command-line arguments come the names of the files for which Fortran
+interfaces are to be constructed.
+
+\section{Examples}
+This section shows the code generated by \code{bfort} with various
+command-line switches.
+
+\vspace{5pt}
+The command \code{bfort add.c} produces
+\begin{verbatim}
+/* add.c */
+/* Fortran interface file for sun4 */
+ int  add_( a1, a2)
+int*a1,*a2;
+{
+return Add(*a1,*a2);
+}
+\end{verbatim}
+
+\vspace{5pt}
+The command \code{bfort -anyname add.c} produces
+\begin{verbatim}
+/* add.c */
+/* Fortran interface file */
+#ifdef FORTRANCAPS
+#define add_ ADD
+#elif !defined(FORTRANUNDERSCORE) && !defined(FORTRANDOUBLEUNDERSCORE)
+#define add_ add
+#endif
+ int  add_( a1, a2)
+int*a1,*a2;
+{
+return Add(*a1,*a2);
+}
+\end{verbatim}
+
+\vspace{5pt}
+The command \code{bfort -ansiheader foo.c} produces
+\begin{verbatim}
+/* add.c */
+extern int  Add ANSI_ARGS((int, int ));
+\end{verbatim}
+
+For a more sophisticated example, here is the result of \code{bfort -ferr -mpi
+-mnative -mapptr -ptrprefix MPIR_ -anyname -I pubinc send.c} for the MPI
+routine \code{MPI_Send} (implemented in the file \code{send.c}, from the MPICH
+implementation).  The file \file{pubinc} contains the single line
+\code{#include "mpiimpl.h"}. 
+
+\begin{verbatim}
+/* send.c */
+/* Fortran interface file */
+#include "mpiimpl.h"
+
+#ifdef POINTER_64_BITS
+extern void *MPIR_ToPointer();
+extern int MPIR_FromPointer();
+extern void MPIR_RmPointer();
+#else
+#define MPIR_ToPointer(a) (a)
+#define MPIR_FromPointer(a) (int)(a)
+#define MPIR_RmPointer(a)
+#endif
+
+#ifdef MPI_BUILD_PROFILING
+#ifdef FORTRANCAPS
+#define mpi_send_ PMPI_SEND
+#elif defined(FORTRANDOUBLEUNDERSCORE)
+#define mpi_send_ pmpi_send__
+#elif !defined(FORTRANUNDERSCORE)
+#define mpi_send_ pmpi_send
+#else
+#define mpi_send_ pmpi_send_
+#endif
+#else
+#ifdef FORTRANCAPS
+#define mpi_send_ MPI_SEND
+#elif defined(FORTRANDOUBLEUNDERSCORE)
+#define mpi_send_ mpi_send__
+#elif !defined(FORTRANUNDERSCORE)
+#define mpi_send_ mpi_send
+#endif
+#endif
+
+ void mpi_send_( buf, count, datatype, dest, tag, comm, __ierr )
+void             *buf;
+int*count,*dest,*tag;
+MPI_Datatype     datatype;
+MPI_Comm         comm;
+int *__ierr;
+{
+*__ierr = MPI_Send(buf,*count,
+        (MPI_Datatype)MPIR_ToPointer( *(int*)(datatype) ),*dest,*tag,
+        (MPI_Comm)MPIR_ToPointer( *(int*)(comm) ));
+}
+\end{verbatim}
+
+Note that the \code{-mapptr} option has caused the generated code to call
+routines to convert the integers in Fortran to valid pointers.  The option
+\code{-ptrprefix} changed the names of the routines to be
+\code{MPIR_ToPointer} and \code{MPIR_FromPointer}.  The option \code{-mpi}
+informed \code{bfort} that \code{MPI_Datatype} and \code{MPI_Comm} were
+pointers rather than nonpointers.  The option \code{-ferr} converted a
+routine \code{MPI_Send} that returns an error code to a Fortran subroutine
+that returns the error code in the last argument.  
+
+\section{Installing bfort}
+The \code{bfort} program is part of the PETSc package of tools for
+scientific computing, but can be installed without installing all of PETSc.
+The program is available from \file{info.mcs.anl.gov} in
+\file{pub/petsc/textpgm.tar.Z}.  Additional information is available through
+the World Wide Web at \URL{http://www.mcs.anl.gov/petsc}.
+
+Please send any comments to \code{gropp@mcs.anl.gov}.
+
+\section*{Acknowledgment}
+\addcontentsline{toc}{section}{Acknowledgment}
+The author thanks Lois Curfman McInnes and Barry Smith for their careful
+reading and vigorous use of the \code{bfort} manual and program.
+
+\begin{tex}
+\addcontentsline{toc}{section}{References}
+\bibliography{tools}
+\end{tex}
+
+\end{document}

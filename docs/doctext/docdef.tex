@@ -1,0 +1,50 @@
+\def\document{\endgroup
+  \ifx\@unusedoptionlist\@empty\else
+    \@latex@warning@no@line{Unused global option(s):^^J%
+            \@spaces[\@unusedoptionlist]}%
+  \fi
+  \@colht\textheight
+  \@colroom\textheight \vsize\textheight
+  \columnwidth\textwidth
+  \@clubpenalty\clubpenalty
+  \if@twocolumn
+    \advance\columnwidth -\columnsep
+    \divide\columnwidth\tw@ \hsize\columnwidth \@firstcolumntrue
+  \fi
+  \hsize\columnwidth \linewidth\hsize
+  \begingroup\@floatplacement\@dblfloatplacement
+    \makeatletter\let\@writefile\@gobbletwo
+    \global \let \@multiplelabels \relax
+    \@input{\jobname.aux}%
+  \endgroup
+  \if@filesw
+    \immediate\openout\@mainaux\jobname.aux
+    \immediate\write\@mainaux{\relax}%
+  \fi
+  \process@table
+  \let\glb@currsize\@empty  %% Force math initialization.
+  \normalsize
+  \everypar{}%
+  \ifx\normalsfcodes\@empty
+    \ifnum\sfcode`\.=\@m
+      \let\normalsfcodes\frenchspacing
+    \else
+      \let\normalsfcodes\nonfrenchspacing
+    \fi
+  \fi
+  \@noskipsecfalse
+  \let \@refundefined \relax
+  \let\AtBeginDocument\@firstofone
+  \@begindocumenthook
+  \ifdim\topskip<1sp\global\topskip 1sp\relax\fi
+  \global\@maxdepth\maxdepth
+  \global\let\@begindocumenthook\@undefined
+  \ifx\@listfiles\@undefined
+    \global\let\@filelist\relax
+    \global\let\@addtofilelist\@gobble
+  \fi
+  \gdef\do##1{\global\let ##1\@notprerr}%
+  \@preamblecmds
+  \global\let \@nodocument \relax
+  \global\let\do\noexpand
+  \ignorespaces}

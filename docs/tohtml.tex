@@ -1,0 +1,645 @@
+\documentstyle[epsf,twoside,../funclist,../tpage,../tools,../../tex/latexinfo]{article} 
+\c -*-latexinfo-*-
+\c \anltmtrue
+\anltmfalse
+\c\pagestyle{empty}
+\c
+\c We really need a ``usage'' macro for the routines and macros
+\def\usage#1{}
+\c
+\c the definition of \file should be changed so that it adds an
+\c \penalty 1000\hskip 0pt +1fil \penalty -10000
+\c before the actual text (allowing a line that the file name would stick
+\c out of to instead be raggedright, a not perfect but better approach).
+\c
+\c See /home/beumer/GROPP/TMS/tohtml.tex
+\c
+\let\DOESupport\DefaultSupport
+
+\def\tie{\nobreak\ \nobreak}
+\def\bw{{\tt\char`\\}}
+\textheight=9in
+\textwidth=6.5in
+\oddsidemargin=0in
+\evensidemargin=0in
+\topmargin=-0.5in
+\hsize=\textwidth
+
+\begin{document}
+\bibliographystyle{plain}
+\newindex{fn}
+
+\begin{ifinfo}
+\c %**start of header
+\title{Users Manual for tohtml:\\
+Producing True Hypertext Documents from LaTeX}
+\author{William Gropp\\
+Mathematics and Computer Science Division\\
+Argonne National Laboratory}
+
+\date{\today}
+
+\c %**end of header
+
+\maketitle
+\end{ifinfo}
+
+\begin{iftex}
+
+\ANLTMTitle{Users Manual for tohtml:\\
+Producing True Hypertext Documents from LaTeX}{\em William Gropp\\
+Mathematics and Computer Science Division}{207}{March 1995}
+
+\end{iftex}
+
+\clearpage
+
+\c \vskip 0pt plus 1filll
+\c Copyright \copyright{} 1994 Argonne National Laboratory
+\c
+\c \clearpage
+\c \pagenumbering{roman}
+\c \setcounter{page}{3}
+\c \pagestyle{plain}
+\c \tableofcontents
+\c \clearpage
+
+\pagenumbering{arabic}
+\pagestyle{plain}
+\thispagestyle{plain}
+
+\setfilename{../tohtml.info}
+
+\node Top,        Introduction, (dir), (dir)
+\c    nodename,   next,          previous, up
+
+\c ---------------------------------------------------------------------------
+\begin{iftex}
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\c \thispagestyle{empty}
+
+\begin{center}
+{\large\bf Users Manual for tohtml:\\
+Producing True Hypertext Documents from LaTeX\\}
+\vspace{.2in}
+by \\
+\vspace{.2in}
+{\it
+William Gropp\\
+}
+\end{center}
+
+\vspace{.2in}
+
+\addcontentsline{toc}{section}{Abstract}
+\begin{abstract}
+\noindent 
+The World Wide Web has made it possible to use and disseminate
+documents 
+as ``hypertext.''  One of the major advantages of hypertext over conventional
+text is that references to other documents or items can be linked directly
+into the document, allowing the easy retrieval of related information.  A
+collection of documents can also be read this way, jumping from one document
+to another based on the interests of the reader.  This does require that the
+hypertext documents be extensively cross-linked.
+Unfortunately, most existing documents are designed as
+linear documents.  Even worse, most authors still think of documents as linear
+structures, to be read from front to back.  To deal with this situation, a
+number of 
+tools have been created that take documents in an existing word-processing
+system or markup language and generate ``HTML,'' the hypertext markup language
+used on the Web. 
+While this process makes a single document available in a convenient form on
+the Web, 
+it does not give access to cross-document linking, a major advantage of
+hypertext.  This manual describes a program, {\tt tohtml}, that takes LaTeX
+input 
+files, as well as files of link information, and produces a hypertext
+document that can contain extensive cross-links.  A related program, {\tt
+doctext}, aids in the generation of manual pages that can be referenced by a
+LaTeX document.
+
+\end{abstract}
+\end{iftex}
+
+
+\clearpage
+\c ---------------------------------------------------------------------------
+
+
+
+\c ---------------------------------------------------------------------------
+
+\node Introduction,tohtml,Top,Top
+\section{Introduction}
+\label{chap-intro}
+Generating true hypertext documentation is a task that requires skill and hard
+work.  The tools described in this report are intended to help you create
+simple hypertext documents that include multimedia elements as well as
+extensive cross-referencing, without requiring you to learn a new
+word-processing system (as long as you already know LaTeX \cite{Lamport86}).
+The documents 
+produced by this system, while relatively simple, do include hot links to
+other documents, the ability to link individual names (such as routine or
+person names) to other documents, and simple multimedia elements.
+
+Specifically, we describe the program \code{tohtml}, which converts LaTeX
+files to HTML (the Web hypertext markup language).  This C program is fast and
+can handle very large documents.  The program \code{doctext} can be used to
+generate manual pages for routines written in C that can be referenced
+automatically by documents built with \code{tohtml}.  Finally, a LaTeX style
+file, \file{tools.core/info2rtf/anlhtext.sty} provides a way to use LaTeX
+and include hypertext links, graphics, and movies into a document.
+
+Other tools exist for translating LaTeX to HTML; perhaps the best known is
+LaTeX2html.  This program has different strengths and weaknesses when compared
+with \code{tohtml}; if you have trouble with one program, you should try the
+other.
+
+LaTeX in this document refers to the original LaTeX, not the new and
+incompatible LaTeX2e.  Support for LaTeX2e may be provided in the future.
+
+\node tohtml,,,Top
+\section{tohtml}
+The \code{tohtml} program is a C program that can read LaTeX files and
+generate HTML files.  Command-line options give you control over the output,
+including the way that the document is split into separate HTML files and the way
+complicated expressions are handled.  
+
+\subsection{Getting Started}
+Using \code{tohtml} is easy.  For example, if you wish to convert a LaTeX file
+named \file{mypaper.tex} into an HTML document, you can do
+\begin{example}
+tohtml -default mypaper.tex
+tohtml -default mypaper.tex
+\end{example}
+Note that, just as you normally need to run LaTeX twice to get all of the
+references correct, you also need to run \code{tohtml} twice.  The
+command-line option \code{-default} provides good basic choice of the many
+options provided by \code{tohtml}.  The first run will also generate a number
+of error messages (such as \code{Could not find Introduction in topicctx} and 
+\verb+\ref{fig:upshot1} unknown (mypaper.tex line 792)+); the second run
+should generate no error messages if all goes well.
+
+The output will be left in a subdirectory with name \file{mypaper}; you can
+view the result with \code{xmosaic mypaper/mypaper.html}.
+
+One important note:  for \code{tohtml} to handle bibliography entries
+correctly, you should keep the files that LaTeX and BibTeX generate 
+(e.g., the \file{mypaper.bbl} file).  
+
+\subsection{Command Line Arguments}
+To use \code{tohtml}, you give it the name of the LaTeX
+file to process:
+\begin{example}
+tohtml foo.tex
+\end{example}
+Command-line options to \code{tohtml} allow you to change the behavior.  The
+option \code{-default} sets a common selection of options:
+\begin{example}
+tohtml -default foo.tex
+\end{example}
+
+A complete list of the command-line options follows.  Some of these (e.g.,
+\code{-mapref}) are discussed in more detail later.
+
+The following options control how the document is divided into individual Web
+pages.
+\begin{description}
+\item[-nocontents]Suppress the generation of the contents page (which has
+links to all of the other sections).  This is useful for short documents.
+
+\item[-split n]Split the document into separate files, based on the sectioning
+commands (e.g., \verb+\chapter+, \verb+\section+).
+The value of \code{n} indicates where to begin breaking the file: a value of
+\code{0} puts chapters into separate files, a value of \code{2} puts
+subsections into a separate file, and a value of \code{-1} forces the entire
+document into a single file (note that any image or graphics files are still
+separate).
+\end{description}
+
+The following options control how \code{tohtml} handles various kinds of LaTeX
+commands.
+\begin{description}
+\item[-citeprefix str]
+\item[-citesuffix str]
+Set the prefix and suffix strings used around
+\verb+\cite+ in text.  The default values are \code{[} and \code{]}.
+
+\item[-cvtlatex]Convert LaTeX that cannot be represented directly by HTML
+into bitmaps that 
+are included in the document.  If this option is not used, the text is
+processed 
+as is, with all LaTeX commands removed and text (and arguments to the
+commands) unchanged.
+
+\item[-cvttables]Convert tabular environments into bitmaps.  This produces
+nicer tables than the default (which attempts to line up columns) but can
+produce large bitmaps that some systems may not be able to handle.
+
+\item[-cvtmath]Convert math and display math environments into bitmaps.  This
+produces nicer representation of the formatted mathematics, but can produce
+large bitmaps.
+
+\item[-iftex]Include text in \verb+\begin{iftex}+ to
+\verb+\end{iftex}+ (for LaTeXInfo documents).
+
+\item[-simplemath]Use italics for
+expressions in LaTeX math mode that do not involve any special characters.
+For example, \code{$3$} would be changed into an italic 3, rather than a small
+bitmap.  Not yet available.
+
+\item[-default]Set a common set of options.  Equivalent to \code{-cvtlatex
+-cvttables -cvtmath -iftex -split 2 -useimg}.
+
+\item[-basedef filename]Read filename for additional definitions.  This lets
+you define some TeX and LaTeX commands as having a specific behavior when
+generating HTML files (\pxref{User-defined Replacements}).
+
+\end{description}
+
+
+The following options control some aspects of the layout of each page,
+particularly the 
+presence of the navigation buttons to other pages.
+\begin{description}
+\item[-notopnames]Suppress generation of the links at the top of the
+page.  This is useful when generating a single-page document, in combination
+with \code{-split -1}.
+
+\item[-nonavnames]Suppress generation of the links at the bottom of the
+page.  This is useful when the sections in the document are short.
+
+\item[-nobottomnav]Suppress generation of the links and buttoms at the
+bottom of each section.
+
+\item[-beginpage filename]Add the HTML in \code{filename} to the top of every
+generated HTML page.
+
+\item[-endpage filename]Add the HTML in \code{filename} to the bottom of every
+generated HTML page.  This is particularly useful for adding links to indexes
+and home pages to a document.
+\end{description}
+
+
+The following command-line arguments control the generation of links to other
+documents. 
+\begin{description}
+
+\item[-mapref filename]Filename contains a list of mappings from citation keys
+(the name in a \verb+\cite+ command) to HTML links (\pxref{Building a Map
+File}). 
+
+\item[-mapman filename]Filename contains a list of mappings from tokens
+(currently defined as sequences of letters only) to HTML links  
+(\pxref{Building a Map File}).
+\end{description}
+
+These commands control details of the generated HTML file.
+
+\begin{description}
+\item[-gaudy]Use images of colored balls for
+bullets in itemized lists.
+
+\item[-useimg]Instead of generating the bitmap, uses a file that has the name
+that would be used for that bitmap.  This
+is useful when making the second run of \code{tohtml}.  It is meaningful only when
+\code{-cvtlatex} is used.
+
+\item[-basedir dirname]Add an HTML base command to the main file.
+For example, \gb\code{-basedir "http://www.mcs.anl.gov/mpi"} causes
+\begin{example}
+<base href="http://www.mcs.anl.gov/mpi">
+\end{example}
+to be written to the file.
+
+\end{description}
+
+\node doctext,,,Top
+\section{doctext}
+One of the most difficult tasks in creating extensive hypertext is generating
+the initial documents and providing an easy way to link to them.  The
+\code{doctext} \cite{doctext} program can be used to generate versions of
+Unix-style man 
+pages from the C source code of routines.  This program can generate
+\code{nroff} (for using \code{man} and \code{xman}), LaTeX (for generating
+printed manuals), and HTML.  For the HTML to be useful, there must be an easy
+way to create links to the generate documents.  This section describes how to
+do that; \code{doctext} itself is documented in \cite{doctext}.
+
+To generate HTML man pages of a collection of source files in
+\file{/home/me/foo}, 
+do the following:
+\begin{verbatim}
+cd
+mkdir www
+mkdir www/man3
+cd foo
+doctext -html -index ../foo.cit \
+        -indexdir http://www.mcs.anl.gov/me/foo/www/man3 \
+        -mpath ../www/man3 *.[ch]
+cd ..
+\end{verbatim}
+This puts the HTML files into the directory \file{www/man3} and the index (in
+the correct format for \code{-mapman}) into file \file{foo.cit}.  Once you are
+sure that the files are correct, you can move them into the Web area with
+\begin{example}
+cp -r www /mcs/www/home/me
+\end{example}
+(assuming that \file{/mcs/www} corresponds to \code{http://www.mcs.anl.gov} in
+the \code{-indexdir} argument).
+
+To generate an HTML listing of the routines, you can execute the following
+script, with, of course, the appropriate text:
+\begin{verbatim}
+#! /bin/sh
+echo '<TITLE>Web pages for My Routines</TITLE>' >> www/index.html
+echo '<H1>Web pages for My Routines</H1>' >> www/index.html
+echo '<H2>My Routines</H2>'  >> www/index.html
+echo '<MENU>' >> www/index.html
+ls -1 www/man3 | \
+    sed -e 's%^\(.*\).html$$%<LI><A HREF="man3/\1.html">\1</A>%g' \
+        >> www/index.html
+echo '</MENU>' >> www/index.html
+\end{verbatim}
+If you have only a few routines to document, you can dispense with the second
+directory level above (the \file{man3}).  However, you might find it valuable
+to follow (at least loosely) the Unix man-page format, with commands and
+installation instructions in \file{man1} and routines spread across
+\file{man1} to \file{man8}.
+
+\node Building a Map File, , , Top
+\section{Building a Map File}
+One of the most useful features of \code{tohtml} is its ability to
+automatically replace citations and names with hot links into other documents.
+This is done by providing one or more \code{-mapref} files (for citations)
+and \code{-mapman} files (for names, currently defined as strings consisting
+only of letters).
+Currently, the format of this file is fairly ugly but easy to use:
+\begin{quote}
+\code{cite:+}{\em cite-name}\code{++}{\em cite-text}\code{++++}{\em kind}\code{+}{\em URL}
+\end{quote}
+where the items are as follows.
+\begin{description}
+\item[cite-name]A citation key that is used in a LaTeX \verb+\cite+
+command, such as \verb+\cite{tohtml-user-ref}+.
+
+\item[cite-text]The name that should replace the citation use.  For
+example, if the document contains a \verb+\cite{tohtml-user-ref}+, and you
+wish this to turn into a hot link with text \code{[Tohtml User Manual]},
+you would use \code{Tohtml User Manual} for {\em cite-text}.
+
+\item[kind]The field is used to indicate the type of the reference.  This is
+not yet implemented.  Use the value \code{manual} for user manuals and
+\code{cite} for everything else for the time being.
+
+\item[URL]The URL (Universal or Uniform Resource Locator) that the item will
+link to.  These are paths such as
+\code{http://www.mcs.anl.gov/home/gropp/tohtml/tohtml.html}.
+
+\end{description}
+
+All of these items must be on a single line; the exact number of \code{+}
+characters must be used.
+
+You can comment out a line in a mapref or mapman file by placing a ``\code{;}'' in
+the {\em first} column. 
+
+Here is a sample map file for citations.  Note that \code{\bw{}cite\{gropp\}}
+will 
+turn into \code{gropp@mcs.anl.gov} in the text, with a link to the Web home
+page for gropp.
+
+\begin{tiny}
+\begin{example}
+cite:+sles-user-ref++SLES User Manual++++manual+http://www.mcs.anl.gov/petsc/solvers.html
+cite:+gropp++gropp@mcs.anl.gov++++person+http://www.mcs.anl.gov/home/gropp/index.html
+cite:+petsc-man-pages++PETSc Manual Pages++++manual+http://www.mcs.anl.gov/petsc/ref/index.html
+
+\end{example}
+\end{tiny}
+
+\subsection{Map Files for man Pages}
+Building a map file for a list of man pages generated by, for example,
+\code{doctext}, is a daunting prospect.  Fortunately, the map file can be
+generated automatically when the man pages are created if \code{doctext} is
+used. 
+To do this, add the options
+\begin{quote}
+\code{-index} {\em indexfile} \code{-indexdir} {\em indexdir}
+\end{quote}
+to the \code{doctext} command.  The {\em indexfile} is a file to which entries
+in the proper form for \code{-mapman} will be {\em appended}.
+The value of {\em indexdir} is the root directory for the generated man pages.
+For example, to use \file{http:/www.mcs.anl.gov/home/gropp/man} as the root
+and the file \file{manref.cit} to hold the \code{-mapman} references, use
+\begin{example}
+doctext -index foo.cit \bw
+    -indexdir "http:/www.mcs.anl.gov/home/gropp/man" ...
+\end{example}
+
+\node Fine-Tuning,,,Top
+\section{Fine-Tuning}
+
+This section discusses how to customize the appearance of the pages generated
+by \code{tohtml}, how to interpret error messages, and how to extend the
+translations that \code{tohtml} recognizes.
+
+\node The anlhtext style file, , , Fine tuning
+\subsection{The anlhtext Style File}
+One way to fine-tune a document is to use a special LaTeX style file that
+contains LaTeX commands that have special meaning to \code{tohtml}.
+This makes it possible to maintain a single document for both hardcopy and
+hypertext versions of a document.
+
+\begin{description}
+\item[URL]Gives the URL for a document.  In LaTeX, it is set in the current
+font; in HTML, it becomes an active link whose text is the link name.
+Usage is \verb+\URL{url-text}+.
+\item[AURL]Gives the URL with a different link text.  In LaTeX, gives the URL
+in the \verb+\tt+ font, followed by the link text.  In HTML, just the link
+text is displayed; clicking the link text jumps to the URL.  Usage is 
+\verb+\AURL{url}{link text}+.
+\item[hcite]Includes a link to a URL that appears {\em only} in the
+HTML document.  Usage is \verb+\hcite{url}+.
+\item[hcitea]Includes a link to a URL with a specified text string; the
+URL is 
+used only in the HTML version.  Usage is \verb+\hcitea{url}{text string}+.
+\item[href]Refers to a section or subsection by title.  For example,
+if you used \verb+\subsection{A sample}+, then \verb+\href{A sample}+ would
+provide a link to that subsection in the HTML.  In LaTeX, it sets its argument
+in the current font.  Usage is \verb+\href{section title}+.
+\end{description}
+
+The following have not yet been implemented.  Comments are welcome.
+\begin{description}
+\item[htmlhr]Generates an {\em hrule} in the HTML.  Ignored in LaTeX.
+\item[html envirionment]\verb+\begin{html}+ to \verb+\end{html}+ may be used
+to imbed HTML commands directly; in LaTeX, no output will be generated.
+\item[movie]Includes a reference to an MPEG movie file with a given icon.
+\item[sound]Includes a reference to a sound file with the generic sound icon.
+\item[graphic]Includes an image (gif) file.
+\end{description}
+
+\node  Adding Pointers to Other Pages to Every Page, , , Fine-tuning
+\subsection{Adding Pointers to Other Pages to Every Page}
+
+In many situations, you would like to add pointers to the bottom of every
+page, for example, a pointer back to a home page.  With \code{tohtml} this is
+very easy.  First, create a file, say \file{bottom.html}, that contains the
+appropriate HTML code:
+\begin{small}
+\begin{example}
+Return to <A HREF="node179.html">MPI Standard Index</A><BR>
+Return to <A HREF="http://www.mcs.anl.gov/mpi/index.html">MPI home page</A><BR>
+\end{example}
+\end{small}
+The first line provides a return to a document in the current directory, in
+this case, the index of the MPI Standard.  
+The second line provides a return to the MPI home page; this will work from
+any location.
+
+To have these incorporated into the output of \code{tohtml}, use the option
+\code{-endpage}:
+\begin{example}
+tohtml -endpage bottom.html ...
+\end{example}
+
+\node Adding a Disclaimer to the Top of Every Page, , , Fine tuning
+\subsection{Adding a disclaimer to the top of every page}
+Sometimes, you may wish to add text to the top of every generated page.
+You can do this by putting the text into a file, say \file{top.html}, and then
+using the \code{-beginpage} option of \code{tohtml}:
+\begin{example}
+tohtml -beginpage top.html ...
+\end{example}
+Here \file{top.html} might contain
+\begin{example}
+This material is a draft and should not be quoted<BR><HR>
+\end{example}
+
+\node Errors, , , Fine tuning
+\subsection{Errors}
+Errors are reported in two places.  Some messages go to standard error. Lists
+of LaTeX commands unknown to \code{tohtml} or citations without hyperlinks are
+written into the file \file{latex.err}.  In addition, \code{tohtml} will not
+let you redefine some basic LaTeX commands such as \verb+\section+; normally,
+this is the behavior that you'd want anyway.
+
+\node User-defined Replacements, , , Fine-tuning
+\subsection{User-defined Replacements}
+You can provide your own definition of many TeX and LaTeX commands by
+including a {\em definitions} file.  This file contains entries of the form
+\begin{quote}
+{\em operation} {\em name} {\em optional-string}
+\end{quote}
+Lines may be commented out by starting them with the character \code{#}.
+\begin{description}
+\item[operation]This is one of \code{nop} (no operation and remove arguments),
+\code{dimen} (TeX dimension) \code{asis} (no operation but leave arguments),
+\code{name} (replace with a string), or \code{raw} (replace with verbatim
+text, such as an HTML command).
+
+\item[name]This is the name of the TeX or LaTeX command, without the initial
+backslash.  That is, to redefine \verb+\samepage+, use the name
+\code{samepage}.
+
+\item[optional-string]This is null (for \code{dimen}), an integer for
+the number of arguments (for \code{nop} or \code{asis}), or the replacement
+string (for \code{name}).  Currently, there is no way to specify leading or
+trailing spaces.
+
+\end{description}
+
+For example, when \code{tohtml} starts, it reads a file that contains the
+definitions of some basic commands, such as
+\begin{example}
+dimen topsep
+asis underline 1
+nop thispagestyle 1
+name mu 0 u
+raw seprule 0 <HR>
+\end{example}
+The first line states that \verb+\topsep+ is a dimension; \code{tohtml} will
+understand what to do when it sees this name.  The second line says that
+\verb+\underline+ is a command with a single argument and that the
+appropriate HTML for this is to use the argument (thus, \verb+\underline{abc}+
+will become \code{abc} in the HTML document).
+The third line says that \verb+\thispagestyle+ is a command with a 
+single argument and can be ignored (performs no operation, or `no-op').
+The fourth line tells \code{tohtml} to replace \verb+\mu+ with \code{u}.  
+The last line tells \code{tohtml} to replace \verb+\seprule+ with the HTML
+command \verb+<HR>+.
+\c The
+\c last line shows the use of quotes to imbed a space in a name; this causes 
+\c the
+\c command `\verb+\ +' to generate a single space in the HTML output.
+
+Any number of \code{-basedef} files may be specified; they are processed in
+order starting from the left.  The default basedef file is always read first.
+
+\node Examples, , , Top
+\section{Examples}
+This section gives examples of using \code{tohtml} for various kinds of
+documents.
+
+\subsection{Single-Page Descriptions}
+Sometimes, you wish to use LaTeX sectioning commands to generate headings in
+the HTML file without generating separate HTML files, for example, when each
+section is very short.  This example shows how to accomplish this.
+In addition, it
+\begin{itemize}
+\item adds some HTML to the bottom of the page (\code{-endpage
+petsc_end.html}),
+\item suppresses the contents list (\code{-nocontents}),
+\item suppresses the links to jump between sections (\code{-notopnames
+-nonavnames}),
+\item makes the use of \verb+\cite+ {\em not} place brackets around the
+reference (\code{-citeprefix "" -citesuffix "" }),
+\item automatically converts citations to links to other documents
+(\code{-mapref ../../html/petsc.cit}), and
+\item places the output into a separate directory (\code{split 0} instead of
+\code{split -1}).
+\end{itemize}
+
+\begin{verbatim}
+tohtml -mapref ../../html/petsc.cit -endpage petsc_end.html \
+        -nocontents -notopnames -nonavnames -split 0 \
+        -citeprefix "" -citesuffix "" domain.tex
+tohtml -mapref ../../html/petsc.cit -endpage petsc_end.html \
+        -nocontents -notopnames -nonavnames -split 0 \
+        -citeprefix "" -citesuffix "" domain.tex
+\end{verbatim}
+In addition, the option \code{-gaudy} may be used to add color to any lists.
+
+\subsection{Chosing LaTeX executable}
+Because of the introduction of LaTeX2e, which is often installed as just
+\code{latex}, it may be necessary to select a particular \code{latex}
+executable.  You can do this with the environment variable
+\code{TOHTML_LATEX}; just set that to the path needed for LaTeX.
+For example,
+\begin{verbatim}
+    setenv TOHTML_LATEX /usr/local/bin/latex
+\end{verbatim}
+
+\subsection{Books}
+A major advantage of \code{tohtml} is its ability to handle very large
+documents.  Here are the commands that are used to process the MPI Standard:
+\begin{verbatim}
+tohtml -default -endpage ../mpi-tail.html mpi-report.tex
+tohtml -default -endpage ../mpi-tail.html mpi-report.tex
+\end{verbatim}
+The \code{-endpage ../mpi-tail.html} option is used to add pointers to the
+index of the MPI standard and the MPI home page to every page.
+
+\section{Comments, Bugs, and Suggestions}
+Please send any comments to \code{gropp@mcs.anl.gov}.
+
+\begin{tex}
+\addcontentsline{toc}{section}{References}
+\bibliography{tools}
+\end{tex}
+
+\end{document}
