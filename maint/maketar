@@ -49,61 +49,66 @@ tar cf - -C /homes/gropp/sowing-proj sowing | tar xf -
 # Update a few files
 #
 # Remove the RCS files, old executables, and debris
-cd $TMPDIR/sowingcopy/sowing
+sowingtmp=$TMPDIR/sowingcopy/sowing
+cd $sowingtmp
 if [ -s Makefile ] ; then
     make distclean
 fi
 # The sed for ' win32' to '\\ win32' handles blanks in the filenames
-find $TMPDIR/sowingcopy/sowing \( -name 'RCS' -o -name '*.o' -o -name '#*#' -o \
+find $sowingtmp \( -name 'RCS' -o -name '*.o' -o -name '#*#' -o \
               -name '*~' -o -name 'mputil.mp*' -o -name Makefile -o \
 	      -name makefile -o -name '*.exe' -o -name core -o \
 	      -name '*.obj' -o -name '*.pdb' -o -name '*.lib' -o \
+	      -name '*.old' -o -name '.foo*' -o -name '*.out' -o \
+	      -name 'config.log' -o -name 'config.status' -o \
+	      -name 'config.cache' -o -name '*.orig' -o \
+	      -name '*.dvi' -o -name '*.aux' -o \
 	      -name '*.ilk' -o -name '*.pch' -o -name 'CVS' \) -print | \
 	sed -e 's/ win32/\\ win32/g' | sed 's%^%/bin/rm -rf %g' | sh
 # Remove some directories
-/bin/rm -rf  $TMPDIR/sowingcopy/sowing/related
-/bin/rm -rf  $TMPDIR/sowingcopy/sowing/maint
-/bin/rm -rf  $TMPDIR/sowingcopy/sowing/docs/coding
-/bin/rm -rf  $TMPDIR/sowingcopy/sowing/notes
-/bin/rm -rf  $TMPDIR/sowingcopy/sowing/ToDo
-/bin/rm -f   $TMPDIR/sowingcopy/sowing/bin/doctext
+/bin/rm -rf  $sowingtmp/related
+/bin/rm -rf  $sowingtmp/maint
+/bin/rm -rf  $sowingtmp/docs/coding
+/bin/rm -rf  $sowingtmp/notes
+/bin/rm -rf  $sowingtmp/ToDo
+/bin/rm -f   $sowingtmp/bin/doctext
 #
 # Remove the configure-generated files
-/bin/rm -f $TMPDIR/sowingcopy/sowing/tohtml/tohtmlpath.h
-/bin/rm -f $TMPDIR/sowingcopy/sowing/bin/pstoxbm
-/bin/rm -f $TMPDIR/sowingcopy/sowing/bin/pstogif
-/bin/rm -f $TMPDIR/sowingcopy/sowing/doctext/docpath.h
-/bin/rm -f $TMPDIR/sowingcopy/sowing/include/textfilt/textpath.h
-/bin/rm -f $TMPDIR/sowingcopy/sowing/include/patchlevel.h
-/bin/rm -f $TMPDIR/sowingcopy/sowing/include/sowingconfig.h
+/bin/rm -f $sowingtmp/tohtml/tohtmlpath.h
+/bin/rm -f $sowingtmp/bin/pstoxbm
+/bin/rm -f $sowingtmp/bin/pstogif
+/bin/rm -f $sowingtmp/doctext/docpath.h
+/bin/rm -f $sowingtmp/include/textfilt/textpath.h
+/bin/rm -f $sowingtmp/include/patchlevel.h
+/bin/rm -f $sowingtmp/include/sowingconfig.h
 #
-/bin/rm -f $TMPDIR/sowingcopy/sowing/make.log
-/bin/rm -f $TMPDIR/sowingcopy/sowing/docs/*.log
-/bin/rm -f $TMPDIR/sowingcopy/sowing/docs/*.hux
-/bin/rm -rf $TMPDIR/sowingcopy/sowing/src/findlibs
+/bin/rm -f $sowingtmp/make.log
+/bin/rm -f $sowingtmp/docs/*.log
+/bin/rm -f $sowingtmp/docs/*.hux
+/bin/rm -rf $sowingtmp/src/findlibs
 
 #
 # Update the documentation files
 rm -f $TMPDIR/.f
 sed -e 's%/homes/gropp/bin/share/tex/%%g' \
-    $TMPDIR/sowingcopy/sowing/docs/doctext/doctext.tex  > $TMPDIR/.f
-mv $TMPDIR/.f $TMPDIR/sowingcopy/sowing/docs/doctext/doctext.tex
+    $sowingtmp/docs/doctext/doctext.tex  > $TMPDIR/.f
+mv $TMPDIR/.f $sowingtmp/docs/doctext/doctext.tex
 #
-cp $texdir/code.sty $TMPDIR/sowingcopy/docs/doctext
-cp $texdir/fileinclude.sty $TMPDIR/sowingcopy/docs/doctext
-cp $texdir/urlsimple.sty $TMPDIR/sowingcopy/docs/doctext
+cp $texdir/code.sty $sowingtmp/docs/doctext
+cp $texdir/fileinclude.sty $sowingtmp/docs/doctext
+cp $texdir/urlsimple.sty $sowingtmp/docs/doctext
 sed -e 's%/homes/gropp/bin/share/tex/%%g' \
-    $TMPDIR/sowingcopy/sowing/docs/install.tex  > $TMPDIR/.f
-mv $TMPDIR/.f $TMPDIR/sowingcopy/sowing/docs/install.tex
+    $sowingtmp/docs/install.tex  > $TMPDIR/.f
+mv $TMPDIR/.f $sowingtmp/docs/install.tex
 sed -e 's%/homes/gropp/bin/share/tex/%%g' \
-    $TMPDIR/sowingcopy/sowing/docs/bfort.tex  > $TMPDIR/.f
-mv $TMPDIR/.f $TMPDIR/sowingcopy/sowing/docs/bfort.tex
+    $sowingtmp/docs/bfort.tex  > $TMPDIR/.f
+mv $TMPDIR/.f $sowingtmp/docs/bfort.tex
 sed -e 's%/homes/gropp/bin/share/tex/%%g' \
-    $TMPDIR/sowingcopy/sowing/docs/tohtml.tex  > $TMPDIR/.f
-mv $TMPDIR/.f $TMPDIR/sowingcopy/sowing/docs/tohtml.tex
-cp $texdir/code.sty $TMPDIR/sowingcopy/docs
-cp $texdir/fileinclude.sty $TMPDIR/sowingcopy/docs
-cp $texdir/url.sty $TMPDIR/sowingcopy/docs
+    $sowingtmp/docs/tohtml.tex  > $TMPDIR/.f
+mv $TMPDIR/.f $sowingtmp/docs/tohtml.tex
+cp $texdir/code.sty $sowingtmp/docs
+cp $texdir/fileinclude.sty $sowingtmp/docs
+cp $texdir/urlsimple.sty $sowingtmp/docs
 
 if [ $notar = "yes" ] ; then exit 0 ; fi
 #
@@ -111,7 +116,7 @@ if [ $notar = "yes" ] ; then exit 0 ; fi
 cd $TMPDIR/sowingcopy
 #
 # Rename the directory
-mv $TMPDIR/sowingcopy/sowing $TMPDIR/sowingcopy/sowing-$Version
+mv $sowingtmp $TMPDIR/sowingcopy/sowing-$Version
 tar cf - sowing-$Version | gzip > $TMPDIR/sowing-$Version.tar.gz
 if [ $do_install = "yes" ] ; then
     cp $TMPDIR/sowing-$Version.tar.gz /home/ftp/pub/sowing
