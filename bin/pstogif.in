@@ -41,6 +41,13 @@ if [ "$PNMCROP" = "" ] ; then PNMCROP=@PNMCROP@ ; fi
 if [ "$PBMTOXBM" = "" ] ; then PBMTOXBM=@PBMTOXBM@ ; fi
 if [ "$PPMTOGIF" = "" ] ; then PPMTOGIF=@PPMTOGIF@ ; fi
 
+
+# Set to -r150 for some on-line displays
+res=""
+if [ -n "$PSTOGIF_RES" ] ; then
+   res="-r$PSTOGIF_RES"
+fi
+
 #
 # First, convert into canonical form
 FNAME=`basename "$1"`
@@ -110,7 +117,7 @@ if [ -z "$gsmajorversion" ] ; then
     gsmajorversion=3
 fi
 if [ "$gsmajorversion" -gt 3 ] ; then
-    $GS -dQUIET -dNOPAUSE -sDEVICE=ppm -sOutputFile=$TMPDIR/$$-${BASE}.ppm -dBATCH $BASE.ps
+    $GS $res -dQUIET -dNOPAUSE -sDEVICE=ppm -sOutputFile=$TMPDIR/$$-${BASE}.ppm -dBATCH $BASE.ps
     if [ ! -f $TMPDIR/$$-${BASE}.ppm -a ! -f $TMPDIR/$$-${BASE}.1.ppm ] ; then
         # Try again, but with a showpage (needed for some versions of gs
         # when handling EPS files)
