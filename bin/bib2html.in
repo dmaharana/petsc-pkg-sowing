@@ -1,4 +1,5 @@
 #! @PERL@
+# -*- Mode:Perl; -*-
 #
 # Minimal processing of a BibTeX database file to make it html
 # Usage:
@@ -79,7 +80,8 @@ $check_valid_fields = 0;
     # title, author, publisher, year.
     %htmlformatsInBook = ( 'starttitle' => '<I>',
 			   'endtitle' => '</I>' );
-    @fieldlistInBook = (title, author, booktitle, publisher, note, year);
+    # chapter is the chapter title.
+    @fieldlistInBook = (title, chapter, author, booktitle, publisher, note, year);
     @fieldlistoptionalInBook = (address, pages, isbn, lccn, series, keywords,
 			        editor, annote, pubaddress, key );
 
@@ -375,7 +377,8 @@ while (<BIB>) {
 	    # ----
 	    # Make the "title" text bold, others regular
 	    print "Found $fieldname\n" if $debug;
-	    if ($fieldname eq "title") { $MakeBold="<B>"; } 
+	    if ($fieldname eq "title" || $fieldname eq "chapter") { 
+	        $MakeBold="<B>"; } 
 	    else { $MakeBold = ""; }
 	    # Output this line
             s%^([^=]*)[ ]*=\s*(.*)\s*$%<TR VALIGN=TOP><TD WIDTH=20><TD><I>$1</I><TD ALIGN="CENTER" WIDTH=15> = <TD>$MakeBold$2%;
