@@ -1,6 +1,9 @@
 dnl
 AC_INIT(Makefile.in)
-AC_PREREQ(2.13)
+dnl We pick autoconf 2.59 because the various 2.x autoconf versions are
+dnl not compatible with each other and this lets us fix on a particular
+dnl set of macros and fixes
+AC_PREREQ(2.59)
 AC_CONFIG_HEADER(include/sowingconfig.h:config.h.in)
 
 PAC_ARG_CACHING 
