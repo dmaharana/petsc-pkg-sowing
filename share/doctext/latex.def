@@ -15,6 +15,8 @@ e_synopsis %n\end{verbatim}%n\endvb%n%m=""
 em_dash    --- 
 eop        \endmanpage%n
 bop        \startmanpage%n
+bof
+eof
 linebreak  \nextline%n
 s_arg      %n\startarg{
 s_defn     {

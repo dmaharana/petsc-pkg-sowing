@@ -20,6 +20,8 @@ em_dash
 eop        %n</BODY></HTML>%n
 bop        <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">%n<HTML>%n\
 <HEAD>%n<META NAME="GENERATOR" CONTENT="DOCTEXT">%n
+bof
+eof
 # Arglist form
 s_arg_list %n<DL>%n
 s_arg_inlist %n<DT><B>
