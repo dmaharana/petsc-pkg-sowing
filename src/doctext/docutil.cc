@@ -160,7 +160,10 @@ int DocReadFuncSynopsis( InStream *ins, OutStream *outs )
     us_break = ins->breaktable['_'];
     ins->SetBreakChar( '\n', BREAK_OTHER );
     ins->SetBreakChar( '_', BREAK_ALPHA );
-    while (!ins->GetToken( maxlen, token, &nsp ) && token[0] != '{') {
+    // Stop when we find *either* a { or a ; 
+    // The semicolon test lets us handle prototype definitions
+    while (!ins->GetToken( maxlen, token, &nsp ) && token[0] != '{'
+	   && token[0] != ';' ) { 
       // Eventually we need to combine these into a single lookup list.
       if (strcmp( token, "register" ) == 0) {
 	/* Skip blanks */

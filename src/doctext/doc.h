@@ -24,7 +24,9 @@
 // N Named block
 // S Structure definition
 // E Enum definition
-#define MATCH_STRING "/*[@MDINSE]"
+// P routine in prototype form (may be prototype definition instead
+//   of actual function definition
+#define MATCH_STRING "/*[@MDINSEP]"
 
 // Leading string (null for C, could be // for C++, C for Fortran, # for
 // perl or shells)
@@ -50,6 +52,7 @@ extern char NewlineString[3];
 #define TEXT        'N'
 #define ENUMDEF     'E'
 #define STRUCTDEF   'S'
+#define PROTOTYPEDEF 'P'
 
 // Special lead character types (only in the first column in a comment)
 #define ARGUMENT    '.'
@@ -58,6 +61,6 @@ extern char NewlineString[3];
 #define VERBATIM    '$'
 
 // Don't forget to update these
-#define DOCTEXT_VERSION "1.1.5"
-#define DOCTEXT_DATE    "November 27, 2001"
+#define DOCTEXT_VERSION "1.1.6"
+#define DOCTEXT_DATE    "March 19, 2003"
 #endif

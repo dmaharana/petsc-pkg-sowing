@@ -402,7 +402,7 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
 
     // Next, output the synopsis if any (kind = ROUTINE or kind = MACRO)
     // We might want a flag to indicate in-line synopsis?
-    if (kind == ROUTINE) {
+    if (kind == ROUTINE || kind == PROTOTYPEDEF) {
 	long position;
 	ins->GetLoc( &position );
 	if (!at_end)
