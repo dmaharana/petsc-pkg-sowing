@@ -618,6 +618,7 @@ void TeXMustGetArg( FILE *fin, char *token, int maxtoken,
 {
     if (TeXGetGenArg( fin, token, maxtoken, LbraceChar, RbraceChar, 1 ) < 0) {
 	TeXAbort( caller, texcmd );
+    }
 }
 
 void TXnop( TeXEntry *e )
@@ -1115,9 +1116,9 @@ void TXinclude( TeXEntry *e )
 	/* Need a command to evaluate a buffer */
 	/* We cheat by pushing back { curtok } and making getarg to all
 	   of the work */
-	SCPushChar( RBraceChar );
-	SCPushTok( curtok );
-	SCPushChar( LBraceChar );
+	SCPushChar( RbraceChar );
+	SCPushToken( curtok );
+	SCPushChar( LbraceChar );
 	TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
 		       "TXinclude", e->name );
     }
@@ -1237,21 +1238,21 @@ void TXIfFileExists( TeXEntry *e )
 	char savetok[MAX_TOKEN];
 	fclose( fp );
 	/* Use genarg because we want to suppress evaluation */
-	if (TeXGetGenArg( fin, savetok, MAX_TOKEN, 
-			   LbraceChar, RbraceChar, 0 )) 
+	if (TeXGetGenArg( fpin[curfile], savetok, MAX_TOKEN, 
+			   LbraceChar, RbraceChar, 0 ) < 0) 
 	    TeXAbort( "TXIfFileExists", e->name );
-	if (TeXGetGenArg( fin, curtok, MAX_TOKEN, 
-			   LbraceChar, RbraceChar, 0 )) 
+	if (TeXGetGenArg( fpin[curfile], curtok, MAX_TOKEN, 
+			   LbraceChar, RbraceChar, 0 ) < 0) 
 	    TeXAbort( "TXIfFileExists", e->name );
 	/* Push back the second token */
 	SCPushToken( savetok );
     }
     else {
-	if (TeXGetGenArg( fin, curtok, MAX_TOKEN, 
-			   LbraceChar, RbraceChar, 0 ))
+	if (TeXGetGenArg( fpin[curfile], curtok, MAX_TOKEN, 
+			   LbraceChar, RbraceChar, 0 ) < 0)
 	    TeXAbort( "TXIfFileExists", e->name );
-	if (TeXGetGenArg( fin, curtok, MAX_TOKEN, 
-			   LbraceChar, RbraceChar, 0 ))
+	if (TeXGetGenArg( fpin[curfile], curtok, MAX_TOKEN, 
+			   LbraceChar, RbraceChar, 0 ) < 0)
 	    TeXAbort( "TXIfFileExists", e->name );
 	/* Push back the third token */
 	SCPushToken( curtok );
