@@ -302,8 +302,12 @@ for %s with mode %s\n",
     }
     else 
       status = 0;
-    next = 0;
-    linecnt = 0;
+    next       = 0;
+    linecnt    = 0;
+    colcnt     = 0;
+    expand_tab = 0;
+    nblanks    = 0;
+    didunget   = 0;
     ResetTables();
 }
 
@@ -321,38 +325,70 @@ InStreamFile::InStreamFile( const char *path, const char *mode )
     }
     fname = new char[strlen(path)+1];
     strcpy( fname, path );
-    linecnt = 0;
-    next = 0;
+    linecnt    = 0;
+    colcnt     = 0;
+    expand_tab = 0;
+    nblanks    = 0;
+    didunget   = 0;
+    next       = 0;
     ResetTables();
 }
 
 InStreamFile::InStreamFile( )
 {
-    fp	 = stdin;
-    next = 0;
-    linecnt = 0;
-    fname = 0;
+    fp	       = stdin;
+    next       = 0;
+    linecnt    = 0;
+    colcnt     = 0;
+    expand_tab = 0;
+    nblanks    = 0;
+    didunget   = 0;
+    fname      = 0;
     ResetTables();
 }
 
 int InStreamFile::GetChar( char *c )
 {
     int ch;
+
+    if (nblanks) {
+	// We expanded a tab; return one of the blanks.
+	*c = ' ';
+	nblanks--;
+	return 0;
+    }
     ch = fgetc( fp );
+    didunget = 0;
     if (ch == -1) {
 	*c = 0;
 	return 1;
 	}
-    if (ch == '\n') linecnt++;
+    if (ch == '\n') { linecnt++; colcnt = 0; }
+    if (expand_tab && ch == '\t') {
+      while (colcnt++ % 8) {
+	  nblanks++;
+      }
+      ch = ' ';
+    }
     *c = ch;
+    colcnt++;
     return 0;
 }
 
 int InStreamFile::UngetChar( char c )
 {
+    // Only one character pushback is guaranteed.  Linux has a bug in 
+    // that exceeding the pushback causes erroneous behavior without
+    // an error being reported.
+    if (didunget) {
+	fprintf( stderr, 
+		 "Warning: multiple unget in InStreamFile::UngetChar\n" );
+    }
     ungetc( c, fp );
+    didunget = 1;
     // This isn't quite correct unless the ch is the character we read.
-    if (c == '\n') linecnt--;
+    colcnt--;
+    if (c == '\n') { linecnt--; colcnt = 0; }
     return 0;
 }
 
@@ -366,12 +402,16 @@ int InStreamFile::UngetToken( char *token )
 int InStreamFile::GetLoc( long *position )
 {
     *position = ftell( fp );
+    //printf( "Position = %ld\n", *position );
     return 0;
 }
 
 int InStreamFile::SetLoc( long position )
 {
     fseek( fp, position, 0 );
+    //printf( "Seeked to %ld\n", position );
+    // linenum and colcnt are now broken!
+    nblanks = 0;  // In case there were pushed-back blanks.
     return 0;
 }
 

@@ -23,6 +23,7 @@ char *SaveRoutineName = 0;
 // a structured comment
 int InComment = 0;
 
+int DeTabFile = 1;
 const char *IgnoreString = 0;
 
 int DoDosFileNewlines = 0;
@@ -71,7 +72,8 @@ int main( int argc, char ** argv )
     char kind;
     CmdLine   *cmd;
     TextOut   *textout;
-    InStream  *incommands, *ins, *insin, *mapins;
+    InStream  *incommands, *ins, *mapins;
+    InStreamFile *insin;
     OutStream *outs;
     TextOutMap *map;
     int       one_per_file;
@@ -249,6 +251,9 @@ in the distribution, where ... is the path to the sowing directory\n\
 	    perror( "Reason:" );
 	    continue;
 	    }
+	if (DeTabFile) 
+	    insin->SetExpandTab( 1 );
+
 	// In case we have a large pushback
         ins = new InStreamBuf( 16000, insin );
 
@@ -282,6 +287,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 		continue;
 		}
 	    textout->SetRegisterValue( 0, routine );  // put name in putop register
+	    // printf( "routine: %s\n", routine );
 	    if (!baseoutfile) {
 	      one_per_file = 1;  // One manual page per "file"
 		MakeFileName( path, routine, lextension, outfilename );

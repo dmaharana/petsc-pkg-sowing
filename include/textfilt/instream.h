@@ -39,15 +39,16 @@ class InStream {
 
 /*
  * Derived classes.  
- * WARNING: You'd think that deriving a class from another with public would
- * allow you to import the public functions from the base class without having
- * to redeclare them.  You'd be wrong... .  Note that you DO get the variables!
  */
 #include <stdio.h>
 class InStreamFile : public InStream {
     FILE *fp;          /* Actual file pointer */
     int  linecnt;      /* Current input line */
+    int  colcnt;       /* Current position in line (column) */
+    int  expand_tab;   /* whether to expand tabs to every 8 columns */
+    int  nblanks;      /* number of pushed-back blanks */
     char *fname;       /* Name of file */
+    int  didunget;
 
     public:
     ~InStreamFile();
@@ -61,7 +62,9 @@ class InStreamFile : public InStream {
     int SetLoc( long ); 
     int GetSourceName( char *, int, int * );
     int GetLineNum( void );
-    int Close( );
+    int Close( void );
+
+    void SetExpandTab( int flag ) { expand_tab = flag; }
     };
 
 class InStreamBuf : public InStream {

@@ -94,6 +94,7 @@ void TeXGetTabularDefn( void )
 	    break;
 	case '|': break;   /* Ignore borders for now */
 	default:
+	    ;
 	}
 	p++;
     }
