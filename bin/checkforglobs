@@ -19,7 +19,7 @@ $print_full_line = 0;
 
 %MPICH2Leaders = ( "MPID_" => 1, "MPIR_" => 1, "mpir_" => 1, "MPI_" => 1, 
 	       "MPIU_" => 1, "MPIDI_" => 1, "MPIC_" => 1,
-		  "MPITEST_" => 1,
+		  "MPITEST_" => 1, "MPIDU_" => 1, 
 	     "PMPI_" => 1, "mpi_"  => 1, "pmpi_" => 1, 
 	     "ADIO_" => 1, "MPIO_" => 1, "PMPIO_" => 1,
 	     "ADIOI_"=> 1, "MPIOI_" => 1, "pmpio_" => 1, 
