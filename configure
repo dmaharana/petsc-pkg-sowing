@@ -2567,7 +2567,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile Makerules src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile docs/Makefile confdb/Makefile include/textfilt/textpath.h include/patchlevel.h include/sowingconfig.h:config.h.in" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile Makerules src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile docs/Makefile docs/doctext/Makefile confdb/Makefile include/textfilt/textpath.h include/patchlevel.h include/sowingconfig.h:config.h.in" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -2662,7 +2662,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile Makerules src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile docs/Makefile confdb/Makefile include/textfilt/textpath.h include/patchlevel.h"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile Makerules src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile docs/Makefile docs/doctext/Makefile confdb/Makefile include/textfilt/textpath.h include/patchlevel.h"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then

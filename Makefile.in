@@ -122,5 +122,10 @@ configure: configure.in
 	autoheader-2.13 -l confdb
 	autoconf-2.13 -l confdb
 clean:
-	for dir in $(SUBDIRS) ; do ( cd $$dir ; ${MAKE} clean ) ; done
-	/bin/rm -f lib/libsowing.a lib/libtfilter.a
+	-for dir in $(SUBDIRS) docs ; do ( cd $$dir ; ${MAKE} clean ) ; done
+	-/bin/rm -f lib/libsowing.a lib/libtfilter.a
+distclean:
+	-for dir in ${SUBDIRS} docs ; do (cd $$dir ; ${MAKE} distclean ) ; done
+	-rm -f lib/*.a config.status config.log config.cache Makerules \
+		Makefile 
+	-rm -f include/sowingconfig.h 

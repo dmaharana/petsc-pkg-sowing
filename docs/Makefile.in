@@ -35,7 +35,10 @@ config.txt: ../configure
 	../configure --help >config.txt
 clean:
 	rm -f bfort.ps tohtml.ps install.ps doctext.ps \
-		*.aux *.dvi *.toc *.log *.fn *.hux
+		*.aux *.dvi *.toc *.log *.fn *.hux *.err *.blg *.bbl
+distclean: clean
+	(cd doctext ; ${MAKE} distclean )
+	rm -f Makefile
 
 install-web: ${doc_HTML}
 	rm -rf ${wwwdir}/sowinginstall

@@ -33,3 +33,6 @@ clean:
 	/bin/rm -f *.o *~ $(PROGRAMS) 
 	(cd test ; if [ -s Makefile ] ; then $(MAKE) clean ; fi )
 	-/bin/rm -f doctext\ win32/debug/*
+distclean: clean
+	rm -f Makefile docpath.h
+

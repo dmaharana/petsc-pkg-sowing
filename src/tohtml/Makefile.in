@@ -29,6 +29,8 @@ clean:
 	-/bin/rm -f *.o *~ $(PROGRAMS)
 	-/bin/rm -f tohtml\ win32/debug/*
 	(cd testing ; ${MAKE} clean )
+distclean: clean
+	rm -f Makefile testing/Makefile tohtmlpath.h
 
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA    = $(INSTALL)

@@ -27,3 +27,5 @@ manpages:
 
 clean:
 	/bin/rm -f *.o *~ $(EXECS) ccc
+distclean: clean
+	rm -f Makefile

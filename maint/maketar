@@ -3,7 +3,20 @@
 # Make a tar file of the SOWING code, removing the RCS files etc.
 #
 TMPDIR=/sandbox/gropp
-notar=0
+do_install="no"
+notar="no"
+for arg in "$@" ; do
+    case $arg in 
+    -install) do_install="yes"
+    ;;
+    -notar) notar="yes"
+    ;;
+    *) echo "Unrecognized argument $arg"
+       exit 1
+       ;;
+    esac
+done
+
 echo "If you are making a distribution version, update src/doctext/doc.h"
 echo "and include/patchlevel.h.in for version number and date."
 
@@ -23,32 +36,32 @@ else
     mkdir $TMPDIR/sowingcopy
 fi
 cd $TMPDIR/sowingcopy
-tar cf - -C /homes/gropp sowing | tar xf -
+tar cf - -C /homes/gropp/sowing-proj sowing | tar xf -
 #
 # Update a few files
 #
-rm $TMPDIR/sowingcopy/sowing/aclocal.m4
-cp /home/MPI/mpich/aclocal.m4 $TMPDIR/sowingcopy/sowing
 rm $TMPDIR/sowingcopy/sowing/tarch
 cp /home/MPI/mpich/util/tarch $TMPDIR/sowingcopy/sowing
 #
 # Remove the RCS files, old executables, and debris
 cd $TMPDIR/sowingcopy/sowing
-rm -f config.cache config.log
 if [ -s Makefile ] ; then
-    make clean
+    make distclean
 fi
 # The sed for ' win32' to '\\ win32' handles blanks in the filenames
 find $TMPDIR/sowingcopy/sowing \( -name 'RCS' -o -name '*.o' -o -name '#*#' -o \
               -name '*~' -o -name 'mputil.mp*' -o -name Makefile -o \
 	      -name makefile -o -name '*.exe' -o -name core -o \
 	      -name '*.obj' -o -name '*.pdb' -o -name '*.lib' -o \
-	      -name '*.ilk' -o -name '*.pch' \) -print | \
+	      -name '*.ilk' -o -name '*.pch' -o -name 'CVS' \) -print | \
 	sed -e 's/ win32/\\ win32/g' | sed 's%^%/bin/rm -rf %g' | sh
 # Remove some directories
 /bin/rm -rf  $TMPDIR/sowingcopy/sowing/related
 /bin/rm -rf  $TMPDIR/sowingcopy/sowing/maint
 /bin/rm -rf  $TMPDIR/sowingcopy/sowing/docs/coding
+/bin/rm -rf  $TMPDIR/sowingcopy/sowing/notes
+/bin/rm -rf  $TMPDIR/sowingcopy/sowing/ToDo
+/bin/rm -f   $TMPDIR/sowingcopy/sowing/bin/doctext
 #
 # Remove the configure-generated files
 /bin/rm -f $TMPDIR/sowingcopy/sowing/tohtml/tohtmlpath.h
@@ -62,17 +75,24 @@ find $TMPDIR/sowingcopy/sowing \( -name 'RCS' -o -name '*.o' -o -name '#*#' -o \
 /bin/rm -f $TMPDIR/sowingcopy/sowing/make.log
 /bin/rm -f $TMPDIR/sowingcopy/sowing/docs/*.log
 /bin/rm -f $TMPDIR/sowingcopy/sowing/docs/*.hux
+/bin/rm -f $TMPDIR/sowingcopy/sowing/src/findlibs
 
+if [ $notar = "yes" ] ; then exit 0 ; fi
 #
 # rebuild the tar file
 cd $TMPDIR/sowingcopy
-if [ $notar = 1 ] ; then exit 0 ; fi
 #
 # Rename the directory
 mv $TMPDIR/sowingcopy/sowing $TMPDIR/sowingcopy/sowing-$Version
 tar cf - sowing-$Version | gzip > $TMPDIR/sowing-$Version.tar.gz
-cp $TMPDIR/sowing-$Version.tar.gz /home/ftp/pub/sowing
+if [ $do_install = "yes" ] ; then
+    cp $TMPDIR/sowing-$Version.tar.gz /home/ftp/pub/sowing
+    echo "sowing-$Version.tar.gz is in ftp:pub/sowing"
+else
+    cp $TMPDIR/sowing-$Version.tar.gz $HOME/sowing-proj
+fi
+#
+# Remove the copy
 cd $TMPDIR
 /bin/rm -rf $TMPDIR/sowingcopy $TMPDIR/sowing-$Version.tar.gz &
-echo "sowing-$Version.tar.gz is in ftp:pub/sowing"
 

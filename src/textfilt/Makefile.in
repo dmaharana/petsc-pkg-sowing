@@ -72,3 +72,5 @@ texttex.o: texttex.cc ../../include/textfilt/textout.h \
 
 clean:
 	/bin/rm -f *.o *~ 
+distclean: clean
+	rm -f Makefile

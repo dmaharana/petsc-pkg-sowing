@@ -21,6 +21,8 @@ doc_SOURCES = bfort.c
 clean:
 	-/bin/rm -f *.o *~ $(PROGRAMS)
 	-/bin/rm -f bfort\ win32/debug/*
+distclean: clean
+	rm -f Makefile
 
 install:
 	$(INSTALL_PROGRAM) bfort @bindir@/bfort

@@ -172,4 +172,4 @@ COPTIONS="$optflags"
 AC_SUBST(COPTIONS)
 AC_SUBST(CXXOPTIONS)
 
-AC_OUTPUT(Makefile Makerules src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile docs/Makefile confdb/Makefile include/textfilt/textpath.h include/patchlevel.h, chmod a+x bin/pstoxbm bin/pstogif)
+AC_OUTPUT(Makefile Makerules src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile docs/Makefile docs/doctext/Makefile confdb/Makefile include/textfilt/textpath.h include/patchlevel.h, chmod a+x bin/pstoxbm bin/pstogif)

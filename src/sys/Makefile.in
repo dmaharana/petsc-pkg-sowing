@@ -17,7 +17,9 @@ CLEANFILES =
 BASEOBJS = 
 
 clean:
-	-/bin/rm -f *.o *~ $(CLEANFILES)
+	-rm -f *.o *~ $(CLEANFILES)
+distclean: clean
+	rm -f Makefile
 
 lib: $(OBJS)
 	$(AR) cr ../../lib/libsowing.a ${OBJS}
