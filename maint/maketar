@@ -2,6 +2,8 @@
 #
 # Make a tar file of the SOWING code, removing the RCS files etc.
 #
+# texdir is the directory with the package files
+texdir=/homes/gropp/bin/share/tex
 TMPDIR=/sandbox/gropp
 do_install="no"
 notar="no"
@@ -19,6 +21,12 @@ done
 
 echo "If you are making a distribution version, update src/doctext/doc.h"
 echo "and include/patchlevel.h.in for version number and date."
+
+if [ ! -s $texdir/code.sty ] ; then
+    echo "Could not find $texdir/code.sty"
+    echo "Fix that file or maint/maketar and re-run maketar"
+    exit 1
+fi
 
 #
 # Generate version number for file name
@@ -39,9 +47,6 @@ cd $TMPDIR/sowingcopy
 tar cf - -C /homes/gropp/sowing-proj sowing | tar xf -
 #
 # Update a few files
-#
-rm $TMPDIR/sowingcopy/sowing/tarch
-cp /home/MPI/mpich/util/tarch $TMPDIR/sowingcopy/sowing
 #
 # Remove the RCS files, old executables, and debris
 cd $TMPDIR/sowingcopy/sowing
@@ -83,9 +88,10 @@ rm -f $TMPDIR/.f
 sed -e 's%/homes/gropp/bin/share/tex/%%g' \
     $TMPDIR/sowingcopy/sowing/docs/doctext/doctext.tex  > $TMPDIR/.f
 mv $TMPDIR/.f $TMPDIR/sowingcopy/sowing/docs/doctext/doctext.tex
-cp /homes/gropp/bin/share/tex/code.sty $TMPDIR/sowingcopy/docs/doctext
-cp /homes/gropp/bin/share/tex/fileinclude.sty $TMPDIR/sowingcopy/docs/doctext
-cp /homes/gropp/bin/share/tex/url.sty $TMPDIR/sowingcopy/docs/doctext
+#
+cp $texdir/code.sty $TMPDIR/sowingcopy/docs/doctext
+cp $texdir/fileinclude.sty $TMPDIR/sowingcopy/docs/doctext
+cp $texdir/urlsimple.sty $TMPDIR/sowingcopy/docs/doctext
 sed -e 's%/homes/gropp/bin/share/tex/%%g' \
     $TMPDIR/sowingcopy/sowing/docs/install.tex  > $TMPDIR/.f
 mv $TMPDIR/.f $TMPDIR/sowingcopy/sowing/docs/install.tex
@@ -95,9 +101,9 @@ mv $TMPDIR/.f $TMPDIR/sowingcopy/sowing/docs/bfort.tex
 sed -e 's%/homes/gropp/bin/share/tex/%%g' \
     $TMPDIR/sowingcopy/sowing/docs/tohtml.tex  > $TMPDIR/.f
 mv $TMPDIR/.f $TMPDIR/sowingcopy/sowing/docs/tohtml.tex
-cp /homes/gropp/bin/share/tex/code.sty $TMPDIR/sowingcopy/docs
-cp /homes/gropp/bin/share/tex/fileinclude.sty $TMPDIR/sowingcopy/docs
-cp /homes/gropp/bin/share/tex/url.sty $TMPDIR/sowingcopy/docs
+cp $texdir/code.sty $TMPDIR/sowingcopy/docs
+cp $texdir/fileinclude.sty $TMPDIR/sowingcopy/docs
+cp $texdir/url.sty $TMPDIR/sowingcopy/docs
 
 if [ $notar = "yes" ] ; then exit 0 ; fi
 #
