@@ -33,6 +33,9 @@ AC_PROG_INSTALL
 AC_CHECK_PROGS(AR,ar)
 AC_PROG_CC
 dnl C++ is needed for the newer textfilter programs
+dnl The autoconf 2.13 list of C++ compilers is very short. 
+dnl We add to it here
+AC_CHECK_PROGS(CXX, $CCC c++ g++ gcc CC cxx cc++ cl xlC pgCC, gcc)
 AC_PROG_CXX
 dnl
 dnl Add gcc checking options if present

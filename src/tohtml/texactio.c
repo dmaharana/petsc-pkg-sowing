@@ -2745,7 +2745,6 @@ void TXcite( TeXEntry *e )
     int  urltype;
     char *url, *text;
     char *p, *pn;
-    extern char *strchr();
 
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
@@ -3133,7 +3132,6 @@ void TXpsfig( e )
 TeXEntry *e;
 {
     char *p, *fname;
-    extern char *strchr();
 
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
