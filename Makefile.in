@@ -158,7 +158,7 @@ distclean:
 
 SOWINGCVSHOME = /home/gropp/cvsMaster_z
 # Make sure to update patchlevel.h.in if you change VERSION
-VERSION       = 1.1.7
+VERSION       = 1.1.8
 dist:
 	@if [ ! -d tmpdir ] ; then mkdir tmpdir ; fi
 	@rm -rf tmpdir/*
