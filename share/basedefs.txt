@@ -140,6 +140,8 @@ hdef htmlanchor 2 '<A NAME="'#1'">#2</A>'
 hdef texttt 1 {\tt #1}
 hdef emph 1 {\em #1}
 hdef textbf 1 {\bf #1}
+# This version of hrule is only approximate
+hdef hrule 0 '<HR>'
 #
 # This uses Javascript to pop up an alert box on a footnote indicated with
 # an asterisk
@@ -166,3 +168,8 @@ begin-env sloppypar 0
 end-env   sloppypar 0
 begin-env tiny 0
 end-env   tiny 0
+#
+# If's (not yet supported)
+#if ifvmode
+#if ifmmode
+
