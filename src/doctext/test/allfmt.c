@@ -19,7 +19,7 @@ N*/
 . a - the `really` important value
 
   Output Parameters:
-. p1 - pointer
+. p1 - pointer `to a`. Is this here?
 
   Notes:
   This system uses the line

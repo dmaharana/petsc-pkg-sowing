@@ -312,6 +312,8 @@ Shows all fancy formatting
 <PRE>
 #include "tools.h"
 #include "system/system.h"
+#include &lt;sys/time.h&gt; 
+#include &lt;sys/types.h&gt; 
 void f1( int a, char *b )
 </PRE>
 <H2>Input Parameters</H2>
@@ -321,7 +323,7 @@ void f1( int a, char *b )
 </DL>
 <P>
 <H2>Output Parameters</H2>
-<DL><DT><B>p1 </B> <DD> pointer
+<DL><DT><B>p1 </B> <DD> pointer <EM>to a</EM>. Is this here?
 </DL>
 <P>
 <H2>Notes</H2>
@@ -335,6 +337,11 @@ as well as
    table example
 </PRE>
 
+and a line ending in colon:
+<P>
+<BLOCKQUOTE>
+This is in quotation format
+</BLOCKQUOTE>
 <P>
 <P>
 <H2>Notes on Fnodes</H2>
