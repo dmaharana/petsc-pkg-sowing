@@ -6,3 +6,5 @@ The installation stuff in general needs more and careful testing (so as not to
 loose the working versions)
 
 The html.def etc files still seem to live in ~/textfilt !
+
+Doctext needs a way to generate index entries.
