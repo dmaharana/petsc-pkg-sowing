@@ -13,26 +13,30 @@ SHELL = @SHELL@
 all: tohtml bfort doctext mapnames
 
 lib/libsowing.a libs:
-	(cd src/sys ; ${MAKE} )
+	(cd src/sys && ${MAKE} )
 lib/libtfilter.a:
-	(cd src/textfilt ; ${MAKE} )
+	(cd src/textfilt && ${MAKE} )
 tohtml: libs
-	(cd src/tohtml ; ${MAKE} )
+	(cd src/tohtml && ${MAKE} )
 bfort: libs
-	(cd src/bfort ; ${MAKE} )
+	(cd src/bfort && ${MAKE} )
 doctext: 
-	(cd src/textfilt ; ${MAKE} )
-	(cd src/doctext ; ${MAKE} )
+	(cd src/textfilt && ${MAKE} )
+	(cd src/doctext && ${MAKE} )
 mapnames:
-	(cd src/textfilt ; ${MAKE} )
-	(cd src/mapnames ; ${MAKE} )
+	(cd src/textfilt && ${MAKE} )
+	(cd src/mapnames && ${MAKE} )
 
 manpages: bin/doctext
-	(cd src ; ${MAKE} manpages )
+	(cd src && ${MAKE} manpages )
 wwwpages: bin/doctext
-	(cd src ; ${MAKE} wwwpages )
+	(cd src && ${MAKE} wwwpages )
 bin/doctext: src/doctext/doctext
 	ln -s ../src/doctext/doctext bin/doctext
+
+doc: bin/doctext
+	(cd docs && ${MAKE} )
+	(cd confdb && ${MAKE} htmldoc && ${MAKE} texdoc)
 
 install:
 	@if [ ! -d $(exec_prefix) ] ; then \
@@ -115,9 +119,9 @@ uninstall:
 	-/bin/rm $(man1dir)/bfort.1
 
 testing:
-	(cd src/bfort/testing ; ${MAKE} testing)
-	(cd src/doctext/test ; ${MAKE} testing)
-	(cd src/tohtml/testing ; ${MAKE} testing)
+	(cd src/bfort/testing && ${MAKE} testing)
+	(cd src/doctext/test && ${MAKE} testing)
+	(cd src/tohtml/testing && ${MAKE} testing)
 
 configure: configure.in
 	cat acconfigl.h confdb/acconfig.h > acconfig.h
@@ -126,10 +130,10 @@ configure: configure.in
 	rm -f acconfig.h
 
 clean:
-	-for dir in $(SUBDIRS) docs ; do ( cd $$dir ; ${MAKE} clean ) ; done
+	-for dir in $(SUBDIRS) docs ; do ( cd $$dir && ${MAKE} clean ) ; done
 	-/bin/rm -f lib/libsowing.a lib/libtfilter.a
 distclean:
-	-for dir in ${SUBDIRS} docs ; do (cd $$dir ; ${MAKE} distclean ) ; done
+	-for dir in ${SUBDIRS} docs ; do (cd $$dir && ${MAKE} distclean ) ; done
 	-rm -f lib/*.a config.status config.log config.cache Makerules \
 		Makefile 
 	-rm -f include/sowingconfig.h 
