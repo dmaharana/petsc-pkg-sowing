@@ -97,6 +97,7 @@ static int InVerbatim = 0;    /* Verbatim has special processing */
 static int DebugArgs  = 0;    /* Set to one to dump arg processing */
 int DebugCommands = 0;        /* Set to one to dump command processing */
 int DebugOutput   = 0;        /* Set to one to dump output processing */
+int DebugFile     = 0;        /* Debug file related commands */
 static int UseIfTex   = 0;    /* Set to use begin{iftex} ... instead of 
 				 begin{ifinfo} code */
 
@@ -234,6 +235,11 @@ void TXSetDebug( int flag )
 {
     DebugArgs     = flag;
     DebugCommands = flag;
+}
+
+void TXSetDebugFile( int flag )
+{
+    DebugFile = flag;
 }
 
 void TXSetUseIfTex( int flag )
@@ -1122,7 +1128,7 @@ void TXinclude( TeXEntry *e )
 	TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
 		       "TXinclude", e->name );
     }
-    if (DebugCommands) 
+    if (DebugCommands || DebugFile) 
 	fprintf( stdout, "About to open |%s|\n", curtok );
     
     if (!InDocument) {
@@ -1183,7 +1189,7 @@ void TXfileinclude( TeXEntry *e )
     curtok[0] = 0;
     TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
 		   "TXfileinclude", e->name );
-    if (DebugCommands) 
+    if (DebugCommands || DebugFile) 
 	fprintf( stdout, "About to open |%s|\n", curtok );
 
     fp = fopen( curtok, "r" );
@@ -1231,6 +1237,8 @@ void TXIfFileExists( TeXEntry *e )
     curtok[0] = 0;
     TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
 		   "TXIfFileExists", e->name );
+    if (DebugCommands || DebugFile) 
+	fprintf( stdout, "Atempting to open file %s\n", curtok );
     fp = fopen( curtok, "r" );
     /* We need to read these args *but not evaluate them* until after
        they are pushed back */
@@ -1280,8 +1288,7 @@ void TXSetSplitLevel( int sl, char *dir )
    variable LastSection.
 
  */
-void TXsection( e )
-TeXEntry *e;
+void TXsection( TeXEntry *e )
 {
     int level = (int)(e->ctx), ch;
     int dummy;
@@ -1869,8 +1876,7 @@ int      doout;
 /* 
    See if the named file exists in the current or split directory 
  */
-int FileExists( fname )
-char *fname;
+int FileExists( char *fname )
 {
     FILE *fp;
     int  exists = 0;
