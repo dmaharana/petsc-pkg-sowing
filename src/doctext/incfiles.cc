@@ -13,14 +13,16 @@
 FILE         *incfd = 0;
 OutStreamBuf *includes = 0;
 
+#define MAX_INCLUDE_BUF 256
+
 int SetIncludeFile( const char *path )
 {
     if (path)
 	incfd = fopen( path, "r" );
     else
 	incfd = 0;
-    includes = new OutStreamBuf( 128 );    
-	return includes->status;
+    includes = new OutStreamBuf( MAX_INCLUDE_BUF );    
+    return includes->status;
 }
 
 int OutputIncludeInfo( TextOut *textout )
@@ -31,9 +33,31 @@ int OutputIncludeInfo( TextOut *textout )
         while ((c = getc( incfd )) != EOF) 
 	    textout->PutChar( c );
 	}
-     // Output the includes local to this file
-     
-     return 0;
+
+    // Output the includes local to this file
+    // Change into ...\n... into #include ...\n#include ...\n
+    const char *p = includes->GetBuffer();
+    const char *pend;
+    char  tmpbuf[MAX_INCLUDE_BUF+10];
+
+    strcpy( tmpbuf, "#include " );
+    while (p && *p) {
+      while (*p && *p == ' ') p++;
+      pend = strchr( p, '\n' );
+      if (!pend) {
+	strcpy( tmpbuf+9, p );
+	p = 0;
+      }
+      else {
+	int plen = 1+(int)(pend - p);
+	strncpy( tmpbuf+9, p, plen );
+	tmpbuf[9 + plen] = 0;
+	p = p + plen;
+      }
+      textout->PutToken( 0, tmpbuf );
+    }
+
+    return 0;
 }
 
 // Read a I ... I and save it
@@ -68,5 +92,5 @@ int SaveIncludeFile( InStream *ins, char *matchstring )
 int ClearIncludeFile( )
 {
     includes->Reset();
-	return 0;
+    return 0;
 }

@@ -2120,7 +2120,7 @@ done
 
     #
     # getdomainname is special BECAUSE IT MAY BE USELESS (!Network computing 
-    # indeed - stuff like this is why Windows95/NT WILL WIN). 
+    # indeed - stuff like this is why Windows2000/NT WILL WIN). 
     # We don't even check for it.
 fi
 
@@ -2339,7 +2339,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile docs/Makefile include/textfilt/textpath.h include/patchlevel.h include/sowingconfig.h:config.h.in" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile docs/Makefile confdb/Makefile include/textfilt/textpath.h include/patchlevel.h include/sowingconfig.h:config.h.in" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -2427,7 +2427,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile docs/Makefile include/textfilt/textpath.h include/patchlevel.h"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile docs/Makefile confdb/Makefile include/textfilt/textpath.h include/patchlevel.h"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
@@ -2604,5 +2604,4 @@ EOF
 chmod +x $CONFIG_STATUS
 rm -fr confdefs* $ac_clean_files
 test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
-
 

@@ -6,7 +6,7 @@ ALL: doctext doc2lt
 
 ##### User configurable options #####
 
-CCC         = @CXX@
+CXX         = @CXX@
 AR          = @AR@ cr
 RANLIB      = @RANLIB@
 CPPFLAGS    = -I../../include/textfilt -I../../include
@@ -14,7 +14,7 @@ ALL_CFLAGS = @optflags@ $(CFLAGS)
 ### End User configurable options ###
 # Without the empty .suffixes, some makes choose the wrong rules
 .SUFFIXES:
-.SUFFIXES: .o .C .cxx
+.SUFFIXES: .o .cc
 
 SHELL = /bin/sh
 
@@ -26,62 +26,27 @@ default: $(EXECS)
 
 doctext: doctext.o docutil.o keyword.o dotfmat.o incfiles.o quotefmt.o \
 	textb.o $(LIBS)
-	$(CCC) -o doctext doctext.o docutil.o keyword.o dotfmat.o \
+	$(CXX) -o doctext doctext.o docutil.o keyword.o dotfmat.o \
 	incfiles.o quotefmt.o textb.o $(LIBS)
 
 doc2lt: doc2lt.o docutil.o $(LIBS)
-	$(CCC) -o doc2lt doc2lt.o docutil.o $(LIBS)
+	$(CXX) -o doc2lt doc2lt.o docutil.o $(LIBS)
+
+bfort: bfort.o $(LIBS)
+	$(CXX) -o bfort bfort.o $(LIBS)
 
 manpages:
-	../../bin/doctext -quotefmt -mpath ../../man/man1 -ext 1 doctext.cxx
-	../../bin/doctext -quotefmt -mpath ../../man/man1 -ext 1 doc2lt.cxx
+	../../bin/doctext -quotefmt -mpath ../../man/man1 -ext 1 doctext.cc
+	../../bin/doctext -quotefmt -mpath ../../man/man1 -ext 1 doc2lt.cc
 wwwpages:
-	../../bin/doctext -html -quotefmt -mpath ../../www/www1 -ext 1 doctext.cxx
-	../../bin/doctext -html -quotefmt -mpath ../../www/www1 -ext 1 doc2lt.cxx
-
-#
-# These were generated with gcc -MM -I../../include/textfilt *.C
-doc2lt.o: doc2lt.C ../../include/textfilt/textout.h \
- ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
- ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
- ../../include/textfilt/cmdline.h docutil.h docpath.h \
- ../../include/textfilt/inutil.h ../../include/textfilt/maptok.h
-doctext.o: doctext.C doc.h ../../include/textfilt/textout.h \
- ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
- ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
- ../../include/textfilt/cmdline.h docutil.h dotfmt.h \
- ../../include/textfilt/inutil.h ../../include/textfilt/maptok.h \
- keyword.h ../../include/textfilt/tfile.h docpath.h quotefmt.h \
- incfiles.h
-docutil.o: docutil.C ../../include/textfilt/textout.h \
- ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
- ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h
-dotfmat.o: dotfmat.C ../../include/textfilt/instream.h \
- ../../include/textfilt/textout.h ../../include/textfilt/outstream.h \
- ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
- ../../include/textfilt/inutil.h docutil.h dotfmt.h keyword.h
-incfiles.o: incfiles.C doc.h ../../include/textfilt/textout.h \
- ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
- ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
- incfiles.h
-keyword.o: keyword.C ../../include/textfilt/textout.h \
- ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
- ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
- doc.h
-quotefmt.o: quotefmt.C quotefmt.h ../../include/textfilt/textout.h \
- ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
- ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h
-textb.o: textb.C ../../include/textfilt/textout.h \
- ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
- ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h
+	../../bin/doctext -html -quotefmt -mpath ../../www/www1 -ext 1 doctext.cc
+	../../bin/doctext -html -quotefmt -mpath ../../www/www1 -ext 1 doc2lt.cc
 
 .c.o:
 	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) -c $*.c
 
-.cxx.C:
-	ln -s $*.cxx $*.C
-.C.o:
-	$(CCC) -c $(CPPFLAGS) $(ALL_CFLAGS) $*.C
+.cc.o:
+	$(CXX) -c $(CPPFLAGS) $(ALL_CFLAGS) $*.cc
 
 clean:
 	/bin/rm -f *.o *~ $(EXECS) 

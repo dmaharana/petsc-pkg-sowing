@@ -118,6 +118,9 @@ testing:
 	(cd src/doctext/test ; $(MAKE) testing)
 	(cd src/tohtml/testing ; $(MAKE) testing)
 
+configure: configure.in
+	autoheader
+	autoconf
 clean:
 	for dir in $(DIRS) ; do ( cd $$dir ; $(MAKE) clean ) ; done
 	/bin/rm -f lib/libsowing.a lib/libtfilter.a

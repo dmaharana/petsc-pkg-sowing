@@ -766,7 +766,7 @@ echo '<H1>Web pages for My Routines</H1>' >> www/index.html
 echo '<H2>My Routines</H2>'  >> www/index.html
 echo '<MENU>' >> www/index.html
 ls -1 www/man3 | \
-    sed -e 's%^\(.*\).html$$%<LI><A HREF="man3/\1.html">\1</A>%g' \
+    sed -e 's%^\(.*\).html$%<LI><A HREF="man3/\1.html">\1</A>%g' \
         >> www/index.html
 echo '</MENU>' >> www/index.html
 \end{verbatim}

@@ -100,11 +100,11 @@ int DocReadDescription( InStream *ins, char *matchstring,
 	      ins->UngetChar( ch );
 	    }
 	    ch = ' ';
-	    }
+	}
 	else if (newline_cnt && isspace(ch)) {
 	    // Allow spaces in the newline field; don't output.
 	    continue; 
-	    }
+	}
 	else
 	    newline_cnt = 0;
 	if (newline_cnt == 2) break;
@@ -242,6 +242,8 @@ int DocReadMacroSynopsis( InStream *ins, char *matchstring, OutStream *outs,
 
     // Text, until two consequtive newlines OR end of comment
     newline_cnt = 1;
+    SkipLeadingString( ins, &ch );
+    ins->UngetChar( ch );
 
     state = b_state;
     while (state >= 0 && !ins->GetChar( &ch )) {
@@ -260,13 +262,17 @@ int DocReadMacroSynopsis( InStream *ins, char *matchstring, OutStream *outs,
 
 	if (ch == '\n') {
 	    newline_cnt++ ; 
-	    }
+	    SkipLeadingString( ins, &ch );
+	    ins->UngetChar( ch );
+	    ch = '\n';
+	}
 	else if (newline_cnt && isspace(ch)) {
 	    // Allow spaces in the newline field; don't output.
 	    continue; 
 	    }
-	else
+	else {
 	    newline_cnt = 0;
+	}
 	if (newline_cnt == 2) break;
 	outs->PutChar( ch );
 	}

@@ -1,4 +1,5 @@
 #include <sys/time.h> /*I <sys/time.h> I*/
+#include <sys/types.h> /*I <sys/types.h> I*/
 /*N
  Fnode
 

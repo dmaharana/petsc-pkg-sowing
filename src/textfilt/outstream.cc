@@ -160,6 +160,7 @@ int OutStreamBuf::PutChar( const char ch )
     	delete buffer;
     	buffer = tmp;
     	maxlen = 2 * maxlen;
+	if (debug_flag) printf( "OutStreamBuf- doubling buffer\n" );
 	// fprintf( stderr, "Doubling buffer\n" );
         }
     if (debug_flag && ch) printf( "OutStreamBuf::PutChar of %c\n", ch );
