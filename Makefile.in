@@ -142,11 +142,13 @@ testing:
 	(cd src/doctext/test && ${MAKE} testing)
 	(cd src/tohtml/testing && ${MAKE} testing)
 
-configure: configure.in
+configure: configure.in acconfigl.h confdb/acconfig.h
 	cat acconfigl.h confdb/acconfig.h > acconfig.h
 	autoheader
 	autoconf
 	rm -f acconfig.h
+confdb/acconfig.h: confdb/acconfig.h.in
+	(cd confdb && $(MAKE) acconfig.h)
 
 clean:
 	-for dir in $(SUBDIRS) docs ; do ( cd $$dir && ${MAKE} clean ) ; done

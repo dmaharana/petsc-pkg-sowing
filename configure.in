@@ -30,6 +30,7 @@ PAC_ARG_WWWDIR
 dnl Checks for programs.
 AC_PROG_RANLIB
 AC_PROG_INSTALL
+PAC_PROG_CHECK_INSTALL_WORKS
 AC_CHECK_PROGS(AR,ar)
 AC_PROG_CC
 dnl C++ is needed for the newer textfilter programs
