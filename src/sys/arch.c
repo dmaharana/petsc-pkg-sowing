@@ -1,5 +1,4 @@
 #include "sowing.h"
-#include <string.h>
 
 
 /*

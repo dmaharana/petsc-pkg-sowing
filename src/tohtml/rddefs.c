@@ -19,7 +19,7 @@ char *TXConvertQuotes( char *value, char cmdchar )
   char *def, *p, *def_p;
   int  in_cmd = 0;
 
-  def = (char *)malloc( strlen(value) + 1 );   CHKPTRN(def);
+  def = (char *)MALLOC( strlen(value) + 1 );   CHKPTRN(def);
   def_p = def;
 
   p = value;

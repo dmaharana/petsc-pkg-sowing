@@ -76,7 +76,8 @@ fi
 # Newer GS versions can do this directly
 gsversion=`$GS -version | sed -n 1p | \
 	sed -e 's/Aladdin//g' -e 's/Ghostscript//g' -e 's/(.*)//g'`
-gsmajorversion=`echo $gsversion | sed -e 's/[ ]*\([0-9]\)\.[0-9]*/\1/g'`
+# We added the A-Z to remove things like "BETA VERSION"
+gsmajorversion=`echo $gsversion | sed -e 's/[ A-Z]*\([0-9]\)\.[0-9]*/\1/g'`
 if [ -z "$gsmajorversion" ] ; then
     # Guess that it is recent...
     gsmajorversion=3

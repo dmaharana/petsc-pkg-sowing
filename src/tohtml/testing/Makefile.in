@@ -80,7 +80,7 @@ test12/test12.html: test12.tex
 	../tohtml -default test12.tex
 	../tohtml -default test12.tex
 test7a.html: test7.tex
-	../tohtml -default -htables -split -1
+	../tohtml -default -htables -split -1 test7.tex
 	mv test7.html test7a.html
 
 # default with active token processing

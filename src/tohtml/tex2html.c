@@ -74,8 +74,7 @@ static int   Esp     = 0;
 static char *(EndName[50]);
 static char *LastFont = 0;
 
-void TeXoutNewline( fout )
-FILE *fout;
+void TeXoutNewline( FILE *fout )
 {
     if (!InDocument || !InOutputBody) return;
     if (DebugOutput) fprintf( stdout, "TeXoutNewline\n" );
@@ -83,7 +82,6 @@ FILE *fout;
    space; RTF does not */
     TeXoutcmd( fout, " " );
     TeXoutstr( fpout, NewLineString );
-
 }
 
 /* Handle \\ in TeX file */

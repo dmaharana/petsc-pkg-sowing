@@ -144,7 +144,7 @@ char CmdName[65];
    section may be entered into the label table (and hence to the aux file for
    the section pass). */
 static int CurSeqnum     = 0;
-static char CurNodename[100];
+static char CurNodename[256];
 
 /* Citation characters.  The default is [ and ] */
 char *CitePrefix = 0;
@@ -205,7 +205,7 @@ static int SSp = -1;
 #define MAX_BLOC_FNAME 50
 typedef struct {
     int lineno;
-    char filename[50];
+    char filename[255];
     } BraceElment;
 #define MAX_BLOC 50
 static BraceElment bloc[MAX_BLOC];
@@ -297,12 +297,10 @@ char *routine, *msg;
 }
 
 /* Output a command */
-void TeXoutcmd( fout, str )
-FILE *fout;
-char *str;
+void TeXoutcmd( FILE *fout, char *str )
 {
-    char buf[100];
-    if (strlen(str) > 100) {
+    char buf[102];
+    if (strlen(str) >= 100) {
 	fprintf( stderr, 
 		 "Error in TeXoutcmd (internal error, command too long)!\n" );
 	return;
@@ -1315,7 +1313,7 @@ TeXEntry *e;
     PUSHCURTOK;
     if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
 	TeXAbort( "TXsection(arg)", e->name );
-    strcpy( CurNodename, curtok );
+    strncpy( CurNodename, curtok, 255 );
 
 /* debug */
     if (IncludeSectionNumbers) {
@@ -1419,7 +1417,7 @@ TeXEntry *e;
     PUSHCURTOK;
 	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
 	    TeXAbort( "TXsection", (char *)0 );
-    strcpy( CurNodename, curtok );
+    strncpy( CurNodename, curtok, 255 );
 
     WriteHeadPage( fpout );
     WriteFileTitle( fpout, curtok );

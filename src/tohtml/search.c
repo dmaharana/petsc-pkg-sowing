@@ -63,7 +63,7 @@ SRList *lctx;
 	cur = lctx->HASH[i];
 	while (cur) {
 	    next = cur->next;
-	    free( cur );
+	    FREE( cur );
 	    cur = next;
 	}
     }
@@ -177,19 +177,19 @@ int  *number;
 #ifdef DEBUG
     fprintf( stderr, "Did not find topic; inserting...\n" );
 #endif    
-    new = (LINK *)malloc( sizeof(LINK) );
+    new = (LINK *)MALLOC( sizeof(LINK) );
     if (!new) {
 	fprintf( stderr, "Out of memory in symbol table\n" );
 	exit(1);
     }
     new->refcount = 0;    
-    new->topicname = malloc( strlen(pcopy) + 1 );
+    new->topicname = MALLOC( strlen(pcopy) + 1 );
     if (!new->topicname) {
 	fprintf( stderr, "Out of memory in symbol table\n" );
 	exit(1);
     }
     strcpy( new->topicname, pcopy );
-    new->entryname = malloc( SR_ENTRY_SIZE );
+    new->entryname = MALLOC( SR_ENTRY_SIZE );
     if (!new->entryname) {
 	fprintf( stderr, "Out of memory in symbol table\n" );
 	exit(1);
@@ -290,19 +290,19 @@ int  *number;
 #ifdef DEBUG
     fprintf( stderr, "Did not find topic; inserting...\n" );
 #endif    
-    new = (LINK *)malloc( sizeof(LINK) );
+    new = (LINK *)MALLOC( sizeof(LINK) );
     if (!new) {
 	fprintf( stderr, "Out of memory in symbol table\n" );
 	exit(1);
     }
     new->refcount = 0;    
-    new->topicname = malloc( strlen(pcopy) + 1 );
+    new->topicname = MALLOC( strlen(pcopy) + 1 );
     if (!new->topicname) {
 	fprintf( stderr, "Out of memory in symbol table\n" );
 	exit(1);
     }
     strcpy( new->topicname, pcopy );
-    new->entryname = malloc( SR_ENTRY_SIZE );
+    new->entryname = MALLOC( SR_ENTRY_SIZE );
     if (!new->entryname) {
 	fprintf( stderr, "Out of memory in symbol table\n" );
 	exit(1);

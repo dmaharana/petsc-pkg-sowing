@@ -103,12 +103,13 @@ trap 'rm -f ${BASE}.ppm; exit' 1 2 3 4 13 15
 # Newer GS versions can do this directly
 gsversion=`$GS -version | sed -n 1p | \
 	sed -e 's/Aladdin//g' -e 's/Ghostscript//g' -e 's/(.*)//g'`
-gsmajorversion=`echo $gsversion | sed -e 's/[ ]*\([0-9]\)\.[0-9]*/\1/g'`
+# We added the A-Z to remove things like "BETA VERSION"
+gsmajorversion=`echo $gsversion | sed -e 's/[ A-Z]*\([0-9]\)\.[0-9]*/\1/g'`
 if [ -z "$gsmajorversion" ] ; then
     # Guess that it is recent...
     gsmajorversion=3
 fi
-if [ $gsmajorversion -gt 3 ] ; then
+if [ "$gsmajorversion" -gt 3 ] ; then
     $GS -dQUIET -dNOPAUSE -sDEVICE=ppm -sOutputFile=$TMPDIR/$$-${BASE}.ppm -dBATCH $BASE.ps
     if [ ! -f $TMPDIR/$$-${BASE}.ppm -a ! -f $TMPDIR/$$-${BASE}.1.ppm ] ; then
         # Try again, but with a showpage (needed for some versions of gs

@@ -17,11 +17,11 @@ section    %n<H2>%1</H2>%n
 s_synopsis %n<H2>Synopsis</H2>%n<PRE>%n
 e_synopsis %n</PRE>%n
 em_dash    
-eop        %n</BODY></HTML>%n
-bop        <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">%n<HTML>%n\
+eof        %n</BODY></HTML>%n
+bof        <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">%n<HTML>%n\
 <HEAD>%n<META NAME="GENERATOR" CONTENT="DOCTEXT">%n
-bof
-eof
+bop
+eop
 # Arglist form
 s_arg_list %n<DL>%n
 s_arg_inlist %n<DT><B>

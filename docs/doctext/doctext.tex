@@ -200,7 +200,8 @@ comments to your file.
 The \code{doctext} program searches for C comments of the form \code{/*}{\em c} \code{...}
 {\em c}\code{*/}, where {\em c} is a single character indicating the type of
 documentation.  The available types are \code{@} for
-routines, \code{M} for macros, and \code{D} for
+routines, \code{M} for macros, \code{E} for enum definitions, 
+\code{S} for struct definitions, and \code{D} for
 other miscellaneous documentation (such as introductions or descriptions of
 programs rather than routines).
 In all cases, the structured comment has this form:
@@ -306,6 +307,28 @@ M*/
 It is important that the word {\em Synopsis} be used; \code{doctext} and
 related programs (\code{bfort} and \code{doc2lt}) use this name to find the
 C-like declaration for the macro. 
+
+\subsection{Enums and Structs}
+A C enum may be documented using the \code{E} command:
+\begin{example}
+/*E
+  Read_t - Enum for read modes
+E*/
+typedef enum { Read, ReadBack } Read_t;
+\end{example}
+
+A C struct definition uses the \code{S} command:
+\begin{example}
+/*S
+  File_t - Structure defining a file type
+S*/
+typedef struct { 
+    Read_t mode;
+    int    fd;
+    int (*readfn)( int, void *, int );
+    int (*writefn)( int, void *, int );
+    } File_t;
+\end{example}
 
 \node Miscellaneous Documentation,,,The doctext Program
 \subsection{Miscellaneous Documentation}

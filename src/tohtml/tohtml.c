@@ -3,18 +3,23 @@
 #include "sowing.h"
 #include "patchlevel.h"
 
+#ifdef HAVE_UNISTD_H
+/* For unlink */
+#include <unistd.h>
+#endif
+
 #include "tex.h"
-void ProcessFile ANSI_ARGS(( int, char **, FILE *, FILE *, 
-			     void (*)( int, char **, FILE *, FILE * ) ));
-char *SkipHTML ANSI_ARGS(( char * ));
-void CopyImgFiles ANSI_ARGS(( char * ));
-void PrintHelp ANSI_ARGS(( char * ));
+void ProcessFile ( int, char **, FILE *, FILE *, 
+			     void (*)( int, char **, FILE *, FILE * ) );
+char *SkipHTML ( char * );
+void CopyImgFiles ( char * );
+void PrintHelp ( char * );
 
-/* void ProcessInfoFile ANSI_ARGS(( int, char **, FILE *, FILE * )); */
+/* void ProcessInfoFile ( int, char **, FILE *, FILE * ); */
 
-void RemoveExtension ANSI_ARGS(( char * ));
+void RemoveExtension ( char * );
 
-/* void ProcessLatexFile ANSI_ARGS(( int, char **, FILE *, FILE * ));*/
+/* void ProcessLatexFile ( int, char **, FILE *, FILE * );*/
 
 void SaveCommandLine( int, char *[] );
 char *GetCommandLine( void );
@@ -78,7 +83,7 @@ static int wrotebody=0;
 int main( int argc, char *argv[] )
 {
     FILE *fpin, *fpout;
-    void (*process)ANSI_ARGS(( int, char **, FILE *, FILE * )) = 
+    void (*process)( int, char **, FILE *, FILE * ) = 
 	ProcessLatexFile;
     int  splitlevel = -1;
     char tmpstr[128];
@@ -88,6 +93,9 @@ int main( int argc, char *argv[] )
 	PrintHelp( argv[0] );
 	return 1;
     }
+
+    /* Check for any debugging options in the memory tracing code */
+    TrInit();
 
     if (SYArgHasName( &argc, argv, 1, "-version" )) {
 	printf( "tohtml from version %d.%d.%d %s of %s\n", 
@@ -204,7 +212,7 @@ int main( int argc, char *argv[] )
 	if (UserIndexName) {
 	    fprintf( stderr, "Only one index name allowed\n" );
 	}
-	UserIndexName = (char *)malloc( strlen(tmpstr) + 1 );
+	UserIndexName = (char *)MALLOC( strlen(tmpstr) + 1 );
 	strcpy( UserIndexName, tmpstr );
     }
 
@@ -400,7 +408,10 @@ char *name;
     /* Too late if we've written the body statement */
     if (DebugOutput) fprintf( stdout, "WriteTileTitle\n" );
     if (wrotebody) return;
-    fprintf( fp, "<TITLE>%s</TITLE>%s", name, NewLineString );
+    /* Make sure that we remove TOK_START and TOK_END from name */
+    fprintf( fp, "<TITLE>" );
+    WriteString( fp, name );
+    fprintf( fp, "</TITLE>%s", NewLineString );
 }
 
 void WriteJumpDestination( fp, name, title )
@@ -521,7 +532,7 @@ void ProcessFile( argc, argv, fpin, fpout, process )
 int  argc;
 char **argv;
 FILE *fpin, *fpout;
-void (*process)ANSI_ARGS(( int, char **, FILE *, FILE * ));
+void (*process)( int, char **, FILE *, FILE * );
 {
     SCSetTranslate( SCHTMLTranslate );
     WriteHeader( fpout );
@@ -549,9 +560,7 @@ FILE *fp;
 }	
 
 
-void WriteString( fp, str )
-FILE *fp;
-char *str;
+void WriteString( FILE *fp, char *str )
 {
     int  in_tok = 0;
 
@@ -978,6 +987,7 @@ FILE *fpout;
 }
 
 static FILE *bofpage = 0;
+
 void WriteBeginPage( fpout )
 FILE *fpout;
 {

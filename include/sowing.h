@@ -16,6 +16,9 @@
 /* Include the definitions from configure */
 #if !defined(WIN32)
 #include "sowingconfig.h"
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 #else
 #define __MSDOS__
 #define HAVE_STDLIB_H 1
@@ -24,9 +27,6 @@
 
 /* System name code */
 void SYGetArchType( char *, int );
-
-/* Include space tracing code */
-#include "trspace.h"
 
 /* Include argument processing code */
 #include "getopts.h"
@@ -39,5 +39,8 @@ void SYGetArchType( char *, int );
 
 /* Include daytime information */
 #include "daytime.h"
+
+/* Include space tracing code */
+#include "trspace.h"
 
 #endif

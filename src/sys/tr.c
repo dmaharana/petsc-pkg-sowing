@@ -1,5 +1,8 @@
-#define MEMORY_TRACING
+#define TRSPACE_SOURCE
 #include "sowing.h"
+#ifndef MEMORY_TRACING
+#define MEMORY_TRACING 1
+#endif
 #include <stdio.h>
 #include <string.h>
 #define _TR_SOURCE
@@ -417,15 +420,15 @@ void trdump( FILE *fp )
 typedef struct { int id, size, lineno; char *fname; } TRINFO;
 static int IntCompare( TRINFO *a, TRINFO *b )
 {
-return a->id - b->id;
+    return a->id - b->id;
 }
 static FILE *TRFP;
 /*ARGSUSED*/
 static void PrintSum( TRINFO **a, VISIT order, int level )
 { 
-if (order == postorder || order == leaf) 
-    fprintf( TRFP, "[%d]%s[%d] has %d\n", 
-	     (*a)->id, (*a)->fname, (*a)->lineno, (*a)->size );
+    if (order == postorder || order == leaf) 
+	fprintf( TRFP, "[%d]%s[%d] has %d\n", 
+		 (*a)->id, (*a)->fname, (*a)->lineno, (*a)->size );
 }
 
 /*+C
@@ -726,4 +729,28 @@ fflush( fp );
 void TrSetMaxMem( int size )
 {
     TRMaxMemAllow = size;
+}
+
+void TrInit( void )
+{
+    char *p;
+    char *v;
+
+    /* This is a special entry point that checks an environment variable 
+       for the debug level.  This routine does not *need* to be called,
+       but it can help */
+
+    v = getenv("TR_VERBOSE");
+    if (getenv("TR_DEBUG")) {
+	trDebugLevel( 1 );
+	if (v && strcmp(v,"yes")) printf( "Setting trDebugLevel to 1\n" );
+    }
+    p = getenv( "TR_LEVEL" );
+    if (p && *p) {
+	int level = atoi(p);
+	if (level >= 0 && level <= 3) {
+	    trlevel( level );
+	    if (v && strcmp(v,"yes")) printf( "Setting trlevel to 1\n" );
+	}
+    }
 }

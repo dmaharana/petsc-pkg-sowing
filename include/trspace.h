@@ -16,6 +16,13 @@ extern void trDebugLevel ( int );
 #define MALLOC(a)    trmalloc((unsigned)(a),__LINE__,__FILE__)
 #define FREE(a)      trfree((char *)(a),__LINE__,__FILE__)
 
+#if defined(MEMORY_TRACING_REQUIRED) && !defined(TRSPACE_SOURCE)
+#define malloc ERROR("Use TR versions of malloc")
+#define free   ERROR("Use TR versions of free")
+#define calloc ERROR("Use TR versions of calloc")
+#define strdup ERROR("Use TR versions of strdup")
+#endif
+
 #else
 
 #define MALLOC(a)    malloc((unsigned)(a))

@@ -1,8 +1,6 @@
 #define MAX_FILE_NAME 1024
 
 #include "sowing.h"
-#include <stdio.h>
-#include <string.h>
 #if defined(HAVE_PWD_H)
 #include <pwd.h>
 #endif

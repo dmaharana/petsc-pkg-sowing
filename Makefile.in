@@ -119,8 +119,11 @@ testing:
 	(cd src/tohtml/testing ; ${MAKE} testing)
 
 configure: configure.in
-	autoheader-2.13 -l confdb
-	autoconf-2.13 -l confdb
+	cat acconfigl.h confdb/acconfig.h > acconfig.h
+	autoheader
+	autoconf
+	rm -f acconfig.h
+
 clean:
 	-for dir in $(SUBDIRS) docs ; do ( cd $$dir ; ${MAKE} clean ) ; done
 	-/bin/rm -f lib/libsowing.a lib/libtfilter.a

@@ -21,6 +21,10 @@ AC_ARG_ENABLE(inplace,[
 --enable-inplace - build the sowing program to run in the 
                    distribution directories, not the installation ($ac_default_prefix) 
                    directories],prefix=`pwd`)
+AC_ARG_ENABLE(memorycheck,[
+--enable-memorycheck - Compile with memory checking code],
+memcheck=$enableval,memcheck="no")
+
 PAC_ARG_WWWDIR
 
 dnl Checks for programs.
@@ -77,7 +81,7 @@ dnl Checks for libraries.
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(fcntl.h sys/time.h unistd.h pwd.h stdlib.h netdb.h)
+AC_CHECK_HEADERS(fcntl.h sys/time.h unistd.h pwd.h stdlib.h netdb.h string.h)
 
 if test $check_for_needs_stdlib_proto = 1 ; then
     AC_MSG_CHECKING(that stdlib prototypes are needed)
@@ -95,6 +99,11 @@ AC_TYPE_UID_T
 AC_TYPE_SIZE_T
 AC_HEADER_TIME
 AC_STRUCT_TM
+
+if test "$memcheck" = "yes" ; then
+    AC_DEFINE(MEMORY_TRACING)
+    AC_DEFINE(MEMORY_TRACING_REQUIRED)
+fi
 
 dnl Checks for library functions.
 dnl AC_FUNC_SETVBUF_REVERSED
