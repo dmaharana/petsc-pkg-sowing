@@ -83,7 +83,7 @@ $check_valid_fields = 0;
     %htmlformatsInBook = ( 'starttitle' => '<I>',
 			   'endtitle' => '</I>' );
     # chapter is the chapter title.
-    @fieldlistInBook = (title, chapter, author, booktitle, publisher, note, year);
+    @fieldlistInBook = (chapter, author, title, publisher, note, year);
     @fieldlistoptionalInBook = (address, pages, isbn, lccn, series, keywords,
 			        editor, annote, pubaddress, key );
 
@@ -624,6 +624,13 @@ sub PrintInProceedings {
     # title, author, booktitle, editors, pages, year
     %htmlformats = %htmlformatsInProc;
     @fieldlist = @fieldlistInProc;
+    &PrintGeneral;
+}
+
+sub PrintInBook {
+    # chapter, author, title, editors, pages, year
+    %htmlformats = %htmlformatsInBook;
+    @fieldlist = @fieldlistInBook;
     &PrintGeneral;
 }
 
