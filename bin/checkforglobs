@@ -2,6 +2,7 @@
 #
 # This script searches for invalid function names.
 $debug = 0;
+$print_full_line = 0;
 # Load up a hash with known leaders
 %MPILeaders = ( "MPID_" => 1, "MPIR_" => 1, "mpir_" => 1, "MPI_" => 1, 
 	     "PMPI_" => 1, "mpi_"  => 1, "pmpi_" => 1, 
@@ -9,9 +10,10 @@ $debug = 0;
 	     "SLOG_" => 1, "MPE_"  => 1, "mpe_"  => 1, "CLOG_" => 1,
 	     "ADIOI_"=> 1, "usc_"  => 1, "xx_"   => 1, "mpi1_" => 1,
 	     "mpi2_" => 1, "MPIOI_" => 1, "pmpio_" => 1, "MD_" => 1,
+	     "mpdlib_" => 1, "slog_" => 1, "TR_" => 1, 
 	     "execer_" => 1, "p2p_" => 1, "MPD_" => 1, "BNR_" => 1 );
 
-@MPINonConformLeaders = ( "alogf", "mpipriv", "XB", "MPICH" );
+@MPINonConformLeaders = ( "alogf", "mpipriv", "XB", "MPICH", "CLOG" );
 
 %PETScLeaders = ( "Petsc_" => 1, "PETSC_" => 1, "VIEWER_" => 1, 
 		  "petsc_" => 1 );
@@ -21,6 +23,10 @@ $debug = 0;
 
 %Leaders = ();
 @NonConformLeaders = ();
+
+$is_solaris = 0;
+$_ = $ENV{'ARCH'};
+if (/solaris/) { $is_solaris = 1; }
 
 foreach $_ (@ARGV) {
     if (/-prefix=(.*)/) {
@@ -73,10 +79,23 @@ sub CheckLibForGlobs {
 
     $found_sym = 0;
     LINE: while (<INFD>) {
-        if ( /\|GLOB/ && ! /\|UNDEF/) {
-	    # For solaris, the name is the LAST item that starts with |
-  	    /.*\|([^\|]*)$/;
+	$found_match = 0;
+	if (/(.*):/) {
+	    $filename = $1;
+	}
+	if ($is_solaris) {
+	    if ( /\|GLOB/ && ! /\|UNDEF/) {
+		# For solaris, the name is the LAST item that starts with |
+		/.*\|([^\|]*)$/;
+		$symbol = $1;
+		$found_match = 1;
+	    }
+	}
+	elsif(/[0-9A-Fa-f]*\s[TC]\s\s*(.*)/) {
 	    $symbol = $1;
+	    $found_match = 1;
+	}
+	if ($found_match) {
 	    # Symbol head MUST include a trailing _
 	    ($symbol_head) = ($symbol =~ /^([^_]*_)/);
 	    print "Symbol head = [$symbol_head]\n" if $debug;
@@ -95,7 +114,12 @@ sub CheckLibForGlobs {
 		$found_sym = 1;
 		print "$library\n";
 	    }
-	    print $_;
+	    if ($print_full_line) {
+		print $_;
+	    }
+	    else {
+		print "$filename: $symbol\n";
+	    }
         }
     }
 }

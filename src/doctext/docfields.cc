@@ -13,6 +13,7 @@
 
 #include "doc.h"
 #include "docutil.h"
+#include <string.h>
 
 // DocField is a structure so that we can hide it :)
 typedef struct _DocField { 
@@ -24,36 +25,37 @@ typedef struct _DocField {
 
 void *DocNewField( void *head, char *name, char *type )
 {
-  DocField *new = (DocField *)malloc( sizeof(DocField) );
-  if (!DocField) {
+  DocField *newdoc = new(DocField);
+
+  if (!newdoc) {
     fprintf( stderr, "Unable to allocate new field\n" );
     exit(1);
   }
   
   if (head) {
-    DocField *p = head;
+    DocField *p = (DocField *)head;
     while (p->next) p = p->next;
-    p->next = new;
+    p->next = newdoc;
   }
   else {
-    head = new;
+    head = newdoc;
   }
-  new->next       = 0;
-  new->name       = strdup( name );
-  new->type_name  = strdup( type );
-  new->qualifiers = 0;
+  newdoc->next       = 0;
+  newdoc->name       = strdup( name );
+  newdoc->type_name  = strdup( type );
+  newdoc->qualifiers = 0;
 
   return head;
 }
 
 void DocFreeFields( void *head )
 {
-  DocField *p = head;
+  DocField *p = (DocField *)head, *pn;
 
-  while (head) {
-    p = head->next;
-    free( head );
-    head = p;
+  while (p) {
+    pn = p->next;
+    delete( p );
+    p = pn;
   }
 }
 

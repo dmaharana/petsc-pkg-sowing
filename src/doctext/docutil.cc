@@ -430,6 +430,7 @@ void UngetLeadingString( InStream *ins )
     ins->UngetChar( *p-- );
 }
 
+#ifdef FOO
 //
 // The following isn't used yet.  It will read a single argument or
 // field definition
@@ -462,7 +463,7 @@ void ReadEnumName( InStream *ins, OutStream *outs, EnumList *enumlist )
     char enumname[256];
     char enumint[256];
     int maxlen = 255, nsp;
-    EnumEntry *new = (EnumEntry *)malloc( sizeof(EnumEntry) );
+    EnumEntry *newentry = new(EnumEntry);
 
     // Get the name
     while (!ins->GetToken( maxlen, enumname, &nsp )) {
@@ -499,3 +500,4 @@ void ReadEnumName( InStream *ins, OutStream *outs, EnumList *enumlist )
     enum->next = 0;
 }
 
+#endif

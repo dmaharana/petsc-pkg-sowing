@@ -2,5 +2,6 @@ config.log
 make.log
 config.status
 config.cache
+config.system
 Makefile
 Makerules
