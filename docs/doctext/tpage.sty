@@ -147,10 +147,14 @@ by
 %
 % This should really be done by putting together boxes of fixed height and
 % width.
-\long\def\ANLTMTitle#1#2#3#4{{\leftskip0in\rightskip0in\relax
+%
+% Default margins
+\def\titleleftmargin{0pt}
+\def\titletopmargin{0pt}
+\long\def\ANLTMTitle#1#2#3#4{{\leftskip\titleleftmargin\rightskip0in\relax
 \oddsidemargin 0pt \evensidemargin 0pt\relax
 \voffset 0pt
-\topmargin 0pt
+\topmargin \titletopmargin
 \vbox to \vsize{%
 \vsize=\TMPageHeight
 \hsize=6.5in
