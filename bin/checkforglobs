@@ -18,7 +18,8 @@ $print_full_line = 0;
 	     "bnr_" => 1, "mpd_" => 1 );
 
 %MPICH2Leaders = ( "MPID_" => 1, "MPIR_" => 1, "mpir_" => 1, "MPI_" => 1, 
-	       "MPIU_" => 1, "MPIDI_" => 1, 
+	       "MPIU_" => 1, "MPIDI_" => 1, "MPIC_" => 1,
+		  "MPITEST_" => 1,
 	     "PMPI_" => 1, "mpi_"  => 1, "pmpi_" => 1, 
 	     "ADIO_" => 1, "MPIO_" => 1, "PMPIO_" => 1,
 	     "ADIOI_"=> 1, "MPIOI_" => 1, "pmpio_" => 1, 
@@ -41,8 +42,12 @@ $print_full_line = 0;
 @NonConformLeaders = ();
 
 $is_solaris = 0;
+$is_osf     = 0;
+$is_irix    = 0;
 $_ = $ENV{'ARCH'};
 if (/solaris/) { $is_solaris = 1; }
+if (/OSF1/) { $is_osf = 1; }
+if (/irix/) { $is_irix = 1; }
 
 foreach $_ (@ARGV) {
     if (/-prefix=(.*)/) {
@@ -101,9 +106,16 @@ foreach $_ (@ARGV) {
 }
 
 sub CheckLibForGlobs {
-    $library = $_[0];
-
-    open( INFD, "nm $library |" ) || die "Could not run nm $library";
+    my $library = $_[0];
+    my $nm = "nm";
+    
+    # on some systems, we need options for nm.
+    # OSF: nm -B
+    # IRIX: !! nm -B doesn't include the filename!
+    #
+    if ($is_osf) { $nm = "nm -B"; }
+    if ($is_irix) { $nm = "nm -B -r"; }
+    open( INFD, "$nm $library |" ) || die "Could not run nm $library";
 
     $found_sym = 0;
     LINE: while (<INFD>) {
@@ -113,6 +125,9 @@ sub CheckLibForGlobs {
 	}
 	if (defined($excludeFilenames{$filename})) {
 	    next;
+	}
+	if ($is_irix) {
+	    s/^[^\s]*//g;
 	}
 	if ($is_solaris) {
 	    if ( /\|GLOB/ && ! /\|UNDEF/) {
