@@ -187,7 +187,7 @@ int DocReadFuncSynopsis( InStream *ins, OutStream *outs )
 }
 
 /* 
-   Skip to the START of a function synopsis.  This is just skipping to 
+   Skip to the START of a macro synopsis.  This is just skipping to 
    EITHER the end (no synopsis) or finding a line containing 
    Synopsis:
    on it 
@@ -294,10 +294,16 @@ int DocReadMacroSynopsis( InStream *ins, char *matchstring, OutStream *outs,
 // This handles
 // text { text including ; } name ;
 // e.g.,
-//   typedef enum { foo, bar, last } name;
+//   typedef enum { foo, bar=2, last } name;
 // and
 //   typedef struct { int foo; char bar; } name;
 //
+// Eventually, we'll want to include information on the contents of the 
+// definition.  At the very least, we'd like a list of the names (enum) or 
+// fields (struct).
+// Enums aren't too hard, but struct definitions can contain things like
+// int (*foo)( char *(name)([][]), double (*name2)( int (*)(int,int) ) );
+// See bfort for some examples.
 int DocReadTypeDefinition( InStream *ins, OutStream *outs )
 {
     char ch;
@@ -306,6 +312,8 @@ int DocReadTypeDefinition( InStream *ins, OutStream *outs )
     int  us_break;
     int in_brace = 0;
     int maxlen = 255, nsp;
+    void *fieldlist=0;       // Fieldlist records the entries in the
+                             // name.  NOT FULLY IMPLEMENTED
 
     // Must handle newline as non-space
     
@@ -421,3 +429,73 @@ void UngetLeadingString( InStream *ins )
   while (p >= LeadingString) 
     ins->UngetChar( *p-- );
 }
+
+//
+// The following isn't used yet.  It will read a single argument or
+// field definition
+//
+// We'll start with an enum name.  That is simply
+//   name [ = int ]
+// We also asume that all setup (e.g., break characters) has already been 
+// done.
+// We may also want a special outs that is effectively /dev/null (i.e., 
+// don't write anything out).
+// How do we want to return the names?  
+// Do we want a special structure with head and tail pointers?
+//
+// More generally, I'd like to parse the descriptions and store them so
+// that they can be further processed, for example to check that all 
+// arguments and fields are described or to list all possible enum values.
+// Once we have this information, doctext can also produce the Fortran 
+// and Lisp interfaces.
+typedef struct _EnumEntry { 
+  struct _EnumEntry *next;
+  char   *name;
+  char   *value;
+} EnumEntry;
+typedef struct {
+  EnumEntry *head, *tail;
+} EnumList;
+
+void ReadEnumName( InStream *ins, OutStream *outs, EnumList *enumlist )
+{
+    char enumname[256];
+    char enumint[256];
+    int maxlen = 255, nsp;
+    EnumEntry *new = (EnumEntry *)malloc( sizeof(EnumEntry) );
+
+    // Get the name
+    while (!ins->GetToken( maxlen, enumname, &nsp )) {
+      // Convert newlines
+      if (enumname[0] == '\n') {
+	outs->PutToken( nsp, NewlineString );
+      }
+      else
+	break;
+    }
+    
+    // Read next token.  If not =, push back and return, else read an int.
+    while (!ins->GetToken( maxlen, enumint, &nsp )) {
+      // Convert newlines
+      if (enumint[0] == '\n') {
+	outs->PutToken( nsp, NewlineString );
+      }
+      else 
+	break;
+    };
+
+    if (enumint[0] == '=') {
+      ins->GetToken( maxlen, enumint, &nsp );
+    }
+    else {
+      while (nsp--) ins->UngetChar( ' ' );
+      ins->UngetToken( enumint );
+      enumint[0] = 0;   // Forget that token.
+    }
+    enum->name = strdup( enumname );
+    enum->value = (enumint[0]) ? 0 : strdup( enumint );
+    if (enumlist->tail) enumlist->tail->next = enum;
+    else enumlist->tail = enumlist->head = enum;
+    enum->next = 0;
+}
+

@@ -17,12 +17,12 @@ LIBS = ../../lib/libtfilter.a
 PROGRAMS = doctext doc2lt
 
 doctext: doctext.o docutil.o keyword.o dotfmat.o incfiles.o quotefmt.o \
-	textb.o $(LIBS)
+	textb.o docfields.o $(LIBS)
 	$(CXX_LINK) -o doctext doctext.o docutil.o keyword.o dotfmat.o \
-	incfiles.o quotefmt.o textb.o $(LIBS)
+	incfiles.o quotefmt.o textb.o docfields.o $(LIBS)
 
-doc2lt: doc2lt.o docutil.o $(LIBS)
-	$(CXX_LINK) -o doc2lt doc2lt.o docutil.o $(LIBS)
+doc2lt: doc2lt.o docutil.o docfields.o $(LIBS)
+	$(CXX_LINK) -o doc2lt doc2lt.o docutil.o docfields.o $(LIBS)
 
 bfort: bfort.o $(LIBS)
 	$(CXX_LINK) -o bfort bfort.o $(LIBS)

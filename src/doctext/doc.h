@@ -16,7 +16,14 @@
 #endif
 #define MAX_PATH_LEN     1024
 
-// Match characters should be changeable.  These are the defaults
+// Match characters should be changeable.  These are the defaults 
+// @ routine
+// M Macro
+// D Documentation (Text)
+// I Include information
+// N Named block
+// S Structure definition
+// E Enum definition
 #define MATCH_STRING "/*[@MDINSE]"
 
 // Leading string (null for C, could be // for C++, C for Fortran, # for
