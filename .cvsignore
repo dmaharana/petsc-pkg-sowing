@@ -1,5 +1,6 @@
 config.log
 make.log
+*.log
 config.status
 config.cache
 config.system
