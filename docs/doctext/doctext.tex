@@ -1,6 +1,7 @@
 %\tracingall
 \documentclass[twoside]{linfoem}
 \usepackage{epsf,refman2,tpage}
+\usepackage{/homes/gropp/bin/share/tex/fileinclude}
 \c\documentstyle[epsf,refman2,twoside,tpage,addtensf,latexinfo]{article} 
 \c If you have latex2e, then you don't have a complete simulation of LaTeX.
 \c The following detects that and tries to fix it.
@@ -243,7 +244,8 @@ The man (nroff-style) output of this is shown in Figure \ref{fig:swap-man},
 and the LaTeX output is shown in Figure \ref{fig:swap-latex}.
 
 \begin{figure}
-\centerline{\epsfysize=3in\epsfbox{swap2.eps}}
+\fileinclude{swap.man}
+\c \centerline{\epsfysize=3in\epsfbox{swap2.eps}}
 \caption{Unix-style man page for the Swap routine}\label{fig:swap-man}
 \end{figure}
 
@@ -437,7 +439,7 @@ N*/
 /*N MPI_ERR_BUFFER
 . MPI_ERR_BUFFER - Invalid buffer pointer.  Usually a null buffer where
   one is not valid.
-*N/
+N*/
 \end{example}
 Each MPI man page ends with references to the name blocks for the errors that
 the particular MPI routine may return.  \code{MPI_Send} has the
@@ -559,12 +561,31 @@ appended to the specified file; this can be used to produce a keyword list.
 \subsection{Other Formatting Options}
 The program \code{doctext} is designed so that it is easy to add additional
 formatting commands of the form \code{.}{\em command}.  
+In fact, you can define your own formatting commands.  This is done in two
+steps.  First, you add formatting commands using a command definition file
+(See \xref{Customizing the Output Format}) and include those definitions with
+the \code{-defn   filename} command-line argument.  You can then invoke your
+new commands by using \code{.f<command name>} in the source file.  For
+example, if the file \file{indent.def} contains
+\begin{example}
+     in \begin{quotation}%n
+     out \end{quotation}%n
+\end{example}
+you can use 
+\begin{example}
+     .fin 
+       This text will be within a LaTeX quotation environment
+     .fout
+\end{example}
+in the source file.
+
 Other commands beyond those described in this document may be
 added in the future, so you should not rely on any particular behavior of
 \code{.}{\em character}.  For example, \code{.seealso} has been added to
 provide a common reference for related information.
 If you need some particular formatting
-option, please send the suggestion to \code{gropp@mcs.anl.gov}.
+option that you cannot achieve with the \code{.f} approach, please send the
+suggestion to \code{gropp@mcs.anl.gov}. 
 
 \node Command Line Arguments,,,Top
 \section{Command Line Arguments}
@@ -673,10 +694,10 @@ shell scripts.
 for Fortran 77 programs.  You can use \code{-skipprefix \#} for shell scripts
 and \code{-skipprefix \bw!} for Fortran 90 programs.
 
-For example, with \code{-skipprefix C}, a Fortran program can use the M (not
+For example, with \code{-skipprefix C}, a Fortran program can use the D (not
 @) mode:
 \begin{example}
-C/*M
+C/*D
 C fortranfoo - An example of using Fortran with doctext
 C
 C Input Parameters:
@@ -684,7 +705,7 @@ C
 C+ foo - bar
 C. bar - stool
 C- stool - pidgeon
-CM*/
+CD*/
       function fortranfoo( foo, bar stool )
       integer foo, bar stool
       end
@@ -1065,7 +1086,7 @@ is
 \item[3]Insert the third string argument
 \item[4]Insert the fourth string argument
 \item[i]Insert the first integer argument
-\item[n]Insert a newline onlyh if not at an newline
+\item[n]Insert a newline only if not at an newline
 \item[u1]Insert the first string argument, but in uppercase.
 Similarly for \code{u2} through \code{u4}.
 \item[p]Insert end-of-paragraph string only if not at an

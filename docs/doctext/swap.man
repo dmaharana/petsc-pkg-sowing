@@ -1,0 +1,20 @@
+C Library Functions                                       Swap(3)
+
+
+
+NAME
+     Swap -  Swaps two pointers
+
+SYNOPSIS
+     void Swap( ptr1, ptr2 )
+     void **ptr1, **ptr2;
+
+PARAMETERS
+     ptr1,ptr2
+          - Pointers to swap
+
+LOCATION
+     swap.txt
+
+
+                      Last change: 1/5/2000                     1

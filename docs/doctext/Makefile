@@ -9,6 +9,8 @@ SHELL = /bin/sh
 #DEFAULTPATH=`kpsewhich -show-path=.tex`
 #TEXPATH=/home/gropp/texhome/share/texmf/tex/latex209:$(DEFAULTPATH)
 #TEXPATH=.:/home/gropp/texhome/share/texmf/tex/latex209
+#TOHTML = tohtml
+TOHTML = ../../src/tohtml/tohtml
 
 .SUFFIXES: .html .ps .dvi .tex
 # add -texindex $*.fn for large manuals
@@ -40,26 +42,26 @@ swap.eps: swap.txt
 
 .tex.html:
 	/bin/rm -f $*.aux
-	tohtml -default -mapref ../../demos/petsc.cit \
+	${TOHTML} -default -mapref ../../demos/petsc.cit \
 		-mapman ../../www/petsc.cit $*.tex
-	tohtml -default -mapref ../../demos/petsc.cit \
+	${TOHTML} -default -mapref ../../demos/petsc.cit \
 		-mapman ../../www/petsc.cit $*.tex
 	/bin/mv latex.err $*.err
 
 #
 tohtml/tohtml.html: tohtml.tex
 	/bin/rm -f tohtml.aux
-	tohtml -default -mapref ../../demos/petsc.cit \
+	${TOHTML} -default -mapref ../../demos/petsc.cit \
 		-mapman ../../www/petsc.cit tohtml.tex
-	tohtml -default -mapref ../../demos/petsc.cit \
+	${TOHTML} -default -mapref ../../demos/petsc.cit \
 		-mapman ../../www/petsc.cit tohtml.tex
 	/bin/mv latex.err tohtml.err
 #
 doctext/doctext.html: doctext.tex
 	/bin/rm -f doctext.aux
-	tohtml -default -mapref ../../demos/petsc.cit \
+	${TOHTML} -default -mapref ../../demos/petsc.cit \
 		-mapman ../../www/petsc.cit doctext.tex
-	tohtml -default -mapref ../../demos/petsc.cit \
+	${TOHTML} -default -mapref ../../demos/petsc.cit \
 		-mapman ../../www/petsc.cit doctext.tex
 	/bin/mv latex.err doctext.err
 
