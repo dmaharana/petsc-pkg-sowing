@@ -613,6 +613,30 @@ may be block not allocated with trmalloc or MALLOC\n",
     return pnew;
 }
 
+/*+C
+    trstrdup - Strdup with tracing
+
+    Input Parameters:
+.   str    - string to duplicate
+.   lineno - line number where used.  Use __LINE__ for this
+.   fname  - file name where used.  Use __FILE__ for this
+
+    Returns:
+    Pointer to copy of the input string.
+ +*/
+char *trstrdup( const char *str, int lineno, const char *fname )
+{
+    char *p;
+    unsigned len = strlen( str ) + 1;
+
+    p = (char *)trmalloc( len, lineno, (char *)fname );
+    if (p) {
+	memcpy( p, str, len + 1 );
+    }
+    return p;
+}
+
+
 #define TR_MAX_DUMP 100
 /*
    The following routine attempts to give useful information about the
