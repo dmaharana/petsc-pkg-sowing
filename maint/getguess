@@ -1,0 +1,12 @@
+#! /bin/sh
+cd /home/gropp/sowing-proj/sowing/confdb
+# ? --passive-ftp  ?
+# -N is timestamping
+# -q is quiet
+# -b is background
+# -t n is for n tries
+# Sigh.  GNU hasn't updated these files!
+# To get up-to-date versions, it looks like you need to get
+# the most recent autoconf and unpack it (!)
+wget -N -q -t 10 --passive-ftp ftp://ftp.gnu.org/pub/gnu/config/config.guess
+wget -N -q -t 10 --passive-ftp ftp://ftp.gnu.org/pub/gnu/config/config.sub
