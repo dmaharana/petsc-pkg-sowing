@@ -8,6 +8,8 @@ bfort.ps
 doctext.ps
 tohtml.ps
 install.ps
+install.out
+*.pdf
 *.err
 *.hux
 install

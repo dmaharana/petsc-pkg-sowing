@@ -1,24 +1,45 @@
-ALL: install.ps tohtml.ps bfort.ps doctext.ps
+ALL: install.ps tohtml.ps bfort.ps doctext.ps install.pdf tohtml.pdf doctext.pdf
 SHELL = @SHELL@
 TOHTML = ../src/tohtml/tohtml
 prefix = @prefix@
 wwwdir = @wwwdir@
 
 doc_POSTSCRIPT = install.ps tohtml.ps bfort.ps doctext.ps
+doc_PDF = install.pdf tohtml.pdf bfort.pdf doctext.pdf
 doc_HTML = install/install.htm tohtml/tohtml.htm bfort/bfort.htm \
 	doctext/doctext/doctext.htm
 
 install.ps: install.tex
 	latex install
+	bibtex install
+	latex install
 	dvips install
 tohtml.ps: tohtml.tex
+	latex tohtml
+	bibtex tohtml
 	latex tohtml
 	dvips tohtml
 bfort.ps: bfort.tex
 	latex bfort
+	bibtex bfort
+	latex bfort
 	dvips bfort
 doctext.ps: doctext/doctext.tex
 	(cd doctext ; latex doctext ; dvips doctext ; mv doctext.ps .. )
+
+install.pdf: install.tex
+	latex install
+	bibtex install
+	latex install
+	dvipdfm install
+tohtml.pdf: tohtml.tex
+	latex tohtml
+	dvipdfm tohtml
+bfort.pdf: bfort.tex
+	latex bfort
+	dvipdfm bfort
+doctext.pdf: doctext/doctext.tex
+	(cd doctext ; latex doctext ; dvipdfm doctext ; mv doctext.pdf .. )
 
 install/install.htm: install.tex config.txt
 	${TOHTML} -default -dosnl install.tex
@@ -35,6 +56,7 @@ config.txt: ../configure
 	../configure --help >config.txt
 clean:
 	rm -f bfort.ps tohtml.ps install.ps doctext.ps \
+	      bfort.pdf tohtml.pdf install.pdf doctext.pdf \
 		*.aux *.dvi *.toc *.log *.fn *.hux *.err *.blg *.bbl
 distclean: clean
 	(cd doctext ; ${MAKE} distclean )
@@ -49,10 +71,15 @@ install-web: ${doc_HTML}
 	cp -rp tohtml ${wwwdir}/tohtml
 	rm -rf ${wwwdir}/doctext
 	cp -rp doctext/doctext ${wwwdir}/doctext
-install-postscript: ${doc_POSTSCRIPT}
+install-postscript: ${doc_POSTSCRIPT} 
 	cp -p install.ps ${wwwdir}/sowinginstall.ps
 	cp -p bfort.ps ${wwwdir}/bfort.ps
 	cp -p tohtml.ps ${wwwdir}/tohtml.ps
 	cp -p doctext.ps ${wwwdir}/doctext.ps
+install-pdf: ${doc_PDF} 
+	cp -p install.pdf ${wwwdir}/sowinginstall.pdf
+	cp -p bfort.pdf ${wwwdir}/bfort.pdf
+	cp -p tohtml.pdf ${wwwdir}/tohtml.pdf
+	cp -p doctext.pdf ${wwwdir}/doctext.pdf
 
-install: install-web install-postscript
+install: install-web install-postscript install-pdf

@@ -1,9 +1,10 @@
 \documentclass[11pt,twoside]{article}
+\usepackage[dvipdfm]{hyperref}
 \usepackage{epsf}
 \usepackage{doctext/tpage}
 \usepackage{/homes/gropp/bin/share/tex/code}
 \usepackage{/homes/gropp/bin/share/tex/fileinclude}
-\usepackage{/homes/gropp/bin/share/tex/url}
+\usepackage{/homes/gropp/bin/share/tex/urlsimple}
 
 %% This is the MPICH installation guide!
 \textwidth=6.0in
@@ -23,7 +24,7 @@
 \makeatother
 %
 % Directory and definitions for help text
-\def\helpdir{/home/MPI/maint/help/src}
+% \def\helpdir{/home/MPI/maint/help/src}
 \def\question{{\bf Q: }}
 \def\answer{{\bf A: }}
 \def\ttURL#1{{\tt\URL{#1}}}
@@ -55,8 +56,8 @@ processed by \LaTeX\ on \today.
 \end{abstract}
 
 This document describes how to obtain and install
-\texttt{sowing}~\cite{sowing}, a collection of portable tools for developing
-and 
+\texttt{sowing}~\cite{Gropp:1997:SMC}, a collection of portable tools for
+developing and 
 distributing software.  Details on using each of the tools is provided in
 separate users manuals \cite{bfort,doctext,tohtml}.
 
@@ -119,8 +120,8 @@ or
 \end{verbatim}
 This will create a single directory called \code{sowing}, containing in various
 subdirectories the entire distribution, including all of the source code, some
-documentation (including this {\em Guide}), \code{man} pages and the \code{sowing}
-environment described in Section~\ref{sec:environment}.
+documentation (including this {\em Guide}), \code{man} pages and the
+\code{sowing} environment.% described in Section~\ref{sec:environment}.
 In particular, you should see the following files and directories:
 \begin{description}
 \item[{\tt COPYRIGHT}] Copyright statement.  This code is free but not public
@@ -162,7 +163,7 @@ of the man pages for the programs, in compressed PostScript form.
 The \code{sowing/docs} directory contains this {\em Installation Guide\/} and
 also the users guides.
 
-\section{Configuring {\tt sowing}}
+\section{Configuring \texorpdfstring{sowing}{\texttt{sowing}}}
 \label{sec:configuring}
 
 The next step is to configure \sowing\ for your particular computing
@@ -197,7 +198,7 @@ compilers:
 configure --enable-strict --datadir=`pwd`/share --prefix=`pwd`
 \end{verbatim}
 
-\section{Compiling \sowing}
+\section{Compiling \texorpdfstring{\sowing}{sowing}}
 \label{sec:compiling}
 
 Once \code{configure} has determined the features of your system, all we have
@@ -244,7 +245,7 @@ If you have a problem, first check the troubleshooting guides and the lists of
 known problems.  If you still need help, send detailed information to
 \code{mpi-bugs@mcs.anl.gov}. 
 
-\section{Installing \sowing\ for Others to Use}
+\section{Installing \texorpdfstring{\sowing\ }{sowing }for Others to Use}
 \label{sec:installing}
 This step is optional.  
 Once you have tested all parts of the \Sowing\ distribution, you may install
@@ -345,8 +346,8 @@ Problems with workstation clusters are collected together as well.
 
 \subsubsection{General}
 \begin{enumerate}
-% Primative shell (no procedures)
-\item \input{\helpdir/all/m1.txt}
+%% Primative shell (no procedures)
+%\item \input{\helpdir/all/m1.txt}
 
 \item 
 \question 
@@ -384,7 +385,7 @@ trys to detect this situation and will normally issue an error message.
 
 \end{enumerate}
 
-\subsection{Problems building {\tt sowing}}
+\subsection{Problems building \texorpdfstring{sowing}{\texttt{sowing}}}
 \subsubsection{General}
 \begin{enumerate}
 \item 
@@ -428,6 +429,7 @@ this).  There should be at least 20--30 MBytes free in \file{/tmp}.
 When doing the link test, the link fails and does not seem to find any of the
 sowing system routines:
 \noindent
+\begin{small}
 \begin{verbatim}
   /homes/them/burgess/sowing/lib/IRIX32/ch_p4/mpicc \
                                          -o overtake overtake.o test.o 
@@ -441,6 +443,7 @@ ld: ERROR 33: Unresolved text symbol "MPI_Send" -- \
                                           1st referenced by overtake.o.
 ...
 \end{verbatim}
+\end{small}
 
 \answer
 Check that the \code{ar} and \code{ranlib} programs are compatible.  One site
@@ -503,10 +506,6 @@ Particular thanks goes to Barry Smith and Lois McInnes for valuable help
 in the implementation and development of sowing.
 
 \bibliographystyle{plain}
-\bibliography{paper}
+\bibliography{doctext/tools}
 
 \end{document}
-
-
-
-

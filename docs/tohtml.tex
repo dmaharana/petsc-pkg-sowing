@@ -1,8 +1,9 @@
 %\documentstyle[epsf,twoside,../funclist,../tpage,../tools,../../tex/latexinfo]{article} 
 \documentclass[twoside]{doctext/linfoem}
+\c\usepackage[dvipdfm]{hyperref}
 \usepackage{epsf,doctext/refman2,doctext/tpage}
 \usepackage{/homes/gropp/bin/share/tex/fileinclude}
-\usepackage{/homes/gropp/bin/share/tex/url}
+\usepackage{/homes/gropp/bin/share/tex/urlsimple}
 \c -*-latexinfo-*-
 \c \anltmtrue
 \anltmfalse
@@ -326,6 +327,14 @@ For example, \code{-basedir "http://www.mcs.anl.gov/mpi"} causes
 \end{example}
 to be written to the file.
 
+\end{description}
+
+The following commands are used for debugging the behavior of tohtml itself.
+\begin{description}
+\item[-debugout]Write out information about the generation of output
+\item[-debugdef]
+\item[-debugscan]
+\item[-debugfile]
 \end{description}
 
 \node doctext,,,Top

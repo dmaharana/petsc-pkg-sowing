@@ -1,4 +1,4 @@
-ALL: doctext/doctext.htm doctext.ps
+ALL: doctext/doctext.htm doctext.ps doctext.pdf
 ALLPS: doctext.ps
 ALLWWW: doctext/doctext.htm
 SHELL = @SHELL@
@@ -13,7 +13,7 @@ wwwdir = @wwwdir@
 
 # Need to add installation steps.
 
-.SUFFIXES: .htm .ps .dvi .tex
+.SUFFIXES: .htm .ps .dvi .tex .pdf
 # add -texindex $*.fn for large manuals
 .tex.dvi:
 	-/bin/rm -f $*.aux $*.blg $*.bbl $*.toc $*.lof $*.lot
@@ -31,6 +31,8 @@ wwwdir = @wwwdir@
 
 .dvi.ps:
 	dvips $*
+.dvi.pdf:
+	dvipdfm $*
 
 tohtml.dvi: tohtml.tex tools.bib
 doctext.dvi: doctext.tex swap.eps
@@ -59,7 +61,7 @@ doctext/doctext.htm: doctext.tex
 
 clean:
 	rm -f *.fn *.aux *.blg *.toc *.lof *.lot *.dvi *.fns *.bbl *.log \
-		*.err *.hux
+		*.err *.hux doctext.ps doctext.pdf
 
 distclean: clean
 	rm -f Makefile
