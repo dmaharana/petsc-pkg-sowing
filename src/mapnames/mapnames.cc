@@ -24,6 +24,8 @@
                       tokens.
    -inhtml          - Input is HTML.  Name mapping won't happen within HTML
                       constructions (e.g., between < and >)
+   -latexout        - Output is LaTeX.  Links are writen using \href instead
+                      of <A.../A>.
  */
 
 class TextOutMapLatex : public TextOutMap {
