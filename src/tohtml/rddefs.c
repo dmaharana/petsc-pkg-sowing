@@ -111,7 +111,7 @@ void RdBaseDef( char *infilename )
 		p[-1] = p[0];
 		p++;
 	    }
-	    *p = 0;
+	    p[-1] = 0;
 	}
 
 	/* printf( "|%s| |%s| |%d| |%s|\n", cmd, name, nargs, value ); */
@@ -130,7 +130,7 @@ void RdBaseDef( char *infilename )
 		    p[-1] = p[0];
 		    p++;
 		}
-		*p = 0;
+		p[-1] = 0;
 	    }
 	    TXInsertName( TeXlist, name, TXname, nargs, 
 			  (void *)TXCopy(value) );
@@ -145,7 +145,7 @@ void RdBaseDef( char *infilename )
 		    p[-1] = p[0];
 		    p++;
 		}
-		*p = 0;
+		p[-1] = 0;
 	    }
 	    TXInsertName( TeXlist, name, TXraw, nargs, 
 			  (void *)TXCopy(value) );
