@@ -33,3 +33,11 @@ distclean: clean
 testing: mapnames
 	cat test1 | ./mapnames -map map1.cit -o test1.html 
 	cat test1 | ./mapnames -map map1.cit -latexout -o test1.tex
+	@if diff -b test1.html test/test1.html ; then : \
+	else \
+	    echo "Failure in test!" ; \
+	fi
+	@if diff -b test1.tex test/test1.tex ; then : \
+	else \
+	    echo "Failure in test!" ; \
+	fi
