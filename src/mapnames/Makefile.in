@@ -19,9 +19,7 @@ EXECS = mapnames
 default: $(EXECS)
 
 mapnames: mapnames.o
-	$(CCC) -o mapnames mapnames.o $(LIBS)
-.c.o:
-	$(CC) $(CFLAGS) -c $*.c
+	$(CXX_LINK) -o mapnames mapnames.o $(LIBS)
 
 doc_SOURCES = 
 wwwpages:

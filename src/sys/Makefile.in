@@ -18,10 +18,9 @@ BASEOBJS =
 
 clean:
 	-/bin/rm -f *.o *~ $(CLEANFILES)
-.c.o:
-	$(C_COMPILE) -c $<
-	$(AR) cr ../../lib/libsowing.a $*.o
+
 lib: $(OBJS)
+	$(AR) cr ../../lib/libsowing.a ${OBJS}
 	$(RANLIB) ../../lib/libsowing.a
 
 doc_SOURCES = 

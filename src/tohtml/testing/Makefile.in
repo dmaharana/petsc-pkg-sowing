@@ -87,6 +87,7 @@ testing: inplace subfiles compare
 
 compare:
 	-@for file in testref/* ; do \
+	if test $$file = "testref/CVS" ; then continue ; fi ; \
 	if test -d $$file ; then \
 	    for f in $$file/* ; do \
 		newf=`echo $$f | sed -e 's%^testref/%%g'` ; \
