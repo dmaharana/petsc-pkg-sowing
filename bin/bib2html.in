@@ -285,7 +285,7 @@ while (<BIB>) {
     $line = $_;	
     $line_count++;		
     # Look for a new bib entry starting a line
-    if (/^\s*\@string\s*\(\s*([^=\s]*)\s*=\s*(.*)\s*\)/) {
+    if (/^\s*\@[Ss][Tt][Rr][Ii][Nn][Gg]\s*[\(\{]\s*([^=\s]*)\s*=\s*(.*)\s*[\)\}]/) {
 	# Found @string name = value
 	$bibstrings{$1} = $2;
 	next;
@@ -339,7 +339,11 @@ while (<BIB>) {
         # Look for a new item entry in a bib entry
 	# We may want to skip some items
 	# One thing to be careful of is multi-line items.
-        if (/^[^%=]*\s*=/) {
+        # Ignore lines that are NOT field asignments, such as
+	# abstract entries that include an = sign.
+	# (This isn't quite right, because a line within an entry that
+	# is <blank><word><blanks>= will still match
+        if (/^\s*\w+\s*=/) {
 	    # Found field = .... 
 	    if ($intable == 0) {
 		print STDERR "Missing bibtex entry type for line #$line_count:$_\n";
@@ -352,7 +356,7 @@ while (<BIB>) {
 	    # Check to see if this line is one that we wish to 
 	    # suppress
 	    # ---- not completely implemented
-	    /^\s*([^%=\s]*)\s*=/; 
+	    /^\s*(\w+)\s*=/; 
 	    print "matched $1 in $_" if $debug;
 	    $fieldname = lc( $1 );
 	    if ($fieldname eq "") {
