@@ -30,6 +30,7 @@ int FindPattern( InStream *ins, const char *pattern, char *match )
     int state = MRESET;
     const char *curpat, *p;
     char ch, *m;
+
     curpat = pattern;
     while (*curpat) {
 	switch (state) {
@@ -47,7 +48,7 @@ int FindPattern( InStream *ins, const char *pattern, char *match )
 		state  = MSTATE;
 		}
 	    else {
-		state = MRESET;
+		state  = MRESET;
 		}
 	    break;
 

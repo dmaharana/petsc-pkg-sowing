@@ -218,8 +218,8 @@ in the distribution, where ... is the path to the sowing directory\n\
     /* Open user-selected output file */
     one_per_file = 1;
     if (baseoutfile) {
-      one_per_file = 0; // All output is going to a single file
-	strcpy( outfilename, baseoutfile );
+        one_per_file = 0; // All output is going to a single file
+        strcpy( outfilename, baseoutfile );
 	outs = new OutStreamFile( outfilename, "w" );
 	if (outs->status) {
 	    fprintf( stderr, "Could not open output file %s\n", outfilename );
@@ -287,9 +287,9 @@ in the distribution, where ... is the path to the sowing directory\n\
 		continue;
 		}
 	    textout->SetRegisterValue( 0, routine );  // put name in putop register
-	    // printf( "routine: %s\n", routine );
+	    //printf( "routine: %s\n", routine );
 	    if (!baseoutfile) {
-	      one_per_file = 1;  // One manual page per "file"
+ 	        one_per_file = 1;  // One manual page per "file"
 		MakeFileName( path, routine, lextension, outfilename );
 		outs = new OutStreamFile( outfilename, "w" );
 		if (outs->status) {

@@ -364,6 +364,16 @@ int InStreamFile::GetChar( char *c )
 	*c = 0;
 	return 1;
 	}
+    /* Convert DOS to nonDOS */
+    if (ch == '\r') {
+	int ch2 = fgetc( fp );
+	if (ch2 != '\n') {
+	    ungetc( ch2, fp );
+	}
+	else 
+	    ch = ch2;
+    }
+
     if (ch == '\n') { linecnt++; colcnt = 0; }
     if (expand_tab && ch == '\t') {
       while (colcnt++ % 8) {
