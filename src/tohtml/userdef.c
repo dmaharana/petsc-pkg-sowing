@@ -120,8 +120,8 @@ void TXAddUserDef( SRList *TeXlist, TeXEntry *e )
     char       lname[40];
     char       template_buf[100];
 
-    ltoken    = (char *)MALLOC( MAX_TOKEN );
-    ldef      = (char *)MALLOC( MAX_TOKEN );
+    ltoken    = (char *)MALLOC( MAX_TOKEN ); CHKPTR(ltoken);
+    ldef      = (char *)MALLOC( MAX_TOKEN ); CHKPTR(ldef);
 
     ch = TeXReadToken( name, &nsp );
     if (ch != CommandChar) {
@@ -349,7 +349,7 @@ void TXlet( TeXEntry *e )
     TeXEntry   *old;
     LINK       *l;
     
-    ltoken    = (char *)MALLOC( MAX_TOKEN );
+    ltoken    = (char *)MALLOC( MAX_TOKEN ); CHKPTR(ltoken);
 
     /* Read command */
     ch = TeXReadToken( name, &nsp );

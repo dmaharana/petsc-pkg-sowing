@@ -1238,7 +1238,7 @@ void TXIfFileExists( TeXEntry *e )
     TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
 		   "TXIfFileExists", e->name );
     if (DebugCommands || DebugFile) 
-	fprintf( stdout, "Atempting to open file %s\n", curtok );
+	fprintf( stdout, "Attempting to open file %s\n", curtok );
     fp = fopen( curtok, "r" );
     /* We need to read these args *but not evaluate them* until after
        they are pushed back */
@@ -2881,8 +2881,7 @@ void TXinitbreaktable()
     breakchar['_'] = 1;
 }
 
-void TXoutactiveToken( token )
-char *token;
+void TXoutactiveToken( char *token )
 {
     int    urltype;
     char   *url, *text;

@@ -362,10 +362,8 @@ FILE *fp;
     number     = number of section
     keywords (optional) = keywords for section
  */
-void WriteSectionHeader( fp, name, entrylevel, number, keywords, level )
-FILE *fp;
-char *name, *entrylevel, *keywords;
-int  number, level;
+void WriteSectionHeader( FILE *fp, char *name, char *entrylevel, int number, 
+			 char *keywords, int level )
 {
     if (DebugOutput) fprintf( stdout, "WriteSectionHeader\n" );
 /*
@@ -407,7 +405,7 @@ int  number, level;
 void WriteFileTitle( FILE *fp, char *name )
 {
     /* Too late if we've written the body statement */
-    if (DebugOutput) fprintf( stdout, "WriteTileTitle\n" );
+    if (DebugOutput) fprintf( stdout, "WriteFileTitle\n" );
     if (wrotebody) return;
     /* Make sure that we remove TOK_START and TOK_END from name */
     fprintf( fp, "<TITLE>" );
@@ -560,13 +558,23 @@ void WriteString( FILE *fp, char *str )
 {
     int  in_tok = 0;
 
-    if (DebugOutput) fprintf( stdout, "WriteString\n" );
+    if (DebugOutput) { 
+	if (strlen(str) < 40) {
+	    fprintf( stdout, "WriteString (%s)\n", str );
+	}
+	else {
+	    fprintf( stdout, "WriteString (%40s)\n", str );
+	}
+    }
+	
     while (*str) {
 	/* Skip the token start/end and don't process while within */
 	if (*str == TOK_START) {
+	    if (DebugOutput) fprintf( stdout, "token-start\n" );
 	    in_tok++;
 	}
 	else if (*str == TOK_END) {
+	    if (DebugOutput) fprintf( stdout, "token-end\n" );
 	    in_tok--;
 	}
 	else if (in_tok == 0 && *str == '>' && DoOutputTranslation) {
@@ -594,8 +602,9 @@ void WriteString( FILE *fp, char *str )
 		fputc( '\r', fp );
 	    fputc( *str, fp );
 	}
-	else
+	else {
 	    fputc( *str, fp );
+	}
 	str++;
     }
 #ifdef FOO
@@ -621,9 +630,7 @@ void WriteString( FILE *fp, char *str )
    to <char>\n<space>  I'll use the former since we may not want
    the space after the newline.
    */
-void WriteStringRaw( fp, str )
-FILE *fp;
-char *str;
+void WriteStringRaw( FILE *fp, char *str )
 {
     char *p;
 

@@ -308,39 +308,43 @@ $   Block at address %lx is corrupted
 +*/
 int trvalid( char *str )
 {
-TRSPACE *head;
-char    *a;
-unsigned long *nend;
-int     errs = 0;
+    TRSPACE *head;
+    char    *a;
+    unsigned long *nend;
+    int     errs = 0;
 
-head = TRhead;
-while (head) {
-    if (head->cookie != COOKIE_VALUE) {
-	if (!errs) fprintf( stderr, "%s\n", str );
-	errs++;
-	fprintf( stderr, "[%d] Block at address %lx is corrupted\n", 
-                 world_rank, (long)head );
-	/* Must stop because if head is invalid, then the data in the
-	   head is probably also invalid, and using could lead to SEGV or BUS
-	 */
-	return errs;
+    head = TRhead;
+    while (head) {
+	if (head->cookie != COOKIE_VALUE) {
+	    if (!errs) fprintf( stderr, "%s\n", str );
+	    errs++;
+	    fprintf( stderr, "[%d] Block at address %lx is corrupted\n", 
+		     world_rank, (long)head );
+	    /* Must stop because if head is invalid, then the data in the
+	       head is probably also invalid, and using could lead to SEGV 
+	       or BUS
+	    */
+	    return errs;
 	}
-    a    = (char *)(((TrSPACE*)head) + 1);
-    nend = (unsigned long *)(a + head->size);
-    if (nend[0] != COOKIE_VALUE) {
-	if (!errs) fprintf( stderr, "%s\n", str );
-	errs++;
-	head->fname[TR_FNAME_LEN-1]= 0;  /* Just in case */
-	fprintf( stderr, 
-"[%d] Block [id=%d(%lu)] at address %lx is corrupted (probably write past end)\n", 
-	     world_rank, head->id, head->size, (long)a );
-	fprintf( stderr, 
-		"[%d] Block allocated in %s[%d]\n", 
-                world_rank, head->fname, head->lineno );
+	a    = (char *)(((TrSPACE*)head) + 1);
+	nend = (unsigned long *)(a + head->size);
+	if (nend[0] != COOKIE_VALUE) {
+	    if (!errs) fprintf( stderr, "%s\n", str );
+	    errs++;
+	    head->fname[TR_FNAME_LEN-1]= 0;  /* Just in case */
+	    fprintf( stderr, 
+		     "[%d] Block [id=%d(%lu)] at address %lx is corrupted (probably write past end)\n", 
+		     world_rank, head->id, head->size, (long)a );
+	    fprintf( stderr, 
+		     "[%d] Block allocated in %s[%d]\n", 
+		     world_rank, head->fname, head->lineno );
+	    fprintf( stderr, 
+		     "[%d] Expected %x, read %x\n", 
+		     world_rank, COOKIE_VALUE, nend[0] );
 	}
-    head = head->next;
+	head = head->next;
     }
-return errs;
+    return errs;
 }
 
 /*+C
@@ -631,7 +635,8 @@ char *trstrdup( const char *str, int lineno, const char *fname )
 
     p = (char *)trmalloc( len, lineno, (char *)fname );
     if (p) {
-	memcpy( p, str, len + 1 );
+	memcpy( p, str, len );
+	trvalid( "memcpy broke string in strdup!" );
     }
     return p;
 }
