@@ -27,10 +27,10 @@ void TX_GIF_size( char *, int *, int * );
    run out of stack space (very, very tiny stacks!) 
  */
 
-static FILE *ferr = 0;
 static char buf[40];
 
-static int InDocument = 0;
+/* FIXME: Is this a different variable than in tex.h? */
+/* static int InDocument = 0; */
 
 
 void TXDoGaudy( int flag )

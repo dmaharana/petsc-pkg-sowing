@@ -167,7 +167,7 @@ int OutStreamMap::PutQuoted( int nsp, const char *token )
   return next->PutQuoted( nsp, token );
 }
 
-int OutStreamMap::PutChar( char c )
+int OutStreamMap::PutChar( const char c )
 {
     char cc[2];
     cc[0] = c;
