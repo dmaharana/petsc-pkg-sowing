@@ -60,9 +60,13 @@ int TextOutNroff::PutChar( const char ch )
         case '\n': lnl = 1; out->PutChar( ch ); break;
         case '.' : 
 	  if (last_was_nl) {
-	    out->PutChar( ' ' );
+	    // This is a mess.  We must change the command character
+	    // and then change it back.
+	    out->PutToken( 0, ".cc ,\n.\n,cc .\n" );
+	    lnl = 1;
 	  }
-	  out->PutChar( ch );
+	  else 
+	    out->PutChar( ch );
 	  break;
 	default: out->PutChar( ch ); 
 	}
