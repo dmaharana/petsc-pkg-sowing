@@ -6,9 +6,9 @@
 #include <string.h>
 
 /* 
-   This defines the LaTeX versions of the output.  Mostly, this setups up
+   This defines the Nroff versions of the output.  Mostly, this setups up
    the general engine and defines the PutChar routine (which handles the 
-   special LaTeX cases)
+   special Nroff cases)
  */
 
 int TextOutNroff::Setup( )
@@ -56,8 +56,14 @@ int TextOutNroff::PutChar( const char ch )
     int lnl = 0;
     if (last_was_nl && isspace(ch)) return 0;
     switch (ch) {
-	case '\\': out->PutQuoted( 0, "\\\\" ); break;
+        case '\\': out->PutQuoted( 0, "\\\\" ); break;
         case '\n': lnl = 1; out->PutChar( ch ); break;
+        case '.' : 
+	  if (last_was_nl) {
+	    out->PutChar( ' ' );
+	  }
+	  out->PutChar( ch );
+	  break;
 	default: out->PutChar( ch ); 
 	}
     if (ch) 
