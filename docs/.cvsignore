@@ -4,6 +4,8 @@ config.txt
 *.aux
 *.fn
 *.toc
+*.bbl
+*.blg
 bfort.ps
 doctext.ps
 tohtml.ps
