@@ -30,6 +30,8 @@ int main( int argc, char **argv )
        filter) */
     cmd = new CmdLine( argc, argv );
 
+    if (!cmd->HasArg( "-debug_paths" )) (void) InstreamDebugPaths( 1 );
+
     /* Source and destination files */
     // ins  = new InStreamFile( "map1.C", "r" );
     ins  = new InStreamFile( );

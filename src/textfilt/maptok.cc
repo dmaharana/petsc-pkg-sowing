@@ -492,12 +492,17 @@ int TextOutMap::ReadMap( InStream *ins )
 int TextOutMap::PutLink( const char *name, SrEntry *entry )
 {
     MapData *info = (MapData *)entry->extra_data;
-    if (next->PutOp( "link", info->url, info->repname, 0 )) {
+    // We may need to suppress the output message when no link command
+    // is specified, since that is a common case
+    if (next->userops->Lookup( "link", 0 )) {
       next->PutToken( 0, "<A href=\"" );
       next->PutToken( 0, info->url );
       next->PutToken( 0, "\">" );
       next->PutToken( 0, info->repname );
       next->PutToken( 0, "</A>" );
+    }
+    else {
+      next->PutOp( "link", info->url, info->repname, 0 );
     }
     return 0;
 }

@@ -56,6 +56,8 @@ SrList::~SrList()
     delete(table);
 }
 
+// val may be null, in which case this returns 0 if the entry is found and
+// 1 otherwise.
 int SrList::Lookup( const char *name, SrEntry **val )
 {
     int     idx;
@@ -65,7 +67,7 @@ int SrList::Lookup( const char *name, SrEntry **val )
     p   = table[idx];
     while (p) {
 	if (strcmp( p->name, name ) == 0) {
-	    *val = p;
+	    if (val && *val) *val = p;
 	    return 0;
 	    }
 	p = p->next;

@@ -39,10 +39,9 @@ item_description %n
 #e_defn           %n.PD 1%n
 #e_arg            %n
 #
-# This is the NetScape form; it makes more sense than the attribute
-# form (add to each <P> a CENTER attribute).
-s_center 
-e_center 
+# This will center upto 250 lines.
+s_center %n.ce 250
+e_center %n.ce 0
 #
 # This is a first cut at supporting NetScape tables.
 # Still need something for table headings
