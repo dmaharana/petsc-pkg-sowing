@@ -17,9 +17,9 @@ wwwdir = @wwwdir@
 # add -texindex $*.fn for large manuals
 .tex.dvi:
 	-/bin/rm -f $*.aux $*.blg $*.bbl $*.toc $*.lof $*.lot
-	-latex $*
+	-latex $* 2>&1 >/dev/null </dev/null
 	-bibtex $*
-	-latex $*
+	-latex $* 2>&1 >/dev/null </dev/null
 	-latex $*
 #	- (TEXINPUTS=$(TEXPATH) ; export TEXINPUTS ; \
 #		$(LATEX) $* )
@@ -30,13 +30,11 @@ wwwdir = @wwwdir@
 #		$(LATEX) $* )
 
 .dvi.ps:
-	dvips $*
+	dvips $* 2>&1 | grep -v pdf: | grep -v 'Unknown keyword'
 .dvi.pdf:
 	dvipdfm $*
 
-tohtml.dvi: tohtml.tex tools.bib
 doctext.dvi: doctext.tex swap.eps
-bfort.dvi: bfort.tex tools.bib
 
 swap.eps: swap.txt
 	doctext -ext 3 swap.txt

@@ -9,33 +9,46 @@ doc_PDF = install.pdf tohtml.pdf bfort.pdf doctext.pdf
 doc_HTML = install/install.htm tohtml/tohtml.htm bfort/bfort.htm \
 	doctext/doctext/doctext.htm
 
+alldocs: $(doc_POSTSCRIPT) $(doc_PDF) $(doc_HTML)
+# Run the first latex into /dev/null to suppress message about missing
+# bib citations and forward references
 install.ps: install.tex
-	latex install
+	latex install 2>&1 >/dev/null </dev/null
 	bibtex install
+	latex install 2>&1 >/dev/null </dev/null
 	latex install
-	dvips install
+	dvips install 2>&1 | grep -v pdf: | grep -v 'Unknown keyword'
 tohtml.ps: tohtml.tex
-	latex tohtml
+	latex tohtml 2>&1 >/dev/null </dev/null
 	bibtex tohtml
+	latex tohtml 2>&1 >/dev/null </dev/null
 	latex tohtml
-	dvips tohtml
+	dvips tohtml 2>&1 | grep -v pdf: | grep -v 'Unknown keyword'
 bfort.ps: bfort.tex
-	latex bfort
+	latex bfort 2>&1 >/dev/null </dev/null
 	bibtex bfort
+	latex bfort 2>&1 >/dev/null </dev/null
 	latex bfort
-	dvips bfort
+	dvips bfort 2>&1 | grep -v pdf: | grep -v 'Unknown keyword'
 doctext.ps: doctext/doctext.tex
-	(cd doctext ; latex doctext ; dvips doctext ; mv doctext.ps .. )
+	(cd doctext && make && mv doctext.ps .. && mv doctext.pdf ..)
 
 install.pdf: install.tex
-	latex install
+	latex install 2>&1 >/dev/null </dev/null
 	bibtex install
+	latex install 2>&1 >/dev/null </dev/null
 	latex install
 	dvipdfm install
 tohtml.pdf: tohtml.tex
+	latex tohtml 2>&1 >/dev/null </dev/null
+	bibtex tohtml
+	latex tohtml 2>&1 >/dev/null </dev/null
 	latex tohtml
 	dvipdfm tohtml
 bfort.pdf: bfort.tex
+	latex bfort 2>&1 >/dev/null </dev/null
+	bibtex bfort
+	latex bfort 2>&1 >/dev/null </dev/null
 	latex bfort
 	dvipdfm bfort
 doctext.pdf: doctext/doctext.tex
@@ -58,8 +71,10 @@ clean:
 	rm -f bfort.ps tohtml.ps install.ps doctext.ps \
 	      bfort.pdf tohtml.pdf install.pdf doctext.pdf \
 		*.aux *.dvi *.toc *.log *.fn *.hux *.err *.blg *.bbl
+	(cd doctext&& ${MAKE} clean)
+
 distclean: clean
-	(cd doctext ; ${MAKE} distclean )
+	(cd doctext && ${MAKE} distclean )
 	rm -f Makefile
 
 install-web: ${doc_HTML}
