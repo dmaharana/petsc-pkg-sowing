@@ -204,6 +204,7 @@ TeXEntry *e;
     int        nargs, ch, nsp, nbrace, j;
     char       *p;
     Definition *def;
+    char       lname[40];
 
 /* We can't use GetArg to get the arg, because we need to skip over the 
    \ in the name.  Fortunately, the argument MUST be a simple name */
@@ -266,19 +267,26 @@ TeXEntry *e;
     if (p > ldef && p[-1] == RbraceChar)
 	p[-1] = 0;
 /* Add to known commands */
-    def = NEW(Definition);  CHKPTR(def);
-    def->nargs = nargs;
-    def->replacement_text = (char *)MALLOC( strlen( ldef ) + 1 );
-    CHKPTR(def->replacement_text);
-    strcpy( def->replacement_text, ldef );
 
-    def->input_template = 0;
-    if (DebugDef) {
-	printf( "Defining %s with newcommand or renewcommand\n", name );
-	printf( "Definition text is %s\n", ldef ? ldef : "<null>" );
+    if (SRLookup( TeXlist, name+1, lname, &j )) {
+	fprintf( ferr, "Attempt to redefine %s; new definition discarded\n", name );
+	fprintf( ferr, "  (Redefinitions may cause problems with the translator)\n" );
     }
+    else {
+	def = NEW(Definition);  CHKPTR(def);
+	def->nargs = nargs;
+	def->replacement_text = (char *)MALLOC( strlen( ldef ) + 1 );
+	CHKPTR(def->replacement_text);
+	strcpy( def->replacement_text, ldef );
 
-    TXInsertName( TeXlist, name+1, TXDoUser, nargs, (void *)def );
+	def->input_template = 0;
+	if (DebugDef) {
+	    printf( "Defining %s with newcommand or renewcommand\n", name );
+	    printf( "Definition text is %s\n", ldef ? ldef : "<null>" );
+	}
+	
+	TXInsertName( TeXlist, name+1, TXDoUser, nargs, (void *)def );
+    }
 }
 
 /* Create a definition context suitable for TXInsertName */
