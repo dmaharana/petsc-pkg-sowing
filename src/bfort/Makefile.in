@@ -1,35 +1,27 @@
 ALL: bfort
 SHELL       = /bin/sh
-prefix      = @prefix@
-exec_prefix = @exec_prefix@
-CC = @CC@
 
-.SUFFIXES:
-.SUFFIXES: .o .c
+include ../../Makerules
+top_srcdir=@top_srcdir@
+srcdir=@srcdir@
+@VPATH@
 
-LIBS      =  ../../lib/libsowing.a
-CPPFLAGS    = -I../../include -DBASEDEF='"@datadir@/basedefs.txt"'
-ALL_CFLAGS = @optflags@ $(CFLAGS)
-LDIR      = 
-CLEANFILES = bfort
+INCLUDES = -I${top_srcdir}/include
+
+LIBS       =  ../../lib/libsowing.a
+INCLUDES   = -I${top_srcdir}/include 
+DEFS       = -DBASEDEF='"@datadir@/basedefs.txt"'
+PROGRAMS   = bfort
 
 bfort: bfort.o  doc.o
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o bfort bfort.o doc.o $(LIBS)
+	$(C_LINK) -o bfort bfort.o doc.o $(LIBS)
 
-manpages:
-	../../bin/doctext -quotefmt -mpath ../../man/man1 -ext 1 bfort.c
-
-wwwpages:
-	../../bin/doctext -html -quotefmt -mpath ../../www/www1 -ext 1 bfort.c
+doc_SOURCES = bfort.c
 
 clean:
-	-/bin/rm -f *.o *~ $(CLEANFILES)
+	-/bin/rm -f *.o *~ $(PROGRAMS)
 	-/bin/rm -f bfort\ win32/debug/*
 
-.c.o:
-	$(CC) -c $(CPPFLAGS) $(ALL_CFLAGS) $<
-
-INSTALL_PROGRAM = $(INSTALL)
-INSTALL_DATA    = $(INSTALL)
 install:
 	$(INSTALL_PROGRAM) bfort @bindir@/bfort
+

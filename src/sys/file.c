@@ -507,64 +507,64 @@ return 0;
 int SYGetFileFromPath( char *path, char *defname, char *name, char *fname, 
 		       char mode )
 {
-char   *p, *cdir;
-int    ln;
-uid_t  uid;
-gid_t  gid;
-char   trial[MAX_FILE_NAME];
-char   *senv, *env;
+    char   *p, *cdir;
+    int    ln;
+    uid_t  uid;
+    gid_t  gid;
+    char   trial[MAX_FILE_NAME];
+    char   *senv, *env;
 
 /* Setup default */
-SYGetFullPath(defname,fname,MAX_FILE_NAME);
+    SYGetFullPath(defname,fname,MAX_FILE_NAME);
 
 /* Get the (effective) user and group of the caller */
-uid = geteuid();
-gid = getegid();
+    uid = geteuid();
+    gid = getegid();
 
-if (path) {
+    if (path) {
 
 /* Check to see if the path is a valid regular FILE */
-if (SYiTestFile( path, mode, uid, gid )) {
-    strcpy( fname, path );
-    return 1;
-    }
+	if (SYiTestFile( path, mode, uid, gid )) {
+	    strcpy( fname, path );
+	    return 1;
+	}
     
 /* Make a local copy of path and mangle it */
-senv = env = (char *)MALLOC( strlen(path) + 1 ); 
-if (!senv) { fprintf( stderr, "Error allocating memory\n" ); return 0; }
-strcpy( env, path );
-while (env) {
-    /* Find next directory in env */
-    cdir = env;
-    p    = strchr( env, ':' );
-    if (p) {
-	*p  = 0;
-	env = p + 1;
-	}
-    else
-	env = 0;
+	senv = env = (char *)MALLOC( strlen(path) + 1 ); 
+	if (!senv) { fprintf( stderr, "Error allocating memory\n" ); return 0; }
+	strcpy( env, path );
+	while (env) {
+	    /* Find next directory in env */
+	    cdir = env;
+	    p    = strchr( env, ':' );
+	    if (p) {
+		*p  = 0;
+		env = p + 1;
+	    }
+	    else
+		env = 0;
 
-    /* Form trial file name */
-    strcpy( trial, cdir );
-    ln = strlen( trial );
-    if (trial[ln-1] != '/') 
-	trial[ln++] = '/';
+	    /* Form trial file name */
+	    strcpy( trial, cdir );
+	    ln = strlen( trial );
+	    if (trial[ln-1] != '/') 
+		trial[ln++] = '/';
 	
-    strcpy( trial + ln, name );
+	    strcpy( trial + ln, name );
 
-    if (SYiTestFile( trial, mode, uid, gid )) {
-        /* need SYGetFullPath rather then copy in case path has . in it */
-	SYGetFullPath( trial,  fname, MAX_FILE_NAME );
-	FREE( senv );
-	return 1;
+	    if (SYiTestFile( trial, mode, uid, gid )) {
+		/* need SYGetFullPath rather then copy in case path has . in it */
+		SYGetFullPath( trial,  fname, MAX_FILE_NAME );
+		FREE( senv );
+		return 1;
+	    }
 	}
-    }
 
-FREE( senv );
-} /* end of if path */
+	FREE( senv );
+    } /* end of if path */
 
-if (SYiTestFile( fname, mode, uid, gid )) return 1;
-else return 0;
+    if (SYiTestFile( fname, mode, uid, gid )) return 1;
+    else return 0;
 }
 #else
 /* MSDOS version does not use uid, gid */

@@ -3,20 +3,14 @@ ALL: default
 #  (C) 1997 by Argonne National Laboratory.
 #      All rights reserved.  See COPYRIGHT in top-level directory.
 #
+SHELL       = @SHELL@
 
+include ../../Makerules
+top_srcdir=@top_srcdir@
+srcdir=@srcdir@
+@VPATH@
 
-##### User configurable options #####
-
-CCC         = @CXX@
-AR          = @AR@ cr
-RANLIB      = @RANLIB@
-SHELL = /bin/sh
-CPPFLAGS = -I../../include/textfilt -I../../include
-ALL_CFLAGS = @optflags@ $(CFLAGS)
-### End User configurable options ###
-.SUFFIXES:
-.SUFFIXES: .o .cc
-
+INCLUDES = -I${top_srcdir}/include/textfilt -I${top_srcdir}/include
 
 LIBS = ../../lib/libtfilter.a 
 
@@ -29,6 +23,8 @@ COBJECTS = cmdline.o file.o instream.o outstream.o search.o maptok.o \
 INCLUDE  = ../include/tfilter.h
 
 default: $(LIBS)
+
+doc_SOURCES = 
 
 manpages:
 
@@ -70,14 +66,8 @@ texttex.o: texttex.cc ../../include/textfilt/textout.h \
  ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
  ../../include/textfilt/textpath.h
 
-.c.o:
-	$(CC) -c $(CPPFLAGS) $(ALL_CFLAGS) $*.c
-
-.cc.o:
-	$(CCC) -c $(CPPFLAGS) $(ALL_CFLAGS) $*.cc
-
 ../../lib/libtfilter.a: $(COBJECTS) 
-	$(AR) $@ $?
+	$(AR) cr $@ $?
 	$(RANLIB) $@
 
 clean:

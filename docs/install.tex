@@ -1,4 +1,10 @@
-\documentstyle[11pt,epsf,doctext/tpage]{article}
+\documentclass[11pt,twoside]{article}
+\usepackage{epsf}
+\usepackage{doctext/tpage}
+\usepackage{/homes/gropp/bin/share/tex/code}
+\usepackage{/homes/gropp/bin/share/tex/fileinclude}
+\usepackage{/homes/gropp/bin/share/tex/url}
+
 %% This is the MPICH installation guide!
 \textwidth=6.0in
 \textheight=9.0in
@@ -17,7 +23,7 @@
 \makeatother
 %
 % Directory and definitions for help text
-\def\helpdir{/home/MPI/mpich/help/src}
+\def\helpdir{/home/MPI/maint/help/src}
 \def\question{{\bf Q: }}
 \def\answer{{\bf A: }}
 \def\ttURL#1{{\tt\URL{#1}}}
@@ -48,8 +54,9 @@ processed by \LaTeX\ on \today.
  Tool building and distribution is important.
 \end{abstract}
 
-This document describes how to obtain and install {\tt
-  sowing~\cite{sowing}, a collection of portable tools for developing and
+This document describes how to obtain and install
+\texttt{sowing}~\cite{sowing}, a collection of portable tools for developing
+and 
 distributing software.  Details on using each of the tools is provided in
 separate users manuals \cite{bfort,doctext,tohtml}.
 
@@ -69,7 +76,8 @@ in the following sections.
 \item \code{cd sowing}
 \item \code{configure}  This will attempt to choose an appropriate default
   architecture and ``device'' for you.  If the defaults are not what you want,
-  see Section~\ref{sec:configuring}
+  see Section~\ref{sec:configuring}.  If you are \emph{not} going to install
+  sowing, give \code{configure} the argument \code{--enable-inplace}.
 \item \code{make >& make.log} (in C-shell syntax).  
 At this point you have built the sowing programs.  
 \item (Optional)  Run the tests
@@ -77,7 +85,7 @@ At this point you have built the sowing programs.
 \item (Optional)  If you wish to install \code{sowing} in a public place so
   that others may use it, use
 \begin{verbatim}
-  \code{make install}
+  make install
 \end{verbatim}
 to install \code{sowing}.  Following standard practice with \code{configure},
 the directories for the installation are chosen when you use configure with
@@ -276,8 +284,8 @@ as the location of the installation (particularly if it is not in
 \subsubsection{Man pages}
 A complete set of Unix man pages for the SOWING implementation are in
 \file{sowing/man}.  \file{man/man1} contains the sowing programs.
-The command \file{sowing/bin/sowingman} is a script that runs \code{xman}
-on these man pages.
+%The command \file{sowing/bin/sowingman} is a script that runs \code{xman}
+%on these man pages.
 
 \subsubsection{Web versions of man pages}
 Web (HTML) versions are available from
@@ -286,7 +294,7 @@ at \URL{http://www.mcs.anl.gov/sowing/www}.
 A sample Web page is shown below, and is also available in
 \file{sowing/docs/sowingsite.html} 
 
-\fileinclude{/home/gropp/sowing/docs/sowingsite.html}
+\fileinclude{/home/gropp/sowing-proj/sowing/docs/sowingsite.html}
 
 \section{Problems}
 \label{sec:problems}
@@ -346,7 +354,7 @@ no problem with the compiler (it runs the test that supposedly failed without
 trouble).
 
 \answer 
-You may me using the Bash shell (\file{/bin/bash}) as a replacement for
+You may be using the Bash shell (\file{/bin/bash}) as a replacement for
 the Bourne shell (\file{/bin/sh}).  We have reports that, at least under
 LINUX, Bash does not properly handle return codes in expressions.  One fix is
 to use a different shell, such as \file{/bin/ash}, on those systems.

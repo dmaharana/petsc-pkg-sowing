@@ -4,51 +4,32 @@ ALL: doctext doc2lt
 #      All rights reserved.  See COPYRIGHT in top-level directory.
 #
 
-##### User configurable options #####
+SHELL       = @SHELL@
+INCLUDES    = -I${top_srcdir}/include/textfilt -I${top_srcdir}/include
 
-CXX         = @CXX@
-AR          = @AR@ cr
-RANLIB      = @RANLIB@
-CPPFLAGS    = -I../../include/textfilt -I../../include
-ALL_CFLAGS = @optflags@ $(CFLAGS)
-### End User configurable options ###
-# Without the empty .suffixes, some makes choose the wrong rules
-.SUFFIXES:
-.SUFFIXES: .o .cc
-
-SHELL = /bin/sh
+include ../../Makerules
+top_srcdir=@top_srcdir@
+srcdir=@srcdir@
+@VPATH@
 
 LIBS = ../../lib/libtfilter.a 
 
-EXECS = doctext doc2lt
-
-default: $(EXECS)
+PROGRAMS = doctext doc2lt
 
 doctext: doctext.o docutil.o keyword.o dotfmat.o incfiles.o quotefmt.o \
 	textb.o $(LIBS)
-	$(CXX) -o doctext doctext.o docutil.o keyword.o dotfmat.o \
+	$(CXX_LINK) -o doctext doctext.o docutil.o keyword.o dotfmat.o \
 	incfiles.o quotefmt.o textb.o $(LIBS)
 
 doc2lt: doc2lt.o docutil.o $(LIBS)
-	$(CXX) -o doc2lt doc2lt.o docutil.o $(LIBS)
+	$(CXX_LINK) -o doc2lt doc2lt.o docutil.o $(LIBS)
 
 bfort: bfort.o $(LIBS)
-	$(CXX) -o bfort bfort.o $(LIBS)
+	$(CXX_LINK) -o bfort bfort.o $(LIBS)
 
-manpages:
-	../../bin/doctext -quotefmt -mpath ../../man/man1 -ext 1 doctext.cc
-	../../bin/doctext -quotefmt -mpath ../../man/man1 -ext 1 doc2lt.cc
-wwwpages:
-	../../bin/doctext -html -quotefmt -mpath ../../www/www1 -ext 1 doctext.cc
-	../../bin/doctext -html -quotefmt -mpath ../../www/www1 -ext 1 doc2lt.cc
-
-.c.o:
-	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) -c $*.c
-
-.cc.o:
-	$(CXX) -c $(CPPFLAGS) $(ALL_CFLAGS) $*.cc
+doc_SOURCES = doctext.cc doc2lt.cc
 
 clean:
-	/bin/rm -f *.o *~ $(EXECS) 
+	/bin/rm -f *.o *~ $(PROGRAMS) 
 	(cd test ; if [ -s Makefile ] ; then $(MAKE) clean ; fi )
 	-/bin/rm -f doctext\ win32/debug/*

@@ -10,6 +10,7 @@ int DocOutMacro( InStream *ins, TextOut *text, char *matchstring );
 
 char *IgnoreString = 0;
 
+char NewlineString[3];
 /*D
 doc2lt - program to extract short descriptions in various formats
 

@@ -19,6 +19,26 @@ typedef struct _TeXEntry {
     char *name;           /* pointer to name */
     } TeXEntry;
 
+/* The latex stack */
+typedef enum { TXITEMIZE, TXDESCRIPTION, TXEXAMPLE, TXVERBATIM, TXENUMERATE,
+	       TXLIST } 
+        EnvType;
+typedef struct {
+    EnvType env;
+    int    num;            /* relative number of an item in this
+			      environment (needed for enumerate) */
+    void    (*newline)( FILE *);   
+                           /* routine to call for new-line handling */
+    char   *p1, *p2;       /* Pointers to text for use by the environment
+                              (some have code and replacement text; 
+			      principly a user-defined list environment */
+    /* These are currently unused */
+    char   *label_node_name; /* Name of the node */
+    char   *label_text;      /* Text to use in refering to the label */
+    /* This is used to keep track of where an environment started */
+    int    line_num;
+    } LaTeXStack;
+
 extern int    curfile;
 extern FILE *(fpin[10]);  /* Input file stack */
 extern FILE *fpout;       /* Output file */
@@ -27,6 +47,8 @@ extern FILE *ferr;        /* Error report file */
 
 extern int  splitlevel;
 extern char splitdir[100];/* directory for output files */
+
+extern char userpath[1024];  /* Path to search for package definitions */
 
 extern int InDocument;
 
@@ -327,6 +349,8 @@ extern void TXfindex ( TeXEntry * );
 extern void TXindex ( TeXEntry * );
 extern void TXprintindex ( TeXEntry * );
 extern void TXmakeindex ( TeXEntry * );
+extern void TXusepackage ( TeXEntry * );
+extern void TXLoadPackage( const char * );
 extern void TXdocumentstyle ( TeXEntry * );
 extern void TXdocumentclass ( TeXEntry * );
 extern void TXtitle ( TeXEntry * );

@@ -27,6 +27,8 @@ char latexerrfilename[256];
 char basefilename[256];
 char basedir[256];
 char basedefs[256];
+char userpath[1024];  /* Path to search for package definitions */
+
 char endpagefilename[256];
 char beginpagefilename[256];
 /* NavNames are the buttons at the bottom, TopNames are the buttons at the 
@@ -241,6 +243,9 @@ int main( int argc, char *argv[] )
     basedir[0] = 0;    
     SYArgGetString( &argc, argv, 1, "-basedir", basedir, 256 );
 
+    userpath[0] = 0;    
+    SYArgGetString( &argc, argv, 1, "-userpath", userpath, 256 );
+
     endpagefilename[0] = 0;
     SYArgGetString( &argc, argv, 1, "-endpage", endpagefilename, 256 );
 
@@ -347,6 +352,7 @@ FILE *fp;
 char *name, *entrylevel, *keywords;
 int  number, level;
 {
+    if (DebugOutput) fprintf( stdout, "WriteSectionHeader\n" );
 /*
   fprintf( fp, "<A NAME=\"...\"><IMG SRC=\"/icons/previous.xbm\"></A>" );  
   fprintf( fp, "<A NAME=\"...\"><IMG SRC=\"/icons/up.xbm\"></A>" );  
@@ -388,6 +394,7 @@ FILE *fp;
 char *name;
 {
     /* Too late if we've written the body statement */
+    if (DebugOutput) fprintf( stdout, "WriteTileTitle\n" );
     if (wrotebody) return;
     fprintf( fp, "<TITLE>%s</TITLE>%s", name, NewLineString );
 }
@@ -396,6 +403,7 @@ void WriteJumpDestination( fp, name, title )
 FILE *fp;
 char *name, *title;
 {
+    if (DebugOutput) fprintf( stdout, "WriteJumpDestination\n" );
     fprintf( fp, "<A NAME=\"%s\">%s</a>", name, title );
 }
 
@@ -415,6 +423,7 @@ FILE *fp;
 char *text, *reftopic;
 int  refnumber;
 {
+    if (DebugOutput) fprintf( stdout, "WritePopupTextReference\n" );
     fprintf( fp, "<a href=\"%s%d\">%s</a>", reftopic, refnumber, text );
 }
 
@@ -428,6 +437,7 @@ FILE *fp;
 char *text, *reftopic;
 int  refnumber;
 {
+    if (DebugOutput) fprintf( stdout, "WritePointerText\n" );
     if (refnumber >= 0) 
 	fprintf( fp, "<a href=\"%s%d\">", reftopic, refnumber );
     else
@@ -541,6 +551,7 @@ char *str;
 {
     int  in_tok = 0;
 
+    if (DebugOutput) fprintf( stdout, "WriteString\n" );
     while (*str) {
 	/* Skip the token start/end and don't process while within */
 	if (*str == TOK_START) {
@@ -598,6 +609,7 @@ char *str;
 {
     char *p;
 
+    if (DebugOutput) fprintf( stdout, "WriteStringRaw\n" );
     p = str;
     while (*p) {
 	if (*p == '<') {
@@ -742,6 +754,7 @@ void SetNextButton( fp, context, name )
 FILE *fp;
 char *context, *name;
 {
+    if (DebugOutput) fprintf( stdout, "SetNextButton\n" );
     fprintf( fp, "<A HREF=\"%s\"><IMG SRC=\"%snext.xbm\"></A>", 
 	     context, NoBMCopy ? BMURL : "" );  
 /* fprintf( fp, "<b>Next: </b><A HREF=\"%s\">%s</a> ", context, name ); */
@@ -751,6 +764,7 @@ void SetPreviousButton( fp, context, name )
 FILE *fp;
 char *context, *name;
 {
+    if (DebugOutput) fprintf( stdout, "SetPreviousButton\n" );
     fprintf( fp, "<A HREF=\"%s\"><IMG SRC=\"%sprevious.xbm\"></A>", 
 	     context, NoBMCopy ? BMURL : "" );  
 /* fprintf( fp, "<b>Previous: </b><A HREF=\"%s\">%s</a> ", context, name ); */
@@ -767,11 +781,13 @@ FILE *fp;
 void WriteBeginPointerMenu( fout )
 FILE *fout;
 {
+    if (DebugOutput) fprintf( stdout, "WriteBeginPointerMenu\n" );
     fputs( "<li>", fout );
 }
 void WriteEndOfPointer( fout )
 FILE *fout;
 {
+    if (DebugOutput) fprintf( stdout, "WriteEndOfPointer\n" );
     fputs( NewLineString, fout );
 }
 
@@ -838,6 +854,7 @@ char *str;
 Synopsis:
 
   tohtml [-latex] [-info] [-mapref filename] [-basedir dirname]
+         [-userpath path]
          [-iftex] [-split n] [-headeroffset n ]
          [-mapman filename ] [-cvtlatex] [-cvttables]
          [-cvtmath] [-simplemath] [-useimg] [-gaudy] [-iftex] [-default]
@@ -931,6 +948,7 @@ FILE *fpout;
 {
     int c;
 
+    if (DebugOutput) fprintf( stdout, "WriteEndPage\n" );
     if (!eofpage) {
 	if (endpagefilename[0]) {
 	    eofpage = fopen( endpagefilename, "r" );

@@ -1,2 +1,2 @@
-in	<QUOTE>%n
-out	</QUOTE>%n
+in	<BLOCKQUOTE>%n
+out	</BLOCKQUOTE>%n

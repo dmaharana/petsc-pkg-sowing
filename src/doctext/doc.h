@@ -29,6 +29,9 @@ extern int InArgList;
 //
 extern const char *IgnoreString;
 
+// Used for newlines.
+extern char NewlineString[3];
+
 // Many of these are KINDS returned by the tests
 #define ROUTINE     '@'
 #define DESCRIPTION 'D'

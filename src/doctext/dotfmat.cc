@@ -87,7 +87,7 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 	  textout->PutChar( ch );
 	}
 	at_first = 0;
-	}
+    }
     if (InArgList) {
       textout->PutOp( "e_arg_inlist" );
       textout->PutOp( "s_defn_inlist" );
@@ -98,9 +98,12 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
     }
     SkipWhite( ins );
     while ( !ins->GetChar( &ch ) ) {
-	textout->PutChar( ch );
-	if (ch == '\n') { 
+	if (ch != '\n') { 
+	    textout->PutChar( ch );
+	}
+	else {
 	    int ns = 0;
+	    textout->PutNewline();
 	    /* Check for a "continued" description, defined as:
 	       next line is neither EMPTY nor starts with . or $ */
 	    // Skip the prefix, peek at next character
@@ -147,8 +150,8 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 		else 
 		  ins->UngetChar( pat[1] );
 		}
-		// Unget the first non-blank character.
-		ins->UngetChar( ch );
+	      // Unget the first non-blank character.
+	      ins->UngetChar( ch );
 	    }
 	}
     }

@@ -23,7 +23,7 @@ FILE *fin, *fout;
     SCSetCommentChar( 0 );
 
     UsingLatexinfo = 1;
-    /* printf ("Using Latexinfo Style\n" ); */
+    /* printf ("Using Latexinfo Style\n" );  */
     TXInsertName( TeXlist, "dfn", TXdfn, 0, (void *)0 );
     TXInsertName( TeXlist, "var", TXdfn, 0, (void *)0 );
     TXInsertName( TeXlist, "routine", TXroutine, 1, (void *)0 );

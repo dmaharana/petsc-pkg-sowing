@@ -27,6 +27,8 @@ const char *IgnoreString = 0;
 
 int DoDosFileNewlines = 0;
 
+char NewlineString[3];
+
 // Indicate if we're in an argument list or not
 int InArgList = 0;
 
@@ -470,10 +472,17 @@ int OutputText( InStream *ins, char *matchstring,
 	      InComment = 0;
 	      break;
 	    }
+	    /* Check for escaped colon */
+	    else if (lp[0] == ':' && lp[-1] == '\\') {
+	        *--lp = ':';
+		lp[1] = 0;
+		textout->PutToken( 0, lineBuffer + 1 );
+		textout->PutNewline();
+	    }
 	    else if (lp[0] == ':') {
 		*lp = '\0';
 		/* Using .SS confused the whatis builder */
-		// If there is a "manual" SYNOPSIS, dont' generate one later
+		// If there is a "manual" SYNOPSIS, don't generate one later
 		if (DocMatchTokens( lineBuffer+1, "SYNOPSIS" )) {
 		    // Skip synopsis for routines, not MACROs!
 		    // Skip not yet implmented!
@@ -604,7 +613,12 @@ int HandleArgs( CmdLine *cmd, const char **path, const char **extension,
   if (!cmd->HasArg( "-debug_paths" )) (void) InstreamDebugPaths( 1 );
   if (!cmd->HasArg( "-nolocation" )) GiveLocation = 0;
   if (!cmd->HasArg( "-location" )) GiveLocation = 1;
-  if (!cmd->HasArg( "-dosnl" )) DoDosFileNewlines = 1;
+  if (!cmd->HasArg( "-dosnl" )) {
+    DoDosFileNewlines = 1;
+    strcpy(NewlineString, "\r\n" );
+  }
+  else
+    strcpy( NewlineString, "\n" );
 
   return 0;
 }

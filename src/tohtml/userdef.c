@@ -110,9 +110,7 @@ TeXEntry *e;
 /* Add "name" as a user-defined command.  We've read the \def only */
 static char name[128];
 
-void TXAddUserDef( TeXlist, e )
-SRList   *TeXlist;
-TeXEntry *e;
+void TXAddUserDef( SRList *TeXlist, TeXEntry *e )
 {
     int        nargs, ch, nsp, nbrace, j, i;
     char       *p;

@@ -1,9 +1,6 @@
-ALL: doctext/doctext.html doctext.ps
-#    tohtml, bfort
+ALL: doctext/doctext.htm doctext.ps
 ALLPS: doctext.ps
-#    tohtml.ps bfort.ps
-ALLWWW: doctext/doctext.html
-#	tohtml/tohtml.html bfort/bfort.html
+ALLWWW: doctext/doctext.htm
 SHELL = /bin/sh
 #LATEX = virtex \&latex209
 #DEFAULTPATH=`kpsewhich -show-path=.tex`
@@ -12,7 +9,7 @@ SHELL = /bin/sh
 #TOHTML = tohtml
 TOHTML = ../../src/tohtml/tohtml
 
-.SUFFIXES: .html .ps .dvi .tex
+.SUFFIXES: .htm .ps .dvi .tex
 # add -texindex $*.fn for large manuals
 .tex.dvi:
 	-/bin/rm -f $*.aux $*.blg $*.bbl $*.toc $*.lof $*.lot
@@ -40,28 +37,19 @@ swap.eps: swap.txt
 	cat Swap.3 | ptroff -man -t > swap.eps
 	doctext -latex -ext tex swap.txt
 
-.tex.html:
+.tex.htm:
 	/bin/rm -f $*.aux
-	${TOHTML} -default -mapref ../../demos/petsc.cit \
+	${TOHTML} -default -dosnl -mapref ../../demos/petsc.cit \
 		-mapman ../../www/petsc.cit $*.tex
-	${TOHTML} -default -mapref ../../demos/petsc.cit \
+	${TOHTML} -default -dosnl -mapref ../../demos/petsc.cit \
 		-mapman ../../www/petsc.cit $*.tex
 	/bin/mv latex.err $*.err
 
-#
-tohtml/tohtml.html: tohtml.tex
-	/bin/rm -f tohtml.aux
-	${TOHTML} -default -mapref ../../demos/petsc.cit \
-		-mapman ../../www/petsc.cit tohtml.tex
-	${TOHTML} -default -mapref ../../demos/petsc.cit \
-		-mapman ../../www/petsc.cit tohtml.tex
-	/bin/mv latex.err tohtml.err
-#
-doctext/doctext.html: doctext.tex
+doctext/doctext.htm: doctext.tex
 	/bin/rm -f doctext.aux
-	${TOHTML} -default -mapref ../../demos/petsc.cit \
+	${TOHTML} -default -dosnl -mapref ../../demos/petsc.cit \
 		-mapman ../../www/petsc.cit doctext.tex
-	${TOHTML} -default -mapref ../../demos/petsc.cit \
+	${TOHTML} -default -dosnl -mapref ../../demos/petsc.cit \
 		-mapman ../../www/petsc.cit doctext.tex
 	/bin/mv latex.err doctext.err
 

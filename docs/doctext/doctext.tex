@@ -259,7 +259,11 @@ and the LaTeX output is shown in Figure \ref{fig:swap-latex}.
 The body of the structured comment follows simple rules.  Any line that ends
 in a colon (\code{:}) generates a section title with the line as the title.
 In the example of \code{Swap}, the line \code{Parameters:} generates a section
-in the man page with title {\bf Parameters}.
+in the man page with title {\bf Parameters}. To end a line in a colon without
+generating a section heading, precede it with a backslash:
+\begin{example}
+   This is not a new section\bw:
+\end{example}
 
 The first column within a structured comment has a special meaning.  A period
 followed by a space indicates that the line 
@@ -568,8 +572,8 @@ the \code{-defn   filename} command-line argument.  You can then invoke your
 new commands by using \code{.f<command name>} in the source file.  For
 example, if the file \file{indent.def} contains
 \begin{example}
-     in \begin{quotation}%n
-     out \end{quotation}%n
+     in \bw{}begin\{quotation\}%n
+     out \bw{}end\{quotation\}%n
 \end{example}
 you can use 
 \begin{example}

@@ -1,33 +1,19 @@
 dnl
-dnl This is an autoconf version 2 configure file
-dnl
-dnl Caching is usually WRONG for systems with cross-mounted file systems
-dnl (the cache file may correspond to a different system).  Since configure
-dnl is not on a performance-critical path, go for robustness over speed.
-dnl
-define([AC_CACHE_LOAD], )dnl
-define([AC_CACHE_SAVE], )dnl
-dnl
-dnl We may prefer to allow an alternate cache to be specified; in that case,
-dnl we may want to set cache_file to /dev/null instead of defining load/save
-dnl as empty.
-dnl
 AC_INIT(Makefile.in)
-AC_PREREQ(2.12)
+AC_PREREQ(2.13)
 AC_CONFIG_HEADER(include/sowingconfig.h:config.h.in)
+
+PAC_ARG_CACHING 
 
 CONFIGURE_OPTIONS="$ac_configure_args"
 AC_SUBST(CONFIGURE_OPTIONS)
 dnl Special features
 dnl If this is set and needed, add -DNEEDS_STDLIB_PROTOTYPES to optflags
 check_for_needs_stdlib_proto=0
-dnl If this is set and needed, add -munalign-doubles
-check_for_needs_unalign=0
 dnl
 AC_ARG_ENABLE(strict,[
 --enable-strict - turn on strict debugging when using gcc],
-optflags="$optflags -g -Dlint";check_for_needs_stdlib_proto=1;check_for_needs_unalign=1;gcc_opts="-Wall -Wstrict-prototypes -Wmissing-prototypes")
-dnl -munaligned-doubles is a SPARC-specific option
+optflags="$optflags -g -Dlint";check_for_needs_stdlib_proto=1;gcc_opts="-Wall -Wstrict-prototypes -Wmissing-prototypes")
 AC_ARG_ENABLE(echo,[
 --enable-echo   - Turn on strong echoing],set -x)
 AC_SUBST(optflags)
@@ -35,6 +21,7 @@ AC_ARG_ENABLE(inplace,[
 --enable-inplace - build the sowing program to run in the 
                    distribution directories, not the installation ($ac_default_prefix) 
                    directories],prefix=`pwd`)
+PAC_ARG_WWWDIR
 
 dnl Checks for programs.
 AC_PROG_RANLIB
@@ -48,6 +35,10 @@ dnl Add gcc checking options if present
 if test -n "$gcc_opts" -a "$GCC" = "yes" ; then
     optflags="$optflags $gcc_opts"
 fi
+dnl
+dnl Make sure that VPATH is provided
+MAKE=${MAKE:-make}
+PAC_PROG_MAKE_VPATH
 
 dnl
 dnl Programs for converting postscript to bitmaps or gifs.
@@ -83,7 +74,6 @@ AC_PATH_PROG(PBMTOXBM,pbmtoxbm)
 AC_PATH_PROG(PPMTOGIF,ppmtogif)
 
 dnl Checks for libraries.
-dnl AC_CHECK_LIB(X11,XDrawLine)
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -97,15 +87,6 @@ if test $check_for_needs_stdlib_proto = 1 ; then
 #include "include/protofix.h"
 #include <stdlib.h>
 #include <unistd.h>],void f(){},AC_MSG_RESULT(yes);optflags="$optflags -DNEEDS_STDLIB_PROTOTYPES",AC_MSG_RESULT(no))
-fi
-
-if test $check_for_needs_unalign = 1 ; then
-    AC_MSG_CHECKING(whether -munaligned-doubles is accepted)
-    CFLAGSSAV="$CFLAGS"
-    CFLAGS="$CFLAGS -munaligned-doubles"
-    AC_TRY_COMPILE([
-#include <stdlib.h>
-#include <unistd.h>],void f(){},AC_MSG_RESULT(yes);,AC_MSG_RESULT(no);CFLAGS="$CFLAGSSAV")
 fi
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -187,4 +168,8 @@ else
 fi
 AC_SUBST(expanded_datadir)
 
-AC_OUTPUT(Makefile src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile docs/Makefile confdb/Makefile include/textfilt/textpath.h include/patchlevel.h, chmod a+x bin/pstoxbm bin/pstogif)
+COPTIONS="$optflags"
+AC_SUBST(COPTIONS)
+AC_SUBST(CXXOPTIONS)
+
+AC_OUTPUT(Makefile Makerules src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile docs/Makefile confdb/Makefile include/textfilt/textpath.h include/patchlevel.h, chmod a+x bin/pstoxbm bin/pstogif)

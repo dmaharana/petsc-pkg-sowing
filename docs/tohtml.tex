@@ -1,4 +1,8 @@
-\documentstyle[epsf,twoside,../funclist,../tpage,../tools,../../tex/latexinfo]{article} 
+%\documentstyle[epsf,twoside,../funclist,../tpage,../tools,../../tex/latexinfo]{article} 
+\documentclass[twoside]{doctext/linfoem}
+\usepackage{epsf,doctext/refman2,doctext/tpage}
+\usepackage{/homes/gropp/bin/share/tex/fileinclude}
+\usepackage{/homes/gropp/bin/share/tex/url}
 \c -*-latexinfo-*-
 \c \anltmtrue
 \anltmfalse
@@ -258,6 +262,13 @@ bitmap.  Not yet available.
 you define some TeX and LaTeX commands as having a specific behavior when
 generating HTML files (\pxref{User-defined Replacements}).
 
+\item[-userpath pathlist]For each \code{documentstyle} option or
+  \code{usepackage} name, look in \code{pathlist} for a file of the form
+  \code{name.def}.  For example, \verb+\usepackage{refman}+ will cause
+  \code{tohtml} to search for \code{refman.def} in \code{pathlist}.  If
+  \code{-userpath} is not given, no files will be searched for.  The
+  environment variable \code{DOCTEXT_USERPATH} may be used instead of
+  \code{-userpath}. 
 \end{description}
 
 
@@ -309,7 +320,7 @@ is useful when making the second run of \code{tohtml}.  It is meaningful only wh
 \code{-cvtlatex} is used.
 
 \item[-basedir dirname]Add an HTML base command to the main file.
-For example, \gb\code{-basedir "http://www.mcs.anl.gov/mpi"} causes
+For example, \code{-basedir "http://www.mcs.anl.gov/mpi"} causes
 \begin{example}
 <base href="http://www.mcs.anl.gov/mpi">
 \end{example}

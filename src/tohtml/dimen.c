@@ -17,8 +17,7 @@ static char  dimentoken[MAX_TOKEN];
  */
 
 /* Read a TeX dimension.  Return 1 on success, 0 on failure. */
-int TXReadDimen( fin )
-FILE *fin;
+int TXReadDimen( FILE *fin )
 {
     int ch, nsp;
     char *p;
@@ -30,6 +29,11 @@ FILE *fin;
     if (ch == '-') {
 	ch = SCTxtFindNextANToken( fpin[curfile], dimentoken, MAX_TOKEN, &nsp );
 	if (ch == EOF) return 1;
+    }
+    if (ch == CommandChar) {
+	/* Read macro name and accept that */
+	TeXReadMacroName( dimentoken );
+	return 0;
     }
 /* Should be number; skip.  Note that it could contain a decimal point.
    This is rough; it skips decimal points and numbers until it finds something
@@ -54,7 +58,7 @@ FILE *fin;
 	  strcmp( dimentoken, "fill" ) == 0 ||
 	  strcmp( dimentoken, "filll" ) == 0)) {
 	fprintf( ferr, 
-	    "Unrecogonized dimension %s at %s line %d (might be r-value)\n", 
+	    "Unrecognized dimension %s at %s line %d (might be r-value)\n", 
 		 dimentoken,
 		 InFName[curfile] ? InFName[curfile] : "", LineNo[curfile] );
 	/* Might be an r-value; push the token back */

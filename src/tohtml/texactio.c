@@ -175,24 +175,6 @@ typedef struct {
     int fontsize;         /* Not used yet; should be delta? */
     } TeXStack;
 
-/* The latex stack */
-typedef enum { TXITEMIZE, TXDESCRIPTION, TXEXAMPLE, TXVERBATIM, TXENUMERATE,
-	       TXLIST } 
-        EnvType;
-typedef struct {
-    EnvType env;
-    int    num;            /* relative number of an item in this
-			      environment (needed for enumerate) */
-    void    (*newline)( FILE *);   
-                           /* routine to call for new-line handling */
-    char   *p1, *p2;       /* Pointers to text for use by the environment
-                              (some have code and replacement text; 
-			      principly a user-defined list environment */
-    /* These are currently unused */
-    char   *label_node_name; /* Name of the node */
-    char   *label_text;      /* Text to use in refering to the label */
-    } LaTeXStack;
-
 /* The section stack */
 typedef struct {
     int level;     /* Section level */
@@ -343,9 +325,7 @@ char *str;
 }
 
 /* Output text (may be pushed back for rescanning) */
-void TeXoutstr( fout, str )
-FILE *fout;
-char *str;
+void TeXoutstr( FILE *fout, char *str )
 {
     if (InArg) {
 	if (!ArgBuffer) {
@@ -396,8 +376,7 @@ int  *nsp;
 }
 
 /* Read a macro name, having read the first \ */
-void TeXReadMacroName( token )
-char *token;
+void TeXReadMacroName( char *token )
 {
     int ch, nsp;
 
@@ -525,7 +504,7 @@ int TeXGetGenArg( FILE *fin, char *token, int maxtoken, char sc, char ec,
 	    }
 	    /* Skip comments 2/11/97 */
 	    else if (ch == CommentChar) {
-		SYTxtDiscardToEndOfLine( fin );
+		SCTxtDiscardToEndOfLine( fin );
 		LineNo[curfile]++;
 		continue;
 	    }
@@ -705,7 +684,7 @@ TeXEntry *e;
 void TXcomment( e )
 TeXEntry *e;
 {
-    SYTxtDiscardToEndOfLine( fpin[curfile] );
+    SCTxtDiscardToEndOfLine( fpin[curfile] );
     LineNo[curfile]++;
 }
 
@@ -1544,10 +1523,7 @@ TeXEntry *e;
 
 /* Skip over an environment.  If flag, write out text and process TeX command,
    otherwise, just skip */
-void TeXskipEnv( e, name, flag )
-TeXEntry *e;
-char     *name;
-int      flag;
+void TeXskipEnv( TeXEntry *e, char *name, int flag )
 {
     int  nsp, ch;
     FILE *fout = fpout;
@@ -1555,6 +1531,7 @@ int      flag;
     int  last_skip    = AmSkipping;
     char *btext, *etext;
     int  nargs;
+    int line_num = LineNo[curfile];  /* Line number where we start */
 
     /* If we are here, we assume that we are in valid TeX.  This is a
        temporary hack.  What we'd like to do is wait until we see either
@@ -1595,8 +1572,37 @@ int      flag;
 	    TXPopFile();
 	}
 	if (ch == EOF) break;
+	if (InVerbatim) {
+	    /* Special case: look only for \end{name} */
+	    if (ch == CommandChar) {
+		last_was_nl  = 0;
+		TeXoutsp( fout, nsp );
+		TeXReadMacroName( curtok );
+		if (strcmp( curtok, "end" ) == 0) {
+		    if (DebugCommands)
+			fprintf( stdout, "Getting argument for end{}\n" );
+		    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
+			TeXAbort( "TXSkipEnv", e->name );
+		    if (strcmp( name, curtok ) == 0) {
+			/* We've found the end of the verbatim */
+			break;
+		    }
+		    else {
+			/* Ignore it */
+			TeXoutstr( fout, "\\end{" );
+			TeXoutstr( fout, curtok );
+			TeXoutstr( fout, "}" );
+		    }
+		}
+		else {
+		    TeXoutstr( fout, "\\" );
+		    TeXoutstr( fout, curtok );
+		}
+		continue;
+	    }
+	}
 	if (ch == CommentChar && !InVerbatim) {
-	    SYTxtDiscardToEndOfLine( fpin[curfile] );
+	    SCTxtDiscardToEndOfLine( fpin[curfile] );
 	    LineNo[curfile]++;
 	    continue;
 	}
@@ -1626,7 +1632,7 @@ int      flag;
 		    else if (strcmp( curtok, name ) != 0) {
 			if (flag) 
 			    fprintf( ferr, 
-				     "%s does not match %s\n", curtok, name );
+     "%s does not match %s (started at line %d)\n", curtok, name, line_num );
 		    }
 		    else {
 			break;
@@ -1656,7 +1662,7 @@ int      flag;
 		    else if (strcmp( curtok, name ) != 0) {
 			if (flag) 
 			    fprintf( ferr, 
-				     "%s does not match %s\n", curtok, name );
+     "%s does not match %s (started at line %d)\n", curtok, name, line_num );
 		    }
 		    else
 			break;
@@ -1794,7 +1800,7 @@ int      doout;
 		TeXoutstr( fout, curtok );
 		TeXoutstr( fout, NewLineString );
 	    }
-	    SYTxtDiscardToEndOfLine( fpin[curfile] );
+	    SCTxtDiscardToEndOfLine( fpin[curfile] );
 	}
 	else if (ch == CommandChar) {
 	    if (doout) 
@@ -1947,6 +1953,7 @@ TeXEntry *e;
     lstack[lSp].newline	    = TeXoutNewline;
     lstack[lSp].label_node_name = 0;
     lstack[lSp].label_text	    = 0;
+    lstack[lSp].line_num = LineNo[curfile];
     TXbitemize( e );
     TeXskipEnv( e, "itemize", 1 );
     TXeitemize( e );
@@ -1964,6 +1971,7 @@ TeXEntry *e;
     lstack[lSp].newline	    = TeXoutNewline;
     lstack[lSp].label_node_name = 0;
     lstack[lSp].label_text	    = 0;
+    lstack[lSp].line_num = LineNo[curfile];
     TXbenumerate( e );
     TeXskipEnv( e, "enumerate", 1 );
     TXeenumerate( e );
@@ -1981,6 +1989,7 @@ TeXEntry *e;
     lstack[lSp].newline	    = TeXoutNewline;
     lstack[lSp].label_node_name = 0;
     lstack[lSp].label_text	    = 0;
+    lstack[lSp].line_num = LineNo[curfile];
     TXbdescription( e );
     TeXskipEnv( e, "description", 1 );
     TXedescription( e );
@@ -2005,6 +2014,7 @@ char     *itemtext, *itemcommands;
     lstack[lSp].p2		= itemcommands;
     lstack[lSp].label_node_name	= 0;
     lstack[lSp].label_text	= 0;
+    lstack[lSp].line_num        = LineNo[curfile];
 /* May want description instead of itemize */
 /* TXbitemize( e ); */
     TeXskipEnv( e, "list", 1 );
@@ -2056,6 +2066,7 @@ TeXEntry *e;
     lstack[lSp].newline	    = TXWriteStartNewLine;
     lstack[lSp].label_node_name = 0;
     lstack[lSp].label_text	    = 0;
+    lstack[lSp].line_num    = LineNo[curfile];
 
 /* Verbatim has no comments! */
 /*
@@ -2466,13 +2477,101 @@ char *preamble = 0;
 char *predoc   = 0;
 char *documentcmd = 0;
 
-void TXdocumentstyle( e )
-TeXEntry *e;
+#ifndef MAX_PATH_LEN
+#define MAX_PATH_LEN 1024
+#endif
+void TXLoadPackage( const char *p )
+{
+    /* First, try to find name.def in the definition list.  If
+       found, load that */
+    if (userpath[0]) {
+	char filename[MAX_PATH_LEN];
+	char fullfilename[MAX_PATH_LEN];
+    
+	strcpy( filename, p );
+	strcat( filename, ".def" );
+	if (SYGetFileFromPath( userpath, filename, "DOCTEXT_USERPATH", 
+			       fullfilename, 'r' )) {
+	    RdBaseDef( fullfilename );
+	    return;
+	}
+    }
+
+    /* Otherwise, check against predefined commands */
+    if (strcmp( p, "latexinfo" ) == 0 || 
+	strcmp( p, "latexinfo-1.2") == 0)
+	TXStyleLatexInfo( TeXlist, fpin[curfile], fpout );
+    else if (strcmp( p, "epsf" ) == 0) 
+	TXStyleEPSF( TeXlist, fpin[curfile], fpout );
+    else if (strcmp( p, "psfig" ) == 0) {
+	TXStylePsfig( TeXlist, fpin[curfile], fpout );
+	/* Must defined the ESPF style, since we currently use
+	   them to implement psfig */
+	TXStyleEPSF( TeXlist, fpin[curfile], fpout );
+    }
+    else if (strcmp( p, "11pt" ) == 0 || 
+	     strcmp( p, "twoside" ) == 0 ||
+	     strcmp( p, "fleqn" ) == 0)
+	    ;
+    /* My private styles ... */
+    else if (strcmp( p, "fileinclude" ) == 0) 
+	;
+    else if (strcmp( p, "funclist" ) == 0)
+	TXStyleFunclist( TeXlist, fpin[curfile], fpout );
+    else if (strcmp( p, "tpage" ) == 0)         
+	TXStyleTpage( TeXlist, fpin[curfile], fpout );
+    else if (strcmp( p, "tools" ) == 0) 
+	TXStyleTools( TeXlist, fpin[curfile], fpout );
+    else if (strcmp( p, "anlhtext" ) == 0) 
+	TXStyleAnlhtext( TeXlist, fpin[curfile], fpout );
+    else if (strcmp( p, "handpage" ) == 0) 
+	TXStyleANLHandpage( TeXlist, fpin[curfile], fpout );
+    else {
+	fprintf( ferr, "Unknown documentstyle or package %s\n", p );
+	/* Question here is whether we should try to read the document
+	   style file */
+    }
+}
+
+/* Latex 2e specifies additional stuff using \usepackage, which may have
+   a comma separate list of packages. */
+void TXusepackage( TeXEntry *e )
+{
+    char *p, *ptr, *p1;
+
+    PUSHCURTOK;
+    strncpy( CmdName, e->name, 64 );
+    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
+	    TeXAbort( "TXusepackage", e->name );
+    strcat( preamble, "\\usepackage{" );
+    strcat( preamble, curtok );
+    strcat( preamble, "}" );
+
+    /* Now, get comma-separate list of packages and load each one */
+    p = curtok;
+    while (*p) {
+	ptr = p;
+	while (*ptr && *ptr != ',') ptr++;
+	if (!*ptr) ptr[1] = 0; /* so the p = ptr + 1 below will exit */
+	*ptr = 0; /* Change , to null */
+	/* Skip over any path part of the specification */
+	p1 = strrchr( p, '/' );
+	if (p1) p = p1 + 1;
+	TXLoadPackage( p );
+	p = ptr + 1;
+    }
+
+    CmdName[0] = 0;
+    POPCURTOK;
+}
+
+void TXdocumentstyle( TeXEntry *e )
 {
     static char name[] = "documentstyle";
     char *p, *ptr, *p1;
+
     preamble    = (char *)MALLOC( 2000 ); CHKPTR(preamble);
-    predoc	    = (char *)MALLOC( 2000 ); CHKPTR(predoc);
+    predoc	= (char *)MALLOC( 2000 ); CHKPTR(predoc);
     predoc[0]   = 0;
     preamble[0] = 0;
     if (!documentcmd) documentcmd = name;
@@ -2495,37 +2594,7 @@ TeXEntry *e;
 	  if (*p1 == '/') p = p1 + 1;
 	  p1++;
 	}
-	if (strcmp( p, "latexinfo" ) == 0 || 
-	    strcmp( p, "latexinfo-1.2") == 0)
-	  TXStyleLatexInfo( TeXlist, fpin[curfile], fpout );
-	else if (strcmp( p, "epsf" ) == 0) 
-	  TXStyleEPSF( TeXlist, fpin[curfile], fpout );
-	else if (strcmp( p, "psfig" ) == 0) {
-	  TXStylePsfig( TeXlist, fpin[curfile], fpout );
-	  /* Must defined the ESPF style, since we currently use
-	     them to implement psfig */
-	  TXStyleEPSF( TeXlist, fpin[curfile], fpout );
-	}
-	else if (strcmp( p, "11pt" ) == 0 || 
-		 strcmp( p, "twoside" ) == 0 ||
-		 strcmp( p, "fleqn" ) == 0)
-	    ;
-	/* My private styles ... */
-	else if (strcmp( p, "funclist" ) == 0)
-	  TXStyleFunclist( TeXlist, fpin[curfile], fpout );
-	else if (strcmp( p, "tpage" ) == 0)         
-	  TXStyleTpage( TeXlist, fpin[curfile], fpout );
-	else if (strcmp( p, "tools" ) == 0) 
-	  TXStyleTools( TeXlist, fpin[curfile], fpout );
-	else if (strcmp( p, "anlhtext" ) == 0) 
-	  TXStyleAnlhtext( TeXlist, fpin[curfile], fpout );
-	else if (strcmp( p, "handpage" ) == 0) 
-	  TXStyleANLHandpage( TeXlist, fpin[curfile], fpout );
-	else {
-	  fprintf( ferr, "Unknown documentstyle %s\n", p );
-	  /* Question here is whether we should try to read the document
-	     style file */
-	}
+	TXLoadPackage( p );
 	p = ptr + 1;
       }
     }
@@ -2534,7 +2603,10 @@ TeXEntry *e;
     strcat( preamble, "{" );
     strcat( preamble, curtok );
     strcat( preamble, "}" );
-    if (strcmp( curtok, "linfoem" ) == 0) {
+    p = strrchr( curtok, '/' );
+    if (!p) p = curtok;
+    else p++;
+    if (strcmp( p, "linfoem" ) == 0) {
 	TXStyleLatexInfo( TeXlist, fpin[curfile], fpout );
     }
     POPCURTOK;
@@ -3126,6 +3198,7 @@ FILE *fin, *fout;
     TXInsertName( TeXlist, "pageref",  TXref, 1, (void *)0 );
     TXInsertName( TeXlist, "documentstyle", TXdocumentstyle, 1, (void *)0 );
     TXInsertName( TeXlist, "documentclass", TXdocumentclass, 1, (void *)0 );
+    TXInsertName( TeXlist, "usepackage", TXusepackage, 1, (void *)0 );
     TXInsertName( TeXlist, "title",  TXtitle, 1, (void *)0 );
     TXInsertName( TeXlist, "author",  TXauthor, 1, (void *)0 );
     TXInsertName( TeXlist, "date",  TXdate, 1, (void *)0 );
@@ -3285,9 +3358,7 @@ FILE *fin, *fout;
     TXInsertName( TeXlist, "AURL", TXAURL, 2, (void *)0 );
 }	
 
-void TeXProcessCommand( token, fin, fout )
-char *token;
-FILE *fin, *fout;
+void TeXProcessCommand( char *token, FILE *fin, FILE *fout )
 {
     LINK     *l;	
     TeXEntry *e;
@@ -3399,7 +3470,7 @@ FILE *fin, *fout;
 	    else break;
 	}
 	if (ch == CommentChar) {
-	    SYTxtDiscardToEndOfLine( fpin[curfile] );
+	    SCTxtDiscardToEndOfLine( fpin[curfile] );
 	    LineNo[curfile]++;
 	}
 	else if (ch == CommandChar) {

@@ -4,17 +4,13 @@ ALL: default
 #      All rights reserved.  See COPYRIGHT in top-level directory.
 #
 
-##### User configurable options #####
+SHELL = @SHELL@
+include ../../Makerules
+top_srcdir=@top_srcdir@
+srcdir=@srcdir@
+@VPATH@
 
-CCC         = @CXX@
-AR          = @AR@
-RANLIB      = @RANLIB@
-CPPFLAGS    = -I../../include/textfilt -I../../include
-ALL_CFLAGS  = @optflags@ $(CFLAGS)
-.SUFFIXES: .o .C .cxx
-### End User configurable options ###
-
-SHELL = /bin/sh
+INCLUDES   = -I${top_srcdir}/include/textfilt -I${top_srcdir}/include
 
 LIBS = ../../lib/libtfilter.a 
 
@@ -27,12 +23,9 @@ mapnames: mapnames.o
 .c.o:
 	$(CC) $(CFLAGS) -c $*.c
 
-.cxx.C:
-	ln -s $*.cxx $*.C
-.C.o:
-	$(CCC) $(CPPFLAGS) $(ALL_CFLAGS) -c $*.C
-.cxx.o:
-	ln -s $*.cxx $*.C
-	$(CCC) $(CPPFLAGS) $(ALL_CFLAGS) -c $*.C
+doc_SOURCES = 
+wwwpages:
+manpages:
+
 clean:
 	/bin/rm -f *.o *~ $(EXECS) ccc

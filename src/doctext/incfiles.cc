@@ -85,7 +85,7 @@ int SaveIncludeFile( InStream *ins, char *matchstring )
     	// Don't allow I...I to cross a newline
     	if (ch == '\n') return 1;
         }
-   includes->PutChar( '\n' );
+   includes->PutToken( 0, NewlineString );
    return rc;
 }
 // Call this when starting a new input file

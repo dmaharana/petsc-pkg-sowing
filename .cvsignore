@@ -1,4 +1,6 @@
 config.log
 make.log
 config.status
+config.cache
 Makefile
+Makerules

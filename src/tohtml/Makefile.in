@@ -1,41 +1,33 @@
 ALL: tohtml
-SHELL       = /bin/sh
-prefix      = @prefix@
-exec_prefix = @exec_prefix@
-CC = @CC@
+SHELL       = @SHELL@
 
-.SUFFIXES:
-.SUFFIXES: .c .o
+include ../../Makerules
+top_srcdir=@top_srcdir@
+srcdir=@srcdir@
+@VPATH@
 
 LIBS      =  ../../lib/libsowing.a
-CPPFLAGS    = -I../../include -DPSPATH='"@bindir@/"' \
+INCLUDES   = -I${top_srcdir}/include 
+DEFS      =   -DPSPATH='"@bindir@/"' \
               -DBMSOURCE='"@datadir@/"' \
 	      -DBASEDEF='"@datadir@/basedefs.txt"'
-ALL_CFLAGS = @optflags@ $(CFLAGS)
-LDIR      = 
-CLEANFILES = tohtml tortf 
+PROGRAMS = tohtml tortf 
 
 BASEOBJS = search.o texactio.o rdaux.o rdindx.o label.o scan.o \
            refmap.o style.o dimen.o userdef.o tabular.o biblio.o environ.o \
 	   math.o rddefs.o latexinfo.o
 
 tohtml: tohtml.o  tex2html.o $(BASEOBJS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o tohtml \
-		tohtml.o tex2html.o $(BASEOBJS) $(LIBS)
+	$(C_LINK) -o tohtml tohtml.o tex2html.o $(BASEOBJS) $(LIBS)
 
 xwdsize: xwdsize.o
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o xwdsize xwdsize.o -lX11
+	$(C_LINK) -o xwdsize xwdsize.o -lX11
 
-manpages:
-	../../bin/doctext -quotefmt -mpath ../../man/man1 -ext 1 tohtml.c
-wwwpages:
-	../../bin/doctext -html -quotefmt -mpath ../../www/www1 -ext 1 tohtml.c
+doc_SOURCES = tohtml.c
 
 clean:
-	-/bin/rm -f *.o *~ $(CLEANFILES)
+	-/bin/rm -f *.o *~ $(PROGRAMS)
 	-/bin/rm -f tohtml\ win32/debug/*
-.c.o:
-	$(CC) -c $(CPPFLAGS) $(ALL_CFLAGS) $<
 
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA    = $(INSTALL)

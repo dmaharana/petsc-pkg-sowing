@@ -172,9 +172,14 @@ int DocReadFuncSynopsis( InStream *ins, OutStream *outs )
 	while (!ins->GetChar( &ch ) && isspace(ch) ) ;
 	ins->UngetChar( ch );
       }
-      else 
-	// May want to check for \n and do PutNewline instead.
-	outs->PutToken( nsp, token );
+      else {
+	// Check for \n and do PutNewline instead.
+	if (token[0] == '\n') {
+	  outs->PutToken( nsp, NewlineString );
+	}
+	else
+	  outs->PutToken( nsp, token );
+      }
     }
     ins->SetBreakChar( '\n', nl_break );
     ins->SetBreakChar( '_', us_break );
@@ -274,7 +279,10 @@ int DocReadMacroSynopsis( InStream *ins, char *matchstring, OutStream *outs,
 	    newline_cnt = 0;
 	}
 	if (newline_cnt == 2) break;
-	outs->PutChar( ch );
+	if (ch == '\n') 
+	  outs->PutToken( 0, NewlineString );
+	else
+	  outs->PutChar( ch );
 	}
     *at_end = state < 0;
     return 0;

@@ -6,22 +6,6 @@
 
 extern LINK *GetNextLink ( LINK * );
 extern SRList *topicctx;
-typedef enum { TXITEMIZE, TXDESCRIPTION, TXEXAMPLE, TXVERBATIM, TXENUMERATE,
-	       TXLIST } 
-        EnvType;
-typedef struct {
-    EnvType env;
-    int    num;            /* relative number of an item in this
-			      environment (needed for enumerate) */
-    void    (*newline)( FILE *);   
-                           /* routine to call for new-line handling */
-    char   *p1, *p2;       /* Pointers to text for use by the environment
-                              (some have code and replacement text; 
-			      principly a user-defined list environment */
-    /* These are currently unused */
-    char   *label_node_name; /* Name of the node */
-    char   *label_text;      /* Text to use in refering to the label */
-    } LaTeXStack;
 extern LaTeXStack lstack[];
 extern int lSp;
 
@@ -94,8 +78,7 @@ TeXEntry *e;
 }	
 
 /* This processes the LatexInfo "example" environment */
-void TeXexample( e )
-TeXEntry *e;
+void TeXexample( TeXEntry *e )
 {
 /* Skip code until find an \end{example} */
     TXWriteStartNewLine( fpout );
@@ -106,9 +89,12 @@ TeXEntry *e;
     lstack[lSp].newline	    = TXWriteStartNewLine;
     lstack[lSp].label_node_name = 0;
     lstack[lSp].label_text	    = 0;
+    lstack[lSp].line_num = LineNo[curfile];
 
-    /* Example is a verbatim environment, even the TeX comment character
+    /* Example is a verbatim-like environment, even the TeX comment character
        should be ignored (it isn't now) */
+    /* However, some operations should be processed, including macros and
+       {} */
     PushCommentChar( '\0' );
     TeXskipEnv( e, "example", 1 );
     PopCommentChar();

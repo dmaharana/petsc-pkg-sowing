@@ -30,6 +30,7 @@ N*/
    a     verbatim
    table example
 .ve
+and a line ending in colon\:
 
 .fin
     This is in quotation format

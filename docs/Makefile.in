@@ -1,4 +1,12 @@
 ALL: install.ps tohtml.ps bfort.ps doctext.ps
+SHELL = @SHELL@
+TOHTML = ../src/tohtml/tohtml
+prefix = @prefix@
+wwwdir = @wwwdir@
+
+doc_POSTSCRIPT = install.ps tohtml.ps bfort.ps doctext.ps
+doc_HTML = install/install.htm tohtml/tohtml.htm bfort/bfort.htm \
+	doctext/doctext/doctext.htm
 
 install.ps: install.tex
 	latex install
@@ -11,3 +19,37 @@ bfort.ps: bfort.tex
 	dvips bfort
 doctext.ps: doctext/doctext.tex
 	(cd doctext ; latex doctext ; dvips doctext ; mv doctext.ps .. )
+
+install/install.htm: install.tex config.txt
+	${TOHTML} -default -dosnl install.tex
+	${TOHTML} -default -dosnl install.tex
+tohtml/tohtml.htm: tohtml.tex
+	${TOHTML} -default -dosnl tohtml.tex
+	${TOHTML} -default -dosnl tohtml.tex
+bfort/bfort.htm: bfort.tex
+	${TOHTML} -default -dosnl bfort.tex
+	${TOHTML} -default -dosnl bfort.tex
+doctext/doctext/doctext.htm: doctext/doctext.tex
+	(cd doctext ; ${MAKE} doctext/doctext.htm )
+config.txt: ../configure
+	../configure --help >config.txt
+clean:
+	rm -f bfort.ps tohtml.ps install.ps doctext.ps \
+		*.aux *.dvi *.toc *.log *.fn *.hux
+
+install-web: ${doc_HTML}
+	rm -rf ${wwwdir}/sowinginstall
+	cp -rp install ${wwwdir}/sowinginstall
+	rm -rf ${wwwdir}/bfort
+	cp -rp bfort ${wwwdir}/bfort
+	rm -rf ${wwwdir}/tohtml
+	cp -rp tohtml ${wwwdir}/tohtml
+	rm -rf ${wwwdir}/doctext
+	cp -rp doctext/doctext ${wwwdir}/doctext
+install-postscript: ${doc_POSTSCRIPT}
+	cp -p install.ps ${wwwdir}/sowinginstall.ps
+	cp -p bfort.ps ${wwwdir}/bfort.ps
+	cp -p tohtml.ps ${wwwdir}/tohtml.ps
+	cp -p doctext.ps ${wwwdir}/doctext.ps
+
+install: install-web install-postscript

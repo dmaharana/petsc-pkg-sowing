@@ -1,4 +1,4 @@
-.TH doctext 1 "4/22/1998" " " ""
+.TH doctext 1 "2/1/2000" " " ""
 .SH NAME
 doctext \-  Generate documentation pages from source files 
 .SH SYNOPSIS
@@ -7,7 +7,8 @@ doctext [ -mpath path ] [ -ext n ] [ -I filename ] [ -latex ]
 [ -html ] [ -index filename ] [ -indexdir filename ]
 [ -jumpfile filename ] [ -outfile filename ]
 [ -mapref filename ] [ -nolocation ] [ -location ]
-[ -defn defnfile ] [ -dosnl ]
+[ -defn defnfile ] [ -dosnl ] [ -skipprefix name ]
+[ -ignore string ]
 [ -heading string ] [ -basedir dirname ] filenames
 .fi
 
@@ -82,8 +83,22 @@ Put the manpages in the indicated file
 .PD 1
 .PD 0
 .TP
-.B -quotefmt    
+.B -quotefmt      
 - support '\\\\tt' and `\\\\em`
+.PD 1
+.PD 0
+.TP
+.B -skipprefix name 
+- skip 'name' at the beginning of each line.  This
+may be used for Fortran or Shell sources
+.PD 1
+.PD 0
+.TP
+.B -ignore string 
+- skip 'name' in a function synopsis.  This can be used 
+to remove special keywords needed to build the routine
+but not needed by the user (e.g., special export
+keywords when building DLLs)   
 .PD 1
 .PD 0
 .TP
@@ -109,4 +124,4 @@ Uses directory in the Location: field
 extracted
 .PD 1
 .SH LOCATION
-doctext.cxx
+doctext.cc

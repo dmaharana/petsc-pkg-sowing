@@ -346,7 +346,7 @@ FILE *fp;
     }
 }
 
-char SCGetCommentChar()
+char SCGetCommentChar( void )
 {
     return commentchar;
 }
@@ -354,8 +354,7 @@ char SCGetCommentChar()
 /* Skip whitespace to the first newline and then skip spaces and newlines 
    until a nonblank is found.  Push back the spaces before the first nonblank 
    character */
-void SCSkipNewlines2( fp )
-FILE *fp;
+void SCSkipNewlines2( FILE *fp )
 {
     int c;
     int space_count;
@@ -394,4 +393,15 @@ FILE *fp;
 	}
 	space_count++;
     }
+}
+
+/* This is a version of SYxxx that first draws from the pushback buffer */
+void SCTxtDiscardToEndOfLine( FILE *fp )
+{
+    int c;
+    while (lp >= 0) {
+	c = lbuffer[lp--];
+	if (c == '\n') return;
+    }
+    SYTxtDiscardToEndOfLine( fp );
 }

@@ -1,0 +1,15 @@
+config.txt
+*.log
+*.dvi
+*.aux
+*.fn
+*.toc
+bfort.ps
+doctext.ps
+tohtml.ps
+install.ps
+*.err
+*.hux
+install
+tohtml
+bfort
