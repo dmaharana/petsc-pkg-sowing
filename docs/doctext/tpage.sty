@@ -151,8 +151,9 @@ by
 % Default margins
 \def\titleleftmargin{0pt}
 \def\titletopmargin{0pt}
-\long\def\ANLTMTitle#1#2#3#4{{\leftskip\titleleftmargin\rightskip0in\relax
-\oddsidemargin 0pt \evensidemargin 0pt\relax
+\long\def\ANLTMTitle#1#2#3#4{{\leftskip0in\rightskip0in\relax
+%\oddsidemargin 0pt \evensidemargin 0pt\relax
+\oddsidemargin \titleleftmargin \evensidemargin \titleleftmargin\relax
 \voffset 0pt
 \topmargin \titletopmargin
 \vbox to \vsize{%
