@@ -4,6 +4,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include "tfile.h"
 // The next is for MAXPATHLEN; MSDOS does not have param.h
 #ifndef MAX_PATH_LEN

@@ -1645,10 +1645,11 @@ else {
 	strcmp( token, "complex") == 0 ||
 	strcmp( token, "dcomplex")== 0 ||
 	strcmp( token, "MPI_Status") == 0 ||
-	strcmp( token, "Scalar")     == 0 ||
+	strcmp( token, "PetscScalar")== 0 ||
+	strcmp( token, "PetscReal")  == 0 ||
 	strcmp( token, "PetscTruth") == 0 ||
 	strcmp( token, "BCArrayPart") == 0 ||
-	strcmp( token, "PLogDouble") == 0)
+	strcmp( token, "PetscLogDouble") == 0)
         type->is_native = 1;
     /* PETSc types that are implicitly pointers are specified here */
     /* This really needs to take the types from a file, so that
@@ -1663,10 +1664,15 @@ else {
         strcmp(token,"Stencil") == 0 || strcmp(token,"DrawAxis") == 0 ||
         strcmp(token,"PetscObject") == 0 || strcmp(token,"TS") == 0 ||
         strcmp(token,"DF") == 0 || strcmp(token,"PetscRandom") == 0 ||
-        strcmp(token,"VecScatter") == 0 ||
-        strcmp(token,"AO") == 0 ||
-        strcmp(token,"GVec") == 0 ||
-        strcmp(token,"Viewer") == 0) {
+        strcmp(token,"VecScatter") == 0 || strcmp(token,"AO") == 0 ||
+        strcmp(token,"Mesh") == 0 || strcmp(token,"Partition") == 0 ||
+        strcmp(token,"Grid") == 0 || strcmp(token,"Discretization") == 0 ||
+        strcmp(token,"FieldClassMap") == 0 || 
+	strcmp(token,"VarOrdering") == 0 ||
+        strcmp(token,"ElementVec") == 0 || strcmp(token,"ElementMat") == 0 ||
+        strcmp(token,"GVec") == 0 || strcmp(token,"GMat") == 0 ||
+        strcmp(token,"GSNES") == 0 || strcmp(token,"GTS") == 0 ||
+        strcmp(token,"Viewer") == 0 || strcmp(token,"StageLog") == 0)  {
 	/* type->has_star      = 1; */
 	type->type_has_star = 1;
 	type->implied_star  = 1;

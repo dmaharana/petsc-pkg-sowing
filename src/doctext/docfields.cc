@@ -13,6 +13,7 @@
 
 #include "doc.h"
 #include "docutil.h"
+#include <stdlib.h>
 #include <string.h>
 
 // DocField is a structure so that we can hide it :)

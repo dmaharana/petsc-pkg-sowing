@@ -1,3 +1,4 @@
+/* -*- Mode: C++; c-basic-offset:4 ; -*- */
 #include "tfilter.h"
 
 #include "instream.h"
@@ -487,14 +488,14 @@ int InStreamBuf::UngetChar( char ch )
 /* The gettoken base should just use getchar */
 int InStreamBuf::Close( )
 {
-    delete buffer;
+    if (buffer) delete buffer;
     return 0;
 }
 
 InStreamBuf::~InStreamBuf( )
 {
-    if (next) delete next;
-    delete buffer;
+    //if (next) delete next;
+    if (buffer) delete buffer;
 }
 
 /*

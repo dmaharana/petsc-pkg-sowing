@@ -39,8 +39,7 @@ void SCSetDebug( int flag )
     DebugScan     = flag;
 }
 
-int (*SCSetTranslate( f ))( char *, int )
-int (*f)( char *, int );
+int (*SCSetTranslate( int (*f)( char *, int ) ))( char *, int )
 {
     int (*old) ( char *, int );
 
