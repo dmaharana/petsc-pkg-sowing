@@ -194,7 +194,7 @@ SRList *TeXlist = 0;
 /* Stack of input files */
 int    curfile = 0;    
 FILE   *(fpin[10]) = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-FILE   *fpout;
+FILE   *fpout = 0;
 char   *outfile = 0;
 
 TeXStack stack[MAX_TEX_STACK];
@@ -887,8 +887,7 @@ void TXhref( TeXEntry *e )
     CmdName[0] = 0;
 }	
 
-void TXmore( e )
-TeXEntry *e;
+void TXmore( TeXEntry *e )
 {
     TeXoutstr( fpout, " (Press " );
     TXref( e );
@@ -916,8 +915,7 @@ void PopCommentChar( void )
     SCSetCommentChar( SavedCommentChar2[comment_depth] );
 }
 
-void TXcode( e )
-TeXEntry *e;
+void TXcode( TeXEntry *e )
 {
 /* output in "code" font */
     if (!InDocument) return;	
@@ -937,8 +935,7 @@ TeXEntry *e;
     CmdName[0] = 0;
 }
 
-void TXroutine( e )
-TeXEntry *e;
+void TXroutine( TeXEntry *e )
 {
 /* output in "code" font */
     if (!InDocument) return;	
@@ -956,8 +953,7 @@ TeXEntry *e;
     CmdName[0] = 0;
 }
 
-void TXdfn( e )
-TeXEntry *e;
+void TXdfn( TeXEntry *e )
 {
 /* output in "definition" font */
     if (!InDocument) return;	
@@ -972,8 +968,7 @@ TeXEntry *e;
     POPCURTOK;
 }
 
-void TXvar( e )
-TeXEntry *e;
+void TXvar( TeXEntry *e )
 {
 /* output in "var" font */
     if (!InDocument) return;	
@@ -988,8 +983,7 @@ TeXEntry *e;
     POPCURTOK;
 	}
 
-void TXfile( e )
-TeXEntry *e;
+void TXfile( TeXEntry *e )
 {
 /* output in "file" font */
     if (!InDocument) return;	
@@ -1004,14 +998,12 @@ TeXEntry *e;
     POPCURTOK;
 }
 
-void TXatletter( e )
-TeXEntry *e;
+void TXatletter( TeXEntry *e )
 {
     SCSetAtLetter( 1 );
 }
 
-void TXatother( e )
-TeXEntry *e;
+void TXatother( TeXEntry *e )
 {
     SCSetAtLetter( 0 );
 }
@@ -1058,8 +1050,7 @@ void TXasisGrouped( TeXEntry *e )
 }
 
 /* This is like asis, but handles the "to <dimension>", which may be \hsize */
-void TXbox( e )
-TeXEntry *e;
+void TXbox( TeXEntry *e )
 {
     int  i, nsp, ch;
 
@@ -1576,12 +1567,15 @@ void TeXskipEnv( TeXEntry *e, char *name, int flag )
        a command that generates non-blank output or a section/chapter/part
        command */
     if (!InOutputBody) {
+	if (DebugOutput) printf( "Starting a page in skipenv\n" );
 	/* Start the page if we haven't already */
 	WriteHeadPage( fpout );
 	/* We don't have a good title.  Use the input file name */
 	WriteFileTitle( fpout, InFName[0] );
 	/* WriteBeginPage sets InOutputBody to 1 */
 	WriteBeginPage( fpout );
+	/* In case we created a new file */
+	fout = fpout;
     }
 
 /* First, remove any newlines */
@@ -1692,8 +1686,11 @@ void TeXskipEnv( TeXEntry *e, char *name, int flag )
 		}
 		else {
 		    /* Need to process TeX command */
-		    if (flag) 
+		    if (flag) {
 			TeXProcessCommand( curtok, fpin[curfile], fout );
+			/* Incase we change fpout */
+			fout = fpout;
+		    }
 		}
 	    }
 	    else {
@@ -2577,6 +2574,11 @@ void TXLoadPackage( const char *p )
 	TXStyleAnlhtext( TeXlist, fpin[curfile], fpout );
     else if (strcmp( p, "handpage" ) == 0) 
 	TXStyleANLHandpage( TeXlist, fpin[curfile], fpout );
+    else if (strcmp( p, "urlsimple" ) == 0 ||
+	     strcmp( p, "code" ) == 0) {
+	/* Simple defines URL and AURL */
+	;
+    }
     else {
 	fprintf( ferr, 
 "Unknown documentstyle or package %s; provide\n\
@@ -3456,13 +3458,13 @@ void TeXWriteContents( FILE *fout )
 	sprintf( ContentsLocation, "%s#Node0", outfile );
     else
 	strcpy(  ContentsLocation, "Node0" );
-    WriteSectionHeader( fout, "Contents", "Node", 0, (char *)0, 0 );
+    WriteSectionHeader( fpout, "Contents", "Node", 0, (char *)0, 0 );
     if (NumChildren( (void *)0 ) > 0 ) {
-	WriteChildren( fout, (void *)0, ContentsDepth );
+	WriteChildren( fpout, (void *)0, ContentsDepth );
     }
     CurSeqnum++;
 /* At this point, we'd like to generate the title and authors. */
-    WriteTextHeader( fout );
+    WriteTextHeader( fpout );
 /*WRfromauxfile( fout, 0 );*/
 
 /* Switch to writing a new aux file */
@@ -3473,10 +3475,7 @@ void TeXWriteContents( FILE *fout )
 /*
    Here is the beginning of a sketch of a routine to process a LaTeXInfo file
  */
-void ProcessLatexFile( argc, argv, fin, fout )
-int  argc;
-char **argv;
-FILE *fin, *fout;
+void ProcessLatexFile( int argc, char **argv, FILE *fin, FILE *fout )
 {
     int  nsp, ch;
 
@@ -3593,9 +3592,7 @@ char *s;
  * Print strings that may contain TOK_START/TOK_END sequences
  */
 
-void TXPrintToken( fp, str )
-FILE *fp;
-char *str;
+void TXPrintToken( FILE *fp, const char *str )
 {
     char c;
     while (*str) {

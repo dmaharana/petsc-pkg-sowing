@@ -547,63 +547,80 @@ void RemoveExtension( char *str )
 
 /* This isn't documented either in the "comprehensive" list of commands OR IN
    THE FORMAL GRAMMAR (but it IS in the description of grammar elements) */
-void WriteStartNewLine( fp )
-FILE *fp;
+void WriteStartNewLine( FILE *fp )
 {
     fprintf( fp, "<BR>%s", NewLineString );
 }	
 
-
+void DebugWriteString( FILE *fd, const char *str, int maxlen )
+{
+    const char *p = str;
+    
+    while (*p && maxlen-- >= 0) {
+	if (*p == TOK_START) {
+	    fputs( "<tok_start>", fd );
+	}
+	else if (*p == TOK_END) {
+	    fputs( "<tok_end>", fd );
+	}
+	else {
+	    fputc( *p, fd );
+	}
+	p++;
+    }
+}
 void WriteString( FILE *fp, char *str )
 {
     int  in_tok = 0;
+    char thischar;
 
     if (DebugOutput) { 
-	if (strlen(str) < 40) {
-	    fprintf( stdout, "WriteString (%s)\n", str );
-	}
-	else {
-	    fprintf( stdout, "WriteString (%40s)\n", str );
-	}
+	fprintf( stdout, "WriteString (" );
+	DebugWriteString( stdout, str, 40 );
+	fprintf( stdout, ") to %d\n", fileno(fp) );
     }
-	
+
+    if (fileno(fp) < 0) {
+	abort();
+    }
     while (*str) {
+	thischar = *str;
 	/* Skip the token start/end and don't process while within */
-	if (*str == TOK_START) {
+	if (thischar == TOK_START) {
 	    if (DebugOutput) fprintf( stdout, "token-start\n" );
 	    in_tok++;
 	}
-	else if (*str == TOK_END) {
+	else if (thischar == TOK_END) {
 	    if (DebugOutput) fprintf( stdout, "token-end\n" );
 	    in_tok--;
 	}
-	else if (in_tok == 0 && *str == '>' && DoOutputTranslation) {
+	else if (in_tok == 0 && thischar == '>' && DoOutputTranslation) {
 	    fputs( "&gt;", fp );
 	}
-	else if (in_tok == 0 && *str == '<' && DoOutputTranslation) {
+	else if (in_tok == 0 && thischar == '<' && DoOutputTranslation) {
 	    fputs( "&lt;", fp );
 	}
-	else if (in_tok == 0 && *str == '&' && DoOutputTranslation) {
+	else if (in_tok == 0 && thischar == '&' && DoOutputTranslation) {
 	    fputs( "&amp;", fp );
 	}
-	else if (*str == '\r') {
+	else if (thischar == '\r') {
 	    fputc( ' ', fp );
-	    fputc( *str, fp );
+	    fputc( thischar, fp );
 	    if (str[1] == '\n') {
 		str++;
 		fputc( *str, fp );
 	    }
 		
 	}
-	else if (*str == '\n') {
+	else if (thischar == '\n') {
 	    fputc( ' ', fp );
 	    /* DOS style is \r\n */
 	    if (DoDosFileNewlines)
 		fputc( '\r', fp );
-	    fputc( *str, fp );
+	    fputc( thischar, fp );
 	}
 	else {
-	    fputc( *str, fp );
+	    fputc( thischar, fp );
 	}
 	str++;
     }
@@ -785,9 +802,7 @@ char *context, *name;
 /* fprintf( fp, "<b>Next: </b><A HREF=\"%s\">%s</a> ", context, name ); */
 }   
 
-void SetPreviousButton( fp, context, name )
-FILE *fp;
-char *context, *name;
+void SetPreviousButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetPreviousButton\n" );
     fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%sprevious.xbm\"></A>", 
@@ -796,15 +811,13 @@ char *context, *name;
 }   
 
 /* THIS SHOULD NOT BE USED (see "InDocument check in tex2html" ) */
-void WritePar( fp )
-FILE *fp;
+void WritePar( FILE *fp )
 {
     fprintf( stderr, "***BOGUS***\n" );
     fprintf( fp, "<P>%s", NewLineString );
 }
 
-void WriteBeginPointerMenu( fout )
-FILE *fout;
+void WriteBeginPointerMenu( FILE *fout )
 {
     if (DebugOutput) fprintf( stdout, "WriteBeginPointerMenu\n" );
     fputs( "<li>", fout );
@@ -993,6 +1006,8 @@ void WriteEndPage( FILE *fpout )
 	fprintf( fpout, "</HTML>%s", NewLineString );
     wrotebody = 0;
     InOutputBody = 0;
+    if (DebugOutput) printf( "Set InOutputBody and wrotebody to 0\n" );
+    
     wrotehead = 0;
 }
 
@@ -1002,9 +1017,12 @@ void WriteBeginPage( FILE *fpout )
 {
     int c;
 
+    if (DebugOutput && wrotebody) 
+	printf( "Skipping WriteBeginPage because writebody is true\n" );
     if (wrotebody) return;
-    wrotebody = 1;
+    wrotebody    = 1;
     InOutputBody = 1;
+    if (DebugOutput) printf( "Set InOutputBody and wrotebody to 1\n" );
 
     if (DebugOutput) fprintf( stdout, "WriteBeginPage\n" );
     /* Should parameterize this - command in basedefs? */
@@ -1106,14 +1124,14 @@ char *str;
     return 0;
 }
 
-void RemoveFonts( instr, outstr )
-char *instr, *outstr;
+void RemoveFonts( const char *instr, char *outstr )
 {
-    char *pin = instr, *pout = outstr;
+    const char *pin = instr;
+    char *pout = outstr;
 
     while (pin && *pin) {
 	if (*pin == '<') 
-	    pin = SkipHTML( ++pin );
+	    pin = SkipHTML( (char *)++pin );
 	else if (*pin == TOK_START || *pin == TOK_END)
 	    pin++;
 	else {

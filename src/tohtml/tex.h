@@ -404,7 +404,7 @@ extern void TeXWriteContents ( FILE * );
 extern void ProcessLatexFile ( int, char **, FILE *, FILE * );
 extern void TXSetCitePrefix ( char * );
 extern void TXSetCiteSuffix ( char * );
-extern void TXPrintToken ( FILE *, char * );
+extern void TXPrintToken ( FILE *, const char * );
 extern int FileExists ( char * ); 
 
 /* tex2html.c */
@@ -455,7 +455,7 @@ extern void TXbcenter( FILE * );
 extern void TXecenter( FILE * );
 
 /* tohtml.c - should be moved */
-extern void RemoveFonts ( char *, char * );
+extern void RemoveFonts ( const char *, char * );
 extern void GetBaseName ( char * );
 extern int SCHTMLTranslate ( char *, int );
 extern void WriteHeader ( FILE * );
