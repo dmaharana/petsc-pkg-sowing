@@ -247,5 +247,6 @@ sub setp4syms {
 	       'TR_stack_init',
 	       'expect_cancel_ack',
 	       'sysv_semid0', 'sysv_num_shmids', 'sysv_shmat', 'sysv_shmid',
-	       'init_sysv_semset', 'remove_sysv_ipc' );
+	       'init_sysv_semset', 'remove_sysv_ipc',
+	       'gethostname_p4' );
 }

@@ -30,7 +30,7 @@ if [ ! -d $TMPDIR ] ; then
     TMPDIR="."
 fi
 ######################################################################
-if [ "$GS" = "" ] ; then GS="@GS@" ; fi
+if [ "$GS" = "" -a -x "@GS@" ] ; then GS="@GS@" ; fi
 if [ "$PSTOPPM" = "" ] ; then PSTOPPM=@datadir@/pstoppm.ps ; fi
 if [ "$PNMCROP" = "" ] ; then PNMCROP=@PNMCROP@ ; fi
 if [ "$PBMTOXBM" = "" ] ; then PBMTOXBM=@PBMTOXBM@ ; fi
