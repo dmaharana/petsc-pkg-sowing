@@ -320,7 +320,7 @@ TextOutMap::TextOutMap( TextOut *textout, int pflag )
   print_matched = pflag;
 }
 
-int TextOutMap::PutChar( char c )
+int TextOutMap::PutChar( const char c )
 {
     char cc[2];
     cc[0] = c;
