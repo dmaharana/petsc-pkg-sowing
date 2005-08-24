@@ -1636,7 +1636,8 @@ else {
     if (strcmp( token, "FILE" ) == 0) type->is_FILE = 1;
     /* Note that we might want special processing for short and long */
     /* Some of these are NOT C types (complex, BCArrayPart)! */
-    if (strcmp( token, "double" ) == 0 ||
+    if (
+	strcmp( token, "double" ) == 0 ||
 	strcmp( token, "int"    ) == 0 ||
 	strcmp( token, "short"  ) == 0 ||
 	strcmp( token, "long"   ) == 0 ||
@@ -1656,30 +1657,94 @@ else {
         strcmp( token, "PetscCookie") == 0 ||
         strcmp( token, "PetscEvent") == 0 ||
         strcmp( token, "PetscBLASInt") == 0 ||
-        strcmp( token, "PetscSysInt") == 0)
+        strcmp( token, "ISColoringValue") == 0 ||
+        strcmp( token, "MatReal") == 0 ||
+        strcmp( token, "PetscSysInt") == 0 ||
+        /* some structures - that are like arrays */
+        strcmp(token,"MatInfo") == 0 ||
+        strcmp(token,"MatStencil") == 0 ||
+        strcmp(token,"DALocalInfo") == 0 ||
+        strcmp(token,"MatFactorInfo") == 0 ||
+        0)
 	type->is_native = 1;
     /* PETSc types that are implicitly pointers are specified here */
     /* This really needs to take the types from a file, so that
        it can be configured for each package.  See the search code in 
        info2rtf (but do a better job of it) */
-    if (strcmp(token,"XBWindow") == 0 || strcmp(token,"KSP") == 0 ||
-        strcmp(token,"Vec") == 0 || strcmp(token,"IS") == 0 ||
-        strcmp(token,"Mat") == 0 || strcmp(token,"SLES") == 0 ||
-        strcmp(token,"PC") == 0 || strcmp(token,"Draw") == 0 ||
-        strcmp(token,"DrawLG") == 0 || strcmp(token,"SNES") == 0 ||
-        strcmp(token,"DA") == 0 || strcmp(token,"Grid") == 0 ||
-        strcmp(token,"Stencil") == 0 || strcmp(token,"DrawAxis") == 0 ||
-        strcmp(token,"PetscObject") == 0 || strcmp(token,"TS") == 0 ||
-        strcmp(token,"DF") == 0 || strcmp(token,"PetscRandom") == 0 ||
-        strcmp(token,"VecScatter") == 0 || strcmp(token,"AO") == 0 ||
-        strcmp(token,"Mesh") == 0 || strcmp(token,"Partition") == 0 ||
-        strcmp(token,"Grid") == 0 || strcmp(token,"Discretization") == 0 ||
-        strcmp(token,"FieldClassMap") == 0 || 
-	strcmp(token,"VarOrdering") == 0 ||
-        strcmp(token,"ElementVec") == 0 || strcmp(token,"ElementMat") == 0 ||
-        strcmp(token,"GVec") == 0 || strcmp(token,"GMat") == 0 ||
-        strcmp(token,"GSNES") == 0 || strcmp(token,"GTS") == 0 ||
-        strcmp(token,"Viewer") == 0 || strcmp(token,"StageLog") == 0)  {
+    if (
+        strcmp(token,"AO") == 0 ||
+        strcmp(token,"AOData") == 0 ||
+        strcmp(token,"AOData2dGrid") == 0 ||
+        strcmp(token,"ClassPerfLog") == 0 ||
+        strcmp(token,"ClassRegLog") == 0 ||
+        strcmp(token,"DA") == 0 ||
+        strcmp(token,"DM") == 0 ||
+        strcmp(token,"DMMG") == 0 ||
+        strcmp(token,"EventPerfLog") == 0 ||
+        strcmp(token,"EventRegLog") == 0 ||
+        strcmp(token,"IntStack") == 0 ||
+        strcmp(token,"IS") == 0 ||
+        strcmp(token,"ISColoring") == 0 ||
+        strcmp(token,"ISLocalToGlobalMapping") == 0 ||
+        strcmp(token,"KSP") == 0 ||
+        strcmp(token,"Mat") == 0 ||
+        strcmp(token,"MatFDColoring") == 0 ||
+        strcmp(token,"MatNullSpace") == 0 ||
+        strcmp(token,"MatPartitioning") == 0 ||
+        strcmp(token,"MatSNESMFCtx") == 0 ||
+        strcmp(token,"PC") == 0 ||
+        strcmp(token,"PetscADICFunction") == 0 ||
+        strcmp(token,"PetscBag") == 0 ||
+        strcmp(token,"PetscBagItem") == 0 ||
+        strcmp(token,"PetscDLLibraryList") == 0 ||
+        strcmp(token,"PetscDraw") == 0 ||
+        strcmp(token,"PetscDrawAxis") == 0 ||
+        strcmp(token,"PetscDrawHG") == 0 ||
+        strcmp(token,"PetscDrawLG") == 0 ||
+        strcmp(token,"PetscDrawSP") == 0 ||
+        strcmp(token,"PetscFList") == 0 ||
+        strcmp(token,"PetscMap") == 0 ||
+        strcmp(token,"PetscMatlabEngine") == 0 ||
+        strcmp(token,"PetscObject") == 0 ||
+        strcmp(token,"PetscObjectContainer") == 0 ||
+        strcmp(token,"PetscOList") == 0 ||
+        strcmp(token,"PetscRandom") == 0 ||
+        strcmp(token,"PetscTable") == 0 ||
+        strcmp(token,"PetscViewer") == 0 ||
+        strcmp(token,"PetscViewers") == 0 ||
+        strcmp(token,"PF") == 0 ||
+        strcmp(token,"SDA") == 0 ||
+        strcmp(token,"SNES") == 0 ||
+        strcmp(token,"StageLog") == 0 ||
+        strcmp(token,"TS") == 0 ||
+        strcmp(token,"Vec") == 0 ||
+        strcmp(token,"VecPack") == 0 ||
+        strcmp(token,"Vecs") == 0 ||
+        strcmp(token,"VecScatter") == 0 ||
+        /* the following are old stuff - not sure if required */
+        strcmp(token,"DF") == 0 ||
+        strcmp(token,"Discretization") == 0 ||
+        strcmp(token,"Draw") == 0 ||
+        strcmp(token,"DrawAxis") == 0 ||
+        strcmp(token,"DrawLG") == 0 ||
+        strcmp(token,"ElementMat") == 0 ||
+        strcmp(token,"ElementVec") == 0 ||
+        strcmp(token,"FieldClassMap") == 0 ||
+        strcmp(token,"GMat") == 0 ||
+        strcmp(token,"Grid") == 0 ||
+        strcmp(token,"Grid") == 0 ||
+        strcmp(token,"GSNES") == 0 ||
+        strcmp(token,"GTS") == 0 ||
+        strcmp(token,"GVec") == 0 ||
+        strcmp(token,"Mesh") == 0 ||
+        strcmp(token,"Partition") == 0 ||
+        strcmp(token,"PetscDrawMesh") == 0 ||
+        strcmp(token,"SLES") == 0 ||
+        strcmp(token,"Stencil") == 0 ||
+        strcmp(token,"VarOrdering") == 0 ||
+        strcmp(token,"Viewer") == 0 ||
+        strcmp(token,"XBWindow") == 0 ||
+        0 )  {
 	/* type->has_star      = 1; */
 	type->type_has_star = 1;
 	type->implied_star  = 1;
@@ -1845,7 +1910,7 @@ int has_extra_chars;
     /* Peak at the next character */
     c = FindNextANToken( fin, p, &nsp1 );
 
-    if (type && !arg->has_star && !type->implied_star && !isMPI2 &&
+    if (type && !arg->has_star && !type->implied_star && 
 	!type->is_mpi && c != '[') {
 	if (nsp == 0) nsp++;
 	OutputToken( fout, "*", nsp );
