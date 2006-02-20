@@ -1634,6 +1634,9 @@ else {
     /* Look for known names */
     if (strcmp( token, "char" ) == 0) type->is_char = 1;
     if (strcmp( token, "FILE" ) == 0) type->is_FILE = 1;
+    /* FIXME: We should put these names in an array, and provide
+       a way to add to that array from a configuration file,
+       to make it easier to customize and extend this code */
     /* Note that we might want special processing for short and long */
     /* Some of these are NOT C types (complex, BCArrayPart)! */
     if (
@@ -1649,6 +1652,7 @@ else {
 	strcmp( token, "PetscScalar")== 0 ||
 	strcmp( token, "PetscReal")  == 0 ||
 	strcmp( token, "PetscTruth") == 0 ||
+	strcmp( token, "KSPConvergedReason") == 0 ||
 	strcmp( token, "BCArrayPart") == 0 ||
 	strcmp( token, "PetscLogDouble") == 0 ||
 	strcmp( token, "PetscInt") == 0 ||
