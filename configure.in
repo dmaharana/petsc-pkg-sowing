@@ -1,10 +1,19 @@
 dnl
-AC_INIT(Makefile.in)
+dnl Use the new AC_INIT format
+AC_INIT(sowing,1.1.11,gropp@mcs.anl.gov,sowing-1.1.11)
 dnl We pick autoconf 2.59 because the various 2.x autoconf versions are
 dnl not compatible with each other and this lets us fix on a particular
 dnl set of macros and fixes
 AC_PREREQ(2.59)
-AC_CONFIG_HEADER(include/sowingconfig.h:config.h.in)
+dnl AC_CONFIG_HEADER(include/sowingconfig.h:config.h.in)
+AC_CONFIG_HEADER(include/sowingconfig.h)
+
+PACKAGE_MAJOR_VERSION=`echo $PACKAGE_VERSION | sed -e 's/\..*//'`
+PACKAGE_MINOR_VERSION=`echo $PACKAGE_VERSION | sed -e 's/.*\.\(.*\)\..*/\1/'`
+PACKAGE_SUBMINOR_VERSION=`echo $PACKAGE_VERSION | sed -e 's/.*\..*\.//'`
+AC_SUBST(PACKAGE_MAJOR_VERSION)
+AC_SUBST(PACKAGE_MINOR_VERSION)
+AC_SUBST(PACKAGE_SUBMINOR_VERSION)
 
 PAC_ARG_CACHING 
 
@@ -39,7 +48,7 @@ AC_PROG_CC
 dnl C++ is needed for the newer textfilter programs
 dnl The autoconf 2.13 list of C++ compilers is very short. 
 dnl We add to it here
-AC_CHECK_PROGS(CXX, $CCC c++ g++ gcc CC cxx cc++ cl xlC pgCC, gcc)
+AC_CHECK_PROGS(CXX, $CCC c++ g++ gcc CC cxx cc++ cl xlC_r xlC pgCC, gcc)
 AC_PROG_CXX
 dnl
 dnl Add gcc checking options if present
@@ -116,8 +125,8 @@ AC_HEADER_TIME
 AC_STRUCT_TM
 
 if test "$memcheck" = "yes" ; then
-    AC_DEFINE(MEMORY_TRACING)
-    AC_DEFINE(MEMORY_TRACING_REQUIRED)
+    AC_DEFINE(MEMORY_TRACING,1,[Define if memory tracing is desired])
+    AC_DEFINE(MEMORY_TRACING_REQUIRED,1,[Define if memory tracing is required])
 fi
 
 dnl Checks for library functions.
