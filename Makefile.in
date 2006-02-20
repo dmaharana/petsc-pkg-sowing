@@ -142,8 +142,9 @@ testing:
 	(cd src/doctext/test && ${MAKE} testing)
 	(cd src/tohtml/testing && ${MAKE} testing)
 
-configure: configure.in acconfigl.h confdb/acconfig.h
-	cat acconfigl.h confdb/acconfig.h > acconfig.h
+configure: configure.in confdb/acconfig.h
+	rm -f acconfig.h
+#	cp confdb/acconfig.h acconfig.h
 	autoheader
 	autoconf
 	rm -f acconfig.h
@@ -160,8 +161,7 @@ distclean:
 	-rm -f include/sowingconfig.h 
 
 SOWINGCVSHOME = /home/gropp/cvsMaster_z
-# Make sure to update patchlevel.h.in if you change VERSION
-VERSION       = 1.1.9
+VERSION       = @PACKAGE_VERSION@
 dist:
 	@if [ ! -d tmpdir ] ; then mkdir tmpdir ; fi
 	@rm -rf tmpdir/*
@@ -170,5 +170,6 @@ dist:
 	else \
 	    cd tmpdir && cvs -d $(SOWINGCVSHOME) export -D 'now' sowing >cvsexp.log 2>&1 ;\
 	fi
+	cd tmpdir && make -f Makefile.in configure
 	mv tmpdir/sowing tmpdir/sowing-$(VERSION)
 	cd tmpdir && tar cf - sowing-$(VERSION) | gzip -9 > ../sowing-$(VERSION).tar.gz
