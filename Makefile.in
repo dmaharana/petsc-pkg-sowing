@@ -165,6 +165,6 @@ dist:
 	else \
 	    cd tmpdir && cvs -d $(SOWINGCVSHOME) export -D 'now' sowing >cvsexp.log 2>&1 ;\
 	fi
-	cd tmpdir && make -f Makefile.in configure
+	cd tmpdir/sowing && autoheader && autoconf && rm -rf autom4te*
 	mv tmpdir/sowing tmpdir/sowing-$(VERSION)
 	cd tmpdir && tar cf - sowing-$(VERSION) | gzip -9 > ../sowing-$(VERSION).tar.gz
