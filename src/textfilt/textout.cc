@@ -594,7 +594,7 @@ int TextOut::ReadCommands( InStream *ins ){
 	            if (!p) return 1;
 	            strcpy( p, command );
 	            }
-	        delete entry->extra_data;
+	        delete (char*)entry->extra_data;
 	        }
 	    else {
 	            p = new char[strlen(command)+1];
