@@ -1,4 +1,4 @@
-ALL: tohtml bfort doctext mapnames
+ALL: all-redirect
 SUBDIRS = src
 prefix      = @prefix@
 exec_prefix = @exec_prefix@
@@ -10,7 +10,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA    = @INSTALL_DATA@
 SHELL = @SHELL@
 
-all: tohtml bfort doctext mapnames
+all-redirect: tohtml bfort doctext mapnames
 
 lib/libsowing.a libs:
 	@if [ ! -d lib ] ; then mkdir lib ; fi
