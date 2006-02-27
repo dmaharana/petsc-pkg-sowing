@@ -1,3 +1,4 @@
+/* -*- Mode: C++; c-basic-offset:4 ; -*- */
 #include "doc.h"
 #include "textout.h"
 #include "cmdline.h"
@@ -112,6 +113,7 @@ int main( int argc, char ** argv )
 		      DOCTEXT_PATH, "DOCTEXT_PATH", "latex.def", "r" );
 	}
     else {
+        cmd->HasArg( "-man" );    // allow -man as an option
 	textout = new TextOutNroff( );
 	if (!extension) extension = "3";
 	incommands = new InStreamFile( 
@@ -717,6 +719,7 @@ Input Parameters:
                    routines
 .    -latex      -   Generate latex output rather than man format files
 .    -html       -   Generate html (WWW) output rather than man format files
+.    -man        -   Generate man (nroff) output (default)
 .    -index filename - Generate a index file appropriate for tohtml
                     (for generating WWW files)
 .    -defn defnfilename - Read commands from this file after loading the
