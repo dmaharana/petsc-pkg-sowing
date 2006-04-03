@@ -1,7 +1,7 @@
 #! @PERL@
+# -*- Mode: perl; -*-
 # DO NOT EDIT
 # This file created by configure from the "sowing" package
-# -*- Mode:Perl; -*-
 #
 # Minimal processing of a BibTeX database file to make it html
 # Usage:
@@ -58,52 +58,74 @@ $outlist = 0;
 $debug = 0;
 $special_entity = 1;
 $check_valid_fields = 0;
+
+# The following variables are often set in the listconfig file
+$ListHeader = "";
+$ListFooter = "";
+$BibFileName = "";
+$EntryStart = "";
+$EntryEnd = "";
 #
+# ignorefields gives the names of fields that should not be noted as 
+# "not known".
+%ignorefields = ( 'area' => 1, 'areaseq' => 1 );
 # Default Formats for outlist
 # Book
     # title, author, publisher, year. 
     %htmlformatsBook = ( 'starttitle' => '<I>',
 			 'endtitle' => '</I>' );
-    @fieldlistBook = (title, author, publisher, note, year);
-    @fieldlistoptionalBook = (address, pages, isbn, lccn, series, keywords,
-			      editor, annote, pubaddress, key );
+    @fieldlistBook = ('title', 'author', 'publisher', 'note', 'year');
+    @fieldlistoptionalBook = ('address', 'pages', 'isbn', 'lccn', 'series', 
+	'keywords', 'editor', 'annote', 'pubaddress', 'key' );
+#
+# Booklet
+    # title, author, publisher, year. 
+    %htmlformatsBooklet = ( 'starttitle' => '<I>',
+			 'endtitle' => '</I>' );
+    @fieldlistBooklet = ('title', 'author', 'publisher', 'note', 'month', 
+			 'year');
+    @fieldlistoptionalBooklet = ('address', 'pages', 'isbn', 'lccn', 'series', 
+	'keywords', 'editor', 'annote', 'pubaddress', 'key' );
 #
 # Article 
     # title, author, journal, volume, number, pages, year.
     %htmlformatsArticle = ( 'starttitle' => '<I>',
 			   'endtitle' => '</I>' );
-    @fieldlistArticle = (title, author, journal, volume, number, pages, note, year);
-    @fieldlistoptionalArticle = (month, annote, url, acknowledgement, 
-				 bibdate, issn, coden, keywords,
-				 classification, conflocation, corpsource, 
-				 conftitle, sponsororg, treatment, key,
-				 affiliation, thesaurus, key, journalabr );
+    @fieldlistArticle = ('title', 'author', 'journal', 'volume', 'number', 
+	'pages', 'note', 'year');
+    @fieldlistoptionalArticle = ('month', 'annote', 'url', 'acknowledgement', 
+	'bibdate', 'issn', 'coden', 'keywords',
+	'classification', 'conflocation', 'corpsource', 
+	'conftitle', 'sponsororg', 'treatment', 'key',
+	'affiliation', 'thesaurus', 'key', 'journalabr' );
 # InBook
     # title, author, publisher, year.
     %htmlformatsInBook = ( 'starttitle' => '<I>',
 			   'endtitle' => '</I>' );
     # chapter is the chapter title.
-    @fieldlistInBook = (chapter, author, title, publisher, note, year);
-    @fieldlistoptionalInBook = (address, pages, isbn, lccn, series, keywords,
-			        editor, annote, pubaddress, key );
+    @fieldlistInBook = ('chapter', 'author', 'title', 'publisher', 'note', 
+	'year');
+    @fieldlistoptionalInBook = ('address', 'pages', 'isbn', 'lccn', 'series', 
+	'keywords', 'editor', 'annote', 'pubaddress', 'key' );
 
 #
 # InProceedings 
     # title, author, booktitle, editors, pages, year
     %htmlformatsInProc = ( 'starttitle' => '<I>',
 			  'endtitle' => '</I>' );
-    @fieldlistInProc = (title, author, booktitle, editor, pages, note, year);
-    @fieldlistoptionalInProc = (number, month, series, publisher, address,
-				volume, keywords, acknowledgement, treatment,
-				corpsource, conftitle, classification, 
-				isbn, organization, confdate,
-				meetingdate, meetingdate2, sponsor, 
-				sponsororg, thesaurus, affiliation, bibdate,
-				annote, url, issn, confloc, eariler, owner,
-				conflocation, crossref, editors,
-				conference, meetingaddress, earlier, 
-				coden, key, pubaddress, category, place,
-				affiliationaddress, journalabr );
+    @fieldlistInProc = ('title', 'author', 'booktitle', 'editor', 'pages', 
+	'note', 'year');
+    @fieldlistoptionalInProc = ('number', 'month', 'series', 'publisher', 
+	'address', 'volume', 'keywords', 'acknowledgement', 'treatment',
+	'corpsource', 'conftitle', 'classification', 
+	'isbn', 'organization', 'confdate',
+	'meetingdate', 'meetingdate2', 'sponsor', 
+	'sponsororg', 'thesaurus', 'affiliation', 'bibdate',
+	'annote', 'url', 'issn', 'confloc', 'eariler', 'owner',
+	'conflocation', 'crossref', 'editors',
+	'conference', 'meetingaddress', 'earlier', 
+	'coden', 'key', 'pubaddress', 'category', 'place',
+	'affiliationaddress', 'journalabr' );
 
     %htmlformatsInColl = %htmlformatsInProc;
     @fieldlistInColl = @fieldlistInProc;
@@ -113,17 +135,19 @@ $check_valid_fields = 0;
     # title, author, institution, number, year
     %htmlformatsTech = ( 'starttitle' => '<I>',
 			'endtitle' => '</I>' );
-    @fieldlistTech = (title, author, institution, organization, number, note, year);
-    @fieldlistoptionalTech = (month, keywords, url, language, notes, pages, 
-			      bibdate, later, scope, type, abstract-url, 
-			      annote, address, key, location, category );
+    @fieldlistTech = ('title', 'author', 'institution', 'organization', 
+	'number', 'note', 'year');
+    @fieldlistoptionalTech = ('month', 'keywords', 'url', 'language', 'notes',
+	'pages', 'bibdate', 'later', 'scope', 'type', 'abstract-url', 
+  	'annote', 'address', 'key', 'location', 'category' );
 #
 # Misc 
     # title, author, institution, number, year
     %htmlformatsMisc = ( 'starttitle' => '<I>',
 			'endtitle' => '</I>' );
-    @fieldlistMisc = (title, author, institution, organization, number, note, year);
-    @fieldlistoptionalMisc = ( month, annote, key, address, type );
+    @fieldlistMisc = ('title', 'author', 'institution', 'organization', 
+	'number', 'note', 'year');
+    @fieldlistoptionalMisc = ( 'month', 'annote', 'key', 'address', 'type' );
 
 # Manual, Unpublished come from Misc for now.  We don't need to define these
 # because Misc is the default
@@ -134,13 +158,14 @@ $check_valid_fields = 0;
 
 # Bibtex entry type mappings
 %shortentrynames = ( 'Book' => 'Book', 
-		  'Article' => 'Article',
-		  'Inproceedings' => 'InProc',
-		  'Incollection' => 'InColl',
-		  'Techreport' => 'Tech',
-		  'Misc' => 'Misc',
-		  'Unpublished' => 'Misc',
-		  'Manual' => 'Misc' );
+		     'Inbook' => 'InBook', 
+		     'Article' => 'Article',
+		     'Inproceedings' => 'InProc',
+		     'Incollection' => 'InColl',
+		     'Techreport' => 'Tech',
+		     'Misc' => 'Misc',
+		     'Unpublished' => 'Misc',
+		     'Manual' => 'Misc' );
 
 # Example Header entries for a listfile configuration file.
 #  $HeaderRE = "Section:";
@@ -195,7 +220,7 @@ while ($_ = $ARGV[0]) {
     elsif ($_ eq "-check") {
 	$check_valid_fields = 1;
     }
-    elsif ($_ eq "-help") {
+    elsif ($_ eq "-help" || $_ eq "-usage") {
 	print "bib2html [ -listfile name ] [ -listconfig name ] \
          [ -group name ] [ -ignore name ] [ -title name ] [ -nospecials ]\
          [ -nooldstyle ] [ -check ] filename \
@@ -245,6 +270,29 @@ while ($_ = $ARGV[0]) {
        -nooldstyle   - Print uses of oldstyle LaTeX to stderr.\
        -check        - Warn about unrecogonized BibTeX fields names.\
 \n";
+
+  	print "To customize the display of an entry, you can modify the\
+\"htmlformats<entryname>\" hash to define how to display each entry.  For example,\
+the default definition for the \"InBook\" entry type is\
+\
+    %htmlformatsInBook = ( \'starttitle\' => \'<I>\',
+			   \'endtitle\' => \'</I>\' );
+\
+You could redefine these for each entry that you wanted to change.  The names\
+of the keys are start<name> and end<name>, where <name> is one of the\
+recognized fields (e.g., title, author, year).  The recognized fields are\
+defined by the fieldlist<entryname> array, where <entryname> is an entry type.\n"; 
+	
+	print "The entry names must be chosen from the right hand side of the\
+following list; the left hand side is the full (BibTeX) name of the entry.\
+If the entry name is not listed here, use the BibTeX name, with the first \
+character capitalized and the other characters in lower case (e.g., Booklet,\
+not BookLet)\n";
+	foreach my $key (keys(%shortentrynames)) {
+	    my $name = $shortentrynames{$key};
+	    print "    $key => $name\n";
+	}
+
 	exit 0;
     }
     else {
@@ -256,12 +304,12 @@ open( BIB, "<$bibfile" ) || die "Could not open $bibfile!\n";
 
 if ($outlist) {
     open( LISTFILE, ">$listfile" ) || die "Could not open $listfile\n";
-    if ($listconfig ne "") {
+    if (defined($listconfig) && $listconfig ne "") {
 	require $listconfig;
 	print LISTFILE $ListHeader;
     }
 }
-if ($TitleString eq "") {
+if (!defined($TitleString) || $TitleString eq "") {
     $TitleString = "Bibliography for $UserName";
 }
 print "<HTML>\n<HEAD>\n";
@@ -284,6 +332,7 @@ $intable = 0;
 $dooutput = 1;
 $line_count = 0;
 $MakeBold = "";
+$fieldname = "";
 # Format as table
 while (<BIB>) {
     $line = $_;	
@@ -294,7 +343,7 @@ while (<BIB>) {
 	$bibstrings{$1} = $2;
 	next;
     }
-    elsif (/^\s*@([a-zA-Z]*)\s*[({]/) { 
+    elsif (/^\s*\@([a-zA-Z]*)\s*[({]/) { 
 	# Found the beginning of a BibTeX entry (@....)
 	$entry_type = lc( $1 );
 	if ($intable == 1) {
@@ -309,7 +358,7 @@ while (<BIB>) {
 	$inrow = ""; 
         $intable = 1;
 	$dooutput = 1;
-        s%@([a-zA-Z]*)([({])\s*(.*)\s*,\s*$%@<B>$1</B>$2<A NAME=\"$3\">$3</A>,\n<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>%g;
+        s%\@([a-zA-Z]*)([({])\s*(.*)\s*,\s*$%\@<B>$1</B>$2<A NAME=\"$3\">$3</A>,\n<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>%g;
 	$entryinfo{'key'} = $3;
         # Setup the list of expected field names based on the entry_type
         %knownfields = ();
@@ -330,7 +379,7 @@ while (<BIB>) {
 	}
 	$knownfields{'abstract'} = 1;
     }
-    elsif (/^\s*%\s*($HeaderRE)(.*)$/) {
+    elsif (defined($HeaderRE) && /^\s*%\s*($HeaderRE)(.*)$/) {
 	# Found a special comment that we want modified and added to the
 	# LISTFILE.
 	$headertext = $2;
@@ -366,22 +415,28 @@ while (<BIB>) {
 	    if ($fieldname eq "") {
 		print STDERR "Matched empty field in $_";
 	    }
-	    for ($i = 0; $i <= $#IgnoreFields; $i++) {
-		if ($IgnoreFields[$i] eq $fieldname) {
-		    $dooutput=0; next;
-		}
-	    }
-	    if ($check_valid_fields && !defined($knownfields{$fieldname})) {
-		print STDERR "Field $fieldname not known for $entryname on line $line_count\n";
-	    }
-	    $entryinfo{$fieldname} = "";
+	    else {
+	        for ($i = 0; $i <= $#IgnoreFields; $i++) {
+		    if ($IgnoreFields[$i] eq $fieldname) {
+		        $dooutput=0; last;
+  	    	    }
+	        }
+	        if ($check_valid_fields && !defined($knownfields{$fieldname})) {
+		    # Ignore "opt" fieldnames
+		    if (! ($fieldname =~ /^opt/) && 
+			! defined($ignorefields{$fieldname}) ) {
+ 	  	        print STDERR "Field $fieldname not known for $entryname on line $line_count\n";
+		    }
+	        }
+	        $entryinfo{$fieldname} = "";
+	        print "Found $fieldname\n" if $debug;
+	        if ($fieldname eq "title" || $fieldname eq "chapter") { 
+	            $MakeBold="<B>"; } 
+	        else { $MakeBold = ""; }
+            }
 	    $line =~ s/^\s*[^=%]*\s*=//;
 	    # ----
 	    # Make the "title" text bold, others regular
-	    print "Found $fieldname\n" if $debug;
-	    if ($fieldname eq "title" || $fieldname eq "chapter") { 
-	        $MakeBold="<B>"; } 
-	    else { $MakeBold = ""; }
 	    # Output this line
             s%^([^=]*)[ ]*=\s*(.*)\s*$%<TR VALIGN=TOP><TD WIDTH=20><TD><I>$1</I><TD ALIGN="CENTER" WIDTH=15> = <TD>$MakeBold$2%;
 	    if ($MakeBold ne "") { $MakeBold = "</B>"; }
@@ -390,12 +445,12 @@ while (<BIB>) {
         # Check of the end of entry (must be alone on a separate line)
         # fix emacs broken matching mode })}
         else {			
-	    if (/^[ ]*[})][ ]*$/) {   
+	    if (/^\s*[\}\)]\s*$/) {   
  	        if ($dooutput == 1) { #({
-		    s%^[ ]*([})])[ ]*$%</TR></TABLE>\n$1%;
+		    s%^\s*([\}\)])\s*$%</TR></TABLE>\n$1%;
 		    }
  	        else {
-		    s%^[ ]*([})])[ ]*$%</TABLE>\n$1%;
+		    s%^\s*([\}\)])\s*$%</TABLE>\n$1%;
 	        }
  	        if ($outlist && defined($entryinfo{"entry_type"})) {
 		    &PrintEntry( %entryinfo );
@@ -411,7 +466,7 @@ while (<BIB>) {
         }
     } 
 
-    print "Current line = \"$line\"\n" if $debug;
+    print "Current line[$line_count] = \"$line\"\n" if $debug;
     $original_line = $line;
     # Fix HTML reserved characters
     $line =~ s%[\\]+&%&amp;%;
@@ -474,8 +529,10 @@ while (<BIB>) {
     $line =~ s%---%&mdash;% if $special_entity;
     # -- -> &ndash;
     $line =~ s%--%&ndash;% if $special_entity;
-    print "Adding field $fieldname with text $line" if $debug;
-    $entryinfo{ $fieldname } .= $line;
+    if (defined($fieldname) && $fieldname ne "") {
+        print "Adding field $fieldname with text $line" if $debug;
+        $entryinfo{ $fieldname } .= $line;
+    }
     
     # Turn URLs into links in $_
     s%(http:[^ }"]*)%<A HREF="$1">$1</A>%g;
@@ -501,7 +558,7 @@ print "Generated on $curtime with <A HREF=\"http://www.mcs.anl.gov/~gropp/bib2ht
 print "</BODY>\n";
 print "</HTML>\n";
 
-if ($listconfig ne "") {
+if (defined($listconfig) && $listconfig ne "") {
     print LISTFILE $ListFooter;
 }
 
@@ -512,19 +569,19 @@ if ($listconfig ne "") {
 sub ReplaceParms {
     $textline = $_[0];
     $default  = $_[1];
-    if ($textline =~ /@([a-z]*)@/) {
+    if ($textline =~ /\@([a-z]+)\@/) {
 	$token = $1;
 	$replacement = $entryinfo{$token};
 	$replacement =~ s/^\s*//;
 	if ($replacement eq "") { $replacement = $default; }
-	$textline =~ s/\@$token@/$replacement/;
+	$textline =~ s/\@$token\@/$replacement/;
     }
     return $textline;
 }
 
 # Print out an entry
 sub PrintEntry {
-    $entry_type = $entryinfo{"entry_type"};
+    my $entry_type = $entryinfo{"entry_type"};
     print "Printing $entry_type\n" if $debug;
     # First, clean up values
     foreach $key (keys %entryinfo) {
@@ -557,7 +614,7 @@ sub PrintEntry {
     }
     else {
 	# Works for manual, unpublished, misc, etc 
-	&PrintMisc;
+	&PrintArbEntry( $entry_type );
     }
     if ($EntryEnd ne "") {
 	$textline = &ReplaceParms( $EntryEnd );
@@ -568,31 +625,35 @@ sub PrintEntry {
 sub TitleCase {
     # Convert to title case, but don't change case inside of {}.
 }
+# Clean up an author list (name and name and name ... goes to name, name, 
+# ..., and name; may also map authors to URLs).
 sub AuthorList {
     my $fieldname = $_[0];
     # Convert all but last "and" into ,
-    $author = $entryinfo{$fieldname};
-    @authors = split /\s\s*and\s*\s/, $author;
-    print @authors if $debug;
-    print "n = $#authors\n" if $debug;
-    if ($#authors > 1) {
-        $author = "";
-	for ($i=0; $i<$#authors; $i++) {
-	    $author .= $authors[$i];
-	    $author .= ", ";
-        }
-	$author .= "and $authors[$#authors]";
-    }
-    # Comment the following to not use links for author names
-    # This also makes the author name bold
-    $author =~ s%($UserREName)%<A HREF="$userURL">$GroupEmphStart$1$GroupEmphEnd</A>%g;
+    if (defined($entryinfo{$fieldname})) {
+	$author = $entryinfo{$fieldname};
+	@authors = split /\s+and\s+/, $author;
+	print @authors if $debug;
+	print "n = $#authors\n" if $debug;
+	if ($#authors > 1) {
+	    $author = "";
+	    for ($i=0; $i<$#authors; $i++) {
+		$author .= $authors[$i];
+		$author .= ", ";
+	    }
+	    $author .= "and $authors[$#authors]";
+	}
+	# Comment the following to not use links for author names
+	# This also makes the author name bold
+	$author =~ s%($UserREName)%<A HREF="$userURL">$GroupEmphStart$1$GroupEmphEnd</A>%g;
 
-    # For a group's bibliography, an array of UserREs and the corresponding
-    # URLs could be used (preloaded as an option to this command)
-    for ($i = 1; $i <= $#GroupURL; $i++) {
-        $author =~ s%($GroupREName[$i])%<A HREF="$GroupURL[$i]">$GroupEmphStart$1$GroupEmphEnd</A>%g;
+	# For a group's bibliography, an array of UserREs and the corresponding
+	# URLs could be used (preloaded as an option to this command)
+	for ($i = 1; $i <= $#GroupURL; $i++) {
+	    $author =~ s%($GroupREName[$i])%<A HREF="$GroupURL[$i]">$GroupEmphStart$1$GroupEmphEnd</A>%g;
+	}
+	$entryinfo{$fieldname} = $author;
     }
-    $entryinfo{$fieldname} = $author;
 }
 
 sub PrintBook {
@@ -627,6 +688,30 @@ sub PrintInProceedings {
     &PrintGeneral;
 }
 
+#
+# Print an arbitrary entry type.  Use Misc if the type is not defined
+sub PrintArbEntry {
+    my $entrytype = $1;
+    my $entryname = ucfirst $entry_type;
+    my $var = "htmlformats$entryname";
+    if (defined(%$var)) {
+	%htmlformats = %$var;
+    }
+    else {
+	print "No $var found for entry $entry_type\n";
+	%htmlformats = %htmlformatsMisc;
+    }
+    $var = "fieldlist$entryname";
+    if (defined(@$var)) {
+	@fieldlist = @$var;
+    }
+    else {
+	print "No $var found for entry $entry_type\n";
+	@fieldlist = @fieldlistMisc;
+    }
+    &PrintGeneral;
+}
+
 sub PrintInBook {
     # chapter, author, title, editors, pages, year
     %htmlformats = %htmlformatsInBook;
@@ -656,8 +741,10 @@ sub CleanString {
 }
 
 sub PrintGeneral {
+    # Clean up any author or editor list
     &AuthorList( 'author' );
     &AuthorList( 'editor' );
+
     $firstitem = 1;
     foreach $key (@fieldlist) {
 	if (!defined($entryinfo{$key})) { next; }
@@ -666,7 +753,9 @@ sub PrintGeneral {
 	if (!$firstitem) { print LISTFILE ", ";}
 	else { $firstitem = 0; }
 	$keyname = "start$key";
-	print LISTFILE "$htmlformats{$keyname}"; 
+	if (defined($htmlformats{$keyname})) {
+            print LISTFILE "$htmlformats{$keyname}"; 
+        }
 	$value = &CleanString( $value );
         #
         # Here is where we look for @name and then look up name 
@@ -680,7 +769,9 @@ sub PrintGeneral {
             print LISTFILE "$value";
         }
 	$keyname = "end$key";
-        print LISTFILE "$htmlformats{$keyname}";
+	if (defined($htmlformats{$keyname})) {
+            print LISTFILE "$htmlformats{$keyname}";
+        }
     }
     print LISTFILE ".\n";
     print LISTFILE "<A HREF=\"$BibFileName#$entryinfo{'key'}\">BibTeX</A>\n";
