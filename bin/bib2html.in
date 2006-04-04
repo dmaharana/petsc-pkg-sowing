@@ -333,8 +333,11 @@ $dooutput = 1;
 $line_count = 0;
 $MakeBold = "";
 $fieldname = "";
-# Format as table
+# Format as table.  Output to stdout is the formatted version of the
+# bib database file, and includes any comments from the bib file.
+# 
 while (<BIB>) {
+    s/\r//g; # remove DOS newlines
     $line = $_;	
     $line_count++;		
     # Look for a new bib entry starting a line
@@ -343,7 +346,7 @@ while (<BIB>) {
 	$bibstrings{$1} = $2;
 	next;
     }
-    elsif (/^\s*\@([a-zA-Z]*)\s*[({]/) { 
+    elsif (/^\s*\@([a-zA-Z]*)\s*[\(\{]/) { 
 	# Found the beginning of a BibTeX entry (@....)
 	$entry_type = lc( $1 );
 	if ($intable == 1) {
@@ -358,7 +361,7 @@ while (<BIB>) {
 	$inrow = ""; 
         $intable = 1;
 	$dooutput = 1;
-        s%\@([a-zA-Z]*)([({])\s*(.*)\s*,\s*$%\@<B>$1</B>$2<A NAME=\"$3\">$3</A>,\n<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>%g;
+        s%\@([a-zA-Z]*)([\(\{])\s*(.*)\s*,\s*$%\@<B>$1</B>$2<A NAME=\"$3\">$3</A>,\n<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>%g;
 	$entryinfo{'key'} = $3;
         # Setup the list of expected field names based on the entry_type
         %knownfields = ();
@@ -379,7 +382,8 @@ while (<BIB>) {
 	}
 	$knownfields{'abstract'} = 1;
     }
-    elsif (defined($HeaderRE) && /^\s*%\s*($HeaderRE)(.*)$/) {
+    elsif (defined($HeaderRE) && $HeaderRE ne "" && 
+	   /^\s*%\s*($HeaderRE)(.*)$/) {
 	# Found a special comment that we want modified and added to the
 	# LISTFILE.
 	$headertext = $2;
@@ -463,6 +467,9 @@ while (<BIB>) {
 	        $intable = 0;
 	        $dooutput = 1;
             }
+	    elsif (/^\s*%/) {
+		$dooutput = 1; 
+	    }
         }
     } 
 
@@ -533,6 +540,11 @@ while (<BIB>) {
         print "Adding field $fieldname with text $line" if $debug;
         $entryinfo{ $fieldname } .= $line;
     }
+#    else {
+#        # Add this info to an "empty" element.  This holds, for example,
+#        # comments from the bibtex file
+#        #$entryinfo{ "" } .= $line;
+#    }
     
     # Turn URLs into links in $_
     s%(http:[^ }"]*)%<A HREF="$1">$1</A>%g;
