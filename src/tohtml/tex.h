@@ -56,6 +56,9 @@ extern char splitdir[100];/* directory for output files */
 
 extern char userpath[1024];  /* Path to search for package definitions */
 
+extern char ImageExt[4];     /* Choose the image type.  Used as both the
+			        image name and the file extension.  
+			        Currently either xbm or gif */
 extern int InDocument;
 
 extern int InOutputBody;

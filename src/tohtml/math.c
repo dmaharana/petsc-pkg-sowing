@@ -428,7 +428,8 @@ void TXProcessDollar( TeXEntry *e, int latexmath, int checkdollar )
 
 	sprintf( bname, "img%d", imageno++ );
 	strncpy( fname, bname, 100 );
-	strncat( fname, ".xbm", 100 );
+	strncat( fname, ".", 100 );
+	strncat( fname, ImageExt, 100 );
 	if (!hasBackwack) strcat( mathbuf, "\\" );
 	if (checkdollar) {
 	    if (displaymode)
@@ -444,7 +445,7 @@ void TXProcessDollar( TeXEntry *e, int latexmath, int checkdollar )
 	}
 
 	if (LatexAgain || !FileExists( fname )) {
-	    RunLatex( (char *)0, mathbuf, bname, (char *)0, "xbm", 1 );
+	    RunLatex( (char *)0, mathbuf, bname, (char *)0, ImageExt, 1 );
 	}
 	if (displaymode)
 	    TXimage( e, fname );

@@ -1913,7 +1913,8 @@ void TXmathmode( TeXEntry *e )
 	char name[4];
 	sprintf( bname, "img%d", imageno++ );
 	strcpy( fname, bname );
-	strcat( fname, ".xbm" );
+	strcat( fname, "." );
+	strcat( fname, ImageExt );
 
 	name[0] = '\\';
 	name[1] = e->name[0];
@@ -1921,11 +1922,11 @@ void TXmathmode( TeXEntry *e )
 	if (LatexAgain || !FileExists( fname )) {
 	    /* We always process, because either LatexAgain is 1, 
 	       or the file does not exists */
-	    RunLatex( (char *)0, (char *)0, bname, name, "xbm", 1 );
+	    RunLatex( (char *)0, (char *)0, bname, name, ImageExt, 1 );
 	}
 	else if (FileExists( fname ) && !LatexAgain) {
 	    /* Skip over the section */
-	    RunLatex( (char *)0, (char *)0, bname, name, "xbm", 0 );
+	    RunLatex( (char *)0, (char *)0, bname, name, ImageExt, 0 );
 	}
 
 	if (name[1] == '[') {
@@ -2337,12 +2338,13 @@ TeXEntry *e;
 	    }
 	    sprintf( bname, "img%d", imageno++ );
 	    strcpy( fname, bname );
-	    strcat( fname, ".xbm" );
+	    strcat( fname, "." );
+	    strcat( fname, ImageExt );
 	    if (LatexAgain || !FileExists( fname )) {
-		RunLatex( curtok, (char *)0, bname, (char *)0, "xbm", 1 );
+		RunLatex( curtok, (char *)0, bname, (char *)0, ImageExt, 1 );
 	    }
 	    else if (FileExists( fname ) && !LatexAgain) {
-		RunLatex( curtok, (char *)0, bname, (char *)0, "xbm", 0 );
+		RunLatex( curtok, (char *)0, bname, (char *)0, ImageExt, 0 );
 	    }
 	    /* If this is a figure or table environment, generate a target 
 	       location for the image */

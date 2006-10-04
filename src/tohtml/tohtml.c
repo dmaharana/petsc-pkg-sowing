@@ -1,3 +1,5 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "sowing.h"
@@ -33,6 +35,9 @@ char basefilename[256];
 char basedir[256];
 char basedefs[256];
 char userpath[1024];  /* Path to search for package definitions */
+
+char ImageExt[4];     /* Choose the image type.  Used as both the
+			 image name and the file extension.  */
 
 char endpagefilename[256];
 char beginpagefilename[256];
@@ -260,6 +265,11 @@ int main( int argc, char *argv[] )
 
     userpath[0] = 0;    
     SYArgGetString( &argc, argv, 1, "-userpath", userpath, 256 );
+
+    /* Set the default image format*/
+    strcpy( ImageExt, "xbm" );
+    if (SYArgHasName( &argc, argv, 1, "-allgif" ))
+        strcpy( ImageExt, "gif" );
 
     endpagefilename[0] = 0;
     SYArgGetString( &argc, argv, 1, "-endpage", endpagefilename, 256 );
@@ -787,8 +797,8 @@ FILE *fp;
 char *context, *name;
 {
     if (DebugOutput) fprintf( stdout, "SetUpButton\n" );
-    fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%sup.xbm\"></A>", 
-	     context, NoBMCopy ? BMURL : "" );  
+    fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%sup.%s\"></A>", 
+	     context, NoBMCopy ? BMURL : "", ImageExt );  
 /* fprintf( fp, "<b>Up: </b><A HREF=\"%s\">%s</a> ", context, name ); */
 }   
 
@@ -797,16 +807,16 @@ FILE *fp;
 char *context, *name;
 {
     if (DebugOutput) fprintf( stdout, "SetNextButton\n" );
-    fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%snext.xbm\"></A>", 
-	     context, NoBMCopy ? BMURL : "" );  
+    fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%snext.%s\"></A>", 
+	     context, NoBMCopy ? BMURL : "", ImageExt );  
 /* fprintf( fp, "<b>Next: </b><A HREF=\"%s\">%s</a> ", context, name ); */
 }   
 
 void SetPreviousButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetPreviousButton\n" );
-    fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%sprevious.xbm\"></A>", 
-	     context, NoBMCopy ? BMURL : "" );  
+    fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%sprevious.%s\"></A>", 
+	     context, NoBMCopy ? BMURL : "", ImageExt );  
 /* fprintf( fp, "<b>Previous: </b><A HREF=\"%s\">%s</a> ", context, name ); */
 }   
 
@@ -1067,11 +1077,12 @@ void CopyImgFiles( char *basefilename )
 
     if (c1 == '\\')
 	basefilename[strlen(basefilename)-1] = 0;
-    sprintf( pgm, "copy \"%s\\next.xbm\" %s", BMSOURCE, basefilename );
+    sprintf( pgm, "copy \"%s\\next.%s\" %s", BMSOURCE, ImageExt, basefilename );
     system( pgm );
-    sprintf( pgm, "copy \"%s\\previous.xbm\" %s", BMSOURCE, basefilename );
+    sprintf( pgm, "copy \"%s\\previous.%s\" %s", BMSOURCE, ImageExt, 
+	     basefilename );
     system( pgm );
-    sprintf( pgm, "copy \"%s\\up.xbm\" %s", BMSOURCE, basefilename );
+    sprintf( pgm, "copy \"%s\\up.%s\" %s", BMSOURCE, ImageExt, basefilename );
     system( pgm );
     if (IsGaudy) {
 	sprintf( pgm, "copy \"%s\\purpleball.gif\" %s", BMSOURCE, basefilename );
@@ -1088,11 +1099,12 @@ void CopyImgFiles( char *basefilename )
     if (c1 == '\\')
 	basefilename[strlen(basefilename)] = c1;
 #else
-    sprintf( pgm, "/bin/cp %s/next.xbm %s", BMSOURCE, basefilename );
+    sprintf( pgm, "/bin/cp %s/next.%s %s", BMSOURCE, ImageExt, basefilename );
     system( pgm );
-    sprintf( pgm, "/bin/cp %s/previous.xbm %s", BMSOURCE, basefilename );
+    sprintf( pgm, "/bin/cp %s/previous.%s %s", BMSOURCE, ImageExt, 
+	     basefilename );
     system( pgm );
-    sprintf( pgm, "/bin/cp %s/up.xbm %s", BMSOURCE, basefilename );
+    sprintf( pgm, "/bin/cp %s/up.%s %s", BMSOURCE, ImageExt, basefilename );
     system( pgm );
     if (IsGaudy) {
 	sprintf( pgm, "/bin/cp %s/purpleball.gif %s", BMSOURCE, basefilename );
