@@ -67,8 +67,9 @@ $EntryStart = "";
 $EntryEnd = "";
 #
 # ignorefields gives the names of fields that should not be noted as 
-# "not known".
-%ignorefields = ( 'area' => 1, 'areaseq' => 1 );
+# "not known".  These apply to every entry type.
+%ignorefields = ( 'area' => 1, 'areaseq' => 1, 'bibsource' => 1, 'ee' => 1,
+    'preprintof' => 1 );
 # Default Formats for outlist
 # Book
     # title, author, publisher, year. 
@@ -76,7 +77,7 @@ $EntryEnd = "";
 			 'endtitle' => '</I>' );
     @fieldlistBook = ('title', 'author', 'publisher', 'note', 'year');
     @fieldlistoptionalBook = ('address', 'pages', 'isbn', 'lccn', 'series', 
-	'keywords', 'editor', 'annote', 'pubaddress', 'key' );
+	'keywords', 'editor', 'annote', 'pubaddress', 'key', 'edition' );
 #
 # Booklet
     # title, author, publisher, year. 
@@ -104,7 +105,7 @@ $EntryEnd = "";
 			   'endtitle' => '</I>' );
     # chapter is the chapter title.
     @fieldlistInBook = ('chapter', 'author', 'title', 'publisher', 'note', 
-	'year');
+	'year' );
     @fieldlistoptionalInBook = ('address', 'pages', 'isbn', 'lccn', 'series', 
 	'keywords', 'editor', 'annote', 'pubaddress', 'key' );
 
