@@ -7,7 +7,7 @@ srcdir=@srcdir@
 @VPATH@
 
 LIBS      =  ../../lib/libsowing.a
-INCLUDES   = -I${top_srcdir}/include 
+INCLUDES   = -I${top_srcdir}/include -I. -I../../include
 DEFS      =   -DPSPATH='"@bindir@/"' \
               -DBMSOURCE='"@datadir@/"' \
 	      -DBASEDEF='"@datadir@/basedefs.txt"'

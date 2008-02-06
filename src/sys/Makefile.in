@@ -6,7 +6,7 @@ top_srcdir=@top_srcdir@
 srcdir=@srcdir@
 @VPATH@
 
-INCLUDES = -I${top_srcdir}/include
+INCLUDES = -I${top_srcdir}/include -I../../include
 
 OBJS = arch.o txt.o daytime.o file.o tr.o getopts.o
 

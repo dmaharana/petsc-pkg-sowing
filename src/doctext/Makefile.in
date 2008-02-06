@@ -5,7 +5,7 @@ ALL: doctext doc2lt
 #
 
 SHELL       = @SHELL@
-INCLUDES    = -I${top_srcdir}/include/textfilt -I${top_srcdir}/include
+INCLUDES    = -I${top_srcdir}/include/textfilt -I${top_srcdir}/include -I. -I../../include
 
 include ../../Makerules
 top_srcdir=@top_srcdir@

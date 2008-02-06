@@ -10,7 +10,7 @@ top_srcdir=@top_srcdir@
 srcdir=@srcdir@
 @VPATH@
 
-INCLUDES = -I${top_srcdir}/include/textfilt -I${top_srcdir}/include
+INCLUDES = -I${top_srcdir}/include/textfilt -I${top_srcdir}/include -I../../include -I../../include/textfilt
 
 LIBS = ../../lib/libtfilter.a 
 

@@ -9,7 +9,7 @@ srcdir=@srcdir@
 INCLUDES = -I${top_srcdir}/include
 
 LIBS       =  ../../lib/libsowing.a
-INCLUDES   = -I${top_srcdir}/include 
+INCLUDES   = -I${top_srcdir}/include -I../../include
 DEFS       = -DBASEDEF='"@datadir@/basedefs.txt"'
 PROGRAMS   = bfort
 

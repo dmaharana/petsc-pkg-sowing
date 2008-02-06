@@ -8,3 +8,4 @@ config.cache
 config.system
 Makefile
 Makerules
+confdb
