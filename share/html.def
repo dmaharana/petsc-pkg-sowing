@@ -50,3 +50,11 @@ b_row   <TR>
 e_row   </TR>
 b_col   <TD>
 e_col   </TD>
+#
+# Additional environments
+s_enumerate <OL>
+e_enumerate </OL>
+itemize_enum <LI>
+#
+s_blockquote <BLOCKQUOTE>
+e_blockquote </BLOCKQUOTE>

@@ -154,7 +154,7 @@ distclean:
 		Makefile 
 	-rm -f include/sowingconfig.h 
 
-SOWINGCVSHOME = /home/gropp/cvsMaster_z
+SOWINGCVSHOME = :ext:shakey.mcs.anl.gov:/home/gropp/cvsMaster_z
 VERSION       = @PACKAGE_VERSION@
 dist:
 	@if [ ! -d tmpdir ] ; then mkdir tmpdir ; fi
@@ -164,6 +164,7 @@ dist:
 	else \
 	    cd tmpdir && cvs -d $(SOWINGCVSHOME) export -D 'now' sowing >cvsexp.log 2>&1 ;\
 	fi
+	cd tmpdir/sowing && svn export https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk/confdb confdb
 	cd tmpdir/sowing && autoheader && autoconf && rm -rf autom4te*
 	mv tmpdir/sowing tmpdir/sowing-$(VERSION)
 	cd tmpdir && tar cf - sowing-$(VERSION) | gzip -9 > ../sowing-$(VERSION).tar.gz

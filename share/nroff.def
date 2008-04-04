@@ -57,3 +57,12 @@ b_row
 e_row   
 b_col   
 e_col   
+#
+# Additional environments
+s_enumerate %n.nr e 1 1%n
+
+e_enumerate %n.rr e
+itemize_enum %n\\ne
+#
+s_blockquote %n.in 1cm%n
+e_blockquote %n.in%n

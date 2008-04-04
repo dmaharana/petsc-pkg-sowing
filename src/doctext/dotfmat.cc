@@ -1,3 +1,4 @@
+/* -*- Mode: C++; c-basic-offset:4 ; -*- */
 /*
     This file contains code to process various formatting commands
     that are indicated by a "." in the first column
@@ -14,6 +15,13 @@
     .cb           Begin picture caption
     .ce           End picture caption                   
     .f            Execute user-defined function (e.g., .fin, .fout)
+
+    Adding now
+    .Es           Begin enumerate
+    .Ee           End enumerate
+    .i            item (like a \item in LaTeX)
+    .Bqs          Begin block quote
+    .Bqe          End block quote
 
     Soon to be added:
     .c citeref    Citation reference (eventually, we will be able to
@@ -347,6 +355,62 @@ int ProcessUserCmd( InStream *ins, TextOut *textout, int *lastWasNl )
     return textout->PutOp( buf );
 }
 
+/* Process a .Es .Ee block */
+int ProcessEnumerate( InStream *ins, TextOut *textout, int *lastWasNl )
+{
+    char ch;
+ 
+    /* Check next character */
+    if (ins->GetChar( &ch )) return 1;
+    if (ch == 'b')      textout->PutOp( "s_enumerate" );
+    else if (ch == 'e') textout->PutOp( "e_enumerate" );
+    else {
+	fprintf( stderr, "Invalid enumerate command '.E%c' in %s\n", ch,
+		 GetCurrentFileName() );
+	return 1;
+	}
+    return 0;
+}
+
+int ProcessItemize( InStream *ins, TextOut *textout, int *lastWasNl )
+{
+    char buf[1024];
+
+    textout->PutOp( "itemize_enum" );
+#if 0
+    /* Pass the tokens to the seealso routine */
+    ins->GetLine( buf, 1024 );
+    
+    textout->PutOp( "section", (char *)"See Also" );
+    textout->PutToken( 0, buf );
+    textout->PutOp( "linebreak" ); // lastwasNL?
+#endif
+    return 0;
+}
+
+/* Process a .B<op>b ... .B<op>e block */
+int ProcessBlockOp( InStream *ins, TextOut *textout, int *lastWasNl )
+{
+    char ch;
+ 
+    /* Check next character */
+    if (ins->GetChar( &ch )) return 1;
+    if (ch != 'q') {
+      fprintf( stderr, "Expected 'q' but saw %c in .B command in %s\n", ch,
+	       GetCurrentFileName() );
+      return 1;
+    }
+    if (ins->GetChar( &ch )) return 1;
+    if (ch == 's')      textout->PutOp( "s_blockquote" );
+    else if (ch == 'e') textout->PutOp( "e_blockquote" );
+    else {
+	fprintf( stderr, "Invalid block command '.Bq%c' in %s\n", ch,
+		 GetCurrentFileName() );
+	return 1;
+	}
+    return 0;
+}
+
 int ProcessDotFmt( char arg_kind, InStream *ins, TextOut *textout, 
 		   int *lastWasNl )
 {
@@ -368,7 +432,10 @@ int ProcessDotFmt( char arg_kind, InStream *ins, TextOut *textout,
         case 'k': return ProcessKeywords( ins, textout, lastWasNl );
         case 's': return ProcessSeeAlso( ins, textout, lastWasNl );
         case 'f': return ProcessUserCmd( ins, textout, lastWasNl );
-
+        case 'E': return ProcessEnumerate( ins, textout, lastWasNl );
+        case 'B': return ProcessBlockOp( ins, textout, lastWasNl );
+        case 'i': return ProcessItemize( ins, textout, lastWasNl );
+    
         default:
     	      fprintf( stderr, "Unknown dot command `%c' in file %s(%s)\n", 
 		       ch, GetCurrentFileName(), GetCurrentRoutinename() );

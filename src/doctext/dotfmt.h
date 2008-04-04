@@ -11,5 +11,8 @@ int ProcessKeywords( InStream *, TextOut *, int * );
 int ProcessSeeAlso( InStream *, TextOut *, int * );
 int ProcessDotFmt( char, InStream *, TextOut *, int * );
 int ProcessUserCmd( InStream *, TextOut *, int * );
+int ProcessEnumerate( InStream *, TextOut *, int * );
+int ProcessBlockOp( InStream *, TextOut *, int * );
+int ProcessItemize( InStream *, TextOut *, int * );
 
 #endif

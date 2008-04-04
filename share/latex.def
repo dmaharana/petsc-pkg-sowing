@@ -51,3 +51,11 @@ e_row   \\%n
 b_col   
 e_col   
 sep_col &
+#
+# Additional environments
+s_enumerate \begin{enumerate}
+e_enumerate \end{enumerate}
+itemize_enum \item{}
+#
+s_blockquote \begin{quotation}
+e_blockquote \end{quotation}
