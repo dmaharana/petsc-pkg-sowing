@@ -81,6 +81,10 @@ static int AnsiForm = 0;
 /* If 0, do not generate the ifndef DEBUG_ALL wrapper */
 static int AddDebugAll = 1;
 
+/* If 0, do not generate Fortran 9x interface module */
+static int F90Module = 1;
+static FILE *fmodout = 0;
+
 /* Catch serious problems */
 #define MAX_ERR 100
 static int ErrCnt = 0;
@@ -121,31 +125,34 @@ typedef struct {
 } RETURN_TYPE;
 
 /* Forward defs */
-void OutputToken ANSI_ARGS(( FILE *, char *, int ));
-void OutputRoutine ANSI_ARGS(( FILE *, FILE *, char *, char *, char ));
-void SkipText ANSI_ARGS(( FILE *, char *, char *, char ));
-int SkipToSynopsis ANSI_ARGS(( FILE *, char ));
-int FindNextANToken ANSI_ARGS(( FILE *, char *, int * ));
-void OutputBuf ANSI_ARGS(( FILE **, char *, char *, FILE *, char * ));
-void OutputMacro ANSI_ARGS(( FILE *, FILE *, char *, char * ));
-void ProcessFunctionType ANSI_ARGS(( FILE *, FILE *, char *, int *, 
-				    char *, RETURN_TYPE *, int ));
-void ProcessArgList ANSI_ARGS(( FILE *, FILE *, char *, int *, char *, 
+void OutputToken ( FILE *, char *, int );
+void OutputRoutine ( FILE *, FILE *, char *, char *, char );
+void SkipText ( FILE *, char *, char *, char );
+int SkipToSynopsis ( FILE *, char );
+int FindNextANToken ( FILE *, char *, int * );
+void OutputBuf ( FILE **, char *, char *, FILE *, char * );
+void OutputMacro ( FILE *, FILE *, char *, char * );
+void ProcessFunctionType ( FILE *, FILE *, char *, int *, 
+				    char *, RETURN_TYPE *, int );
+void ProcessArgList ( FILE *, FILE *, char *, int *, char *, 
 				ARG_LIST[512], int *, RETURN_TYPE *, 
-				int, TYPE_LIST *, int *, int ));
-int ProcessArgDefs ANSI_ARGS(( FILE *, FILE *, ARG_LIST *, int, TYPE_LIST *,
-			       int *, int *, int, char *, int ));
-void PrintBody ANSI_ARGS(( FILE *, int, char *, int, int, ARG_LIST *,
-			   TYPE_LIST *, RETURN_TYPE * ));
-int NameHasUnderscore ANSI_ARGS(( char * ));
-void OutputRoutineName ANSI_ARGS(( char *, FILE * ));
-void OutputUniversalName ANSI_ARGS(( FILE *, char * ));
-int GetTypeName ANSI_ARGS(( FILE *, FILE *, TYPE_LIST *, int, int, int ));
-int GetArgName ANSI_ARGS(( FILE *, FILE *, ARG_LIST *, TYPE_LIST *, int ));
-void OutputBalancedString ANSI_ARGS(( FILE *, FILE *, int, int ));
-char *ToCPointer ANSI_ARGS(( char *, char *, int ));
+				int, TYPE_LIST *, int *, int );
+int ProcessArgDefs ( FILE *, FILE *, ARG_LIST *, int, TYPE_LIST *,
+			       int *, int *, int, char *, int );
+void PrintBody ( FILE *, int, char *, int, int, ARG_LIST *,
+			   TYPE_LIST *, RETURN_TYPE * );
+void PrintDefinition ( FILE *, int, char *, int, int, ARG_LIST *,
+			   TYPE_LIST *, RETURN_TYPE * );
+int NameHasUnderscore ( char * );
+void OutputRoutineName ( char *, FILE * );
+void OutputUniversalName ( FILE *, char * );
+int GetTypeName ( FILE *, FILE *, TYPE_LIST *, int, int, int );
+int GetArgName ( FILE *, FILE *, ARG_LIST *, TYPE_LIST *, int );
+void OutputBalancedString ( FILE *, FILE *, int, int );
+char *ToCPointer ( char *, char *, int );
+char *ArgToFortran( const char *typeName );
 
-void DoBfortHelp ANSI_ARGS(( char * ));
+void DoBfortHelp ( char * );
 
 /*D
   bfort - program to extract short definitions for a Fortran to C interface
@@ -177,6 +184,7 @@ void DoBfortHelp ANSI_ARGS(( char * ));
 . -mnative  - Multiple indirects are native datatypes (no coercion)
 . -voidisptr - Consider "void *" as a pointer to a structure.
 . -ansi      - C routines use ANSI prototype form rather than K&R C form
+. -noansi    - C routines use K&R C form (no prototypes)
 . -ansiheader - Generate ANSI-C style headers instead of Fortran interfaces
   This will be useful for creating ANSI prototypes   without ANSI-fying the 
   code.  These use a trick to provide both ANSI and non-ANSI prototypes.
@@ -238,9 +246,7 @@ void DoBfortHelp ANSI_ARGS(( char * ));
   Author: 
   Bill Gropp
 D*/
-int main( argc, argv )
-int  argc;
-char **argv;
+int main( int argc, char **argv )
 {
     char routine[MAX_ROUTINE_NAME];
     char *infilename;
@@ -271,7 +277,13 @@ char **argv;
 	DoProfileNames = 0;
     TranslateVoidStar	   = SYArgHasName( &argc, argv, 1, "-voidisptr" );
     MultipleIndirectsAreNative = SYArgHasName( &argc, argv, 1, "-mnative" );
-    AnsiForm		   = SYArgHasName( &argc, argv, 1, "-ansi" );
+
+    /* ANSI by default; read and discard -ansi for backward compatibility */
+    AnsiForm = 1;
+    if (SYArgHasName( &argc, argv, 1, "-noansi" )) {
+	AnsiForm = 0;
+    }
+    (void) SYArgHasName( &argc, argv, 1, "-ansi" );
     AnsiHeader		   = SYArgHasName( &argc, argv, 1, "-ansiheader" );
     AddDebugAll                = SYArgHasName( &argc, argv, 1, "-nodebug" );
     IfdefFortranName           = SYArgHasName( &argc, argv, 1, "-anyname" );
@@ -306,6 +318,26 @@ char **argv;
     }
     else
 	incfd = 0;
+
+    /* If there is a f90 module file, open it now */
+    if (F90Module) {
+	char fmodfile[MAX_FILE_SIZE];
+	if (!SYArgGetString( &argc, argv, 1, "-f90modfile", 
+			     fmodfile, MAX_FILE_SIZE )) {
+	    strcpy( fmodfile, "f90module.f90" );
+	}
+
+	fmodout = fopen( fmodfile, "w" );
+	if (!fmodout) {
+	    ErrCnt++;
+	    fprintf( stderr, "Could not open file %s for Fortran 90 interface output\n", fmodfile );
+	    if (ErrCnt > MAX_ERR) exit(1);
+	    F90Module = 0;
+	}
+	else {
+	    fprintf( fmodout, "module f90header\ninterface\n" );
+	}
+    }
 
     argc--; argv++;
     while (argc--) {
@@ -443,6 +475,7 @@ char **argv;
 	    }
 	}
 	fclose( fd );
+
 	if (fout) {
 /* BFS added support for calling C++ from fortran */
 	    fprintf(fout,"#if defined(__cplusplus)\n");
@@ -456,13 +489,16 @@ char **argv;
 	    }
 	}
     }
+    if (F90Module && fmodout) {
+	fprintf( fmodout, "end interface\nend module\n" );
+	fclose( fmodout );
+	fmodout = 0;
+    }
+
     return 0;
 }
 
-void OutputToken( fout, p, nsp )
-FILE *fout;
-char *p;
-int  nsp;
+void OutputToken( FILE *fout, char *p, int nsp )
 {
     int i;
     static int outcnt = 0;
@@ -516,6 +552,10 @@ void OutputRoutine( FILE *fin, FILE *fout, char *name, char *filename,
     }
 
     PrintBody( fout, is_function, name, nstrings, nargs, args, types, &rt );
+    if (F90Module) {
+	PrintDefinition( fmodout, is_function, name, nstrings, nargs, 
+			 args, types, &rt );
+    }
 }
 
 /*
@@ -595,10 +635,7 @@ int SkipToSynopsis( FILE *fin, char kind )
    The number of leading spaces is kept in nsp.
    Alpha-numeric tokens are terminated by a non-alphanumeric character
    (_ is allowed in alpha-numeric tokens) */
-int FindNextANToken( fd, token, nsp )
-FILE *fd;
-char *token;
-int  *nsp;
+int FindNextANToken( FILE *fd, char *token, int *nsp )
 {
     int fc, c, Nsp;
 
@@ -619,9 +656,8 @@ int  *nsp;
     return fc;
 }
 
-void OutputBuf( fout, infilename, outfilename, incfd, buffer )
-FILE **fout, *incfd;
-char *infilename, *outfilename, *buffer;
+void OutputBuf( FILE **fout, char *infilename, char *outfilename, FILE *incfd, 
+		char *buffer )
 {
     char arch[20];
     if (!*fout) {
@@ -709,9 +745,7 @@ extern void %sRmPointer();\n\
    considered significant; since the text is being formated, we usually dont
    agree with that. 
  */
-void OutputMacro( fin, fout, routine_name, filename )
-FILE *fin, *fout;
-char *routine_name, *filename;
+void OutputMacro( FILE *fin, FILE *fout, char *routine_name, char *filename )
 {
     int         is_function;
     ARG_LIST    args[MAX_ARGS];
@@ -778,13 +812,9 @@ char *routine_name, *filename;
    This routine read the function type and name; that is, it processes
    things like "void *foo" and "void (*foo)()"
  */
-void ProcessFunctionType( fin, fout, filename, is_function, name, rt, flag )
-FILE        *fin, *fout;
-char        *filename;
-int         *is_function;
-char        *name;
-RETURN_TYPE *rt;
-int         flag;
+void ProcessFunctionType( FILE *fin, FILE *fout, char *filename, 
+			  int *is_function, char *name, RETURN_TYPE *rt, 
+			  int flag )
 {
     static char rcall[1024];
     char *p, actname[1024];
@@ -912,16 +942,10 @@ int         flag;
 /* We are moving to being able to suppress generating the output until the
    argument definitions are read.
    flag is 1 for C routines, 0 for macros (I think)  */
-void ProcessArgList( fin, fout, filename, is_function, name, args, Nargs,
-		     rt, flag, types, Ntypes, flag2 )
-FILE        *fin, *fout;
-char        *filename, *name;
-ARG_LIST    args[512];
-RETURN_TYPE *rt;
-int         *Nargs;
-int         *is_function, flag;
-TYPE_LIST   *types;
-int         *Ntypes, flag2;
+void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function, 
+		     char *name, ARG_LIST args[512], int *Nargs,
+		     RETURN_TYPE *rt, int flag, TYPE_LIST *types, int *Ntypes, 
+		     int flag2 )
 {
     int             c, ntypes;
     char            *p;
@@ -1069,14 +1093,9 @@ int         *Ntypes, flag2;
    
    Returns 1 if it saw the end of a macro, 0 otherwise (see OutputMacro)
  */
-int ProcessArgDefs( fin, fout, args, nargs, types, Ntypes, Nstrings, flag, 
-		    name, flag2 )
-FILE      *fin, *fout;
-ARG_LIST  *args;
-int       nargs;
-TYPE_LIST *types;
-int       *Ntypes, *Nstrings, flag, flag2;
-char      *name;
+int ProcessArgDefs( FILE *fin, FILE *fout, ARG_LIST *args, int nargs, 
+		    TYPE_LIST *types, int *Ntypes, int *Nstrings, int flag, 
+		    char *name, int flag2 )
 {
     int      c;
     char     token[1024];
@@ -1201,9 +1220,7 @@ char      *name;
 
     __FromPointer always allocates a new pointer item.
  */
-char *ToCPointer( type, name, implied_star )
-char *type, *name;
-int  implied_star;
+char *ToCPointer( char *type, char *name, int implied_star )
 {
     static char buf[300];
     
@@ -1252,13 +1269,8 @@ int  implied_star;
    to any one of the type double*, int*, ..., I'm going to add void * to
    the list of types that are not translated
  */
-void PrintBody( fout, is_function, name, nstrings, nargs, args, types, rt )
-FILE        *fout;
-char        *name;
-int         is_function, nstrings, nargs;
-ARG_LIST    *args;
-TYPE_LIST   *types;
-RETURN_TYPE *rt;
+void PrintBody( FILE *fout, int is_function, char *name, int nstrings, 
+		int nargs, ARG_LIST *args, TYPE_LIST *types, RETURN_TYPE *rt )
 {
     int  i, j;
     
@@ -1381,17 +1393,95 @@ RETURN_TYPE *rt;
     fputs( ");\n}\n", fout );
 }
 
-int NameHasUnderscore( p )
-char *p;
+/*
+ * In support for Fortran 9x/20xx, print a Fortran module interface definition.
+ *
+ * These definitions are of the form
+ * {SUBROUTINE|FUNCTION} name( arg-list )
+ * arg-decls
+ * result-type name ! if function
+ * end {SUBROUTINE|FUNCTION} name
+ * 
+ * These are within an interface - end interface block, which is itself 
+ * within a module mod-name -- end module 
+ *
+ * Note that this routine only works with ansi-style definitions
+ */
+void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings, 
+		      int nargs, ARG_LIST *args, TYPE_LIST *types, 
+		      RETURN_TYPE *rt )
+{
+    int  i;
+
+    /* Known bugs in ansiheader:
+       Definitions like     void (*fcn)() fail
+       Multiple indirection (char **argv) fail
+    */  
+    /* Output the function definition */
+    fputs( is_function ? "function " : "subroutine ", fout );
+    OutputRoutineName( name, fout );
+    fprintf( fout, "(" );
+    for (i=0; i<nargs-1; i++) {
+	fprintf( fout, "%s, ", args[i].name );
+    }
+    if (nargs > 0) {
+	/* Do the last arg, if any */
+	fprintf( fout, "%s ", args[nargs-1].name );
+    }
+    fputs( ")\n", fout );
+
+    for (i=0; i<nargs; i++) {
+	/* Figure out the corresponding Fortran type */
+	fprintf( fout, "%s %s ! %s\n", 
+		 ArgToFortran( types[args[i].type].type ),
+		 args[i].name, types[args[i].type].type );
+# if 0
+	if (args[i].is_FILE) 
+	    fprintf( fout, "integer %s\n", args[i].name );
+	else if (!args[i].is_native && args[i].has_star 
+		 && !args[i].void_function) {
+	    if (args[i].has_star == 1 || !MultipleIndirectAreInts) 
+		fprintf( fout, "%s", 
+			 ToCPointer( types[args[i].type].type, args[i].name,
+				     args[i].implied_star ) );
+	    else {
+		if (MultipleIndirectsAreNative) {
+		    fprintf( fout, "%s", args[i].name );
+		}
+		else {
+		    fprintf( fout, "(%s ", types[args[i].type].type );
+		    if (!args[i].implied_star)
+			for (j = 0; j<args[i].has_star; j++) fputs( "*", fout );
+		    fprintf( fout, ")*((int *)%s)", args[i].name );
+		}
+	    }
+	}
+	else {
+	    /* if args[i].has_star, the argument often has intent OUT 
+	       or INOUT */
+	    fputs( args[i].name, fout );
+	}
+#endif
+    }
+
+    /* Add a "decl/result(name) for functions */
+    if (is_function) {
+	fprintf( fout, "%s ", ArgToFortran( rt->name ) );
+        OutputRoutineName( name, fout );
+        fprintf( fout, " ! %s\n", rt->name );
+    }
+    fputs( "end ", fout );
+    fputs( is_function ? "function\n" : "subroutine\n", fout );
+}
+
+int NameHasUnderscore( char *p )
 {
     while (*p) 
 	if (*p++ == '_') return 1;
     return 0;
 }
 
-void OutputRoutineName( name, fout )
-char *name;
-FILE *fout;
+void OutputRoutineName( char *name, FILE *fout )
 {
     char buf[256], *p;
     int  ln;
@@ -1433,9 +1523,7 @@ FILE *fout;
     fputs( buf, fout );
 }
 
-void OutputUniversalName( fout, routine )
-FILE *fout;
-char *routine;
+void OutputUniversalName( FILE *fout, char *routine )
 {
     char basename[MAX_ROUTINE_NAME], capsname[MAX_ROUTINE_NAME],
 	nouscorename[MAX_ROUTINE_NAME];
@@ -1541,10 +1629,8 @@ else {
    Effective only if AnsiForm is true.
    
  */
-int GetTypeName( fin, fout, type, is_macro, flag2, outparen )
-FILE     *fin, *fout;
-TYPE_LIST *type;
-int       is_macro, flag2, outparen;
+int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro, 
+		 int flag2, int outparen )
 {
 int             c, nsp;
 char            token[1024];
@@ -1736,7 +1822,6 @@ else {
         strcmp(token,"FieldClassMap") == 0 ||
         strcmp(token,"GMat") == 0 ||
         strcmp(token,"Grid") == 0 ||
-        strcmp(token,"Grid") == 0 ||
         strcmp(token,"GSNES") == 0 ||
         strcmp(token,"GTS") == 0 ||
         strcmp(token,"GVec") == 0 ||
@@ -1812,11 +1897,8 @@ return 0;
    Read an argument.  If it is not a pointer type, add the "*" to the
    definition.
  */
-int GetArgName( fin, fout, arg, type, has_extra_chars )
-FILE     *fin, *fout;
-ARG_LIST *arg;
-TYPE_LIST *type;
-int has_extra_chars;
+int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type, 
+		int has_extra_chars )
 {
     int c, nsp, nsp1, nparen, nbrack, nstar;
     char *p, token[1024];
@@ -1960,9 +2042,7 @@ int has_extra_chars;
 }
 
 /* Output a balanced string.  The first character (cs) has been read */
-void OutputBalancedString( fin, fout, cs, ce )
-FILE *fin, *fout;
-int  cs, ce;
+void OutputBalancedString( FILE *fin, FILE *fout, int cs, int ce )
 {
     int c, bcount;
     bcount = 1;
@@ -1974,8 +2054,7 @@ int  cs, ce;
     }
 }
 
-void DoBfortHelp( pgm )
-char *pgm;
+void DoBfortHelp( char *pgm )
 {
 fprintf( stderr, "%s - write a Fortran interface to C routines with\n", 
 	 pgm );
@@ -2014,4 +2093,74 @@ fprintf( stderr, "\
 This will be useful for creating ANSI prototypes without ANSI-fying the\n\
 code.  The output is in <filename>.ansi .\n\
 " );
+}
+
+/*
+ * Mapping of types between C and Fortran.
+ *
+ * These routines implement a translation between C and Fortran types.
+ * For each C type that may be used in the source code, we need to know 
+ * the following:
+ *    What is the corresponding Fortran datatype?
+ *    What is the C type corresponding to that Fortran datatype?
+ *    Are special steps required in translating between the C and Fortran
+ *       types?  Two cases are MPI handles and character strings
+ *
+ * 
+ */
+
+/* 
+ * This is a simple, temporary version of a routine to take a C type
+ * (by name) and return the Fortran equivalent.
+ */
+char *ArgToFortran( const char *typeName )
+{
+    static char *outName = 0;
+    outName = "integer";
+    if (strcmp( typeName, "char" ) == 0) outName   = "character";
+    if (strcmp( typeName, "double" ) == 0) outName = "double precision";
+    if (strcmp( typeName, "float" ) == 0) outName  = "real";
+
+    return outName;
+}
+
+/* 
+   Define the mapping a C to Fortran types, along with properties of the 
+   C types that are needed in generating the Fortran wrappers.
+   Because the list is static (once created), we use a simple array, sorted
+   by type type name in C, to improve search performance 
+*/
+/* Properties */
+#define CTYPE_IS_POINTER 0x1
+#define CTYPE_IS_MPI_HANDLE 0x2
+#define CTYPE_IS_CHARACTER 0x4
+
+typedef struct {
+    char cName[MAX_TYPE_NAME];   /* Name of the type in C */
+    char fName[MAX_TYPE_NAME];   /* Corresponding name in Fortran */
+    int flags;                   /* Each bit is used with a flag (CTYPE_IS_xxx)*/
+} TypeInfo;
+
+static TypeInfo *typeArray = 0;
+static int typeArrayLen = 0;
+
+/* Given a C type name, return the corresponding TypeInfo record */
+TypeInfo *FindCType( const char *cName )
+{
+    int i=typeArrayLen/2, first = 0, last = typeArrayLen-1;
+    int cmp;
+
+    do {
+	i = (last + first) / 2;
+	cmp = strcmp( cName, typeArray[i].cName );
+	if (cmp == 0) return typeArray + i;
+	if (cmp > 0) {
+	    first = i+1;
+	}
+	else {
+	    last = i-1;
+	}
+    } while (first < last);
+
+    return 0;
 }
