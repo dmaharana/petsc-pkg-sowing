@@ -108,6 +108,7 @@ nop hline 0
 nop newblock 0
 nop thispagestyle 1
 nop thanks 1
+nop typeout 1
 #
 asis underline 1
 asis fbox 1 
@@ -133,6 +134,7 @@ name cdot 0 .
 nop ve 0
 #
 hdef centerline 1 '<CENTER>'#1'</CENTER>'
+# hdef center 1 '<CENTER>'#1'</CENTER>'
 hdef htmlanchor 2 '<A NAME="'#1'">#2</A>'
 hdef texorpdfstring 2 #1
 # LaTeX2e versions of font changes

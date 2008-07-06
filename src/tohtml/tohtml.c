@@ -702,10 +702,7 @@ static char PrevTitle[128];
  * 
  * We'd also like to eliminate markers for empty sections.
  */
-void WriteSectionButtons( fout, name, l )
-FILE *fout;
-char *name;
-LINK *l;
+void WriteSectionButtons( FILE *fout, char *name, LINK *l )
 {
     char contextParent[125], contextNext[125], contextPrev[125];
     int  did_output = 0;
@@ -770,19 +767,14 @@ LINK *l;
 	fprintf( fout, "<P>%s", NewLineString );
 }
 
-void WriteSectionButtonsBottom( fout, name, l )
-FILE *fout;
-char *name;
-LINK *l;
+void WriteSectionButtonsBottom( FILE *fout, char *name, LINK *l )
 {
     if (DoBottomNav)
 	WriteSectionButtons( fout, name, l );
 }
 
 
-void OutJump( fp, context, name, label )
-FILE *fp;
-char *context, *name, *label;
+void OutJump( FILE *fp, char *context, char *name, char *label )
 {
     if (DebugOutput) fprintf( stdout, "OutJump\n" );
     fprintf( fp, "<b>%s: </b><A HREF=\"%s\">", label, context );

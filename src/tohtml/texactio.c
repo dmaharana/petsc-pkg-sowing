@@ -1,3 +1,4 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
 #include <stdio.h>
 #include <ctype.h>
 #include "sowing.h"
@@ -1375,6 +1376,11 @@ void TXsection( TeXEntry *e )
 
     if (1) {
 	LastSection = GetNextLink( LastSection );
+	/* Check that this matches the name */
+	if (LastSection && strcmp(LastSection->topicname,curtok) != 0) {
+	    fprintf( stderr, "Mismatch in section; expected %s found %s\n",
+		     curtok, LastSection->topicname );
+	}
     }
     else {
 /* Lookup the section in the aux file list */
@@ -1471,8 +1477,7 @@ TeXEntry *e;
     POPCURTOK;
 }    
 
-void PrintLastSectionName( fp )
-FILE *fp;
+void PrintLastSectionName( FILE *fp )
 {
     if (LastSection)
 	fprintf( fp, "%s\n", LastSection->topicname );
@@ -2123,8 +2128,7 @@ void TeXCenterline( TeXEntry *e )
    and end in the basedefs file and stored in the TeXEntry (which could
    store the functions themselves)
  */
-void TXbegin( e )
-TeXEntry *e;
+void TXbegin( TeXEntry *e )
 {
 /* Process the beginning of an environment */
     char *p;
@@ -2497,8 +2501,7 @@ void TXindex( TeXEntry *e )
     POPCURTOK;
 }
 
-void TXprintindex( e )
-TeXEntry *e;
+void TXprintindex( TeXEntry *e )
 {
     int which;
 
@@ -2512,8 +2515,7 @@ TeXEntry *e;
     POPCURTOK;
 }
 
-void TXmakeindex( e )
-TeXEntry *e;
+void TXmakeindex( TeXEntry *e )
 {
 /* Does makeindex do some sort of heading? */
 /* WriteIndex( fpout, 2 ); */
@@ -2599,9 +2601,11 @@ void TXusepackage( TeXEntry *e )
     PUSHCURTOK;
     strncpy( CmdName, e->name, 64 );
     TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXusepackage", e->name );
-    strcat( preamble, "\\usepackage{" );
-    strcat( preamble, curtok );
-    strcat( preamble, "}" );
+    if (curtok[0]) {
+	strcat( preamble, "\\usepackage{" );
+	strcat( preamble, curtok );
+	strcat( preamble, "}" );
+    }
 
     /* Now, get comma-separate list of packages and load each one */
     p = curtok;
@@ -2686,16 +2690,14 @@ void TXtitle( TeXEntry *e )
     TeXMustGetArg( fpin[curfile], TitleString, MAX_TITLE, "TXtitle", e->name );
 }
 
-void TXauthor( e )
-TeXEntry *e;
+void TXauthor( TeXEntry *e )
 {
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     TeXMustGetArg( fpin[curfile], AuthorString, MAX_AUTHOR, 
 		   "TXauthor", e->name );
 }
-void TXdate( e )
-TeXEntry *e;
+void TXdate( TeXEntry *e )
 {
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
@@ -2797,8 +2799,7 @@ void TXcite( TeXEntry *e )
  * we need to implement the full stack semantics of TeX scoping when
  * processing groups
  */
-void TXcatcode( e )
-TeXEntry *e;
+void TXcatcode( TeXEntry *e )
 {
     char c, codetoken[21];
     int  code, nsp;
@@ -2873,7 +2874,7 @@ TeXEntry *e;
 static char activetok[MAX_TOKEN];
 static int lasttok = 0;
 static int breakchar[256];
-void TXinitbreaktable()
+void TXinitbreaktable( void )
 {
     int i;
     for (i=0; i<256; i++) {
@@ -3130,8 +3131,7 @@ void TXepsfbox( TeXEntry *e )
    (adjust if the bounding box doesn't start at (0,0).
  */
 
-void TXpsfig( e )
-TeXEntry *e;
+void TXpsfig( TeXEntry *e )
 {
     char *p, *fname;
 
@@ -3164,11 +3164,18 @@ TeXEntry *e;
     POPCURTOK;
 }
 
+/* FIXME: Add
+
+   includegraphics[width=dim]{filename}
+
+   File name may be missing the extension, in which case assume pdf 
+ */
+
 /* Process an animation entry.  args are {mpg}{gif}{text} */
 
 static char mpgtoken[256], giftoken[256];
-void TXanimation( e )
-TeXEntry *e;
+
+void TXanimation( TeXEntry *e )
 {
     TeXMustGetArg( fpin[curfile], mpgtoken, 256, "TXanimation", e->name );
     TeXMustGetArg( fpin[curfile], giftoken, 256, "TXanimation", e->name );
@@ -3557,7 +3564,8 @@ void ProcessLatexFile( int argc, char **argv, FILE *fin, FILE *fout )
     POPCURTOK;
     WriteEndofTopic( fout );
     fclose( ferr );   
-/* PrintContents( stdout, (void *)0 );  */
+    if (0) 
+	PrintContents( stdout, (void *)0 );
     if (BraceCount != 0) {
 	fprintf( stderr, "Brace count = %d\n", BraceCount );
 	if (BraceCount > 0) {
@@ -3572,16 +3580,14 @@ void ProcessLatexFile( int argc, char **argv, FILE *fin, FILE *fout )
 }
    
 /* Manage the citation characters */
-void TXSetCitePrefix( s )
-char *s;
+void TXSetCitePrefix( char *s )
 {
     if (CitePrefix) FREE( CitePrefix );
     CitePrefix = (char *)MALLOC( strlen( s ) + 1 );
     strcpy( CitePrefix, s );
 }
 
-void TXSetCiteSuffix( s )
-char *s;
+void TXSetCiteSuffix( char *s )
 {
     if (CiteSuffix) FREE( CiteSuffix );
     CiteSuffix = (char *)MALLOC( strlen( s ) + 1 );
