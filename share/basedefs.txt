@@ -110,6 +110,8 @@ nop thispagestyle 1
 nop thanks 1
 nop typeout 1
 #
+nop nocite 1
+#
 asis underline 1
 asis fbox 1 
 #
@@ -134,6 +136,9 @@ name cdot 0 .
 nop ve 0
 #
 hdef centerline 1 '<CENTER>'#1'</CENTER>'
+# Some LaTeX uses \center where they mean to use \centerline.
+# This is commented out but can be used in a document-specific 
+# definitions file
 # hdef center 1 '<CENTER>'#1'</CENTER>'
 hdef htmlanchor 2 '<A NAME="'#1'">#2</A>'
 hdef texorpdfstring 2 #1

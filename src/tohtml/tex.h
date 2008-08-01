@@ -59,6 +59,10 @@ extern char userpath[1024];  /* Path to search for package definitions */
 extern char ImageExt[4];     /* Choose the image type.  Used as both the
 			        image name and the file extension.  
 			        Currently either xbm or gif */
+
+extern char latex_errname[300];  /* File name used for errors in 
+				    generating latex or graphics files */
+
 extern int InDocument;
 
 extern int InOutputBody;
@@ -167,6 +171,8 @@ extern char ActiveChar;      /* often ~ */
 /* General globals */
 extern int  DebugCommands;
 extern int  DebugOutput;
+extern int  warnRedefinition;
+
 extern char *tokbuf, *curtok;
 extern int  toknum;
 #define MAX_CURTOKS 15
@@ -409,6 +415,7 @@ extern void TXSetCitePrefix ( char * );
 extern void TXSetCiteSuffix ( char * );
 extern void TXPrintToken ( FILE *, const char * );
 extern int FileExists ( char * ); 
+extern void TXincludegraphics( TeXEntry * );
 
 /* tex2html.c */
 extern void TXDoGaudy ( int );

@@ -7,6 +7,7 @@ extern void SYGetUserName( char *, int );
 extern void SYGetHostName( char *, int );
 extern int SYGetFileFromPath( char *, char *, char *, char *, char );
 extern int SYGetFileFromEnvironment( char *, char *, char *, char *, char );
+extern int SYFindFileWithExtension( char *, const char * );
 extern FILE *SYOpenWritableFile( char *, char *, char *, char *, int );
 extern void SYGetwd( char *, int );
 extern char *SYGetRealpath( char *, char * );

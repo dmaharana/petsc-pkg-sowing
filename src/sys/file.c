@@ -125,11 +125,9 @@ if (strncmp( fullpath, "/tmp_mnt/", 9 ) == 0) {
 /* We could try to handle things like the removal of .. etc */
 }
 #else
-void SYGetFullPath( path, fullpath, flen )
-char *path, *fullpath;
-int  flen;
+void SYGetFullPath( char *path, char *fullpath, int flen )
 {
-strcpy( fullpath, path );
+  strcpy( fullpath, path );
 }	
 #endif
 
@@ -378,8 +376,8 @@ return 0;
 int SYiFileExists( char *fname, char mode )
 {
     static int set_ids = 0;
-    uid_t uid;
-    gid_t gid;
+    static uid_t uid;
+    static gid_t gid;
     int         err;
     struct stat statbuf;
     int         stmode, rbit, wbit, ebit;
@@ -1059,8 +1057,7 @@ static char *lockfile = 0;
 static int  lockfilefd = -1;
 #endif
 
-FILE *SYfopenLock( name, type )
-char *name, *type;
+FILE *SYfopenLock( char *name, char *type )
 {
 FILE *fp;
 int  fd;
@@ -1132,8 +1129,7 @@ if (!cnt) {
 #endif
 return fp;
 }
-void SYfcloseLock( fp )
-FILE *fp;
+void SYfcloseLock( FILE *fp )
 {
 int fd;
 #ifdef FCNTL_WORKS
@@ -1223,3 +1219,32 @@ else {
     }
 }
 #endif
+
+/* Return 1 if the file exists.  If fname does not exist, try fname
+   with each of the extensions (colon separated) in extensions.
+   The extensions do not include the "." */
+int SYFindFileWithExtension( char *fname, const char *extensions )
+{
+    char *extLoc;
+    const char *p;
+
+    if (SYiFileExists( fname, 'r' ) == 1) {
+	return 1;
+    }
+    extLoc = fname + strlen(fname);
+    *extLoc++ = '.';
+    p = extensions;
+    while (*p) {
+	int i=0;
+	while (*p && *p != ':') {
+	    extLoc[i++] = *p++;
+	}
+	if (*p == ':') p++;
+	extLoc[i] = 0;
+	/* printf( "Checking for file %s\n", fname ); */
+	if (SYiFileExists( fname, 'r' ) == 1) {
+	    return 1;
+	}
+    }
+    return 0;
+}

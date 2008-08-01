@@ -5,6 +5,7 @@
 #include "search.h"
 #include "tex.h"
 
+#define OUTFILE_SIZE 512
 /* #define DBGMSG(a) if (DebugCommands) { fprintf( stdout, ... what goes here .. ); } */
 
 extern LINK *GetNextLink ( LINK * );
@@ -99,6 +100,7 @@ static int DebugArgs  = 0;    /* Set to one to dump arg processing */
 int DebugCommands = 0;        /* Set to one to dump command processing */
 int DebugOutput   = 0;        /* Set to one to dump output processing */
 int DebugFile     = 0;        /* Debug file related commands */
+int warnRedefinition = 0;     /* Warn on redefinition of commands */
 static int UseIfTex   = 0;    /* Set to use begin{iftex} ... instead of 
 				 begin{ifinfo} code */
 
@@ -227,6 +229,10 @@ char AlignChar       = '&';
 
 /* Special user commands */
 char *UserIndexName = 0;
+
+/* File for latex or graphics output errors */
+char latex_errname[300];
+
 /*
     This file contains the actions for processing a subset of LaTeXinfo
     files
@@ -280,7 +286,7 @@ void TXSetLatexAgain( int flag )
 
 void TXSetFiles( char *fin, char *fout )
 {
-    outfile = (char *)MALLOC( 512 );
+    outfile = (char *)MALLOC( OUTFILE_SIZE );
     CHKPTR(outfile);
     strcpy( outfile, fout );
     InFName[0] = (char *)MALLOC( strlen(fin) + 1 );
@@ -794,9 +800,9 @@ void TXref( TeXEntry *e )
     if (refname) {
 	if (refnumber >= 0) {
 	    if (fname)
-		sprintf( lfname, "%s#Node", fname );
+		snprintf( lfname, sizeof(lfname), "%s#Node", fname );
 	    else
-		strcpy( lfname, "Node" );
+		strncpy( lfname, "Node", sizeof(lfname) );
 	    WritePointerText( fpout, refname, lfname, refnumber );
 	}
 	else {
@@ -845,7 +851,7 @@ void TXlabel( TeXEntry *e )
 	POPCURTOK;
 	return;
       }
-      sprintf( buf, "%d", envJumpNum );
+      snprintf( buf, sizeof(buf), "%d", envJumpNum );
       WriteLabeltoauxfile( -1, envjumpname, curtok, buf );
     }
     POPCURTOK;
@@ -875,9 +881,9 @@ void TXhref( TeXEntry *e )
     }
     topicfile = TopicFilename( RefedSection );
     if (topicfile)
-	sprintf( lfname, "%s#Node", topicfile );
+	snprintf( lfname, sizeof(lfname), "%s#Node", topicfile );
     else
-	strcpy( lfname, "Node" );
+	strncpy( lfname, "Node", sizeof(lfname) );
     WritePointerText( fpout, curtok, lfname, RefedSection->number );
 /* \hrefa has a second argument that is used in the LaTeX version as the
    replacement text */
@@ -1282,8 +1288,9 @@ void TXSetSplitLevel( int sl, char *dir )
  */
 void TXsection( TeXEntry *e )
 {
-    int level = (int)(e->ctx), ch;
-    int dummy;
+    int   level = (int)(e->ctx), ch;
+    int   dummy;
+    char *p;
 
     TeXWriteContents( fpout );
 
@@ -1337,6 +1344,22 @@ void TXsection( TeXEntry *e )
     PUSHCURTOK;
     TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
 		   "TXsection(arg)", e->name );
+    /* Remove any leading blanks */
+    if (curtok[0] == ' ') {
+	char *p = curtok;
+	char *p1 = curtok;
+	/* Find the first nonblank */
+	while (*p == ' ') p++;
+	/* Move the first nonblank over, and then copy the rest of the string */
+	while (*p != 0) *p1++ = *p++;
+	*p1 = 0;
+    }
+    /* Remoave any trailing blanks */
+    p = curtok + strlen(curtok) - 1;
+    if (*p == ' ') {
+	while (p > curtok && *p == ' ') p--;
+        *++p = 0;
+    }
     strncpy( CurNodename, curtok, 255 );
 
 /* debug */
@@ -1353,12 +1376,11 @@ void TXsection( TeXEntry *e )
 	    WriteEndPage( fpout );
 	}
 	if (!outfile) {
-	    outfile = (char *)MALLOC( 512 );
+	    outfile = (char *)MALLOC( OUTFILE_SIZE );
 	    CHKPTR(outfile);
 	}
-	sprintf( outfile, "%s%cnode%d.%s", 
+	snprintf( outfile, OUTFILE_SIZE, "%s%cnode%d.%s", 
                  splitdir, DirSep, CurSeqnum, HTML_Suffix );
-	/* sprintf( outfile, "node%d.html",  CurSeqnum ); */
 	fclose( fpout );
 	fpout = fopen( outfile, "w" );
 	if (!fpout) {
@@ -1366,7 +1388,7 @@ void TXsection( TeXEntry *e )
 	    TeXAbort( "TXsection(file)", (char *)0 );
         }
 	/* We use the local name (in the directory) for all references */
-	sprintf( outfile, "node%d.%s", CurSeqnum, HTML_Suffix );
+	snprintf( outfile, OUTFILE_SIZE, "node%d.%s", CurSeqnum, HTML_Suffix );
 	WriteHeadPage( fpout );
 	WriteFileTitle( fpout, curtok );
 	WriteBeginPage( fpout );
@@ -1378,7 +1400,7 @@ void TXsection( TeXEntry *e )
 	LastSection = GetNextLink( LastSection );
 	/* Check that this matches the name */
 	if (LastSection && strcmp(LastSection->topicname,curtok) != 0) {
-	    fprintf( stderr, "Mismatch in section; expected %s found %s\n",
+	    fprintf( stderr, "Mismatch in section; expected \"%s\" found \"%s\"\n",
 		     curtok, LastSection->topicname );
 	}
     }
@@ -1425,8 +1447,7 @@ void TXsection( TeXEntry *e )
     This is a special version of section for the first page (vtitle) of
     a set of slides.
  */
-void TXtitlesection( e )
-TeXEntry *e;
+void TXtitlesection( TeXEntry *e )
 {
     int level = (int)(e->ctx), ch;
     int dummy;
@@ -1684,7 +1705,9 @@ void TeXskipEnv( TeXEntry *e, char *name, int flag )
 		    else if (strcmp( curtok, name ) != 0) {
 			if (flag) 
 			    fprintf( ferr, 
-     "%s does not match %s (started at line %d)\n", curtok, name, line_num );
+		  "<skipEnv>%s does not match %s (started at line %d), at %s line %d\n", 
+		  curtok, name, line_num, 
+ 	          InFName[curfile] ? InFName[curfile]: "", LineNo[curfile] );
 		    }
 		    else
 			break;
@@ -1975,8 +1998,7 @@ void TeXitemize( TeXEntry *e )
     TXWriteStartNewLine( fpout );
 }	
 
-void TeXenumerate( e )
-TeXEntry *e;
+void TeXenumerate( TeXEntry *e )
 {
     itemizelevel++;
     lstack[++lSp].env	    = TXENUMERATE;
@@ -1995,8 +2017,7 @@ TeXEntry *e;
 /* TXWriteStartNewLine( fpout ); */
 }	
 
-void TeXdescription( e )
-TeXEntry *e;
+void TeXdescription( TeXEntry *e )
 {
     itemizelevel++;
     lstack[++lSp].env	    = TXDESCRIPTION;
@@ -2038,15 +2059,13 @@ void TeXDoList( TeXEntry *e, char *itemtext, char *itemcommands )
     TXWriteStartNewLine( fpout );
 }	
 	
-void TeXsmall( e )
-TeXEntry *e;
+void TeXsmall( TeXEntry *e )
 {
     TeXskipEnv( e, "small", 1 );
 }   
 
 
-void TXverb( e )
-TeXEntry *e;
+void TXverb( TeXEntry *e )
 {
     int  ch;
     int  match;
@@ -2559,6 +2578,12 @@ void TXLoadPackage( const char *p )
 	   them to implement psfig */
 	TXStyleEPSF( TeXlist, fpin[curfile], fpout );
     }
+    else if (strcmp( p, "graphics" ) == 0 ||
+	     strcmp( p, "graphicx" ) == 0 ||
+	     strcmp( p, "graphicsx" ) == 0) {
+	TXInsertName( TeXlist, "includegraphics", TXincludegraphics, 
+		      1, (void *)0 );
+    }
     else if (strcmp( p, "11pt" ) == 0 || 
 	     strcmp( p, "12pt" ) == 0 ||
 	     strcmp( p, "twoside" ) == 0 ||
@@ -2973,7 +2998,7 @@ void TXepsfbox( TeXEntry *e )
     TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXepsfbox", e->name );
 
 /* Save the filename */
-    strncpy( imagefile, curtok, 255 );
+    strncpy( imagefile, curtok, sizeof(imagefile) );
 
 /* Modify curtok by changing .ps or .eps to .gif */
     p = curtok + strlen(curtok) - 1;
@@ -2982,9 +3007,9 @@ void TXepsfbox( TeXEntry *e )
 
 /* out file is the file without the directory */
     p = curtok;
-    strncpy( imgoutfile, curtok, 255 );
+    strncpy( imgoutfile, curtok, sizeof(imgoutfile) );
     while (*p) {
-	if (p[0] == '/') strncpy( imgoutfile, p + 1, 255 );
+	if (p[0] == '/') strncpy( imgoutfile, p + 1, sizeof(imgoutfile) );
 	p++;
     }
 /* Here are the file names: 
@@ -3170,6 +3195,57 @@ void TXpsfig( TeXEntry *e )
 
    File name may be missing the extension, in which case assume pdf 
  */
+
+void TXincludegraphics( TeXEntry *e )
+{
+    static char name[] = "includegraphics";
+    char *p, *ptr, *p1;
+    int  rc;
+
+    /* See if there is an option argument (which we'll ignore for now) */
+    PUSHCURTOK;
+    if (TeXGetGenArg( fpin[curfile], curtok, MAX_TOKEN, '[', ']', 1 ) == 1) {
+	/* Use this to process any arguments that we might need with
+	   the picture */
+#if 0
+      p = curtok;
+      while (*p) {
+	/* Look for known commands */
+	ptr = p;
+	while (*ptr && *ptr != ',') ptr++;
+	if (!*ptr) ptr[1] = 0;   /* so the p = ptr + 1 below will exit */
+	*ptr = 0;
+	/* Skip over any path part of the specification */
+	p1 = p;
+	while (*p1) {
+	  if (*p1 == '/') p = p1 + 1;
+	  p1++;
+	}
+	p = ptr + 1;
+      }
+#endif
+    }
+    /* Get the file name */
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+		   "TXincludegraphics", (char *)0 );
+    /* Try to find the file */
+    rc = SYFindFileWithExtension( curtok, "gif:eps:pnm:ps:pdf" );
+    if (rc == 1) {
+	/* We may need to convert the file to one that can be displayed */
+	rc = TXConvertFigureToGIF( curtok );
+	if (rc == 1) {
+	    TXimage( 0, curtok );
+	}
+	else {
+	    fprintf( stderr, "Unable to convert %s to .gif\n", curtok );
+	}
+    }
+    else {
+	fprintf( stderr, "Cannot find graphics file %s\n", curtok );
+    }
+
+    POPCURTOK;
+}
 
 /* Process an animation entry.  args are {mpg}{gif}{text} */
 
@@ -3410,6 +3486,10 @@ void TXInit( FILE *fin, FILE *fout )
 /* HTML Tables */
     if (HandleAlign) 
 	InitTabular();
+
+    /* Initialize the name of the error output file */
+    GetBaseName( latex_errname );
+    strcat( latex_errname, ".ler" );
 }	
 
 void TeXProcessCommand( char *token, FILE *fin, FILE *fout )
@@ -3668,7 +3748,9 @@ void TXPrintToken( FILE *fp, const char *str )
 		    else if (strcmp( curtok, name ) != 0) {
 			if (flag) 
 			    fprintf( ferr, 
-     "%s does not match %s (started at line %d)\n", curtok, name, line_num );
+		  "%s does not match %s (started at line %d), at %s line %d\n", 
+		  curtok, name, line_num, 
+ 	          InFName[curfile] ? InFName[curfile]: "", LineNo[curfile] );
 		    }
 		    else {
 			break;
@@ -3683,4 +3765,124 @@ void TXPrintToken( FILE *fp, const char *str )
 		}
 	    }
 	    else {
+	    }
 #endif
+
+/* Eventually, we may prefer to use PNM of PNG files */
+static int debugF2GIF = 0;
+
+/* Convert fname to GIF.  Replace fname with the filename to be used to 
+ include the file in the generated output */
+int TXConvertFigureToGIF( char *fname )
+{
+    char *p;
+    char pgm[2048], fname2[2048];
+    int  rc = 0;
+
+    /* Determine the type of the file from the known types (if this
+       ever gets long, we could use an array of types and methods to convert
+       to GIF */
+
+    if (debugF2GIF)
+	fprintf( stderr, "Converting file %s\n", fname );
+
+    /* Create the result file name.  The result name is created from the
+       basename of the result, with the target directory */
+    p = fname + strlen(fname) - 1;
+    /* find the dirctory separator, if any */
+    while (p != fname && *p != DirSep) p--;
+    if (*p == DirSep) p++;
+    snprintf( fname2, sizeof(fname2), "%s%c%s", splitdir, DirSep, p );
+    p = fname2 + strlen(fname2) - 1;
+    while (p != fname2 && *p != '.') p--;
+    *p = 0;
+    strncpy( p, ".gif", 10 );
+
+    if (strstr( fname, ".gif" )) {
+	if (debugF2GIF)
+	    fprintf( stderr, "Do we need to move %s to %s\n", fname, fname2 );
+	/* Copy the file into the proper directory if it isn't there */
+	if (strcmp( fname, fname2 ) != 0) {
+	    snprintf( pgm, sizeof(pgm), "cp -f %s %s", fname, fname2 );
+	    rc = system( pgm );
+	    if (rc) {
+		fprintf( stderr, "Error code %d from %s\n", rc, pgm );
+		return 0;
+	    }
+	}
+	p = fname2 + strlen(fname2) - 1;
+	while (p != fname2 && *p != DirSep) p--;
+	if (*p == DirSep) p++;
+	strcpy( fname, p );
+	return 1;
+    }
+
+
+    if ( strstr( fname, ".ps" ) != 0) {
+	if (debugF2GIF) fprintf( stderr, "Converting ps to gif for %s\n", 
+				 fname );
+	/* The figure argument preserves color */
+	snprintf( pgm, sizeof(pgm), "%spstogif %s %s figure >>%s 2>&1", 
+		  PSPATH, fname, fname2, latex_errname );
+	if (debugF2GIF)
+	    fprintf( stderr, "Running %s\n", pgm );
+	rc = system( pgm );
+	if (rc != 0) {
+	    fprintf( stderr, "Error code %d from %s\n", rc, pgm );
+	    return 0;
+	}
+	p = fname2 + strlen(fname2) - 1;
+	while (p != fname2 && *p != DirSep) p--;
+	if (*p == DirSep) p++;
+	strcpy( fname, p );
+	return 1;
+    }
+    else if ( strstr( fname, ".eps" ) != 0) {
+	if (debugF2GIF) fprintf( stderr, "Converting eps to gif for %s\n", 
+				 fname );
+	/* The figure argument preserves color */
+	snprintf( pgm, sizeof(pgm), "%spstogif %s %s figure >>%s 2>&1", 
+		  PSPATH, fname, fname2, latex_errname );
+	if (debugF2GIF)
+	    fprintf( stderr, "Running %s\n", pgm );
+	rc = system( pgm );
+	if (rc != 0) {
+	    fprintf( stderr, "Error code %d from %s\n", rc, pgm );
+	    return 0;
+	}
+	p = fname2 + strlen(fname2) - 1;
+	while (p != fname2 && *p != DirSep) p--;
+	if (*p == DirSep) p++;
+	strcpy( fname, p );
+	return 1;
+    }
+    else if ( strstr( fname, ".pnm" ) != 0) {
+	return 1; /* Will this work? */
+    }
+    else if ( strstr( fname, ".pdf" ) != 0) {
+	if (debugF2GIF) fprintf( stderr, "Converting pdf to gif for %s\n", 
+				 fname );
+	/* Change the output name to a .ps file */
+	p = fname2 + strlen(fname2) - 1;
+	while (p != fname2 && *p != '.') p--;
+	strncpy( p, ".ps", 10 );
+
+
+	snprintf( pgm, sizeof(pgm), "pdf2ps %s %s >>%s 2>&1", fname, fname2, 
+		  latex_errname );
+	if (debugF2GIF)
+	    fprintf( stderr, "Running %s\n", pgm );
+	rc = system( pgm );
+	if (rc != 0) {
+	    fprintf( stderr, "Error code %d from %s\n", rc, pgm );
+	    return 0;
+	}
+	if (debugF2GIF)
+	    fprintf( stderr, "Now, convert %s to gif\n", fname2 );
+	/* Now convert the postscript file */
+	rc = TXConvertFigureToGIF( fname2 );
+	strcpy( fname, fname2 );
+	return rc;
+    }
+    return rc;
+}

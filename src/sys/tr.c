@@ -339,7 +339,7 @@ int trvalid( char *str )
 		     "[%d] Block allocated in %s[%d]\n", 
 		     world_rank, head->fname, head->lineno );
 	    fprintf( stderr, 
-		     "[%d] Expected %x, read %x\n", 
+		     "[%d] Expected %x, read %lx\n", 
 		     world_rank, COOKIE_VALUE, nend[0] );
 	}
 	head = head->next;

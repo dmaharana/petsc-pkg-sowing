@@ -13,9 +13,7 @@
    SYArgSqueeze - Remove all null arguments from an arg vector; 
    update the number of arguments.
  @*/
-void SYArgSqueeze( Argc, argv )
-int  *Argc;
-char **argv;
+void SYArgSqueeze( int *Argc, char **argv )
 {
 int argc, i, j;
     
@@ -43,10 +41,7 @@ if (!argv[i-1]) i--;
    Returns:
    index in argv of name; -1 if name is not in argv
  @*/
-int SYArgFindName( argc, argv, name )
-int  argc;
-char **argv;
-char *name;
+int SYArgFindName( int argc, char **argv, char *name )
 {
 int  i;
 
@@ -71,9 +66,7 @@ return -1;
   Note:
   This routine handles both decimal and hexidecimal integers.
 @*/
-int SYArgGetInt( Argc, argv, rflag, name, val )
-int  *Argc, rflag, *val;
-char **argv, *name;
+int SYArgGetInt( int *Argc, char **argv, int rflag, char *name, int *val )
 {
 int idx;
 char *p;
@@ -119,13 +112,10 @@ return 1;
   Returns:
   1 on success
 @*/
-int SYArgGetDouble( Argc, argv, rflag, name, val )
-int    *Argc, rflag;
-char   **argv, *name;
-double *val;
+int SYArgGetDouble( int *Argc, char **argv, int rflag, char *name, double *val )
 {
 int idx;
-extern double atof();
+extern double atof(const char*);
 
 idx = SYArgFindName( *Argc, argv, name );
 if (idx < 0) return 0;
@@ -157,9 +147,8 @@ return 1;
   Returns:
   1 on success
 @*/
-int SYArgGetString( Argc, argv, rflag, name, val, vallen )
-int  *Argc, rflag, vallen;
-char **argv, *name, *val;
+int SYArgGetString( int *Argc, char **argv, int rflag, char *name, 
+		    char *val, int vallen )
 {
 int idx;
 
@@ -192,9 +181,7 @@ return 1;
   Returns:
   1 on success
 @*/
-int SYArgHasName( Argc, argv, rflag, name )
-int  *Argc, rflag;
-char **argv, *name;
+int SYArgHasName( int *Argc, char **argv, int rflag, char *name )
 {
 int idx;
 
@@ -223,9 +210,8 @@ return 1;
   Returns:
   1 on success
 @*/
-int SYArgGetIntVec( Argc, argv, rflag, name, n, val )
-int  *Argc, rflag, *val, n;
-char **argv, *name;
+int SYArgGetIntVec( int *Argc, char **argv, int rflag, char *name, 
+		    int n, int *val )
 {
 int idx, i;
 
@@ -269,9 +255,8 @@ return 1;
   Number of elements found.  0 if none or error (such as -name with 
   no additional arguments)
 @*/
-int SYArgGetIntList( Argc, argv, rflag, name, n, val )
-int  *Argc, rflag, *val, n;
-char **argv, *name;
+int SYArgGetIntList( int *Argc, char **argv, int rflag, char *name, int n, 
+		     int *val )
 {
 int  idx, i;
 char *p, *pcomma;

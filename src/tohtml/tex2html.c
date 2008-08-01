@@ -320,9 +320,7 @@ void TXInlineImage( TeXEntry *e, char *fname )
 /* fprintf( fpout, "<A HREF=\"%s\">push here for picture</a>"\n", fname ); */
 }
 
-void TXAnchoredImage( e, anchorname, fname )
-TeXEntry *e;
-char     *anchorname, *fname;
+void TXAnchoredImage( TeXEntry *e, char *anchorname, char *fname )
 {
     int width, height;
 
@@ -380,47 +378,40 @@ void TXmovie( TeXEntry *e, char *movie, char *icon, char *text )
 	     movie, icon, text, NewLineString );
 }
 
-void TXbbrace( e )
-TeXEntry *e;
+void TXbbrace( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;	
     fputs( "{", fpout );
 }
 
-void TXebrace( e )
-TeXEntry *e;
+void TXebrace( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;	
     fputs( "}", fpout );
 }
 
-void TXmath( e )
-TeXEntry *e;
+void TXmath( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;	
     TeXoutcmd( fpout, "<p><I>" );
 }
-void TXmathend( e )
-TeXEntry *e;
+void TXmathend( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;	
     TeXoutcmd( fpout, "</I><p>" );
 }
-void TXinlinemath( e )
-TeXEntry *e;
+void TXinlinemath( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;	
     TeXoutcmd( fpout, "<I>" );
 }
-void TXinlinemathend( e )
-TeXEntry *e;
+void TXinlinemathend( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;	
     TeXoutcmd( fpout, "</I>" );
 }
 
-void TXWriteStartNewLine( fout )
-FILE *fout;
+void TXWriteStartNewLine( FILE *fout )
 {
     if (!InDocument || !InOutputBody) return;
     if (!IsPreformatted) {
@@ -431,16 +422,13 @@ FILE *fout;
 	TeXoutcmd( fout, NewLineString );
 }
 
-void TXWriteStartItem( fout )
-FILE *fout;
+void TXWriteStartItem( FILE *fout )
 {
     if (!InDocument || !InOutputBody) return;
     TeXoutcmd( fout, NewLineString );
 }
 
-void TXmaketitle( e, TitleString, AuthorString )
-TeXEntry *e;
-char *TitleString, *AuthorString;
+void TXmaketitle( TeXEntry *e, char *TitleString, char *AuthorString )
 {
     char tmpbuf[1024];
 
@@ -469,8 +457,7 @@ char *TitleString, *AuthorString;
 }
 
 /* Itemize environement */
-void TXbitemize( e )
-TeXEntry *e;
+void TXbitemize( TeXEntry *e )
 {
     if (DoGaudy) {
 	itemlevel++;
@@ -480,8 +467,7 @@ TeXEntry *e;
 	TeXoutcmd( fpout, "<ul>" );	
     TeXoutstr( fpout, NewLineString );
 }	
-void TXeitemize( e )
-TeXEntry *e;
+void TXeitemize( TeXEntry *e )
 {
     if (DoGaudy) {
 	itemlevel--;
@@ -493,26 +479,22 @@ TeXEntry *e;
 }	
 
 /* Enumerate environment */
-void TXbenumerate( e )
-TeXEntry *e;
+void TXbenumerate( TeXEntry *e )
 {
     TeXoutcmd( fpout, "<ol>" );	
     TeXoutstr( fpout, NewLineString );
 }
-void TXeenumerate( e )
-TeXEntry *e;
+void TXeenumerate( TeXEntry *e )
 {
     TeXoutcmd( fpout, "</ol>" );	
     TeXoutstr( fpout, NewLineString );
 }
-void TXbdescription( e )
-TeXEntry *e;
+void TXbdescription( TeXEntry *e )
 {
     TeXoutcmd( fpout, "<dl>" );
     TeXoutstr( fpout, NewLineString );
 }
-void TXedescription( e )
-TeXEntry *e;
+void TXedescription( TeXEntry *e )
 {
     TeXoutcmd( fpout, "</dl>" );
     TeXoutstr( fpout, NewLineString );

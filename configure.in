@@ -101,6 +101,7 @@ fi
 AC_PATH_PROG(PNMCROP,pnmcrop)
 AC_PATH_PROG(PBMTOXBM,pbmtoxbm)
 AC_PATH_PROG(PPMTOGIF,ppmtogif)
+AC_PATH_PROG(PNMQUANT,pnmquant)
 AC_PATH_PROG(PERL,perl)
 
 dnl Checks for libraries.

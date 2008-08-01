@@ -19,10 +19,7 @@ SRList *labelctx = 0;
 /* A label at node "seqnum", with buffer containing "name node-name".
    This is intended for use by the aux file.  The file containing
    the reference is "fname" */
-void InsertLabel( seqnum, buffer, fname )
-int  seqnum;
-char *buffer;
-char *fname;
+void InsertLabel( int seqnum, char *buffer, char *fname )
 {
     char *name, *p;
     static char entrylevel[] = "Document";
@@ -52,10 +49,7 @@ char *fname;
     strcpy( ll->fname, fname );
 }
 	
-char *LabelLookup( name, seqnum, fname )
-char *name;
-int  *seqnum;
-char *fname;
+char *LabelLookup( char *name, int *seqnum, char *fname )
 {
     LINK *l;
     LABEL *ll;
@@ -75,8 +69,7 @@ char *fname;
 }
 	
 /* Replace any tabs or newlines with a single blank */
-void ReplaceWhite( str )
-char *str;
+void ReplaceWhite( char *str )
 {
     while (*str) {
 	if (isspace(*str)) *str = ' ';

@@ -201,9 +201,8 @@ void TeXskipMath( TeXEntry *e, char *name, int doout )
     int  nsp, ch;
     FILE *fout = fpout;
     int  (*oldtrans)( char *, int );
-/*     extern int (*SCSetTranslate( ))(); */
 
-/* First, remove any newlines */
+    /* First, remove any newlines */
     SCSkipNewlines( fpin[curfile] );
 
     oldtrans = SCSetTranslate( (int (*)(char *, int ))0 );
@@ -340,6 +339,8 @@ void TXProcessDollar( TeXEntry *e, int latexmath, int checkdollar )
 	    }
 	}
 
+	/* If the previous character was a \ (command char), use 
+  	   special processing for this character */
 	if (hasBackwack) {
 	    /* Check for \] or \) */
 	    if (token[0] == ']' || token[0] == ')') break;
@@ -396,6 +397,14 @@ void TXProcessDollar( TeXEntry *e, int latexmath, int checkdollar )
 	    /*	    else if (strcmp( token, "{" ) == 0 ||
 		     strcmp( token, "}" ) == 0) 
 		     numDoableCommands++; */
+	} /* Check for commandchar (hasBackwhack) */
+	else if (ch == CommentChar) {
+	    /* If the previous character was not a command char, then
+	       this really is a comment, and we should skip to the
+	       end of the line without processing it */
+	    SCTxtDiscardToEndOfLine( fpin[curfile] );
+	    LineNo[curfile]++;
+	    continue;
 	}
 
 	/* Remember if the PREVIOUS character was a CommandChar */

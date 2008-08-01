@@ -102,6 +102,9 @@ int main( int argc, char *argv[] )
     /* Check for any debugging options in the memory tracing code */
     TrInit();
 
+    /* Initializations prior to checking the arguments */
+    /* outfilename[0] = 0; */
+
     if (SYArgHasName( &argc, argv, 1, "-version" )) {
 	printf( "tohtml from version %d.%d.%d %s of %s\n", 
 		PATCHLEVEL, PATCHLEVEL_MINOR, PATCHLEVEL_SUBMINOR, 
@@ -177,6 +180,9 @@ int main( int argc, char *argv[] )
     }
     if (SYArgHasName( &argc, argv, 1, "-debugout" )) {
 	DebugOutput = 1;
+    }
+    if (SYArgHasName( &argc, argv, 1, "-Wnoredef" )) {
+	warnRedefinition = 0;
     }
     if (SYArgHasName( &argc, argv, 1, "-cvtlatex" ))
 	TXSetLatexUnknown( 1 );
@@ -277,6 +283,9 @@ int main( int argc, char *argv[] )
     beginpagefilename[0] = 0;
     SYArgGetString( &argc, argv, 1, "-beginpage", beginpagefilename, 256 );
 
+    outfilename[0] = 0;
+    SYArgGetString( &argc, argv, 1, "-o", outfilename, sizeof(outfilename) );
+
     argv++;
     argc--;
     if (argc == 0 || !argv[0]) {
@@ -284,7 +293,9 @@ int main( int argc, char *argv[] )
 	return 1;
     }
     strcpy( infilename, argv[0] );
-    strcpy( outfilename, argv[0] );
+    if (outfilename[0] == 0) {
+	strcpy( outfilename, argv[0] );
+    }
     RemoveExtension( outfilename );
     strcpy( basefilename, outfilename );
     strcpy( auxfilename, outfilename );
@@ -353,14 +364,12 @@ int main( int argc, char *argv[] )
 /*
     Write the help header to fp
  */
-void WriteHeader( fp )
-FILE *fp;
+void WriteHeader( FILE *fp )
 {
 }
 
 /* Write the trailer */
-void WriteTrailer( fp )
-FILE *fp;
+void WriteTrailer( FILE *fp )
 {
 }
 
@@ -394,10 +403,8 @@ void WriteSectionHeader( FILE *fp, char *name, char *entrylevel, int number,
 /* 
    We can't put an anchor in without there being actual TEXT.  GRUMBLE.
  */
-void WriteSectionAnchor( fp, name, entrylevel, number, level )
-FILE *fp;
-char *name, *entrylevel;
-int  number, level;
+void WriteSectionAnchor( FILE *fp, char *name, char *entrylevel, 
+			 int number, int level )
 {
     char tmpname[256];
 /* FEATURE: font changes in headings don't work.  Rather than try and suppress 
@@ -423,9 +430,7 @@ void WriteFileTitle( FILE *fp, char *name )
     fprintf( fp, "</TITLE>%s", NewLineString );
 }
 
-void WriteJumpDestination( fp, name, title )
-FILE *fp;
-char *name, *title;
+void WriteJumpDestination( FILE *fp, char *name, char *title )
 {
     if (DebugOutput) fprintf( stdout, "WriteJumpDestination\n" );
     fprintf( fp, "<A NAME=\"%s\">%s</a>", name, title );
@@ -434,18 +439,15 @@ char *name, *title;
 /*
     Write the text to set the formatting for the body of a topic
  */
-void WriteTextHeader( fp )
-FILE *fp;
+void WriteTextHeader( FILE *fp )
 {
 }
 
 /*
     Write out popup text.  popup text refers to a topic (entryname/number)
  */
-void WritePopupTextReference( fp, text, reftopic, refnumber )
-FILE *fp;
-char *text, *reftopic;
-int  refnumber;
+void WritePopupTextReference( FILE *fp, char *text, char *reftopic, 
+			      int refnumber )
 {
     if (DebugOutput) fprintf( stdout, "WritePopupTextReference\n" );
     fprintf( fp, "<a href=\"%s%d\">%s</a>", reftopic, refnumber, text );
@@ -456,10 +458,7 @@ int  refnumber;
     Since the topic may contain quoted commands, we need to process it
     as well
  */
-void WritePointerText( fp, text, reftopic, refnumber )
-FILE *fp;
-char *text, *reftopic;
-int  refnumber;
+void WritePointerText( FILE *fp, char *text, char *reftopic, int refnumber )
 {
     if (DebugOutput) fprintf( stdout, "WritePointerText\n" );
     if (refnumber >= 0) 
@@ -485,9 +484,7 @@ void WriteEndofTopic( FILE *fp )
 
 /* This translation needs to happen on output in HTML, if it hasn't 
    already been processed */
-int SCHTMLTranslate( token, maxtoken )
-char *token;
-int  maxtoken;
+int SCHTMLTranslate( char *token, int maxtoken )
 {
 /*
   if (token[0] == '<')      strcpy( token, "&lt;" );
@@ -501,9 +498,7 @@ int  maxtoken;
     return token[0];
 }
 
-int SCHTMLTranslateTables( token, maxtoken )
-char *token;
-int  maxtoken;
+int SCHTMLTranslateTables( char *token, int maxtoken )
 {
     if (token[0] == '<')      strcpy( token, "&lt;" );
     else if (token[0] == '>') strcpy( token, "&gt;" );
@@ -784,9 +779,7 @@ void OutJump( FILE *fp, char *context, char *name, char *label )
 /*
    This changes the binding of the UP button to the given context
  */
-void SetUpButton( fp, context, name )
-FILE *fp;
-char *context, *name;
+void SetUpButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetUpButton\n" );
     fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%sup.%s\"></A>", 
@@ -794,9 +787,7 @@ char *context, *name;
 /* fprintf( fp, "<b>Up: </b><A HREF=\"%s\">%s</a> ", context, name ); */
 }   
 
-void SetNextButton( fp, context, name )
-FILE *fp;
-char *context, *name;
+void SetNextButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetNextButton\n" );
     fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%snext.%s\"></A>", 
@@ -824,59 +815,49 @@ void WriteBeginPointerMenu( FILE *fout )
     if (DebugOutput) fprintf( stdout, "WriteBeginPointerMenu\n" );
     fputs( "<li>", fout );
 }
-void WriteEndOfPointer( fout )
-FILE *fout;
+void WriteEndOfPointer( FILE *fout )
 {
     if (DebugOutput) fprintf( stdout, "WriteEndOfPointer\n" );
     fputs( NewLineString, fout );
 }
 
 /* These next provide for paragraph justification */
-void WriteCenter( fp )
-FILE *fp;
+void WriteCenter( FILE *fp )
 {
 }
-void WriteLeftAligned( fp )
-FILE *fp;
+void WriteLeftAligned( FILE *fp )
 {
 }
-void WriteRightAligned( fp )
-FILE *fp;
+void WriteRightAligned( FILE *fp )
 {
 }
-void WriteJustified( fp )
-FILE *fp;
+void WriteJustified( FILE *fp )
 {
 }
-void WritePlain( fp )
-FILE *fp;
+void WritePlain( FILE *fp )
 {
 }
 
 /* Paragraph indentation */
-void WriteRightIndent( fp, n )
-FILE *fp;
-int  n;
+void WriteRightIndent( FILE *fp, int n )
 {
 }
-void WriteLeftIndent( fp, n )
-FILE *fp;
-int  n;
+void WriteLeftIndent( FILE *fp, int n )
 {
 }
-void WriteFirstLineIndent( fp, n )
-FILE *fp;
-int  n;
+void WriteFirstLineIndent( FILE *fp, int n )
 {
 }
 
 /* Return the name of the file (without the extension) */
-void GetBaseName( str )
-char *str;
+void GetBaseName( char *str )
 {
     strcpy( str, basefilename );
 }
-
+void GetMainInputFileName( char *str )
+{
+    strcpy( str, infilename );
+}
 /*
     Still to add...
 
@@ -900,7 +881,7 @@ Synopsis:
          [-cvtmath] [-simplemath] [-useimg] [-gaudy] [-iftex] [-default]
          [-nonavnames] [-notopnames] [-nobottomnav]
          [-basedef filename] [-endpage filename ] [-beginpage filename]
-         [-citeprefix str] [-citesuffix str] filename
+         [-citeprefix str] [-citesuffix str] [-o outname ] filename
 
 Input Parameters:
 + -iftex - Include text in begin{iftex}...end{iftex} mode
@@ -931,9 +912,12 @@ Input Parameters:
 . -basedef name - Use file name to define TeX commands
 . -beginpage filename - Prepend the html in filename to the end of
  each page
-- -endpage filename - Append the html in filename to the end of
+. -endpage filename - Append the html in filename to the end of
  each page
-
+- -o outname - Specify the name to be used as the output file name (instead
+    of the basing the output file name on the input file name).  This
+    name should include the natural extension; e.g., for HTML output, 
+    use something like tohtml -latex -o myout.htm myfile.tex .
 D*/
 void PrintHelp( char *pgm )
 {
@@ -971,7 +955,11 @@ void PrintHelp( char *pgm )
 \t-beginpage filename\tPrepend the html in filename to the end of\n\
 \t\t\t\teach page\n\
 \t-endpage filename\tAppend the html in filename to the end of\n\
-\t\t\t\teach page\n" );
+\t\t\t\teach page\n\
+\t-o outname\tSpecify the name to be used as the output file name (instead\n\
+\t\t\t\tof the basing the output file name on the input file name).  This\n\
+\t\t\t\tname should include the natural extension; e.g., for HTML output, \n\
+\t\t\t\tuse something like tohtml -latex -o myout.htm myfile.tex ." );
     fprintf( stderr, "(for wizards): [-debug] [-debugscan] [-debugdef]\n" );
     return;
 }
@@ -1115,8 +1103,7 @@ void CopyImgFiles( char *basefilename )
 
 /* Skip to the end of an HTML expression; return pointer to first char
    after expression */
-char *SkipHTML( str )
-char *str;
+char *SkipHTML( char *str )
 {
     while (str && *str) {
 	if (*str == '<')
@@ -1162,7 +1149,7 @@ void SaveCommandLine( int argc, char *argv[] )
     }
 }
 
-char *GetCommandLine( )
+char *GetCommandLine( void )
 {
     return cmdlin;
 }

@@ -47,8 +47,7 @@ static char  bibtoken[MAX_TOKEN];
 
 static int bibcount = 1;
 
-void TXbibitem( e )
-TeXEntry *e;
+void TXbibitem( TeXEntry *e )
 {
     char buf[10], dest[20], fulldest[256];
 
@@ -69,9 +68,7 @@ TeXEntry *e;
 
    For example "foo.html#-Bib3 p4-book"
  */
-void InsertBib( level, buffer )
-int level;
-char *buffer;
+void InsertBib( int level, char *buffer )
 {
     int d;
     LINK *l;
@@ -102,8 +99,7 @@ char *buffer;
     strncpy( e->number, p, 4 );
 }
 
-int BibLookup( name, url, text )
-char *name, **url, **text;
+int BibLookup( char *name, char **url, char **text )
 {
     LINK     *l;
     Bibentry *e;
@@ -119,15 +115,16 @@ char *name, **url, **text;
 }
 
 
-void TXDoBibliography( e )
-TeXEntry *e;
+void TXDoBibliography( TeXEntry *e )
 {
     char fname[270];
 
-/* Eat the name of the database */
+    /* Eat the name of the database */
     TeXGetArg( fpin[curfile], fname, 270 );
 
-    GetBaseName( fname );
+    /* Get the name of the input file to use in searching for the bbl file */
+    GetMainInputFileName( fname );
+    RemoveExtension( fname );
     strcat( fname, ".bbl" );
 
     if (fpin[curfile+1]) fclose( fpin[curfile+1] );

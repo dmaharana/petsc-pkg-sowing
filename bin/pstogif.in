@@ -40,7 +40,7 @@ if [ "$PSTOPPM" = "" ] ; then PSTOPPM=@prefix@/bin/pstoppm.ps ; fi
 if [ "$PNMCROP" = "" ] ; then PNMCROP=@PNMCROP@ ; fi
 if [ "$PBMTOXBM" = "" ] ; then PBMTOXBM=@PBMTOXBM@ ; fi
 if [ "$PPMTOGIF" = "" ] ; then PPMTOGIF=@PPMTOGIF@ ; fi
-
+if [ "$PNMQUANT" = "" ] ; then PNMQUANT=@PNMQUANT@ ; fi
 
 # Set to -r150 for some on-line displays
 res=""
@@ -145,12 +145,15 @@ ND
 fi
 
 if [ -f $TMPDIR/$$-${BASE}.ppm ] ; then
-	$PNMCROP $TMPDIR/$$-${BASE}.ppm | $PPMTOGIF - > $2
+    # Make sure there are at most 256 colors (otherwise the conversion
+    # to gif will fail)
+    $PNMCROP $TMPDIR/$$-${BASE}.ppm | $PNMQUANT 256 | $PPMTOGIF - > $2
 else
      # Test for any files at all
      if [ -f $TMPDIR/$$-${BASE}.1ppm ] ; then
          for i in `ls $TMPDIR/$$-${BASE}.[1-9]*ppm` ; do 
-           $PNMCROP $i | $PPMTOGIF - > `echo $i |sed 's/\.\(.*\)ppm/\1\.xbm/'`;
+           $PNMCROP $i | $PNMQUANT 256  | \
+	       $PPMTOGIF - > `echo $i |sed 's/\.\(.*\)ppm/\1\.xbm/'`;
    	    echo "Writing `echo $i |sed 's/\.\(.*\)ppm/\1\.xbm/'`"
          done
      else

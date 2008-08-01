@@ -251,7 +251,6 @@ void RunLatex( char *envname, char *string, char *name, char *mathmode,
     char fname[100];
     char fdviname[256];
     char ext[10];
-    char latex_errname[300];
     char *latex_pgm;
     FILE  *fp, *foutsave;
     int  problem_with_file = 0;
@@ -405,8 +404,10 @@ documentcmd, preamble ? preamble : "{article}" );
 	   */
 	latex_pgm = "latex";
 	if ((p = getenv( "TOHTML_LATEX" ))) latex_pgm = p;
+#if 0	/* Now in TXInit */
 	GetBaseName( latex_errname );
 	strcat( latex_errname, ".ler" );
+#endif
 	/* An alternative is 
 	   strcpy( latex_errname, "/dev/null" ); */
 	if (LatexQuiet) {
@@ -535,8 +536,7 @@ void TXStartNumberedEnv( char *envname )
    For figure and table environments handled by using Latexmode, I need
    to capture the \label command, if any, and keep the info.
  */
-void TXcaptionHandling( e )
-TeXEntry *e;
+void TXcaptionHandling( TeXEntry *e )
 {
     char envname[20];
 
@@ -550,8 +550,10 @@ TeXEntry *e;
     }
 }
 
-void TXcaption( e )
-TeXEntry *e;
+/* LaTeX appears to have changed the caption command to allow an optional
+ argument in [] before the actual caption (some sort of short form?).  
+ We must skip over than optional argument */
+void TXcaption( TeXEntry *e )
 {
     char *caption;
     char envname[20];
@@ -560,6 +562,9 @@ TeXEntry *e;
     envname[0] = 0;
     TXStartNumberedEnv( envname );
     TXbgroup( e );
+    /* Ignore the optional argument */
+    (void) TeXGetGenArg( fpin[curfile], curtok, MAX_TOKEN, '[', ']', 1 );
+    /* Now, process the caption */
     TeXGetArg( fpin[curfile], caption, MAX_TOKEN );
     if (InDocument) {
 	TXWriteStartNewLine( fpout );

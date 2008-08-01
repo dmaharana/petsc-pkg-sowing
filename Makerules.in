@@ -2,6 +2,7 @@
 
 prefix=@prefix@
 exec_prefix=@exec_prefix@
+datarootdir=@datarootdir@
 libdir=@libdir@
 # Without the empty .suffixes, some makes choose the wrong rules
 .SUFFIXES:

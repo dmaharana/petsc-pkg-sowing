@@ -165,8 +165,10 @@ void TXAddUserDef( SRList *TeXlist, TeXEntry *e )
     if (p > ldef && p[-1] == RbraceChar)
 	p[-1] = 0;
     if (SRLookup( TeXlist, name+1, lname, &j )) {
-	fprintf( ferr, "Attempt to redefine %s; new definition discarded\n", name );
-	fprintf( ferr, "  (Redefinitions may cause problems with the translator)\n" );
+	if (warnRedefinition)  {
+	    fprintf( ferr, "Attempt to redefine %s; new definition discarded\n", name );
+	    fprintf( ferr, "  (Redefinitions may cause problems with the translator)\n" );
+	}
     }
     else {
 	/* Add to known commands */
@@ -267,8 +269,10 @@ void TXDoNewCommand( SRList *TeXlist, TeXEntry *e )
 /* Add to known commands */
 
     if (SRLookup( TeXlist, name+1, lname, &j )) {
-	fprintf( ferr, "Attempt to redefine %s; new definition discarded\n", name );
-	fprintf( ferr, "  (Redefinitions may cause problems with the translator)\n" );
+	if (warnRedefinition)  {
+	    fprintf( ferr, "Attempt to redefine %s; new definition discarded\n", name );
+	    fprintf( ferr, "  (Redefinitions may cause problems with the translator)\n" );
+	}
     }
     else {
 	def = NEW(Definition);  CHKPTR(def);
