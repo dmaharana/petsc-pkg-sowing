@@ -36,6 +36,9 @@ static int NoFortMsgs = 1;
    Fortran */
 static int NoFortWarnings = 1;
 
+/* when converting C type to Fortran for F90 interfaces keep any unknown ones */
+static int useUserTypes = 1;
+
 /* This says to convert char **a to int*a, and cast to (char **)*a */
 static int MultipleIndirectAreInts    = 1;
 static int MultipleIndirectsAreNative = 0;
@@ -127,6 +130,7 @@ typedef struct {
 /* Forward defs */
 void OutputToken ( FILE *, char *, int );
 void OutputRoutine ( FILE *, FILE *, char *, char *, char );
+void OutputFortranToken( FILE *, int, const char *);
 void SkipText ( FILE *, char *, char *, char );
 int SkipToSynopsis ( FILE *, char );
 int FindNextANToken ( FILE *, char *, int * );
@@ -150,7 +154,7 @@ int GetTypeName ( FILE *, FILE *, TYPE_LIST *, int, int, int );
 int GetArgName ( FILE *, FILE *, ARG_LIST *, TYPE_LIST *, int );
 void OutputBalancedString ( FILE *, FILE *, int, int );
 char *ToCPointer ( char *, char *, int );
-char *ArgToFortran( const char *typeName );
+const char *ArgToFortran( const char *typeName );
 
 void DoBfortHelp ( char * );
 
@@ -258,6 +262,7 @@ int main( int argc, char **argv )
     char incfile[MAX_FILE_SIZE];
     char incbuffer[1024];
     int  n_in_file;
+    int  f90mod_skip_header = 0;
 
 /* process all of the files */
     strcpy( dirname, "." );
@@ -319,6 +324,8 @@ int main( int argc, char **argv )
     else
 	incfd = 0;
 
+    f90mod_skip_header = SYArgHasName( &argc, argv, 1, "-f90mod_skip_header" );
+
     /* If there is a f90 module file, open it now */
     if (F90Module) {
 	char fmodfile[MAX_FILE_SIZE];
@@ -335,7 +342,12 @@ int main( int argc, char **argv )
 	    F90Module = 0;
 	}
 	else {
-	    fprintf( fmodout, "module f90header\ninterface\n" );
+	  if (!f90mod_skip_header) {
+	      OutputFortranToken( fmodout, 0, "module f90header" );
+	      OutputFortranToken( fmodout, 0,"\n" );
+	      OutputFortranToken( fmodout, 0, "interface" );
+	      OutputFortranToken( fmodout, 0, "\n" );
+          }
 	}
     }
 
@@ -374,8 +386,8 @@ int main( int argc, char **argv )
 	fout = NULL;
 
 	/* Pass 1: Generate the name mappings.
-	   Eventually, we could store up the routine names and generate a single,
-	   simpler block of definitions.
+	   Eventually, we could store up the routine names and generate a
+	   single, simpler block of definitions.
 	   */
 	while (FoundLeader( fd, routine, &kind )) {
 	    if (!fout) {
@@ -490,7 +502,12 @@ int main( int argc, char **argv )
 	}
     }
     if (F90Module && fmodout) {
-	fprintf( fmodout, "end interface\nend module\n" );
+	if (!f90mod_skip_header) {
+	    OutputFortranToken( fmodout, 0, "end interface" );
+	    OutputFortranToken( fmodout, 0, "\n" );
+	    OutputFortranToken( fmodout, 0, "end module" );
+	    OutputFortranToken( fmodout, 0, "\n" );
+        }
 	fclose( fmodout );
 	fmodout = 0;
     }
@@ -498,6 +515,9 @@ int main( int argc, char **argv )
     return 0;
 }
 
+/* 
+ * Output routines
+ */
 void OutputToken( FILE *fout, char *p, int nsp )
 {
     int i;
@@ -660,6 +680,7 @@ void OutputBuf( FILE **fout, char *infilename, char *outfilename, FILE *incfd,
 		char *buffer )
 {
     char arch[20];
+
     if (!*fout) {
 	*fout = fopen( outfilename, "w" );
 	if (!*fout) {
@@ -1407,71 +1428,162 @@ void PrintBody( FILE *fout, int is_function, char *name, int nstrings,
  *
  * Note that this routine only works with ansi-style definitions
  */
+static int curCol = 0;
+static int maxOutputCol = 72;
+static int inComment = 0;
+void OutputFortranToken( FILE *fout, int nsp, const char *token )
+{
+    int tokenLen = strlen( token );
+    int i;
+
+    if (curCol + nsp > maxOutputCol) nsp = 0;
+    for (i=0; i<nsp; i++) putc( ' ', fout );
+    curCol += nsp;
+    if (curCol + tokenLen > maxOutputCol) {
+	while (curCol < 72) {
+	    putc( ' ', fout );
+	    curCol ++;
+	}
+	/* We continue a comment in a different way */
+	if (inComment) {
+	    putc( '\n', fout );
+	    putc( '!', fout );
+	    putc( ' ', fout );
+	    curCol = 2;
+	}
+	else {
+	    putc( '&', fout );
+	    putc( '\n', fout );
+	    for (i=0; i<5; i++) putc( ' ', fout );
+	    putc( '&', fout );
+	    curCol = 6;
+	}
+    }
+    if (curCol == 0 && (*token != 'C' || *token != 'c') ) {
+	/* Skip past column 6 to support free and fixed format */
+	for (i=0; i<6; i++) putc( ' ', fout );
+	curCol = 7;
+    }
+    fputs( token, fout );
+    curCol += tokenLen;
+    if (*token == '\n' ) {
+	curCol    = 0;
+	inComment = 0;
+    }
+    else if (*token == '!') {
+	inComment = 1;
+    }
+}
+
 void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings, 
 		      int nargs, ARG_LIST *args, TYPE_LIST *types, 
 		      RETURN_TYPE *rt )
 {
     int  i;
-
+    char *token = 0;
+    
+    curCol = 0;
     /* Known bugs in ansiheader:
        Definitions like     void (*fcn)() fail
        Multiple indirection (char **argv) fail
     */  
     /* Output the function definition */
-    fputs( is_function ? "function " : "subroutine ", fout );
-    OutputRoutineName( name, fout );
-    fprintf( fout, "(" );
+    if (useFerr) {
+	token = "subroutine";
+    } else {
+	token = is_function ? "function" : "subroutine";
+    }
+    OutputFortranToken( fout, 8, token );
+    OutputFortranToken( fout, 1, name );
+    OutputFortranToken( fout, 0, "(" );
     for (i=0; i<nargs-1; i++) {
-	fprintf( fout, "%s, ", args[i].name );
+	OutputFortranToken( fout, 0, args[i].name );
+	OutputFortranToken( fout, 0, ", " );
     }
     if (nargs > 0) {
 	/* Do the last arg, if any */
-	fprintf( fout, "%s ", args[nargs-1].name );
+	OutputFortranToken( fout, 0, args[nargs-1].name );
+	OutputFortranToken( fout, 0, " " );
     }
-    fputs( ")\n", fout );
+    if (useFerr) {
+	if (nargs > 0) OutputFortranToken( fout, 0, "," );
+	OutputFortranToken( fout, 0, "ierr" );
+    }     
+    OutputFortranToken( fout, 0, ")" );
+    OutputFortranToken( fout, 0, "\n" );
 
     for (i=0; i<nargs; i++) {
 	/* Figure out the corresponding Fortran type */
-	fprintf( fout, "%s %s ! %s\n", 
-		 ArgToFortran( types[args[i].type].type ),
-		 args[i].name, types[args[i].type].type );
+	if (types[args[i].type].is_mpi) {
+	    OutputFortranToken( fout, 7, "integer" );
+	}
+	else {
+	    OutputFortranToken( fout, 7, 
+				ArgToFortran( types[args[i].type].type ) );
+	}
+	OutputFortranToken( fout, 1, args[i].name );
+	if (args[i].has_array) {
+	    OutputFortranToken( fout, 1, "(*)" );
+	}
+	OutputFortranToken( fout, 1, "!" );
+	OutputFortranToken( fout, 1, types[args[i].type].type );
+	OutputFortranToken( fout, 0, "\n" );
 # if 0
-	if (args[i].is_FILE) 
-	    fprintf( fout, "integer %s\n", args[i].name );
+	if (args[i].is_FILE) {
+	    OutputFortranToken( fout, 0, "integer" );
+	    OutputFortranToken( fout, 1, args[i].name );
+	}
 	else if (!args[i].is_native && args[i].has_star 
 		 && !args[i].void_function) {
 	    if (args[i].has_star == 1 || !MultipleIndirectAreInts) 
-		fprintf( fout, "%s", 
+		OutputFortranToken( fout, 0, 
 			 ToCPointer( types[args[i].type].type, args[i].name,
 				     args[i].implied_star ) );
 	    else {
 		if (MultipleIndirectsAreNative) {
-		    fprintf( fout, "%s", args[i].name );
+		    OutputFortranToken( fout, 0, args[i].name );
 		}
 		else {
-		    fprintf( fout, "(%s ", types[args[i].type].type );
+		    OutputFortranToken( fout, 0, "(" );
+		    OutputFortranToken( fout, 0, types[args[i].type].type );
+		    OutputFortranToken( fout, 0, " " );
 		    if (!args[i].implied_star)
-			for (j = 0; j<args[i].has_star; j++) fputs( "*", fout );
-		    fprintf( fout, ")*((int *)%s)", args[i].name );
+			for (j = 0; j<args[i].has_star; j++) {
+			    OutputFortranToken( fout, 0, "*" );
+			}
+		    OutputFortranToken( fout, 0, ")*((int *)" );
+		    OutputFortranToken( fout, 0, args[i].name );
+		    OutputFortranToken( fout, 0, ")" );
 		}
 	    }
 	}
 	else {
 	    /* if args[i].has_star, the argument often has intent OUT 
 	       or INOUT */
-	    fputs( args[i].name, fout );
+	    OutputFortranToken( fout, 0, args[i].name );
 	}
 #endif
     }
 
     /* Add a "decl/result(name) for functions */
-    if (is_function) {
-	fprintf( fout, "%s ", ArgToFortran( rt->name ) );
-        OutputRoutineName( name, fout );
-        fprintf( fout, " ! %s\n", rt->name );
+    if (useFerr) {
+	OutputFortranToken( fout, 7, "integer ierr" );
+    } else if (is_function) {
+	OutputFortranToken( fout, 7, ArgToFortran( rt->name ) );
+	OutputFortranToken( fout, 1, name );
+	OutputFortranToken( fout, 1, "!" );
+	OutputFortranToken( fout, 1, rt->name );
     }
-    fputs( "end ", fout );
-    fputs( is_function ? "function\n" : "subroutine\n", fout );
+    OutputFortranToken( fout, 0, "\n" );
+    OutputFortranToken( fout, 7, "end" );
+
+    if (useFerr) {
+	token = "subroutine";
+    } else {
+	token = is_function ? "function" : "subroutine";
+    }
+    OutputFortranToken( fout, 1, token );
+    OutputFortranToken( fout, 0, "\n" );
 }
 
 int NameHasUnderscore( char *p )
@@ -1730,6 +1842,7 @@ else {
 	strcmp( token, "int"    ) == 0 ||
 	strcmp( token, "short"  ) == 0 ||
 	strcmp( token, "long"   ) == 0 ||
+        strcmp( token, "size_t" ) == 0 ||
 	strcmp( token, "float"  ) == 0 ||
 	strcmp( token, "char"   ) == 0 ||
 	strcmp( token, "complex") == 0 ||
@@ -1738,10 +1851,13 @@ else {
 	strcmp( token, "PetscScalar")== 0 ||
 	strcmp( token, "PetscReal")  == 0 ||
 	strcmp( token, "PetscTruth") == 0 ||
+        strcmp( token, "PetscSizeT") == 0 ||
+        strcmp( token, "MatStructure") == 0 ||
 	strcmp( token, "KSPConvergedReason") == 0 ||
 	strcmp( token, "BCArrayPart") == 0 ||
 	strcmp( token, "PetscLogDouble") == 0 ||
 	strcmp( token, "PetscInt") == 0 ||
+        strcmp( token, "SNESConvergedReason") == 0 ||
         strcmp( token, "PetscMPIInt") == 0 ||
         strcmp( token, "PetscErrorCode") == 0 ||
         strcmp( token, "PetscCookie") == 0 ||
@@ -1796,7 +1912,7 @@ else {
         strcmp(token,"PetscMap") == 0 ||
         strcmp(token,"PetscMatlabEngine") == 0 ||
         strcmp(token,"PetscObject") == 0 ||
-        strcmp(token,"PetscObjectContainer") == 0 ||
+        strcmp(token,"PetscContainer") == 0 ||
         strcmp(token,"PetscOList") == 0 ||
         strcmp(token,"PetscRandom") == 0 ||
         strcmp(token,"PetscTable") == 0 ||
@@ -2113,14 +2229,20 @@ code.  The output is in <filename>.ansi .\n\
  * This is a simple, temporary version of a routine to take a C type
  * (by name) and return the Fortran equivalent.
  */
-char *ArgToFortran( const char *typeName )
+const char *ArgToFortran( const char *typeName )
 {
-    static char *outName = 0;
-    outName = "integer";
-    if (strcmp( typeName, "char" ) == 0) outName   = "character";
-    if (strcmp( typeName, "double" ) == 0) outName = "double precision";
-    if (strcmp( typeName, "float" ) == 0) outName  = "real";
-
+    const char *outName = 0;
+    if (strcmp( typeName, "int") == 0) outName = "integer";
+    else if (strcmp( typeName, "char" ) == 0) outName   = "character";
+    else if (strcmp( typeName, "double" ) == 0) outName = "double precision";
+    else if (strcmp( typeName, "float" ) == 0) outName  = "real";
+    else {
+      if (!useUserTypes) {
+	outName = "integer";
+      } else {
+	outName = typeName;
+      }
+    }
     return outName;
 }
 
