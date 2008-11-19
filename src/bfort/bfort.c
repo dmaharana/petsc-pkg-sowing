@@ -29,6 +29,7 @@
    to the structure ARG_LIST to distinguish pointers to void functions 
    from pointers to void structures.  
  */
+
 /* extern char GetSubClass(); */
 
 static int NoFortMsgs = 1;
@@ -139,7 +140,7 @@ void OutputMacro ( FILE *, FILE *, char *, char * );
 void ProcessFunctionType ( FILE *, FILE *, char *, int *, 
 				    char *, RETURN_TYPE *, int );
 void ProcessArgList ( FILE *, FILE *, char *, int *, char *, 
-				ARG_LIST[512], int *, RETURN_TYPE *, 
+				ARG_LIST[MAX_ARGS], int *, RETURN_TYPE *, 
 				int, TYPE_LIST *, int *, int );
 int ProcessArgDefs ( FILE *, FILE *, ARG_LIST *, int, TYPE_LIST *,
 			       int *, int *, int, char *, int );
@@ -830,7 +831,7 @@ void OutputMacro( FILE *fin, FILE *fout, char *routine_name, char *filename )
 /* Read the arg list and function type */
 
 /* 
-   This routine read the function type and name; that is, it processes
+   This routine reads the function type and name; that is, it processes
    things like "void *foo" and "void (*foo)()"
  */
 void ProcessFunctionType( FILE *fin, FILE *fout, char *filename, 
@@ -964,7 +965,7 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
    argument definitions are read.
    flag is 1 for C routines, 0 for macros (I think)  */
 void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function, 
-		     char *name, ARG_LIST args[512], int *Nargs,
+		     char *name, ARG_LIST args[MAX_ARGS], int *Nargs,
 		     RETURN_TYPE *rt, int flag, TYPE_LIST *types, int *Ntypes, 
 		     int flag2 )
 {
@@ -1020,8 +1021,8 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 	    }
 	    ntypes++;
 	}
-	/* Now, get the variable names until the arg terminator.  They are of the
-	   form [(\*]*name[(\*\[]*
+	/* Now, get the variable names until the arg terminator.  
+	   They are of the form [(\*]*name[(\*\[]*
 	   */
 	if (GetArgName( fin, fout, &args[nargs], curtype, AnsiForm )) {
 	    break;
@@ -1035,9 +1036,9 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 		args[nargs].implied_star++;
 	    args[nargs].is_native = curtype->is_native;
 	}
-	if (nargs > 511) {
+	if (nargs >= MAX_ARGS) {
 	    ErrCnt++;
-	    fprintf( stderr, "Too many arguments to function\n" );
+	    fprintf( stderr, "Too many arguments to function %s\n", name );
 	    exit(1);
 	}
 	nargs++;
@@ -1141,14 +1142,14 @@ int ProcessArgDefs( FILE *fin, FILE *fout, ARG_LIST *args, int nargs,
 
 /* This should really use a better parser. 
    Types are
-   [register] [const] [struct] typename [ *( ]* varname [(*\[]* 
+   [register] [const] [struct] typename [ *( ]* [restrict] varname [(*\[]* 
    separated by , (ANSI) or ; (K&R), and terminated by
    ')' (ANSI) or '{' (K&R)
 
    A modification is that in K&R form, after a ',', the 
    [register] [struct] typename is carried forward until a ';'
 
-   The known typenames (and optional [register][const][struct] are 
+   The known typenames (and optional [register][const][struct]) are 
    processed by GetTypeName;
  */
     while (1) {
@@ -1475,6 +1476,63 @@ void OutputFortranToken( FILE *fout, int nsp, const char *token )
     }
 }
 
+/* This routine ensures that all arguments are distinct, even when case is
+   not considered.  Specifically, if both "m" and "M" are argument names, 
+   the "M" argument will be replaced with "M$1" */
+void FixupArgNames( int nargs, ARG_LIST *args )
+{
+    int i, j;
+    char tmpbuf[MAX_LINE];
+    char *c, *cout;
+
+    for (i=0; i<nargs; i++) {
+	int hasUpper = 0;
+	/* printf( "Trying to fix %s\n", args[i].name ); */
+	/* Produce a lower-case version of the name */
+	c    = args[i].name;
+	cout = tmpbuf;
+	while (*c) {
+	    *cout = tolower( *c );
+	    if (*cout != *c) hasUpper = 1;
+	    c++; cout++;
+	}
+	if (hasUpper) {
+	    /* Compare with the other arguments.  tmpbuf has the 
+	       lower-case version of the current name. */
+	    /* Q: can we just use j<i? */
+	    for (j=0; j<nargs; j++) {
+		if (j == i) continue;
+		c = args[j].name;
+		cout = tmpbuf;
+		while (*c && *cout) {
+		    char mychar = tolower(*c);
+		    if (mychar != *cout) break;
+		    c++; cout++;
+		}
+		if (!*c && !*cout) {
+		    /* Problem - matched lower case version.  Replace 
+		       current name with name + Upper */
+		    /* printf( "Matched %s to %s\n", args[i].name, 
+		       args[j].name ); */
+		    cout = tmpbuf;
+		    while (*cout) cout++;
+		    *cout++ = 'u';
+		    *cout++ = 'p';
+		    *cout++ = 'p';
+		    *cout++ = 'e';
+		    *cout++ = 'r';
+		    *cout++ = 0;
+		    strcpy( args[i].name, tmpbuf );
+		    break;
+		}
+	    }
+	}
+    }
+}
+
+/* 
+ * Create a Fortran 90 definition (module) for a function
+ */
 void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings, 
 		      int nargs, ARG_LIST *args, TYPE_LIST *types, 
 		      RETURN_TYPE *rt )
@@ -1482,6 +1540,14 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
     int  i;
     char *token = 0;
     
+    /* 
+     * Initial setup.  Fortran is case-insensitive and C is case-sensitive
+     * Check that the case-insensitive argument names are distinct, and
+     * if not, replace them with ones that are.  The rule is to 
+     * take a lowercase name and add "$1" to it.  We warn if a variable name
+     * includes $1 ($ is permitted in Fortran names (check))
+     */
+    FixupArgNames( nargs, args );
     curCol = 0;
     /* Known bugs in ansiheader:
        Definitions like     void (*fcn)() fail
@@ -2022,7 +2088,7 @@ int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type,
     DBG("Looking for arg...\n")
 /* This should really use a better parser. 
    Names are
-   [ *( ]* varname [(*\[]* 
+   [ *( ]* [restrict] varname [(*\[]* 
    separated by , (ANSI) or ; (K&R), and terminated by
    ')' (ANSI) or '{' (K&R)
 
@@ -2071,6 +2137,10 @@ int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type,
 /* We don't want to output the token when we reach the name incase
    we need to generate a "*" for it */
     while (c != EOF) {
+	if (strcmp( p, "restrict" ) == 0) {
+	    c = FindNextANToken( fin, p, &nsp );
+	    continue;
+	}
 	if (c == '(') 
 	    nparen++;
 	else if (c == '*')
@@ -2236,6 +2306,8 @@ const char *ArgToFortran( const char *typeName )
     else if (strcmp( typeName, "char" ) == 0) outName   = "character";
     else if (strcmp( typeName, "double" ) == 0) outName = "double precision";
     else if (strcmp( typeName, "float" ) == 0) outName  = "real";
+    /* The following is a temporary hack */
+    else if (strcmp( typeName, "void" ) == 0) outName = "PetscVoid";
     else {
       if (!useUserTypes) {
 	outName = "integer";
@@ -2286,3 +2358,30 @@ TypeInfo *FindCType( const char *cName )
 
     return 0;
 }
+
+/* Sort the typeArray so that it can be used by the find routine above */
+int typeCompare( const void *a, const void *b )
+{
+    const char *astr = ((TypeInfo *)a)->cName;
+    const char *bstr = ((TypeInfo *)b)->cName;
+    return strcmp( astr, bstr );
+}
+void sortTypeArray( void )
+{
+    qsort( typeArray, typeArrayLen, sizeof(TypeInfo), typeCompare );
+}
+
+#if 0
+/* Add to/from Fortran option in description? */
+/* MPI_Comm_f2c( *(%s) ) */
+{ "MPI_Comm", "integer", CTYPE_IS_MPI_HANDLE }, /* Add handle to int? */
+{ "MPI_Request", "integer", CTYPE_IS_MPI_HANDLE },
+{ "MPI_Group", "integer", CTYPE_IS_MPI_HANDLE },
+{ "MPI_Op", "integer", CTYPE_IS_MPI_HANDLE },
+{ "MPI_Datatype", "integer", CTYPE_IS_MPI_HANDLE },
+{ "MPI_Win", "integer", CTYPE_IS_MPI_HANDLE },
+{ "MPI_File", "integer", CTYPE_IS_MPI_HANDLE }, 
+/* MPI types */
+{ "MPI_Aint", "integer (kind=MPI_ADDRESS_KIND)", 0 },
+
+#endif

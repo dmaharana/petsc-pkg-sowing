@@ -20,3 +20,11 @@ int barlong( const int aLongArrayName[], const int *alongArgumentName,
 {
   /* do more stuff */
 }
+/*@
+  mixedargs - a routine with arguments that are not distinct in type
+  and ones that use void types
+  @*/
+double mixedargs( const int M, const int m, void *p, void * restrict c )
+{
+  /* do yet more stuff */
+}
