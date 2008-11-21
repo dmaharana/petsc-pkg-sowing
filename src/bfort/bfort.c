@@ -1496,6 +1496,7 @@ void FixupArgNames( int nargs, ARG_LIST *args )
 	    if (*cout != *c) hasUpper = 1;
 	    c++; cout++;
 	}
+	*cout = 0;
 	if (hasUpper) {
 	    /* Compare with the other arguments.  tmpbuf has the 
 	       lower-case version of the current name. */

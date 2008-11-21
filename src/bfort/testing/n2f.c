@@ -89,6 +89,22 @@ extern void __RmPointer(int);
 #endif
 #endif
 
+#ifdef MPI_BUILD_PROFILING
+#ifdef FORTRANCAPS
+#define mixedargs2_ PMIXEDARGS2
+#elif !defined(FORTRANUNDERSCORE) && !defined(FORTRANDOUBLEUNDERSCORE)
+#define mixedargs2_ pmixedargs2
+#else
+#define mixedargs2_ pmixedargs2_
+#endif
+#else
+#ifdef FORTRANCAPS
+#define mixedargs2_ MIXEDARGS2
+#elif !defined(FORTRANUNDERSCORE) && !defined(FORTRANDOUBLEUNDERSCORE)
+#define mixedargs2_ mixedargs2
+#endif
+#endif
+
 
 
 /* Definitions of Fortran Wrapper routines */
@@ -108,6 +124,10 @@ void barlong_( int aLongArrayName[], int *alongArgumentName,
 }
 double  mixedargs_( int *M, int *m,void*p,void* c, int *__ierr ){
 *__ierr = mixedargs(*M,*m,p,c);
+}
+double  mixedargs2_(int *Mlonger, int *M,float *m1, int *m,void*p,
+     void* c, int *__ierr ){
+*__ierr = mixedargs2(*Mlonger,*M,*m1,*m,p,c);
 }
 #if defined(__cplusplus)
 }
