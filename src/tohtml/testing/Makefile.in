@@ -63,6 +63,9 @@ test25.html: test25.tex
 	    echo "Did not create gif file" ; \
 	fi
 	rm -f testf1.gif testf1.ps
+test26.html: test26.tex
+	../tohtml test26.tex
+
 # default
 test1/test1.html: test1.tex
 	../tohtml -default test1.tex
