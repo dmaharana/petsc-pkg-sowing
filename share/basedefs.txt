@@ -148,6 +148,8 @@ hdef texorpdfstring 2 #1
 hdef texttt 1 {\tt #1}
 hdef emph 1 {\em #1}
 hdef textbf 1 {\bf #1}
+hdef textsf 1 {\sf #1}
+hdef textrm 1 {\rm #1}
 # This version of hrule is only approximate
 hdef hrule 0 '<HR>'
 #
