@@ -147,7 +147,7 @@ void RdAuxFile( SRList *topicctx )
 /* Default value of entrylevel */
     strcpy( entrylevel, "Document");
     if (!fpaux) return;	
-    fgets( buffer, 256, fpaux );
+    fgets( buffer, sizeof(buffer), fpaux );
     if (strcmp( buffer, "TEXAUX\n" ) != 0) {
 	/* Invalid aux file */
 	fprintf( stderr, "Aux file missing TEXAUX header\n" );
@@ -205,6 +205,9 @@ void RdAuxFile( SRList *topicctx )
 	    if (rlevel < RootLevel) {
 		int i;
 		fprintf( stderr, "AUX file contains out-of-order elements\n" );
+		fprintf( stderr, "rlevel = %d, RootLevel = %d\n", 
+			 rlevel, RootLevel );
+		fprintf( stderr, "Line: %s\n", buffer );
 		/* Update the root */
 		for (i=rlevel;i<RootLevel;i++) {
 		    parents[i-1]->Child = parents[i];

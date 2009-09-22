@@ -144,14 +144,16 @@ int main( int argc, char *argv[] )
 	strcpy( HTML_Suffix, "htm" );
     }
 
-/*
-  if (SYArgHasName( &argc, argv, 1, "-order")) {
-  process = CreateOrderFile;
-  }
-  else {
-  will want to read order file here
-  }    
-  */    
+    /*
+      if (SYArgHasName( &argc, argv, 1, "-order")) {
+      process = CreateOrderFile;
+      }
+      else {
+      will want to read order file here
+      }    
+    */    
+
+    /* FIXME: Add support for debug environment variables */
 
     if (SYArgHasName( &argc, argv, 1, "-default" )) {
 	TXSetLatexUnknown( 1 );
@@ -161,16 +163,19 @@ int main( int argc, char *argv[] )
 	splitlevel = 2;
 	TXSetLatexAgain( 0 );
     }
+    if (SYArgHasName( &argc, argv, 1, "-quietlatex")) {
+	TXSetLatexQuiet( 1 );
+    }
+
     if (SYArgHasName( &argc, argv, 1, "-debug")) {
 	TXSetDebug( 1 );
     }
     if (SYArgHasName( &argc, argv, 1, "-debugfile" )) {
 	TXSetDebugFile( 1 );
     }
-    if (SYArgHasName( &argc, argv, 1, "-quietlatex")) {
-	TXSetLatexQuiet( 1 );
+    if (SYArgHasName( &argc, argv, 1, "-debugfont" )) {
+	TXSetDebugFont( 1 );
     }
-
     if (SYArgHasName( &argc, argv, 1, "-debugscan" )) {
 	SCSetDebug( 1 );
     }
@@ -181,9 +186,11 @@ int main( int argc, char *argv[] )
     if (SYArgHasName( &argc, argv, 1, "-debugout" )) {
 	DebugOutput = 1;
     }
+
     if (SYArgHasName( &argc, argv, 1, "-Wnoredef" )) {
 	warnRedefinition = 0;
     }
+
     if (SYArgHasName( &argc, argv, 1, "-cvtlatex" ))
 	TXSetLatexUnknown( 1 );
     if (SYArgHasName( &argc, argv, 1, "-cvttables" ))

@@ -100,6 +100,7 @@ static int DebugArgs  = 0;    /* Set to one to dump arg processing */
 int DebugCommands = 0;        /* Set to one to dump command processing */
 int DebugOutput   = 0;        /* Set to one to dump output processing */
 int DebugFile     = 0;        /* Debug file related commands */
+int DebugFont     = 0;        /* Debug font related commands */
 int warnRedefinition = 0;     /* Warn on redefinition of commands */
 static int UseIfTex   = 0;    /* Set to use begin{iftex} ... instead of 
 				 begin{ifinfo} code */
@@ -139,7 +140,7 @@ int MinSectionKind = 1;
 
 int IgnoreCatcode = 1;
 
-/* This is for debugging the LaTeX file; it is important to insure that all
+/* This is for debugging the LaTeX file; it is important to ensure that all
    braces are closed */
 int LineNo[10] = { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 char *(InFName[10]) = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -249,6 +250,11 @@ void TXSetDebugFile( int flag )
     DebugFile = flag;
 }
 
+void TXSetDebugFont( int flag )
+{
+    DebugFont = flag;
+}
+
 void TXSetUseIfTex( int flag )
 {
     UseIfTex = flag;
@@ -300,6 +306,12 @@ void TeXAbort( char *routine, char *msg )
     fprintf( stdout, "File %s line %d\n", 
 	     InFName[curfile] ? InFName[curfile]: "", LineNo[curfile] );
     exit(1);
+}
+
+void TXPrintLocation( FILE *fp )
+{
+    fprintf( fp, "File %s line %d\n", 
+	     InFName[curfile] ? InFName[curfile]: "", LineNo[curfile] );
 }
 
 /* Output a command */
@@ -464,7 +476,7 @@ int TeXGetGenArg( FILE *fin, char *token, int maxtoken, char sc, char ec,
 	    fprintf( stdout, "EOF in TeXGetGenArg\n" );
 	TXPopFile();
     }
-    if (DebugArgs) fprintf( stdout, "ARG-start\n" );
+    if (DebugArgs) fprintf( stdout, "ARG-start: ch = %c\n", ch );
     if (ch == sc) {
 	found = 1;
 	depth = 1;
@@ -988,7 +1000,7 @@ void TXvar( TeXEntry *e )
     TeXoutstr( fpout, curtok );
     TXegroup( e );
     POPCURTOK;
-	}
+}
 
 void TXfile( TeXEntry *e )
 {
@@ -1135,14 +1147,35 @@ void TXinclude( TeXEntry *e )
 	strcat( predoc, curtok );
 	strcat( predoc, "}\n" );
     }
+    /* Catch the case where a file hasn't been closed */
     if (fpin[curfile+1]) fclose( fpin[curfile+1] );
+
+    /* In some cases, particularly complex macro files used in Books,
+       we may want to skip reading an include file, instead relying on 
+       customized defintions provide through a definitions file.  Without
+       this, we'd have to implement the most complex parts of TeX, including
+       catcode changes, expandafter, etc. This include file name is
+       specified in a defs file using the skipinclude command */
+    if (TXIsSkipFile( curtok )) {
+	POPCURTOK;
+	return;
+    }
+    /* Check for a replacemtn file name */
+    {
+	char newtok[MAX_TOKEN];
+	if (TXIsReplaceFile( curtok, newtok )) {
+	    strcpy( curtok, newtok );
+	}
+    }
+
+    /* Push this file and process it */
     fpin[++curfile] = fopen( curtok, "r" );
     if (!fpin[curfile]) {
 	strcat( curtok, ".tex" );
 	fpin[curfile] = fopen( curtok, "r" );
 	if (!fpin[curfile]) {
 	    curfile--;
-	    fprintf( stderr, "Could not open file %s\n", curtok );
+	    fprintf( stderr, "(TXinclude) Could not open file %s\n", curtok );
 	    POPCURTOK;;
 	    return;
 	}
@@ -1192,7 +1225,7 @@ void TXfileinclude( TeXEntry *e )
 
     fp = fopen( curtok, "r" );
     if (!fp) {
-	fprintf( stderr, "Could not open file %s\n", curtok );
+	fprintf( stderr, "(TXfileinclude) Could not open file %s\n", curtok );
 	POPCURTOK;
 	return;
     }
@@ -1203,7 +1236,7 @@ void TXfileinclude( TeXEntry *e )
     TXfont_tt( e );
 
 /* We'd like to map tokens here as well */
-    while (fgets( line, 256, fp )) {
+    while (fgets( line, sizeof(line)-1, fp )) {
 	if (ProcessManPageTokens)
 	    /* Eventually used WriteString(fpout,...) */
 	    TXoutactiveToken( line );
@@ -1227,7 +1260,6 @@ void TXfileinclude( TeXEntry *e )
 void TXIfFileExists( TeXEntry *e )
 {
     FILE *fp;
-    int  rc;
 
     if (DebugCommands) 
 	fprintf( stdout, "Getting argument for %s\n", e->name );
@@ -1384,7 +1416,7 @@ void TXsection( TeXEntry *e )
 	fclose( fpout );
 	fpout = fopen( outfile, "w" );
 	if (!fpout) {
-	    fprintf( ferr, "Could not open file %s\n", outfile );
+	    fprintf( ferr, "(TXsection) Could not open file %s\n", outfile );
 	    TeXAbort( "TXsection(file)", (char *)0 );
         }
 	/* We use the local name (in the directory) for all references */
@@ -2165,9 +2197,9 @@ void TXbegin( TeXEntry *e )
 	else          TeXiftex( e );
     }
     else if (strcmp( curtok, "tex" ) == 0) TeXtex( e );
-/* MPI reports use example as a variation of theorem, not verbatim,
-   as LatexInfo does.  We need to configure this somehow...
-   In fact, we need to label it as an Example, with example numbers... 
+    /* MPI reports use example as a variation of theorem, not verbatim,
+       as LatexInfo does.  We need to configure this somehow...
+       In fact, we need to label it as an Example, with example numbers... 
    */
     else if (UsingLatexinfo && strcmp( curtok, "example" ) == 0) TeXexample( e );
     else if (strcmp( curtok, "verbatim" ) == 0) TeXverbatim( e );
@@ -3198,8 +3230,6 @@ void TXpsfig( TeXEntry *e )
 
 void TXincludegraphics( TeXEntry *e )
 {
-    static char name[] = "includegraphics";
-    char *p, *ptr, *p1;
     int  rc;
 
     /* See if there is an option argument (which we'll ignore for now) */
@@ -3208,21 +3238,23 @@ void TXincludegraphics( TeXEntry *e )
 	/* Use this to process any arguments that we might need with
 	   the picture */
 #if 0
-      p = curtok;
-      while (*p) {
-	/* Look for known commands */
-	ptr = p;
-	while (*ptr && *ptr != ',') ptr++;
-	if (!*ptr) ptr[1] = 0;   /* so the p = ptr + 1 below will exit */
-	*ptr = 0;
-	/* Skip over any path part of the specification */
-	p1 = p;
-	while (*p1) {
-	  if (*p1 == '/') p = p1 + 1;
-	  p1++;
+	static char name[] = "includegraphics";
+	char *p, *ptr, *p1;
+	p = curtok;
+	while (*p) {
+	    /* Look for known commands */
+	    ptr = p;
+	    while (*ptr && *ptr != ',') ptr++;
+	    if (!*ptr) ptr[1] = 0;   /* so the p = ptr + 1 below will exit */
+	    *ptr = 0;
+	    /* Skip over any path part of the specification */
+	    p1 = p;
+	    while (*p1) {
+		if (*p1 == '/') p = p1 + 1;
+		p1++;
+	    }
+	    p = ptr + 1;
 	}
-	p = ptr + 1;
-      }
 #endif
     }
     /* Get the file name */
@@ -3263,7 +3295,7 @@ void TXanimation( TeXEntry *e )
 }
 
 /* Initialization code */
-void TXInsertName( SRList *list, char *name, void (*action)( TeXEntry *),
+void TXInsertName( SRList *list, const char *name, void (*action)( TeXEntry *),
 		   int nargs, void *ctx )
 {
     LINK *l;

@@ -1,5 +1,6 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
-   This file contains routines to process user defined
+   This file contains routines to process user defined commands
 
    TeX uses a template macro processor; this means that we must be prepared 
    to skip over text in the macro definition.
@@ -35,7 +36,7 @@ void TXDoUser( TeXEntry *e )
 {
     Definition *def;
     char       *p, *pstart;
-    int        j, nargs, argn;
+    int        j, nargs, argn, rc;
     int        ch;
     char       **args;
     char       *template;
@@ -51,10 +52,18 @@ void TXDoUser( TeXEntry *e )
     }
 /* Don't evaluate the arguments until we push them back ... */
     template = def->input_template;
-    while (template && template[0] && template[0] != ArgChar) {
-	ch = SCTxtGetChar( fpin[curfile] );
-	if (ch == template[0]) template++;
-	else break;
+    if (template) {
+	if (DebugDef && template[0]) {
+	    printf( "Template string is %s\n", template );
+	}
+	while (template[0] && template[0] != ArgChar) {
+	    ch = SCTxtGetChar( fpin[curfile] );
+	    if (ch == template[0]) {
+		if (DebugDef) printf( "Skipping character %c in template\n", ch );
+		template++;
+	    }
+	    else break;
+	}
     }
     for (j=0; j<nargs; j++) {
 	while (template && template[0] && template[0] != ArgChar) {
@@ -66,10 +75,19 @@ void TXDoUser( TeXEntry *e )
 	    /* skip over #n */
 	    template += 2;
 	}
-	if (TeXGetGenArg( fpin[curfile], ltoken, MAX_TOKEN, 
-			  LbraceChar, RbraceChar, 0 ) == -1) {
+	if (DebugDef) printf( "Reading arg %d\n", j );
+	rc = TeXGetGenArg( fpin[curfile], ltoken, MAX_TOKEN, 
+			   LbraceChar, RbraceChar, 0 );
+	if (rc == -1) {
 	    TeXAbort( "TXDoUser", e->name );
 	}
+	if (rc == 0) {
+	    /* If there is no {...}, then read exactly one character */
+	    ltoken[0] = SCTxtGetChar( fpin[curfile] );
+	    ltoken[1] = 0;
+	    if (DebugDef) printf( "Read a single %c character\n", ltoken[0] );
+	}
+	if (DebugDef) printf( "Argument %d is :%s:\n", j, ltoken );
 
 	args[j] = (char *)MALLOC( strlen( ltoken ) + 1 );  CHKPTR(args[j]);
 	strcpy( args[j], ltoken );
@@ -175,7 +193,9 @@ void TXAddUserDef( SRList *TeXlist, TeXEntry *e )
 	def = NEW(Definition);  CHKPTR(def);
 	def->nargs = nargs;
 	if (DebugDef) {
-	    printf( "Definition text is %s\n", *ldef ? ldef : "<null>" );
+	    printf( "User provided defintion of %s is:\n\ttemplate = %s\n\tdef = %s\n", 
+		    name+1, *template_buf ? template_buf : "<null>", 
+		    *ldef ? ldef : "<null>" );
         }
 	def->replacement_text = (char *)MALLOC( strlen( ldef ) + 1 );
 	CHKPTR(def->replacement_text);
@@ -433,6 +453,61 @@ void TXDumpUserDefs( FILE *fout, int include_hdef )
     }
 }
 
+/* This code allows us to keep track of include files that we either want to
+   skip or want to replace with a different file. */
+static SRList *skipFileList = 0;
+void TXAddSkipFile( const char *value )
+{
+    int n;
+    LINK *elm;
+
+    if (!skipFileList) skipFileList = SRCreate();
+    elm = SRInsert( skipFileList, value, (char *)0, &n );
+    if (elm) {
+	FREE( elm->entryname );
+	elm->entryname = 0;
+    }
+}
+void TXAddReplaceFile( const char *value, const char *newname )
+{
+    int n;
+    LINK *elm;
+    if (!skipFileList) skipFileList = SRCreate();
+    elm = SRInsert( skipFileList, value, (char *)0, &n );
+    if (elm) {
+	FREE( elm->entryname );
+	elm->entryname = MALLOC( sizeof(newname)+1 );
+	strcpy( elm->entryname, newname );
+    }
+}
+
+int  TXIsSkipFile( const char *name )
+{
+    int n, rc = 0;
+    LINK *elm;
+    if (!skipFileList) return 0;
+    elm = SRLookup( skipFileList, name, (char *)0, &n );
+    if (elm) {
+	if (elm->entryname && elm->entryname[0]) rc = 0;
+	else rc = 1;
+    }
+    return rc;
+}
+
+int  TXIsReplaceFile( const char *name, char *newname )
+{
+    int n, rc = 0;
+    LINK *elm;
+    if (!skipFileList) return 0;
+    newname[0] = 0;
+    elm = SRLookup( skipFileList, name, (char *)0, &n );
+    if (elm) {
+	strcpy( newname, elm->entryname );
+	rc = 1;
+    }
+    return rc;
+}
+
 #ifdef FOO
 /* 
    Add a definition that may include commands (e.g., may contain raw html)
@@ -465,4 +540,4 @@ void TXAddUserDefn( char *name, int nargs, char *value, char cmdchar )
   TXInsertName( TeXlist, name, TXDoUser, nargs, (void *)def );
 }
 
-#endif
+#endif /* FOO */

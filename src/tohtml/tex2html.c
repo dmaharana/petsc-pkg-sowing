@@ -1,3 +1,4 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
 #include <stdio.h>
 #include "sowing.h"
 #include "search.h"
@@ -71,8 +72,9 @@ void TXpreformated( FILE *fout, int flag )
     files
  */
 
+#define MAX_GROUP_STACK 50
 static int   Esp     = 0;
-static char *(EndName[50]);
+static char *(EndName[MAX_GROUP_STACK]);
 static char *LastFont = 0;
 
 void TeXoutNewline( FILE *fout )
@@ -124,15 +126,31 @@ void TXoutbullet( TeXEntry *e )
  */
 void TXbf( TeXEntry *e )
 {
-/* output start of BoldFace */
+  /* output start of BoldFace */
     if (!InDocument || !InOutputBody) return;
     if (LastFont) {
+	if (DebugFont) {
+	    fprintf( stdout, "Ended font %s (LastFont):", LastFont );
+	    TXPrintLocation( stdout );
+	}
 	sprintf( buf, "</%s>", LastFont );
 	TeXoutcmd( fpout, buf );
     }
-    TeXoutcmd( fpout, "<b>" );
-    EndName[Esp] = "b";
-    LastFont     = "b";
+    if (DebugFont) {
+	fprintf( stdout, "Starting font %s:", "b" );
+	TXPrintLocation( stdout );
+    }
+
+    if (Esp >= 0) {
+	TeXoutcmd( fpout, "<b>" );
+	EndName[Esp] = "b";
+	LastFont     = "b";
+    }
+    else {
+	fprintf( ferr, "Group stack index = %d, <0:", Esp );
+	TXPrintLocation( ferr );
+    }
+
 }
 
 void TXem( TeXEntry *e )
@@ -140,28 +158,57 @@ void TXem( TeXEntry *e )
     if (!InDocument || !InOutputBody) return;
 /* output start of Emphasis (italics) */
     if (LastFont) {
+	if (DebugFont) {
+	    fprintf( stdout, "Ended font %s (LastFont):", LastFont );
+	    TXPrintLocation( stdout );
+	}
 	sprintf( buf, "</%s>", LastFont );
 	TeXoutcmd( fpout, buf );
     }
-    TeXoutcmd( fpout, "<em>" );
-    EndName[Esp] = "em";
-    LastFont     = "em";
+    if (DebugFont) {
+	fprintf( stdout, "Starting font %s:", "em" );
+	TXPrintLocation( stdout );
+    }
+    if (Esp >= 0) {
+	TeXoutcmd( fpout, "<em>" );
+	EndName[Esp] = "em";
+	LastFont     = "em";
+    }
+    else {
+	fprintf( ferr, "Group stack index = %d, <0:", Esp );
+	TXPrintLocation( ferr );
+    }
+
 }
 
 void TXsf( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;
-/* output start of Sans-serif (use rm for html) */
+    /* output start of Sans-serif (use rm for html) */
     if (LastFont) {
+	if (DebugFont) {
+	    fprintf( stdout, "Ended font %s (LastFont):", LastFont );
+	    TXPrintLocation( stdout );
+	}
 	sprintf( buf, "</%s>", LastFont );
 	TeXoutcmd( fpout, buf );
     }
-    EndName[Esp] = (char *)0;
-    LastFont     = (char *)0;
+    if (Esp >= 0) {
+	TeXoutcmd( fpout, "<font face=\"sans-serif\">" );
+	EndName[Esp] = "font";
+	LastFont     = "font";
+    }
+    else {
+	fprintf( ferr, "Group stack index = %d, <0:", Esp );
+	TXPrintLocation( ferr );
+    }
+
 }
 
-/* HTML makes this particularly hard because there is NO roman font 
-   command.  You have to move into and out of the current font
+/* 
+   HTML makes this particularly hard because there is NO roman font 
+   command (in the "classis" HTML).  
+   You have to move into and out of the current font
 
    What we'll do for now is issue an error message if you aren't in the
    correct font
@@ -174,75 +221,163 @@ void TXrm( TeXEntry *e )
 	    if (!ferr) ferr=stderr;
 	    fprintf( ferr, 
 		     "Switching to Roman font within another font not supported\n" );
+	    fprintf( ferr, "Current font is %s\n", EndName[Esp] );
+	    TXPrintLocation( ferr );
 	}
     }
 /*
   EndName[Esp] = "rm";
   LastFont     = "rm";
   */
-    EndName[Esp] = (char *)0;
-    LastFont     = (char *)0;
+    if (Esp >= 0) {
+	EndName[Esp] = (char *)0;
+	LastFont     = (char *)0;
+    }
+    else {
+	fprintf( ferr, "Group stack index = %d, <0:", Esp );
+	TXPrintLocation( ferr );
+    }
+
 }
 
 void TXbgroup( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;
     Esp++;
+    if (Esp >= MAX_GROUP_STACK) {
+	fprintf( ferr, "Exceeded group stack; depth is %d, ", Esp );
+	TXPrintLocation( ferr );
+    }
+    if (DebugFont) { 
+	fprintf( stdout, "TXbgroup: Esp=%d:", Esp );
+	TXPrintLocation( stdout );
+    }
+    if (Esp >= 0) 
+	EndName[Esp] = 0;
+    else {
+	fprintf( ferr, "Mismatched groups - Esp < 0, = %d, ", Esp );
+	TXPrintLocation( ferr );
+    }
 }
 
-void TXegroup( e )
-TeXEntry *e;
+void TXegroup( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;
+    if (DebugFont) {
+	fprintf( stdout, "TXegroup:" );
+	if (Esp >= 0) {
+	    fprintf( stdout, "(EspName[%d]= %s):", Esp, EndName[Esp] ? EndName[Esp] : "<null>" );
+	}
+	else {
+	    fprintf( stdout, "(Esp = %d)", Esp );
+	}
+	TXPrintLocation( stdout );
+    }
+
     if (Esp >= 0 && EndName[Esp]) {
+	if (DebugFont) {
+	    fprintf( stdout, "Ended font %s:", EndName[Esp] );
+	    TXPrintLocation( stdout );
+	}
 	sprintf( buf, "</%s>", EndName[Esp] );
 	TeXoutcmd( fpout, buf );
 	EndName[Esp] = 0;
     }
     Esp--;
     LastFont = 0;
+    if (Esp < -1) { 
+	fprintf( ferr, "Setting scan debug because group count < -1\n" );
+	SCSetDebug( 1 );
+    }
 }
 
-void TXfont_tt( e )
-TeXEntry *e;
+void TXfont_tt( TeXEntry *e )
+{
+    /* output start of TT (Courier) in default face*/
+    if (!InDocument || !InOutputBody) return;
+    if (LastFont) {
+	if (DebugFont) {
+	    fprintf( stdout, "Ended font %s (LastFont):", LastFont );
+	    TXPrintLocation( stdout );
+	}
+
+	sprintf( buf, "</%s>", LastFont );
+	TeXoutcmd( fpout, buf );
+    }
+    if (DebugFont) {
+	fprintf( stdout, "TXfont_tt: Starting font %s:", "tt" );
+	TXPrintLocation( stdout );
+    }
+
+    if (Esp >= 0) {
+	TeXoutcmd( fpout, "<tt>" );
+	EndName[Esp] = "tt";
+	LastFont     = "tt";
+    }
+    else {
+	fprintf( ferr, "Group stack index = %d, <0:", Esp );
+	TXPrintLocation( ferr );
+    }
+}
+
+void TXfont_ss( TeXEntry *e )
+{
+    /* output start of Sans Serif in default face*/
+    if (!InDocument || !InOutputBody) return;
+    if (LastFont) {
+	if (DebugFont) {
+	    fprintf( stdout, "Ended font %s (LastFont):", LastFont );
+	    TXPrintLocation( stdout );
+	}
+
+	sprintf( buf, "</%s>", LastFont );
+	TeXoutcmd( fpout, buf );
+    }
+    if (DebugFont) {
+	fprintf( stdout, "Starting font %s:", "em" );
+	TXPrintLocation( stdout );
+    }
+    
+    if (Esp >= 0) {
+	TeXoutcmd( fpout, "<em>" );
+	EndName[Esp] = "em";
+	LastFont     = "em";
+    }
+    else {
+	fprintf( ferr, "Group stack index = %d, <0:", Esp );
+	TXPrintLocation( ferr );
+    }
+
+}
+
+void TXtt( TeXEntry *e )
 {
 /* output start of TT (Courier) in default face*/
     if (!InDocument || !InOutputBody) return;
     if (LastFont) {
-	sprintf( buf, "</%s>", LastFont );
-	TeXoutcmd( fpout, buf );
-    }
-    TeXoutcmd( fpout, "<tt>" );
-    EndName[Esp] = "tt";
-    LastFont     = "tt";
-}
+	if (DebugFont) {
+	    fprintf( stdout, "Ended font %s (LastFont):", LastFont );
+	    TXPrintLocation( stdout );
+	}
 
-void TXfont_ss( e )
-TeXEntry *e;
-{
-/* output start of Sans Serif in default face*/
-    if (!InDocument || !InOutputBody) return;
-    if (LastFont) {
 	sprintf( buf, "</%s>", LastFont );
 	TeXoutcmd( fpout, buf );
     }
-    TeXoutcmd( fpout, "<em>" );
-    EndName[Esp] = "em";
-    LastFont     = "em";
-}
+    if (DebugFont) {
+	fprintf( stdout, "TXtt: Starting font %s:", "tt" );
+	TXPrintLocation( stdout );
+    }
 
-void TXtt( e )
-TeXEntry *e;
-{
-/* output start of TT (Courier) in default face*/
-    if (!InDocument || !InOutputBody) return;
-    if (LastFont) {
-	sprintf( buf, "</%s>", LastFont );
-	TeXoutcmd( fpout, buf );
+    if (Esp >= 0) {
+	TeXoutcmd( fpout, "<tt>" );
+	EndName[Esp] = "tt";
+	LastFont     = "tt";
     }
-    TeXoutcmd( fpout, "<tt>" );
-    EndName[Esp] = "tt";
-    LastFont     = "tt";
+    else {
+	fprintf( ferr, "Group stack index = %d, <0:", Esp );
+	TXPrintLocation( ferr );
+    }
+
 }
 
 #ifdef FOO

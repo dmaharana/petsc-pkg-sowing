@@ -131,7 +131,7 @@ void TXDoBibliography( TeXEntry *e )
     fpin[++curfile] = fopen( fname, "r" );
     if (!fpin[curfile]) {
 	curfile--;
-	fprintf( stderr, "Could not open file %s\n", fname );
+	fprintf( stderr, "(TXDoBibliography) Could not open file %s\n", fname );
 	return;
     }
     InFName[curfile] = (char *)MALLOC( strlen(fname) + 1 );

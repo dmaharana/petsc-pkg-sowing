@@ -1,3 +1,4 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
    This file contains routines to handle the "newenvironment" command
  */
@@ -20,7 +21,7 @@ static int LatexQuiet = 0;
 
 static int leave_tex_files = 0;
 
-void AddCodeDefn ( FILE * );
+static void AddCodeDefn ( FILE * );
 
 static int Debug_environ = 0;
 
@@ -88,7 +89,7 @@ void TXDoNewenvironment( TeXEntry *e )
    Environments set with this function cannot be replaced by 
    newenvironment commands
  */
-void TXSetEnv( char *name, char *btext, char *etext, int bnargs )
+void TXSetEnv( const char *name, char *btext, char *etext, int bnargs )
 {
     int    d;
     LINK   *l;
@@ -268,7 +269,7 @@ void RunLatex( char *envname, char *string, char *name, char *mathmode,
 	sprintf( fname, "%s.tex", name );
 	fp = fopen( fname, "w" );
 	if (!fp) {
-	    fprintf( ferr, "Could not open file %s for LaTeX processing\n",
+	    fprintf( ferr, "(RunLatex) Could not open file %s for LaTeX processing\n",
 		     fname );
 	    return;
 	}
@@ -278,29 +279,38 @@ void RunLatex( char *envname, char *string, char *name, char *mathmode,
 
 	/* Make the page long enough that it will generate a single output page */
 	fprintf( fp, "\
+%%tohtml-start%% Set page sizes so that we will get a single page\n\
 \\%s%s\n\
 \\pagestyle{empty}\n\
 \\thispagestyle{empty}\n\
 \\vsize=20in\\setlength{\\textheight}{20in}\n\
-\\begin{document}\n", 
+%%tohtml-end%%\n", 
 documentcmd, preamble ? preamble : "{article}" );
-/* Add the definition of \code and \file, just in case.  This really should
-   be set if format is -slide, along with other slide items. */
-	AddCodeDefn( fp );
+	/* Add the definition of \code and \file, just in case.  
+	   This really should
+	   be set if format is -slide, along with other slide items. */
+	if (0) 
+	  AddCodeDefn( fp );
 
-	fprintf( fp, "\\setcounter{section}{1}\n\
+	if (predoc && predoc[0]) {
+	    fprintf( fp, "%%tohtml-start%%predoc\n%s\n%%tohtml-end\n", predoc );
+	}
+
+	fprintf( fp, "\
+\\begin{document}\n\
+%%tohtml-start%% set counter values\n\
+\\setcounter{section}{1}\n\
 \\setcounter{figure}{%d}\n\
 \\setcounter{table}{%d}\n\
-\\setcounter{equation}{%d}\n", FigureNumber, TableNumber, EquationNumber-1 );
+\\setcounter{equation}{%d}\n\
+%%tohtml-end\n", FigureNumber, TableNumber, EquationNumber-1 );
 
-	if (predoc && predoc[0]) 
-	    fputs( predoc, fp );
-	fprintf( fp, "%% User definitions begin here\n" );
+	fprintf( fp, "%%tohtml-start%%User definitions begin here\n" );
 	TXDumpUserDefs( fp, 0 );
-	fprintf( fp, "%% User definitions end here\n" );
+	fprintf( fp, "%%tohtml-end%%User definitions end here\n" );
 
 	/* Disable things like \index */
-	fprintf( fp, "%% Disable other commands\n" );
+	fprintf( fp, "%%tohtml-start%% Disable other commands\n" );
 	fprintf( fp, "\\def\\index#1{\\relax}\n" );
 
 	if (string) {
@@ -308,6 +318,7 @@ documentcmd, preamble ? preamble : "{article}" );
 	    fputs( string, fp );
 	    fprintf( fp, "%% End of user command to run\n" );
 	}
+	fprintf( fp, "%%tohtml-end\n" );
     }
 
     if (!runagain) {
@@ -601,9 +612,11 @@ void TeXSetEnvJump( char *envname )
     }
 }
 
-void AddCodeDefn( FILE *fout )
+static void AddCodeDefn( FILE *fout )
 {
-    fprintf( fout, "{\\catcode`\\_=\\active\\gdef_{{\\tt\\char`\\_}}}\n\
+    fprintf( fout, "\
+%%tohtml-start\n\
+{\\catcode`\\_=\\active\\gdef_{{\\tt\\char`\\_}}}\n\
 {\\catcode`\\_=\\active\\gdef\\makeustext{\\def_{{\\tt\\char`\\_}}}}\n\
 {\\catcode`\\&=\\active\\gdef\\makeamptext{\\catcode`\\&=\\active\\def&{{\\tt\\char`\\&}}}}\n\
 \\def\\eatcode{\\catcode`\\_=\\active\\makeustext\\makeamptext\\eatnext}\n\
@@ -611,5 +624,6 @@ void AddCodeDefn( FILE *fout )
 \\def\\eatnext#1{{\\tt #1}\\endgroup}\n\
 \\def\\eatnextfile#1{`{\\tt #1}'\\endgroup}\n\
 \\def\\file{\\begingroup\\eatfile}\n\
-\\def\\code{\\begingroup\\eatcode}\n" );
+\\def\\code{\\begingroup\\eatcode}\n\
+%%tohtml-end\n" );
 }

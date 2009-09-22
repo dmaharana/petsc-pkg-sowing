@@ -25,10 +25,12 @@ xwdsize: xwdsize.o
 
 doc_SOURCES = tohtml.c
 
+testing:
+	cd testing && ${MAKE} testing
 clean:
 	-/bin/rm -f *.o *~ $(PROGRAMS)
 	-/bin/rm -f tohtml\ win32/debug/*
-	(cd testing ; ${MAKE} clean )
+	(cd testing && ${MAKE} clean )
 distclean: clean
 	rm -f Makefile testing/Makefile tohtmlpath.h
 

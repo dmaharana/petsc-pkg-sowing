@@ -14,6 +14,8 @@
    we need to keep them straight.
  */
 
+#define KEY_NAME_SIZE 256
+
 #ifdef FOO
 typedef struct _RTFNode {
     struct _RTFNode *sibling, *child, *parent;
@@ -25,9 +27,9 @@ typedef struct _RTFNode {
 /* #define DEBUG */
 
 /* Forward defs */
-int SRHashFcn ( SRList *, char * );
+static int SRHashFcn ( SRList *, char * );
 
-int SRHashFcn( SRList *lctx, char *name )
+static int SRHashFcn( SRList *lctx, char *name )
 {
     int fcn = 0;
     while (*name) fcn += *name++;
@@ -70,30 +72,33 @@ void SRDestroy( SRList *lctx )
 
 /* This needs to return a pointer to the link, OR have a routine to call
    to manage the private data area */
-LINK *SRLookup( SRList *lctx, char *topicname, char *entryname, int *number )
+LINK *SRLookup( SRList *lctx, const char *topicname, char *entryname, 
+		int *number )
 {
     LINK *cur;
     int  match;
     char *p;
+    char pcopy[KEY_NAME_SIZE];
 
     if (lctx == 0) return 0;
 
 /* Remove leading, trailing blanks from topicname */
     while (*topicname == ' ') topicname++;
-    p = topicname + strlen(topicname) - 1;
-    while (p > topicname && *p == ' ') p--;
+    strncpy( pcopy, topicname, sizeof(pcopy)-1 );
+    p = pcopy + strlen(pcopy) - 1;
+    while (p > pcopy && *p == ' ') p--;
     p[1] = 0;
 
 /* First, see if the name is known */	
-    cur = lctx->HASH[SRHashFcn( lctx, topicname )];
+    cur = lctx->HASH[SRHashFcn( lctx, pcopy )];
 #ifdef DEBUG
-    fprintf( stderr, "Looking for topicname |%s|\n", topicname );
+    fprintf( stderr, "Looking for topicname |%s|\n", pcopy );
 #endif
     while (cur) {
 #ifdef DEBUG
-	fprintf( stderr, "Testing %s against %s\n", topicname, cur->topicname );
+	fprintf( stderr, "Testing %s against %s\n", pcopy, cur->topicname );
 #endif
-	match = strcmp( topicname, cur->topicname );
+	match = strcmp( pcopy, cur->topicname );
 	if (match == 0) {
 	    /* found */
 #ifdef DEBUG
@@ -120,17 +125,17 @@ LINK *SRLookup( SRList *lctx, char *topicname, char *entryname, int *number )
    make a copy of it (so that we can elimiinate any potential blanks
    in the name) 
  */
-LINK *SRInsert( SRList *lctx, char *topicname, char *entryname, int *number )
+LINK *SRInsert( SRList *lctx, const char *topicname, char *entryname, int *number )
 {
     LINK *cur, *new, *prev;
     int  match;
     int  hidx;
     char *p;
-    char pcopy[256];
+    char pcopy[KEY_NAME_SIZE];
 
 /* Remove leading, trailing blanks from topicname */
     while (*topicname == ' ') topicname++;
-    strncpy( pcopy, topicname, 255 );
+    strncpy( pcopy, topicname, sizeof(pcopy)-1 );
     p = pcopy + strlen(pcopy) - 1;
     while (p > pcopy && *p == ' ') p--;
     p[1] = 0;
@@ -219,26 +224,26 @@ LINK *SRInsert( SRList *lctx, char *topicname, char *entryname, int *number )
 	    fprintf( stderr, "Inserting at end...\n" );
 #endif    	
 	    prev->next = new;
-	    new->prev        = prev;
-	    new->next        = 0;
+	    new->prev  = prev;
+	    new->next  = 0;
         }
     }
     return new;    
 }
 
 /* This is just SRInsert without the lookup */
-LINK *SRInsertAllowDuplicates( SRList *lctx, char *topicname, char *entryname,
-			       int *number )
+LINK *SRInsertAllowDuplicates( SRList *lctx, const char *topicname, 
+			       char *entryname, int *number )
 {
     LINK *cur, *new, *prev;
     int  match;
     int  hidx;
     char *p;
-    char pcopy[256];
+    char pcopy[KEY_NAME_SIZE];
 
 /* Remove leading, trailing blanks from topicname */
     while (*topicname == ' ') topicname++;
-    strncpy( pcopy, topicname, 255 );
+    strncpy( pcopy, topicname, sizeof(pcopy)-1 );
     p = pcopy + strlen(pcopy) - 1;
     while (p > pcopy && *p == ' ') p--;
     p[1] = 0;

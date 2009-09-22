@@ -33,7 +33,6 @@ static int isatletter = 0;
 
 void OverlapCopy( char *, int );
 
-
 void SCSetDebug( int flag )
 {
     DebugScan     = flag;

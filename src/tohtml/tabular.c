@@ -364,7 +364,10 @@ void TXmulticolumn( TeXEntry *e )
 	switch (curtok[0]) {
 	case 'l': align_str = "\"LEFT\"";   break;
 	case 'r': align_str = "\"RIGHT\"";  break;
-	default:  align_str = "\"CENTER\""; break;
+	case 'c': align_str = "\"CENTER\""; break;
+	default:  
+	  fprintf( ferr, "Unrecognized multcolumn alignment %c\n", curtok[0] );
+	  align_str = "\"CENTER\""; break;
 	}
 	POPCURTOK;
 	
@@ -378,5 +381,5 @@ void InitTabular( void )
 {
     /* Don't uncomment this until multicolumn works correctly with the 
        other alignments */
-/*    TXInsertName( TeXlist, "multicolumn", TXmulticolumn, 3, (void *)0 ); */
+    TXInsertName( TeXlist, "multicolumn", TXmulticolumn, 3, (void *)0 ); 
 }

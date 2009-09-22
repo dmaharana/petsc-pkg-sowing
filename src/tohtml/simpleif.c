@@ -1,3 +1,4 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
  * This file implements a simple if statement, using the LaTeX
  * \newif\ifname, \nametrue, \namefalse
@@ -35,7 +36,7 @@ void TXNewif( TeXEntry *e )
 }
 
 /* A stack of if values.  For now, we can only handle true values */
-#define MAX_IF_STACK 15
+#define MAX_IF_STACK 30
 static int if_sp = -1;
 static int truth[MAX_IF_STACK];
 
@@ -48,6 +49,8 @@ void TXDoIf( TeXEntry *e )
     if (*def) {
 	/* True branch */
 	/* Tell \else or \if to be silent */
+	if (if_sp >= MAX_IF_STACK-1) 
+	    fprintf( stderr, "Too many TeX ifs\n" );
 	truth[++if_sp] = 1;
     }
     else {
@@ -85,7 +88,8 @@ void TXElse( TeXEntry *e )
 
 void TXFi( TeXEntry *e )
 {
-    if_sp--;
+    if (if_sp > 0)
+	if_sp--;
 }
 
 void TeXskipUntil( char *(names[]), int n_names )
@@ -119,4 +123,16 @@ void TeXskipUntil( char *(names[]), int n_names )
 	    }
 	}
     }
+}
+
+/* Add an easy way to process if commands that are defined in other packages 
+   TXAddPredefIf( ifname, istrue )
+ */
+void TXAddPredefIf( const char *ifname, int isTrue )
+{
+    int *def;
+
+    def = NEW(int); CHKPTR(def);
+    *def = isTrue;
+    TXInsertName( TeXlist, ifname, TXDoIf, 0, (void *)def );
 }

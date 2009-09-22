@@ -1,3 +1,4 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
 #include <stdio.h>
 #include "sowing.h"
 #include "search.h"
@@ -16,7 +17,7 @@ static char *InitCommands = 0;
 
 /* Remove quotes from the string pointed at by p, moving them in place as 
    necessary */
-static stripquote( char *p )
+static void stripquote( char *p )
 {
     char *pnew;
     if (p[0] != '"') return;
@@ -78,7 +79,7 @@ void RdBaseDef( char *infilename )
 	fprintf( stderr, "Could not open definition file %s\n", infilename );
 	return;
     }
-    while (fgets(buf, 199, fp)) {
+    while (fgets(buf, sizeof(buf)-1, fp)) {
 	buf[199] = 0; /* Just in case */
 	nargs = 0;   /* in case not set ... */
 	name = 0; cmd = 0; value = 0;
@@ -170,6 +171,18 @@ void RdBaseDef( char *infilename )
 		InitCommands[0] = '\0';
 	    }
 	    strncat( InitCommands, name, MAX_INIT_COMMANDS );
+	}
+	else if (strcmp( cmd, "skipinclude" ) == 0) {
+	    /* Save this file name as a file to skip */
+	    TXAddSkipFile( name );
+	}
+	else if (strcmp( cmd, "replaceinclude" ) == 0) {
+	    TXAddReplaceFile( name, value );
+	}
+	else if (strcmp( cmd, "if" ) == 0) {
+	    int isTrue = 1;
+	    if (strcmp( value, "false" ) == 0) isTrue = 0;
+	    TXAddPredefIf( name, isTrue );
 	}
 	else {
 	    fprintf( stderr, "Unknown command %s in definitions file\n", cmd );

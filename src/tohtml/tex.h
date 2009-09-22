@@ -171,6 +171,7 @@ extern char ActiveChar;      /* often ~ */
 /* General globals */
 extern int  DebugCommands;
 extern int  DebugOutput;
+extern int  DebugFont;
 extern int  warnRedefinition;
 
 extern char *tokbuf, *curtok;
@@ -222,7 +223,7 @@ extern void TXStartNumberedEnv ( char * );
 extern void TXcaptionHandling ( TeXEntry * );
 extern void TXcaption ( TeXEntry * );
 extern void TeXSetEnvJump ( char * );
-extern void TeXSetEnv( char *, char *, char *, int );
+extern void TXSetEnv( const char *, char *, char *, int );
 
 /* label.c */
 extern void InsertLabel ( int, char *, char * );
@@ -283,6 +284,7 @@ extern char SCGetCommentChar ( void );
 extern void TXNewif( TeXEntry * );
 extern void TXElse( TeXEntry * );
 extern void TXFi( TeXEntry * );
+extern void TXAddPredefIf( const char *, int );
 
 /* style.c */
 extern void TXStyleLatexInfo ( SRList *, FILE *, FILE * );
@@ -304,6 +306,8 @@ extern void TeXEndHalignTable( void );
 
 /* texactio.c */
 extern void TXSetDebug ( int );
+extern void TXSetDebugFile( int );
+extern void TXSetDebugFont( int );
 extern void TXSetUseIfTex ( int );
 extern void TXSetLatexUnknown ( int );
 extern void TXSetProcessManPageTokens ( int );
@@ -313,6 +317,7 @@ extern void TXSetSimpleMath ( int );
 extern void TXSetLatexAgain ( int );
 extern void TXSetFiles ( char *, char * );
 extern void TeXAbort ( char *, char * );
+extern void TXPrintLocation( FILE * );
 extern void TeXoutcmd ( FILE *, char * );
 extern void TeXoutstr ( FILE *, char * );
 extern void TeXoutsp ( FILE *, int );
@@ -320,6 +325,7 @@ extern int TeXReadToken ( char *, int * );
 extern void TeXReadMacroName ( char * );
 extern int TeXGetGenArg ( FILE *, char *, int, char, char, int );
 extern int TeXGetArg ( FILE *, char *, int );
+extern void TeXMustGetArg( FILE *, char *, int, char *, char * );
 extern void TXnop ( TeXEntry * );
 extern char *TXCopy ( char * );
 extern void TXsavearg ( TeXEntry * );
@@ -333,6 +339,7 @@ extern void TXnopStar ( TeXEntry * );
 extern void TXdoublebw ( TeXEntry * );
 extern void TXtoday ( TeXEntry * );
 extern void TXref ( TeXEntry * );
+extern void TXnewline( TeXEntry * );
 extern void TXlabel ( TeXEntry * );
 extern void TXhref ( TeXEntry * );
 extern void TXxref ( TeXEntry * );
@@ -353,6 +360,7 @@ extern void TXbox ( TeXEntry * );
 extern void TXinclude ( TeXEntry * );
 extern void TXPopFile ( void );
 extern void TXfileinclude ( TeXEntry * );
+extern void TXIfFileExists( TeXEntry * );
 extern void TXSetSplitLevel ( int, char * );
 extern void TXsection ( TeXEntry * );
 extern void TXtitlesection ( TeXEntry * );
@@ -403,7 +411,7 @@ extern void TXoutactiveToken ( char * );
 extern void TXepsfbox ( TeXEntry * );
 extern void TXpsfig ( TeXEntry * );
 extern void TXanimation ( TeXEntry * );
-extern void TXInsertName ( SRList *, char *, void (*)(TeXEntry *),
+extern void TXInsertName ( SRList *, const char *, void (*)(TeXEntry *),
 				     int, void * );
 extern void TXInit ( FILE *, FILE * );
 extern void TeXProcessCommand ( char *, FILE *, FILE * );
@@ -513,6 +521,10 @@ extern void TXDoNewLength ( SRList *, TeXEntry * );
 extern void TXlet ( TeXEntry * );
 extern void TXDumpUserDefs ( FILE *, int );
 extern void *TXCreateDefn( int nargs, char *ldef, int is_html );
+extern void TXAddSkipFile( const char * );
+extern void TXAddReplaceFile( const char *, const char * );
+extern int  TXIsSkipFile( const char * );
+extern int  TXIsReplaceFile( const char *, char * );
 
 #ifdef __MSDOS__
 #define MAX_TOKEN 512

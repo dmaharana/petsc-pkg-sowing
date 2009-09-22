@@ -17,9 +17,10 @@ typedef struct {
     } SRList;
 
 extern SRList *SRCreate (void);
-extern LINK   *SRInsert ( SRList *, char *, char *, int * ), 
-              *SRLookup ( SRList *, char *, char *, int * );
-extern LINK   *SRInsertAllowDuplicates ( SRList *, char *, char *, int * );
+extern LINK   *SRInsert ( SRList *, const char *, char *, int * ), 
+              *SRLookup ( SRList *, const char *, char *, int * );
+extern LINK   *SRInsertAllowDuplicates ( SRList *, const char *, char *,
+					 int * );
 extern void   SRDestroy ( SRList * );
 extern void   SRDump    ( SRList *, FILE * );
 extern void   SRDumpAll ( SRList *, FILE * );
