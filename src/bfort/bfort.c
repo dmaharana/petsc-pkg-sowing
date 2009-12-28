@@ -1,3 +1,5 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+
 #include <ctype.h>
 #include "sowing.h"
 #include "doc.h"
@@ -86,7 +88,7 @@ static int AnsiForm = 0;
 static int AddDebugAll = 1;
 
 /* If 0, do not generate Fortran 9x interface module */
-static int F90Module = 1;
+static int F90Module = 0;
 static FILE *fmodout = 0;
 
 /* Catch serious problems */
@@ -110,6 +112,10 @@ static char BuildProfiling[256] = "MPI_BUILD_PROFILING";
 #define MAX_TYPE_NAME 60    /* Maximum length of a type name */
 #define MAX_ARGS      128   /* Maximum number of args to a function */
 #define MAX_TYPES      64   /* Maximum number of types to a function */
+
+#ifndef MAX_PATH_NAME
+#define MAX_PATH_NAME 1024
+#endif
 
 typedef struct {
     char *name;
@@ -153,11 +159,15 @@ void OutputRoutineName ( char *, FILE * );
 void OutputUniversalName ( FILE *, char * );
 int GetTypeName ( FILE *, FILE *, TYPE_LIST *, int, int, int );
 int GetArgName ( FILE *, FILE *, ARG_LIST *, TYPE_LIST *, int );
+void FixupArgNames( int, ARG_LIST * );
 void OutputBalancedString ( FILE *, FILE *, int, int );
 char *ToCPointer ( char *, char *, int );
 const char *ArgToFortran( const char *typeName );
-
+int MPIU_Strncpy( char *, const char *, size_t );
+int MPIU_Strnapp( char *, const char *, size_t );
+void Abort( const char *, const char *, int );
 void DoBfortHelp ( char * );
+#define ABORT(msg) Abort(msg,__FILE__,__LINE__)
 
 /*D
   bfort - program to extract short definitions for a Fortran to C interface
@@ -255,21 +265,23 @@ int main( int argc, char **argv )
 {
     char routine[MAX_ROUTINE_NAME];
     char *infilename;
-    char outfilename[1024];
-    char dirname[1024];
-    char fname[1024], *p;
+    char outfilename[MAX_PATH_NAME];
+    char dirname[MAX_PATH_NAME];
+    char fname[MAX_PATH_NAME], *p;
     FILE *fd, *fout, *incfd;
     char kind;
     char incfile[MAX_FILE_SIZE];
-    char incbuffer[1024];
+    char incbuffer[MAX_PATH_NAME];
     int  n_in_file;
-    int  f90mod_skip_header = 0;
+    int  f90mod_skip_header = 1;
 
 /* process all of the files */
-    strcpy( dirname, "." );
+    if (MPIU_Strncpy( dirname, ".", sizeof(dirname) )) {
+	ABORT( "Unable to set dirname to \".\"" );
+    }
     incfile[0]  = 0;
-    SYArgGetString( &argc, argv, 1, "-dir", dirname, 1024 );
-    SYArgGetString( &argc, argv, 1, "-I",   incfile, 1024 );
+    SYArgGetString( &argc, argv, 1, "-dir", dirname, MAX_PATH_NAME );
+    SYArgGetString( &argc, argv, 1, "-I",   incfile, MAX_PATH_NAME );
     NoFortMsgs		   = SYArgHasName( &argc, argv, 1, "-nomsgs" );
     MapPointers		   = SYArgHasName( &argc, argv, 1, "-mapptr" );
     if (MapPointers) {
@@ -319,27 +331,39 @@ int main( int argc, char **argv )
 	if (!incfd) {
 	    ErrCnt++;
 	    fprintf( stderr, "Could not open file %s for -I option\n", incfile );
-	    if (ErrCnt > MAX_ERR) exit(1);
+	    if (ErrCnt > MAX_ERR) ABORT( "" );
 	}
     }
     else
 	incfd = 0;
 
+    /* See if we should create the F90 Module file. */
     f90mod_skip_header = SYArgHasName( &argc, argv, 1, "-f90mod_skip_header" );
+    if (!f90mod_skip_header) {
+	/* Check for the more appropriate spelling */
+	f90mod_skip_header = 
+	    SYArgHasName( &argc, argv, 1, "-f90mod-skip-header" );
+    }
+    /* If an f90modfile argument is provided, then enable the f90module */
+    if (SYArgHasName( &argc, argv, 0, "-f90modfile" )) {
+	F90Module = 1;
+    }
 
     /* If there is a f90 module file, open it now */
     if (F90Module) {
 	char fmodfile[MAX_FILE_SIZE];
 	if (!SYArgGetString( &argc, argv, 1, "-f90modfile", 
 			     fmodfile, MAX_FILE_SIZE )) {
-	    strcpy( fmodfile, "f90module.f90" );
+	    if (MPIU_Strncpy( fmodfile, "f90module.f90", sizeof(fmodfile) )) {
+		ABORT( "Unable to set the name of the Fortran 90 module file" );
+	    }
 	}
 
 	fmodout = fopen( fmodfile, "w" );
 	if (!fmodout) {
 	    ErrCnt++;
 	    fprintf( stderr, "Could not open file %s for Fortran 90 interface output\n", fmodfile );
-	    if (ErrCnt > MAX_ERR) exit(1);
+	    if (ErrCnt > MAX_ERR) ABORT( "" );
 	    F90Module = 0;
 	}
 	else {
@@ -360,7 +384,7 @@ int main( int argc, char **argv )
 	if (!fd) {
 	    ErrCnt++;
 	    fprintf( stderr, "Could not open file %s\n", infilename );
-	    if (ErrCnt > MAX_ERR) exit(1);
+	    if (ErrCnt > MAX_ERR) ABORT( "" );
 	    continue;
         }
 	n_in_file = 0;
@@ -368,7 +392,7 @@ int main( int argc, char **argv )
 	CurrentFilename = infilename;
 
 	/* Set the output filename */
-	SYGetRelativePath( infilename, fname, 1024 );
+	SYGetRelativePath( infilename, fname, MAX_PATH_NAME );
 	/* Strip the trailer */
 	p = fname + strlen(fname) - 1;
 	while (p > fname && *p != '.') p--;
@@ -402,14 +426,22 @@ int main( int argc, char **argv )
 	    }
 	    else if (kind == INCLUDE) {
 		int guard_x = 0;
-		strcpy( incbuffer, "#include " );
+		if (MPIU_Strncpy( incbuffer, "#include ", sizeof(incbuffer) )) {
+		    ABORT( "Unable to set the name of the include buffer" );
+		}
 		/* Grumble.  We'll have to fix this eventually */
 		if (routine[0] != '"' && routine[0] != '<') {
 		    p = routine + strlen(routine) - 1;
-		    if (*p == '>')
-			strcat( incbuffer, "<" );
-		    else if (*p == '"') 
-			strcat( incbuffer, p );
+		    if (*p == '>') {
+			if (MPIU_Strnapp( incbuffer, "<", sizeof(incbuffer) )){
+			    ABORT( "Cannot add < to include buffer" );
+			}
+		    }
+		    else if (*p == '"') {
+			if (MPIU_Strnapp( incbuffer, p, sizeof(incbuffer) ) ){
+			    ABORT( "Cannot append file name to include buffer");
+			}
+		    }
 		}
 		/* Special case */
 		/* fprintf( stderr, "include == |%s|\n", routine ); */
@@ -418,9 +450,13 @@ int main( int argc, char **argv )
 		    OutputBuf( &fout, infilename, outfilename, incfd, 
 			       "#ifndef TOOLSNOX11\n" );
 		}
-		strcat( incbuffer, routine );
+		if (MPIU_Strnapp( incbuffer, routine, sizeof(incbuffer) )) {
+		    ABORT( "Cannot add routine name to include buffer" );
+		}
 		CopyIncludeName( fd, incbuffer + strlen(incbuffer) );
-		strcat( incbuffer, "\n" );
+		if (MPIU_Strnapp( incbuffer, "\n", sizeof(incbuffer) )) {
+		    ABORT( "Cannot add newline to include buffer" );
+		}
 		OutputBuf( &fout, infilename, outfilename, incfd, incbuffer );
 		if (guard_x) {
 		    OutputBuf( &fout, infilename, outfilename, incfd, 
@@ -530,8 +566,7 @@ void OutputToken( FILE *fout, char *p, int nsp )
 	if (Debug) {
 	    outcnt += nsp + strlen(p);
 	    if (outcnt > 10000) {
-		fprintf( stderr, "Exceeded output count limit!\n" );
-		exit(1);
+		ABORT( "Exceeded output count limit!" );
 	    }
 	}
     }
@@ -548,7 +583,7 @@ void OutputRoutine( FILE *fin, FILE *fout, char *name, char *filename,
     int         ntypes;
     int         flag2 = 0;
 
-/* Check to see if this is a C-only routine */
+    /* Check to see if this is a C-only routine */
     if (GetSubClass() == 'C') {
 	if (!NoFortMsgs && !NoFortWarnings) {
 	    fprintf( stderr, "Routine %s(%s) can not be translated into Fortran\n",
@@ -558,10 +593,10 @@ void OutputRoutine( FILE *fin, FILE *fout, char *name, char *filename,
 	return;
     }
 
-/* Skip to trailer */
+    /* Skip to trailer */
     SkipText( fin, name, filename, kind );
 
-/* Get the call to the routine, including finding the argument names */
+    /* Get the call to the routine, including finding the argument names */
     SkipWhite( fin );
     ProcessArgList( fin, fout, filename, &is_function, name, 
 		    args, &nargs, &rt, 0, types, &ntypes, flag2 );
@@ -687,7 +722,7 @@ void OutputBuf( FILE **fout, char *infilename, char *outfilename, FILE *incfd,
 	if (!*fout) {
 	    ErrCnt++;
 	    fprintf( stderr, "Could not open file %s\n", outfilename );
-	    if (ErrCnt > MAX_ERR) exit(1);
+	    if (ErrCnt > MAX_ERR) ABORT( "" );
 	    return;
 	}
 	fprintf( *fout, "/* %s */\n", infilename );
@@ -821,7 +856,7 @@ void OutputMacro( FILE *fin, FILE *fout, char *routine_name, char *filename )
 	ErrCnt++;
 	fprintf( stderr, "%s(%s) has no synopsis section\n", 
 		 routine_name, CurrentFilename );
-	if (ErrCnt > MAX_ERR) exit(1);
+	if (ErrCnt > MAX_ERR) ABORT( "" );
     }
 /* finish up the section */
     if (!done)
@@ -859,7 +894,9 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
    We also want to defer generating the function type incase we need to 
    replace a pointer ref with an integer.
    */
-    strcpy( rt->name, p );
+    if (MPIU_Strncpy( rt->name, p, sizeof(rt->name) )) {
+	ABORT( "Cannot copy return type name" );
+    }
     rt->num_stars = 0;
     *is_function          = strcmp( p, "void" );
 
@@ -878,12 +915,19 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
 	if (c == EOF) {
 	    ErrCnt++;
 	    fprintf( stderr, "Unexpected EOF in %s\n", filename );
-	    if (ErrCnt > MAX_ERR) exit(1);
+	    if (ErrCnt > MAX_ERR) ABORT( "" );
 	    return;
 	}
-	if (nsp > 0) strcat( rt->name, " " );
-	if (strcmp( p, name ) != 0 && p[0] != '(')
-	    strcat( rt->name, p );
+	if (nsp > 0) {
+	    if (MPIU_Strnapp( rt->name, " ", sizeof(rt->name) )) {
+		ABORT( "Cannot add space to return type name" );
+	    }
+	}
+	if (strcmp( p, name ) != 0 && p[0] != '(') {
+	    if (MPIU_Strnapp( rt->name, p, sizeof(rt->name) )) {
+		ABORT( "Cannot append name to return type" );
+	    }
+	}
 	if (c == '*') {
 	    *is_function = 1;
 	    rt->num_stars++;
@@ -926,7 +970,9 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
 		break;
 	    }
 	}
-	strcpy( actname, p );
+	if (MPIU_Strncpy( actname, p, sizeof(actname) )) {
+	    ABORT( "Cannot copy actual name" );
+	}
 	if (in_args == 0) {
 	    if (strcmp( p, name ) == 0) {
 		/* Convert to Fortran name.  For now, this just does the
@@ -941,7 +987,7 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
 	       Errcnt++;
 	       fprintf( stderr, "%s:Did not find matching name: %s != %s\n", 
 	       filename, p, name );
-	       if (ErrCnt > MAX_ERR) exit(1);
+	       if (ErrCnt > MAX_ERR) ABORT( "" );
 	       }
 	       }
 	       */
@@ -951,13 +997,13 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
 	ErrCnt++;
 	fprintf( stderr, "%s:Did not find routine name (may be untyped): %s \n", 
 		 filename, name );
-	if (ErrCnt > MAX_ERR) exit(1);
+	if (ErrCnt > MAX_ERR) ABORT( "" );
     }
     else if (strcmp( name, actname ) != 0) {
 	ErrCnt++;
 	fprintf( stderr, "%s:Did not find matching name: %s != %s\n", 
 		 filename, actname, name );
-	if (ErrCnt > MAX_ERR) exit(1);
+	if (ErrCnt > MAX_ERR) ABORT( "" );
     }
 }
 
@@ -992,7 +1038,7 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
     if (c != '(') {
 	ErrCnt++;
 	fprintf( stderr, "Expected a (, found %s\n", p );
-	if (ErrCnt > MAX_ERR) exit(1);
+	if (ErrCnt > MAX_ERR) ABORT( "" );
 	return;
     }
     OutputToken( fout, p, nsp );
@@ -1039,7 +1085,7 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 	if (nargs >= MAX_ARGS) {
 	    ErrCnt++;
 	    fprintf( stderr, "Too many arguments to function %s\n", name );
-	    exit(1);
+	    ABORT( "" );
 	}
 	nargs++;
 	/* Get between-arg character */
@@ -1135,7 +1181,9 @@ int ProcessArgDefs( FILE *fin, FILE *fout, ARG_LIST *args, int nargs,
     nstrings	  = 0;
 /* The default type is int */
     ntypes		  = 1;
-    strcpy( types[0].type, "int" );
+    if (MPIU_Strncpy( types[0].type, "int", sizeof(types[0].type) )) {
+	ABORT( "Cannot set initial type to int" );
+    }
     in_function	  = 0;
     set_void	  = 0;
     void_function	  = 0;
@@ -1165,7 +1213,7 @@ int ProcessArgDefs( FILE *fin, FILE *fout, ARG_LIST *args, int nargs,
 	    if (i >= nargs) {
 		ErrCnt++;
 		fprintf( stderr, "Could not find argument %s\n", narg.name );
-		if (ErrCnt > MAX_ERR) exit(1);
+		if (ErrCnt > MAX_ERR) ABORT( "" );
 	    }
 	    args[i]		     = narg;
 	    args[i].type	     = ntypes-1;
@@ -1517,13 +1565,23 @@ void FixupArgNames( int nargs, ARG_LIST *args )
 		       args[j].name ); */
 		    cout = tmpbuf;
 		    while (*cout) cout++;
+		    if (cout - tmpbuf > MAX_LINE - 6) {
+			fprintf( stderr, "Argument name %s too long\n", tmpbuf );
+			ABORT( "" );
+		    }
 		    *cout++ = 'u';
 		    *cout++ = 'p';
 		    *cout++ = 'p';
 		    *cout++ = 'e';
 		    *cout++ = 'r';
 		    *cout++ = 0;
-		    strcpy( args[i].name, tmpbuf );
+		    if (args[i].name) {
+			FREE( args[i].name );
+		    }
+		    args[i].name = (char *)MALLOC( strlen( tmpbuf ) + 1 );
+		    if (MPIU_Strncpy( args[i].name, tmpbuf, strlen( tmpbuf ) + 1 )) {
+			ABORT( "Cannot replace argument name" );
+		    }
 		    break;
 		}
 	    }
@@ -1584,16 +1642,24 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 	if (types[args[i].type].is_mpi) {
 	    OutputFortranToken( fout, 7, "integer" );
 	}
+	else if (args[i].void_function) {
+	    OutputFortranToken( fout, 7, "external" );
+	}
 	else {
 	    OutputFortranToken( fout, 7, 
 				ArgToFortran( types[args[i].type].type ) );
 	}
 	OutputFortranToken( fout, 1, args[i].name );
-	if (args[i].has_array) {
+	if (args[i].has_array && !args[i].void_function) {
 	    OutputFortranToken( fout, 1, "(*)" );
 	}
 	OutputFortranToken( fout, 1, "!" );
-	OutputFortranToken( fout, 1, types[args[i].type].type );
+	if (args[i].void_function) {
+	    OutputFortranToken( fout, 1, "void function pointer" );
+	}
+	else {
+	    OutputFortranToken( fout, 1, types[args[i].type].type );
+	}
 	OutputFortranToken( fout, 0, "\n" );
 # if 0
 	if (args[i].is_FILE) {
@@ -1666,7 +1732,9 @@ void OutputRoutineName( char *name, FILE *fout )
     int  ln;
 
     p = buf;
-    strcpy( buf, name );
+    if (MPIU_Strncpy( buf, name, sizeof(buf) )) {
+	ABORT( "Cannot copy name to buf" );
+    }
     if (!AnsiHeader) {
 	if (IfdefFortranName) {
 	    LowerCase( p );
@@ -1706,12 +1774,20 @@ void OutputUniversalName( FILE *fout, char *routine )
 {
     char basename[MAX_ROUTINE_NAME], capsname[MAX_ROUTINE_NAME],
 	nouscorename[MAX_ROUTINE_NAME];
-    strcpy( basename, routine );
+    if (MPIU_Strncpy( basename, routine, sizeof(basename) )) {
+	ABORT( "Cannot set basename" );
+    }
     LowerCase( basename );
-    strcat( basename, "_" );
-    strcpy( capsname, routine );
+    if (MPIU_Strnapp( basename, "_", sizeof(basename) )) {
+	ABORT( "Cannot append underscore to basename" );
+    }
+    if (MPIU_Strncpy( capsname, routine, sizeof(capsname) )) {
+	ABORT( "Cannot set capsname" );
+    }
     UpperCase( capsname );
-    strcpy( nouscorename, routine );
+    if (MPIU_Strncpy( nouscorename, routine, sizeof(nouscorename) )) {
+	ABORT( "Cannot set nouscorename" );
+    }
     LowerCase( nouscorename );
     if (isMPI && DoProfileNames) {
 	if (NameHasUnderscore(nouscorename)) {
@@ -1811,269 +1887,283 @@ else {
 int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro, 
 		 int flag2, int outparen )
 {
-int             c, nsp;
-char            token[1024];
-char            *typename = type->type;
-int             last_was_newline = 0;
-
-typename[0]	    = 0;
-type->is_char	    = 0;
-type->is_native	    = 0;
-type->is_FILE	    = 0;
-type->implied_star  = 0;
-type->type_has_star = 0;
-type->is_void       = 0;
-type->is_mpi        = 0;
-
-DBG("Looking for type...\n")
-/* Skip register */
-SkipWhite( fin );
-c = FindNextANToken( fin, token, &nsp );
-while (c != EOF && c == '\n') {
-    /* Macro typedefs end with a blank line */
-    if (is_macro && last_was_newline) return 1;
-    last_was_newline = 1;
-    OutputToken( fout, token, nsp );
+    int             c, nsp;
+    char            token[1024];
+    char            *typename = type->type;
+    int             last_was_newline = 0;
+    int             typenamelen = sizeof(type->type);
+    
+    typename[0]	        = 0;
+    type->is_char       = 0;
+    type->is_native     = 0;
+    type->is_FILE       = 0;
+    type->implied_star  = 0;
+    type->type_has_star = 0;
+    type->is_void       = 0;
+    type->is_mpi        = 0;
+    
+    DBG("Looking for type...\n");
+    /* Skip register */
+    SkipWhite( fin );
     c = FindNextANToken( fin, token, &nsp );
-    }
-/* Now we check for end of type definitions.  This is either a
-   { in K&R, ) in ANSI, or M * / in a Macro defn */
-if (c == EOF) return 1;
-if (c == '{') {
-    /* We don't output the initial brace here (see printbody) */
-    return 1;
-    }
-if (AnsiForm && (c == '(' || c == ')')) {
-    if (outparen)
-	OutputToken( fout, token, nsp );
-    else 
-	return c;
-    return 1;
-    }
-/* The macro form should stop at a newline as well */
-if (is_macro && c == MACRO) {
-    DBG("Checking for macro\n")
-    c = getc( fin );
-    if (c == '*') {
-	c = getc( fin );
-	if (c == '/') {
-	    DBG("Found end of macro defn\n")
-	    return 2;
-	    }
-	else { 
-	    /* This won't work on all systems. */
-	    ungetc( '*', fin );
-	    ungetc( (char)c, fin );
-	    }
-	}
-    else 
-	ungetc( (char)c, fin );
-    }
-
-if (strcmp( token, "register" ) == 0) {
-    c = FindNextANToken( fin, token, &nsp );
-    if (c == EOF || c == '{' || (AnsiForm && c == '(')) return 1;
-    }
-
-if (strcmp( token, "const" ) == 0) {
-    c = FindNextANToken( fin, token, &nsp );
-    if (c == EOF || c == '{' || (AnsiForm && c == '(')) return 1;
-    }
-
-/* Read type declaration: struct name or [ unsigned ] type */
-if (strcmp( token, "struct" ) == 0) {
-    strcat( typename, token );
-    strcat( typename, " " );
-    OutputToken( fout, token, nsp );
-    c = FindNextANToken( fin, token, &nsp );
-    strcat( typename, token );
-    }
-else {
-    if (strcmp( token, "unsigned" ) == 0) {
-	strcat( typename, token );
-	strcat( typename, " " );
+    while (c != EOF && c == '\n') {
+	/* Macro typedefs end with a blank line */
+	if (is_macro && last_was_newline) return 1;
+	last_was_newline = 1;
 	OutputToken( fout, token, nsp );
 	c = FindNextANToken( fin, token, &nsp );
+    }
+    /* Now we check for end of type definitions.  This is either a
+       { in K&R, ) in ANSI, or M * / in a Macro defn */
+    if (c == EOF) return 1;
+    if (c == '{') {
+	/* We don't output the initial brace here (see printbody) */
+	return 1;
+    }
+    if (AnsiForm && (c == '(' || c == ')')) {
+	if (outparen)
+	    OutputToken( fout, token, nsp );
+	else 
+	    return c;
+	return 1;
+    }
+    /* The macro form should stop at a newline as well */
+    if (is_macro && c == MACRO) {
+	DBG("Checking for macro\n");
+	c = getc( fin );
+	if (c == '*') {
+	    c = getc( fin );
+	    if (c == '/') {
+		DBG("Found end of macro defn\n");
+		return 2;
+	    }
+	    else { 
+		/* This won't work on all systems (some only allow 1 
+		   pushback). */
+		ungetc( '*', fin );
+		ungetc( (char)c, fin );
+	    }
 	}
-    strcat( typename, token );
-    /* Look for known names */
-    if (strcmp( token, "char" ) == 0) type->is_char = 1;
-    if (strcmp( token, "FILE" ) == 0) type->is_FILE = 1;
-    /* FIXME: We should put these names in an array, and provide
-       a way to add to that array from a configuration file,
-       to make it easier to customize and extend this code */
-    /* Note that we might want special processing for short and long */
-    /* Some of these are NOT C types (complex, BCArrayPart)! */
-    if (
-	strcmp( token, "double" ) == 0 ||
-	strcmp( token, "int"    ) == 0 ||
-	strcmp( token, "short"  ) == 0 ||
-	strcmp( token, "long"   ) == 0 ||
-        strcmp( token, "size_t" ) == 0 ||
-	strcmp( token, "float"  ) == 0 ||
-	strcmp( token, "char"   ) == 0 ||
-	strcmp( token, "complex") == 0 ||
-	strcmp( token, "dcomplex")== 0 ||
-	strcmp( token, "MPI_Status") == 0 ||
-	strcmp( token, "PetscScalar")== 0 ||
-	strcmp( token, "PetscReal")  == 0 ||
-	strcmp( token, "PetscTruth") == 0 ||
-        strcmp( token, "PetscSizeT") == 0 ||
-        strcmp( token, "MatStructure") == 0 ||
-	strcmp( token, "KSPConvergedReason") == 0 ||
-	strcmp( token, "BCArrayPart") == 0 ||
-	strcmp( token, "PetscLogDouble") == 0 ||
-	strcmp( token, "PetscInt") == 0 ||
-        strcmp( token, "SNESConvergedReason") == 0 ||
-        strcmp( token, "PetscMPIInt") == 0 ||
-        strcmp( token, "PetscErrorCode") == 0 ||
-        strcmp( token, "PetscCookie") == 0 ||
-        strcmp( token, "PetscEvent") == 0 ||
-        strcmp( token, "PetscBLASInt") == 0 ||
-        strcmp( token, "ISColoringValue") == 0 ||
-        strcmp( token, "MatReal") == 0 ||
-        strcmp( token, "PetscSysInt") == 0 ||
-        /* some structures - that are like arrays */
-        strcmp(token,"MatInfo") == 0 ||
-        strcmp(token,"MatStencil") == 0 ||
-        strcmp(token,"DALocalInfo") == 0 ||
-        strcmp(token,"MatFactorInfo") == 0 ||
-        0)
-	type->is_native = 1;
-    /* PETSc types that are implicitly pointers are specified here */
-    /* This really needs to take the types from a file, so that
-       it can be configured for each package.  See the search code in 
-       info2rtf (but do a better job of it) */
-    if (
-        strcmp(token,"AO") == 0 ||
-        strcmp(token,"AOData") == 0 ||
-        strcmp(token,"AOData2dGrid") == 0 ||
-        strcmp(token,"ClassPerfLog") == 0 ||
-        strcmp(token,"ClassRegLog") == 0 ||
-        strcmp(token,"DA") == 0 ||
-        strcmp(token,"DM") == 0 ||
-        strcmp(token,"DMMG") == 0 ||
-        strcmp(token,"EventPerfLog") == 0 ||
-        strcmp(token,"EventRegLog") == 0 ||
-        strcmp(token,"IntStack") == 0 ||
-        strcmp(token,"IS") == 0 ||
-        strcmp(token,"ISColoring") == 0 ||
-        strcmp(token,"ISLocalToGlobalMapping") == 0 ||
-        strcmp(token,"KSP") == 0 ||
-        strcmp(token,"Mat") == 0 ||
-        strcmp(token,"MatFDColoring") == 0 ||
-        strcmp(token,"MatNullSpace") == 0 ||
-        strcmp(token,"MatPartitioning") == 0 ||
-        strcmp(token,"MatSNESMFCtx") == 0 ||
-        strcmp(token,"PC") == 0 ||
-        strcmp(token,"PetscADICFunction") == 0 ||
-        strcmp(token,"PetscBag") == 0 ||
-        strcmp(token,"PetscBagItem") == 0 ||
-        strcmp(token,"PetscDLLibraryList") == 0 ||
-        strcmp(token,"PetscDraw") == 0 ||
-        strcmp(token,"PetscDrawAxis") == 0 ||
-        strcmp(token,"PetscDrawHG") == 0 ||
-        strcmp(token,"PetscDrawLG") == 0 ||
-        strcmp(token,"PetscDrawSP") == 0 ||
-        strcmp(token,"PetscFList") == 0 ||
-        strcmp(token,"PetscMap") == 0 ||
-        strcmp(token,"PetscMatlabEngine") == 0 ||
-        strcmp(token,"PetscObject") == 0 ||
-        strcmp(token,"PetscContainer") == 0 ||
-        strcmp(token,"PetscOList") == 0 ||
-        strcmp(token,"PetscRandom") == 0 ||
-        strcmp(token,"PetscTable") == 0 ||
-        strcmp(token,"PetscViewer") == 0 ||
-        strcmp(token,"PetscViewers") == 0 ||
-        strcmp(token,"PF") == 0 ||
-        strcmp(token,"SDA") == 0 ||
-        strcmp(token,"SNES") == 0 ||
-        strcmp(token,"StageLog") == 0 ||
-        strcmp(token,"TS") == 0 ||
-        strcmp(token,"Vec") == 0 ||
-        strcmp(token,"VecPack") == 0 ||
-        strcmp(token,"Vecs") == 0 ||
-        strcmp(token,"VecScatter") == 0 ||
-        /* the following are old stuff - not sure if required */
-        strcmp(token,"DF") == 0 ||
-        strcmp(token,"Discretization") == 0 ||
-        strcmp(token,"Draw") == 0 ||
-        strcmp(token,"DrawAxis") == 0 ||
-        strcmp(token,"DrawLG") == 0 ||
-        strcmp(token,"ElementMat") == 0 ||
-        strcmp(token,"ElementVec") == 0 ||
-        strcmp(token,"FieldClassMap") == 0 ||
-        strcmp(token,"GMat") == 0 ||
-        strcmp(token,"Grid") == 0 ||
-        strcmp(token,"GSNES") == 0 ||
-        strcmp(token,"GTS") == 0 ||
-        strcmp(token,"GVec") == 0 ||
-        strcmp(token,"Mesh") == 0 ||
-        strcmp(token,"Partition") == 0 ||
-        strcmp(token,"PetscDrawMesh") == 0 ||
-        strcmp(token,"SLES") == 0 ||
-        strcmp(token,"Stencil") == 0 ||
-        strcmp(token,"VarOrdering") == 0 ||
-        strcmp(token,"Viewer") == 0 ||
-        strcmp(token,"XBWindow") == 0 ||
-        0 )  {
-	/* type->has_star      = 1; */
-	type->type_has_star = 1;
-	type->implied_star  = 1;
-	}
+	else 
+	    ungetc( (char)c, fin );
+    }
     
-    /* This should be an "mpi defs file" rather than just -mpi */
-    if (isMPI) {
-	/* Some things need to be considered ints in the declarations.
-	   That is, these are "implicit" pointer objects; often they
-	   are pointers to be returned from the calling routine. 
-	   These tests set these up as being pointer objects 
-	   In many recent implementations, they are now ints.
-	   There are also the MPI-2 functions for converting, which
-	   we should use (actually, we should have a table that 
-	   we can read in).
-	 */
-	if (strcmp( token, "MPI_Comm" ) == 0    ||
-	    strcmp( token, "MPI_Request" ) == 0 ||
-	    strcmp( token, "MPI_Group" ) == 0   || 
-	    strcmp( token, "MPI_Op" ) == 0      ||    
-	    strcmp( token, "MPI_Uop" ) == 0     ||    
-	    strcmp( token, "MPI_File" ) == 0    ||
-            strcmp( token, "MPI_Win"  ) == 0    || 
-	    strcmp( token, "MPI_Datatype" ) == 0) {
-	    type->is_mpi = 1;
+    if (strcmp( token, "register" ) == 0) {
+	c = FindNextANToken( fin, token, &nsp );
+	if (c == EOF || c == '{' || (AnsiForm && c == '(')) return 1;
+    }
+    
+    if (strcmp( token, "const" ) == 0) {
+	c = FindNextANToken( fin, token, &nsp );
+	if (c == EOF || c == '{' || (AnsiForm && c == '(')) return 1;
+    }
+
+    /* Read type declaration: struct name or [ unsigned ] type */
+    if (strcmp( token, "struct" ) == 0) {
+	if (MPIU_Strnapp( typename, token, typenamelen )) {
+	    ABORT( "Cannot append token to typename" );
+	}
+	if (MPIU_Strnapp( typename, " ", typenamelen) ) {
+	    ABORT( "Cannot append space to typename" );
+	}
+	OutputToken( fout, token, nsp );
+	c = FindNextANToken( fin, token, &nsp );
+	if (MPIU_Strnapp( typename, token, typenamelen )) {
+	    ABORT( "Cannot append token to typename" );
+	}
+    }
+    else {
+	if (strcmp( token, "unsigned" ) == 0) {
+	    if (MPIU_Strnapp( typename, token, typenamelen )) {
+		ABORT( "Cannot append unsigned to typename" );
+	    }
+	    if (MPIU_Strnapp( typename, " ", typenamelen )) {
+		ABORT( "Cannot append space to typename" );
+	    }
+	    OutputToken( fout, token, nsp );
+	    c = FindNextANToken( fin, token, &nsp );
+	}
+	if (MPIU_Strnapp( typename, token, typenamelen )) {
+	    ABORT( "Cannot append token to typename" );
+	}
+	/* Look for known names */
+	if (strcmp( token, "char" ) == 0) type->is_char = 1;
+	if (strcmp( token, "FILE" ) == 0) type->is_FILE = 1;
+	/* FIXME: We should put these names in an array, and provide
+	   a way to add to that array from a configuration file,
+	   to make it easier to customize and extend this code */
+	/* Note that we might want special processing for short and long */
+	/* Some of these are NOT C types (complex, BCArrayPart)! */
+	if (
+	    strcmp( token, "double" ) == 0 ||
+	    strcmp( token, "int"    ) == 0 ||
+	    strcmp( token, "short"  ) == 0 ||
+	    strcmp( token, "long"   ) == 0 ||
+	    strcmp( token, "size_t" ) == 0 ||
+	    strcmp( token, "float"  ) == 0 ||
+	    strcmp( token, "char"   ) == 0 ||
+	    strcmp( token, "complex") == 0 ||
+	    strcmp( token, "dcomplex")== 0 ||
+	    strcmp( token, "MPI_Status") == 0 ||
+	    strcmp( token, "PetscScalar")== 0 ||
+	    strcmp( token, "PetscReal")  == 0 ||
+	    strcmp( token, "PetscTruth") == 0 ||
+	    strcmp( token, "PetscSizeT") == 0 ||
+	    strcmp( token, "MatStructure") == 0 ||
+	    strcmp( token, "KSPConvergedReason") == 0 ||
+	    strcmp( token, "BCArrayPart") == 0 ||
+	    strcmp( token, "PetscLogDouble") == 0 ||
+	    strcmp( token, "PetscInt") == 0 ||
+	    strcmp( token, "SNESConvergedReason") == 0 ||
+	    strcmp( token, "PetscMPIInt") == 0 ||
+	    strcmp( token, "PetscErrorCode") == 0 ||
+	    strcmp( token, "PetscCookie") == 0 ||
+	    strcmp( token, "PetscEvent") == 0 ||
+	    strcmp( token, "PetscBLASInt") == 0 ||
+	    strcmp( token, "ISColoringValue") == 0 ||
+	    strcmp( token, "MatReal") == 0 ||
+	    strcmp( token, "PetscSysInt") == 0 ||
+	    /* some structures - that are like arrays */
+	    strcmp(token,"MatInfo") == 0 ||
+	    strcmp(token,"MatStencil") == 0 ||
+	    strcmp(token,"DALocalInfo") == 0 ||
+	    strcmp(token,"MatFactorInfo") == 0 ||
+	    0)
+	    type->is_native = 1;
+	/* PETSc types that are implicitly pointers are specified here */
+	/* This really needs to take the types from a file, so that
+	   it can be configured for each package.  See the search code in 
+	   info2rtf (but do a better job of it) */
+	if (
+	    strcmp(token,"AO") == 0 ||
+	    strcmp(token,"AOData") == 0 ||
+	    strcmp(token,"AOData2dGrid") == 0 ||
+	    strcmp(token,"ClassPerfLog") == 0 ||
+	    strcmp(token,"ClassRegLog") == 0 ||
+	    strcmp(token,"DA") == 0 ||
+	    strcmp(token,"DM") == 0 ||
+	    strcmp(token,"DMMG") == 0 ||
+	    strcmp(token,"EventPerfLog") == 0 ||
+	    strcmp(token,"EventRegLog") == 0 ||
+	    strcmp(token,"IntStack") == 0 ||
+	    strcmp(token,"IS") == 0 ||
+	    strcmp(token,"ISColoring") == 0 ||
+	    strcmp(token,"ISLocalToGlobalMapping") == 0 ||
+	    strcmp(token,"KSP") == 0 ||
+	    strcmp(token,"Mat") == 0 ||
+	    strcmp(token,"MatFDColoring") == 0 ||
+	    strcmp(token,"MatNullSpace") == 0 ||
+	    strcmp(token,"MatPartitioning") == 0 ||
+	    strcmp(token,"MatSNESMFCtx") == 0 ||
+	    strcmp(token,"PC") == 0 ||
+	    strcmp(token,"PetscADICFunction") == 0 ||
+	    strcmp(token,"PetscBag") == 0 ||
+	    strcmp(token,"PetscBagItem") == 0 ||
+	    strcmp(token,"PetscDLLibraryList") == 0 ||
+	    strcmp(token,"PetscDraw") == 0 ||
+	    strcmp(token,"PetscDrawAxis") == 0 ||
+	    strcmp(token,"PetscDrawHG") == 0 ||
+	    strcmp(token,"PetscDrawLG") == 0 ||
+	    strcmp(token,"PetscDrawSP") == 0 ||
+	    strcmp(token,"PetscFList") == 0 ||
+	    strcmp(token,"PetscMap") == 0 ||
+	    strcmp(token,"PetscMatlabEngine") == 0 ||
+	    strcmp(token,"PetscObject") == 0 ||
+	    strcmp(token,"PetscContainer") == 0 ||
+	    strcmp(token,"PetscOList") == 0 ||
+	    strcmp(token,"PetscRandom") == 0 ||
+	    strcmp(token,"PetscTable") == 0 ||
+	    strcmp(token,"PetscViewer") == 0 ||
+	    strcmp(token,"PetscViewers") == 0 ||
+	    strcmp(token,"PF") == 0 ||
+	    strcmp(token,"SDA") == 0 ||
+	    strcmp(token,"SNES") == 0 ||
+	    strcmp(token,"StageLog") == 0 ||
+	    strcmp(token,"TS") == 0 ||
+	    strcmp(token,"Vec") == 0 ||
+	    strcmp(token,"VecPack") == 0 ||
+	    strcmp(token,"Vecs") == 0 ||
+	    strcmp(token,"VecScatter") == 0 ||
+	    /* the following are old stuff - not sure if required */
+	    strcmp(token,"DF") == 0 ||
+	    strcmp(token,"Discretization") == 0 ||
+	    strcmp(token,"Draw") == 0 ||
+	    strcmp(token,"DrawAxis") == 0 ||
+	    strcmp(token,"DrawLG") == 0 ||
+	    strcmp(token,"ElementMat") == 0 ||
+	    strcmp(token,"ElementVec") == 0 ||
+	    strcmp(token,"FieldClassMap") == 0 ||
+	    strcmp(token,"GMat") == 0 ||
+	    strcmp(token,"Grid") == 0 ||
+	    strcmp(token,"GSNES") == 0 ||
+	    strcmp(token,"GTS") == 0 ||
+	    strcmp(token,"GVec") == 0 ||
+	    strcmp(token,"Mesh") == 0 ||
+	    strcmp(token,"Partition") == 0 ||
+	    strcmp(token,"PetscDrawMesh") == 0 ||
+	    strcmp(token,"SLES") == 0 ||
+	    strcmp(token,"Stencil") == 0 ||
+	    strcmp(token,"VarOrdering") == 0 ||
+	    strcmp(token,"Viewer") == 0 ||
+	    strcmp(token,"XBWindow") == 0 ||
+	    0 )  {
 	    /* type->has_star      = 1; */
 	    type->type_has_star = 1;
 	    type->implied_star  = 1;
+	}
+	
+	/* This should be an "mpi defs file" rather than just -mpi */
+	if (isMPI) {
+	    /* Some things need to be considered ints in the declarations.
+	       That is, these are "implicit" pointer objects; often they
+	       are pointers to be returned from the calling routine. 
+	       These tests set these up as being pointer objects 
+	       In many recent implementations, they are now ints.
+	       There are also the MPI-2 functions for converting, which
+	       we should use (actually, we should have a table that 
+	       we can read in).
+	    */
+	    if (strcmp( token, "MPI_Comm" ) == 0    ||
+		strcmp( token, "MPI_Request" ) == 0 ||
+		strcmp( token, "MPI_Group" ) == 0   || 
+		strcmp( token, "MPI_Op" ) == 0      ||    
+		strcmp( token, "MPI_Uop" ) == 0     ||    
+		strcmp( token, "MPI_File" ) == 0    ||
+		strcmp( token, "MPI_Win"  ) == 0    || 
+		strcmp( token, "MPI_Datatype" ) == 0) {
+		type->is_mpi = 1;
+		/* type->has_star      = 1; */
+		type->type_has_star = 1;
+		type->implied_star  = 1;
 	    }
-	if (strcmp( token, "MPI_Aint" ) == 0) {
-	    /* For most systems, MPI_Aint is just long */
-	    /* type->has_star      = 0; */
-	    type->type_has_star = 0;
-	    type->implied_star  = 0;
-	    type->is_native     = 1;
+	    if (strcmp( token, "MPI_Aint" ) == 0) {
+		/* For most systems, MPI_Aint is just long */
+		/* type->has_star      = 0; */
+		type->type_has_star = 0;
+		type->implied_star  = 0;
+		type->is_native     = 1;
 	    }
 	}
-    if (strcmp( token, "void"   ) == 0) {
-	/* Activate set_void only for the files specified by flag2 */
-	if (!flag2) type->is_native = 1;
-	else type->is_void = 1;    
+	if (strcmp( token, "void"   ) == 0) {
+	    /* Activate set_void only for the files specified by flag2 */
+	    if (!flag2) type->is_native = 1;
+	    else type->is_void = 1;    
 	}
     }
-DBG2("Found type %s\n",token)
-if (AnsiForm && useFerr && strcmp( token, "void") == 0) {
-    /* Special case for (void) when we replace with an argument */
-    while ( (c = SYTxtGetChar( fin )) != EOF && isspace(c)) ;
-    ungetc( c, fin );
-    if (c == ')') return 0;
+    DBG2("Found type %s\n",token);
+    if (AnsiForm && useFerr && strcmp( token, "void") == 0) {
+	/* Special case for (void) when we replace with an argument */
+	while ( (c = SYTxtGetChar( fin )) != EOF && isspace(c)) ;
+	ungetc( c, fin );
+	if (c == ')') return 0;
     }
-if (type->is_mpi && isMPI2) {
-    OutputToken( fout, "MPI_Fint *", nsp );
-}
-else {
-    OutputToken( fout, token, nsp );
-}
-return 0;
+    if (type->is_mpi && isMPI2) {
+	OutputToken( fout, "MPI_Fint *", nsp );
+    }
+    else {
+	OutputToken( fout, token, nsp );
+    }
+    return 0;
 }
 
 /* 
@@ -2106,14 +2196,14 @@ int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type,
     nbrack = 0;
     nstar  = 0;
 /* Many of these fields are set from the base type */
-    arg->has_star	   = 0;
-    arg->is_char	   = 0;
-    arg->is_native	   = 0;
-    arg->has_array	   = 0;
-    arg->is_FILE	   = 0;
+    arg->has_star      = 0;
+    arg->is_char       = 0;
+    arg->is_native     = 0;
+    arg->has_array     = 0;
+    arg->is_FILE       = 0;
     arg->void_function = 0;
     arg->implied_star  = 0;
-    arg->name	   = 0;
+    arg->name	       = 0;
 
     p = token;
     c = FindNextANToken( fin, p, &nsp );
@@ -2157,7 +2247,9 @@ int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type,
     /* Current token is name */
     arg->has_star = (nstar > 0);
     arg->name     = (char *)MALLOC( strlen(p) + 1 );
-    strcpy( arg->name, p );
+    if (MPIU_Strncpy( arg->name, p, strlen(p) + 1) ) {
+	ABORT( "Cannot set argument name" );
+    }
 
     /* We can't output the name just yet, because if it is
        int foo[], we don't want to generate int *foo[].  As a short cut,
@@ -2222,7 +2314,7 @@ int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type,
 	if (strlen(p) > 1) {
 	    ErrCnt++;
 	    fprintf( stderr, "Unexpected token (%s) while reading argument name\n",p);
-	    if (ErrCnt > MAX_ERR) exit(1);
+	    if (ErrCnt > MAX_ERR) ABORT( "" );
 	}
     ungetc( (char)c, fin );
     return 0;
@@ -2281,6 +2373,11 @@ This will be useful for creating ANSI prototypes without ANSI-fying the\n\
 code.  The output is in <filename>.ansi .\n\
 " );
 }
+void Abort( const char *msg, const char *file, int line )
+{
+    fprintf( stderr, "bfort terminating at %d: %s\n", line, msg );
+    exit( 1 );
+}
 
 /*
  * Mapping of types between C and Fortran.
@@ -2307,6 +2404,7 @@ const char *ArgToFortran( const char *typeName )
     else if (strcmp( typeName, "char" ) == 0) outName   = "character";
     else if (strcmp( typeName, "double" ) == 0) outName = "double precision";
     else if (strcmp( typeName, "float" ) == 0) outName  = "real";
+    else if (strcmp( typeName, "short" ) == 0) outName  = "integer*2";
     /* The following is a temporary hack */
     else if (strcmp( typeName, "void" ) == 0) outName = "PetscVoid";
     else {
@@ -2319,6 +2417,7 @@ const char *ArgToFortran( const char *typeName )
     return outName;
 }
 
+#if 0
 /* 
    Define the mapping a C to Fortran types, along with properties of the 
    C types that are needed in generating the Fortran wrappers.
@@ -2372,7 +2471,6 @@ void sortTypeArray( void )
     qsort( typeArray, typeArrayLen, sizeof(TypeInfo), typeCompare );
 }
 
-#if 0
 /* Add to/from Fortran option in description? */
 /* MPI_Comm_f2c( *(%s) ) */
 { "MPI_Comm", "integer", CTYPE_IS_MPI_HANDLE }, /* Add handle to int? */
@@ -2386,3 +2484,70 @@ void sortTypeArray( void )
 { "MPI_Aint", "integer (kind=MPI_ADDRESS_KIND)", 0 },
 
 #endif
+
+/* 
+   This is a better version of strncpy that does not zero out the entire 
+   array but does ensure that it is null-terminated, and returns a
+   failure indication (value not 0) if the string did not fit. 
+*/
+int MPIU_Strncpy( char *dest, const char *src, size_t n )
+{
+    char * restrict d_ptr = dest;
+    const char * restrict s_ptr = src;
+    register int i;
+
+    if (n == 0) return 0;
+
+    i = (int)n;
+    while (*s_ptr && i-- > 0) {
+	*d_ptr++ = *s_ptr++;
+    }
+    
+    if (i > 0) { 
+	*d_ptr = 0;
+	return 0;
+    }
+    else {
+	/* Force a null at the end of the string (gives better safety 
+	   in case the user fails to check the error code) */
+	dest[n-1] = 0;
+	/* We may want to force an error message here, at least in the
+	   debugging version */
+	/*printf( "failure in copying %s with length %d\n", src, n ); */
+	return 1;
+    }
+}
+
+/* This is like strncat, but does an append and the size is the
+   size of the dest buffer.  Return 0 on success. */
+int MPIU_Strnapp( char *dest, const char *src, size_t n )
+{
+    char * restrict d_ptr = dest;
+    const char * restrict s_ptr = src;
+    register int i;
+
+    /* Get to the end of dest */
+    i = (int)n;
+    while (i-- > 0 && *d_ptr) d_ptr++;
+    if (i <= 0) return 1;
+
+    /* Append.  d_ptr points at first null and i is remaining space. */
+    while (*s_ptr && i-- > 0) {
+	*d_ptr++ = *s_ptr++;
+    }
+
+    /* We allow i >= (not just >) here because the first while decrements
+       i by one more than there are characters, leaving room for the null */
+    if (i >= 0) { 
+	*d_ptr = 0;
+	return 0;
+    }
+    else {
+	/* Force the null at the end */
+	*--d_ptr = 0;
+    
+	/* We may want to force an error message here, at least in the
+	   debugging version */
+	return 1;
+    }
+}
