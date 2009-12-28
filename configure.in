@@ -1,10 +1,10 @@
 dnl
 dnl Use the new AC_INIT format
-AC_INIT(sowing,1.1.13,wgropp@uiuc.edu,sowing-1.1.13)
-dnl We pick autoconf 2.59 because the various 2.x autoconf versions are
+AC_INIT(sowing,1.1.14,wgropp@illinois.edu,sowing-1.1.14)
+dnl We pick autoconf 2.61 because the various 2.x autoconf versions are
 dnl not compatible with each other and this lets us fix on a particular
 dnl set of macros and fixes
-AC_PREREQ(2.59)
+AC_PREREQ(2.61)
 dnl AC_CONFIG_HEADER(include/sowingconfig.h:config.h.in)
 AC_CONFIG_HEADER(include/sowingconfig.h)
 
