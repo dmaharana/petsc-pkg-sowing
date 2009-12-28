@@ -39,6 +39,7 @@ int  slen;
 #include <sys/utsname.h>
 struct utsname un;
 (void)uname( &un );
+#endif
 }
 /*@C
     foobar - test program C only
