@@ -31,7 +31,7 @@ if [ ! -d $TMPDIR ] ; then
 fi
 ######################################################################
 if [ "$GS" = "" -a -x "@GS@" ] ; then GS="@GS@" ; fi
-if [ "$PSTOPPM" = "" ] ; then PSTOPPM=@datadir@/pstoppm.ps ; fi
+if [ "$PSTOPPM" = "" ] ; then PSTOPPM=@datarootdir@/pstoppm.ps ; fi
 if [ "$PNMCROP" = "" ] ; then PNMCROP=@PNMCROP@ ; fi
 if [ "$PBMTOXBM" = "" ] ; then PBMTOXBM=@PBMTOXBM@ ; fi
 if [ "$PPMTOGIF" = "" ] ; then PPMTOGIF=@PPMTOGIF@ ; fi

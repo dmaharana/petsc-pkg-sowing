@@ -4,13 +4,14 @@ SHELL       = @SHELL@
 include ../../Makerules
 top_srcdir=@top_srcdir@
 srcdir=@srcdir@
+datarootdir     = @datarootdir@
 @VPATH@
 
 LIBS      =  ../../lib/libsowing.a
 INCLUDES   = -I${top_srcdir}/include -I. -I../../include
 DEFS      =   -DPSPATH='"@bindir@/"' \
-              -DBMSOURCE='"@datadir@/"' \
-	      -DBASEDEF='"@datadir@/basedefs.txt"'
+              -DBMSOURCE='"@datarootdir@/"' \
+	      -DBASEDEF='"@datarootdir@/basedefs.txt"'
 PROGRAMS = tohtml tortf 
 
 BASEOBJS = search.o texactio.o rdaux.o rdindx.o label.o scan.o \
@@ -39,4 +40,4 @@ INSTALL_DATA    = $(INSTALL)
 install:
 	$(INSTALL_PROGRAM) tohtml @bindir@/tohtml
 	$(INSTALL_PROGRAM) xwdsize @bindir@/xwdsize
-	$(INSTALL_DATA) basedefs.txt @datadir@/basedefs.txt
+	$(INSTALL_DATA) basedefs.txt @datarootdir@/basedefs.txt

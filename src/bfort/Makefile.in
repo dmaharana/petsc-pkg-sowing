@@ -4,13 +4,14 @@ SHELL       = /bin/sh
 include ../../Makerules
 top_srcdir=@top_srcdir@
 srcdir=@srcdir@
+datarootdir     = @datarootdir@
 @VPATH@
 
 INCLUDES = -I${top_srcdir}/include
 
 LIBS       =  ../../lib/libsowing.a
 INCLUDES   = -I${top_srcdir}/include -I../../include
-DEFS       = -DBASEDEF='"@datadir@/basedefs.txt"'
+DEFS       = -DBASEDEF='"@datarootdir@/basedefs.txt"'
 PROGRAMS   = bfort
 
 bfort: bfort.o  doc.o
