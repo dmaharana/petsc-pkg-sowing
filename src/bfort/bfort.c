@@ -163,6 +163,7 @@ void FixupArgNames( int, ARG_LIST * );
 void OutputBalancedString ( FILE *, FILE *, int, int );
 char *ToCPointer ( char *, char *, int );
 const char *ArgToFortran( const char *typeName );
+void FreeArgs( ARG_LIST *, int );
 int MPIU_Strncpy( char *, const char *, size_t );
 int MPIU_Strnapp( char *, const char *, size_t );
 void Abort( const char *, const char *, int );
@@ -612,6 +613,8 @@ void OutputRoutine( FILE *fin, FILE *fout, char *name, char *filename,
 	PrintDefinition( fmodout, is_function, name, nstrings, nargs, 
 			 args, types, &rt );
     }
+    /* Free the created space */
+    FreeArgs( args, nargs );
 }
 
 /*
@@ -2049,6 +2052,7 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"IS") == 0 ||
 	    strcmp(token,"ISColoring") == 0 ||
 	    strcmp(token,"ISLocalToGlobalMapping") == 0 ||
+            strcmp(token,"Characteristic") == 0 ||
 	    strcmp(token,"KSP") == 0 ||
 	    strcmp(token,"Mat") == 0 ||
 	    strcmp(token,"MatFDColoring") == 0 ||
@@ -2084,7 +2088,9 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"VecPack") == 0 ||
 	    strcmp(token,"Vecs") == 0 ||
 	    strcmp(token,"VecScatter") == 0 ||
-	    /* the following are old stuff - not sure if required */
+	    /* the following are old stuff - might be requird for older versions
+	       of PETSc */
+	    strcmp(token,"PetscObjectContainer") == 0 ||
 	    strcmp(token,"DF") == 0 ||
 	    strcmp(token,"Discretization") == 0 ||
 	    strcmp(token,"Draw") == 0 ||
@@ -2123,14 +2129,17 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	       we should use (actually, we should have a table that 
 	       we can read in).
 	    */
-	    if (strcmp( token, "MPI_Comm" ) == 0    ||
-		strcmp( token, "MPI_Request" ) == 0 ||
-		strcmp( token, "MPI_Group" ) == 0   || 
-		strcmp( token, "MPI_Op" ) == 0      ||    
-		strcmp( token, "MPI_Uop" ) == 0     ||    
-		strcmp( token, "MPI_File" ) == 0    ||
-		strcmp( token, "MPI_Win"  ) == 0    || 
-		strcmp( token, "MPI_Datatype" ) == 0) {
+	    if (strcmp( token, "MPI_Comm" ) == 0       ||
+		strcmp( token, "MPI_Request" ) == 0    ||
+		strcmp( token, "MPI_Group" ) == 0      || 
+		strcmp( token, "MPI_Op" ) == 0         ||    
+		strcmp( token, "MPI_Uop" ) == 0        ||    
+		strcmp( token, "MPI_File" ) == 0       ||
+		strcmp( token, "MPI_Win"  ) == 0       || 
+		strcmp( token, "MPI_Datatype" ) == 0   ||
+		strcmp( token, "MPI_Errhandler" ) == 0 ||
+		strcmp( token, "MPI_Info" ) == 0       ||
+		0) {
 		type->is_mpi = 1;
 		/* type->has_star      = 1; */
 		type->type_has_star = 1;
@@ -2138,6 +2147,13 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    }
 	    if (strcmp( token, "MPI_Aint" ) == 0) {
 		/* For most systems, MPI_Aint is just long */
+		/* type->has_star      = 0; */
+		type->type_has_star = 0;
+		type->implied_star  = 0;
+		type->is_native     = 1;
+	    }
+	    if (strcmp( token, "MPI_Offset" ) == 0) {
+		/* For most systems, MPI_Offset is long long */
 		/* type->has_star      = 0; */
 		type->type_has_star = 0;
 		type->implied_star  = 0;
@@ -2480,8 +2496,11 @@ void sortTypeArray( void )
 { "MPI_Datatype", "integer", CTYPE_IS_MPI_HANDLE },
 { "MPI_Win", "integer", CTYPE_IS_MPI_HANDLE },
 { "MPI_File", "integer", CTYPE_IS_MPI_HANDLE }, 
+{ "MPI_Info", "integer", CTYPE_IS_MPI_HANDLE },
+{ "MPI_Errhandler", "integer", CTYPE_IS_MPI_HANDLE },
 /* MPI types */
 { "MPI_Aint", "integer (kind=MPI_ADDRESS_KIND)", 0 },
+{ "MPI_Offset", "integer (kind=MPI_OFFSET_KIND)", 0 },
 
 #endif
 
@@ -2549,5 +2568,16 @@ int MPIU_Strnapp( char *dest, const char *src, size_t n )
 	/* We may want to force an error message here, at least in the
 	   debugging version */
 	return 1;
+    }
+}
+
+void FreeArgs( ARG_LIST *args, int nargs ) 
+{
+    int i;
+    for (i=0; i<nargs; i++) {
+	if (args[i].name) { 
+	    FREE( args[i].name );
+	    args[i].name = 0;
+	}
     }
 }
