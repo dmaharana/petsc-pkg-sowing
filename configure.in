@@ -204,6 +204,9 @@ else
     eval expanded_datadir=$datadir
     prefix="NONE"
 fi
+# Expand again in case the definition referred to another variable (such as 
+# prefix)
+eval expanded_datadir=$expanded_datadir
 AC_SUBST(expanded_datadir)
 
 COPTIONS="$optflags"
