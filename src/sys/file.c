@@ -1195,9 +1195,7 @@ while (*p) {
     p   = pn + 1;
     }
 }
-void SYLastChangeToFile( fname, date, ltm )
-char      *fname, *date;
-struct tm *ltm;
+void SYLastChangeToFile( char *fname, char *date, struct tm *ltm )
 {
 struct stat buf;
 struct tm   *tim;

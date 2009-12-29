@@ -18,6 +18,11 @@
 #undef HAS_UNAME
 #endif
 
+#if defined(HAS_UNAME)
+#include <sys/utsname.h>
+#endif
+
+
 /*@
      SYGetArchType - Return a standardized architecture type for the machine
      that is executing this routine.  This uses uname where possible,
@@ -33,7 +38,6 @@
 void SYGetArchType( char *str, int slen )
 {
 #if defined(HAS_UNAME)
-#include <sys/utsname.h>
     struct utsname un;
     (void)uname( &un );
 
@@ -56,7 +60,7 @@ void SYGetArchType( char *str, int slen )
 
 #elif defined(tc2000)
     strcpy( str, "tc2000" );   /* Need a lowercase version eventually ... */
-#endif
+#endif /* End of case HAS_UNAME*/
 
 #elif defined(HPUX)
     strncpy( str, "hpux", slen );
