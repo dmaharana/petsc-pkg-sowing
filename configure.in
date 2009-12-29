@@ -1,6 +1,6 @@
 dnl
 dnl Use the new AC_INIT format
-AC_INIT(sowing,1.1.14,wgropp@illinois.edu,sowing-1.1.14)
+AC_INIT(sowing,1.1.15,wgropp@illinois.edu,sowing-1.1.15)
 dnl We pick autoconf 2.61 because the various 2.x autoconf versions are
 dnl not compatible with each other and this lets us fix on a particular
 dnl set of macros and fixes
@@ -37,7 +37,10 @@ AC_ARG_ENABLE(memorycheck,[
 --enable-memorycheck - Compile with memory checking code],
 memcheck=$enableval,memcheck="no")
 
-PAC_ARG_WWWDIR
+AC_ARG_WITH([wwwdir],[
+--with-wwwdir=directory - Specify the root directory for HTML documentation],
+wwwdir=$withval,wwwdir='${prefix}/www')
+AC_SUBST(wwwdir)
 
 dnl Checks for programs.
 AC_PROG_RANLIB
@@ -65,7 +68,7 @@ PAC_PROG_MAKE_VPATH
 # The following isn't quite good enough, since cd to the same directory
 # in different ways may cause pwd to give different output (sigh).
 if test "$prefix" != "NONE" -a -d "$prefix" ; then
-   if "`(cd $prefix && pwd)`" = "`(cd . && pwd)`" ; then
+   if test "`(cd $prefix && pwd)`" = "`(cd . && pwd)`" ; then
        AC_MSG_WARN([The prefix should be different from the build directory])
    fi
 fi
