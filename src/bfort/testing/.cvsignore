@@ -2,4 +2,6 @@ Makefile
 n1f.c
 n2f.c
 tstpgmaf.c
-testpgmaf90.f90
+tstpgma2f.c
+tstpgmaf90.f90
+
