@@ -1,4 +1,4 @@
-#! @PERL@
+#! @PERL@ -w
 # -*- Mode: perl; -*-
 # DO NOT EDIT
 # This file created by configure from the "sowing" package
@@ -173,6 +173,7 @@ $EntryEnd = "";
 #  $HeaderStart = "<H2 style=\"color:blue;align=center\">";
 #  $HeaderEnd   = "</H2>";
 #
+$LiteralHTML = "LiteralHTML:";
 while ($_ = $ARGV[0]) {
     shift;
     if ($_ eq "-group") {
@@ -229,12 +230,14 @@ while ($_ = $ARGV[0]) {
          -listconfig name - Use file name to control the format of\
                             the list file.  This is a Perl script defining\
                 \$ListHeader - HTML file header (to BODY)\
-                \$ListFooter - HTML file footer (from /BODY)\
+                \$ListFooter - HTML file footer (from BODY)\
                 \$BibFileName - Name of bib file (used for links)\
                 \$HeaderRE   - Regular expression that will be matched in
-                               TeX comments\
+                               TeX comments for a header\
                 \$HeaderStart - HTML inserted in listfile before header\
                 \$HeaderEnd   - HTML inserted in listfile after header\
+		\$LiteralHTML - Regular expression that will be matched in
+		               TeX comments for explicit HTML in output\
                 \$GroupEmphStart - HTML inserted before names found in the\
                                    group file\
                 \$GroupEmphEnd - HTML inserted after names found in the\
@@ -259,6 +262,7 @@ while ($_ = $ARGV[0]) {
            \$HeaderRE = \"Section:\";\
            \$HeaderStart = \"<H2>\";\
            \$HeaderEnd   = \"</H2>\";\
+	   \$LiteralHTML = \"LiteralHTML:\";\
            \$GroupEmphStart = \"<B>\";\
            \$GroupEmphEnd = \"</B>\";\
            1;\n\
@@ -392,6 +396,13 @@ while (<BIB>) {
             ($HeaderRE ne "" || $HeaderEnd ne "" || $HeaderStart ne "")) {
             print LISTFILE "$HeaderStart $headertext $HeaderEnd\n";
         }
+    }
+    elsif (defined($LiteralHTML) && $LiteralHTML ne "" && 
+	   /^\s*%\s*($LiteralHTML)(.*)$/) {
+	# Found a special comment that we want modified and added to the
+	# LISTFILE.
+	$headertext = $2;
+        print LISTFILE "$headertext\n";
     }
     else {
         # Look for a new item entry in a bib entry
