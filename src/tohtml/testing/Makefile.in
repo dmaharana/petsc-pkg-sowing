@@ -135,3 +135,4 @@ clean:
 	-/bin/rm -f test[0-9].htm test[1-2][0-9].htm
 	-/bin/rm -f previous.xbm *.hux img*.xbm
 	-/bin/rm -f inplace subfiles
+	-/bin/rm -f *.ler *.aux *.out
