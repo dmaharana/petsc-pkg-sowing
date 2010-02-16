@@ -160,8 +160,10 @@ clean:
 distclean:
 	-for dir in ${SUBDIRS} docs ; do (cd $$dir && ${MAKE} distclean ) ; done
 	-rm -f lib/*.a config.status config.log config.cache Makerules \
-		Makefile 
+		config.system Makefile 
 	-rm -f include/sowingconfig.h 
+	-rm -f bin/pstofig bin/pstoxbm bin/bib2html
+	-rm -f src/doctext/docpath.h include/patchlevel.h include/textfilt/textpath.h
 
 SOWINGCVSHOME = :ext:shakey.mcs.anl.gov:/home/gropp/cvsMaster_z
 VERSION       = @PACKAGE_VERSION@
