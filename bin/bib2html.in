@@ -18,7 +18,7 @@
 #
 # To customize for yourself, change the following three lines.
 $UserName = "William Gropp";
-$userURL = "http://www.mcs.anl.gov/~gropp";
+$userURL = "http://www.cs.uiuc.edu/~wgropp";
 # This is W. or William (the W(\.|illiam)), optionally followed by D. (the 
 # ( D\.)?), followed by Gropp.
 $UserREName = "W(\.|illiam)( D\.)? Gropp";
@@ -51,6 +51,7 @@ $UserREName = "W(\.|illiam)( D\.)? Gropp";
 $GroupEmphStart = "<B>";
 $GroupEmphEnd   = "</B>";
 #
+$includeCreateTime = 1;
 $announce_oldstyle = 0;
 $groupsize = 0;
 $ignoresize = 0;
@@ -186,7 +187,7 @@ while ($_ = $ARGV[0]) {
 	while (<GROUP>) {
 	    chop;
 	    if ($_ ne "") {  # Do we want !/^\s*$/?
-	        ($GroupREName[$groupsize],$GroupURL[$groupsize]) = split /!/;
+	        ($GroupREName[$groupsize],$GroupURL[$groupsize]) = split(/!/);
 	        $groupsize ++;
 	    }
 	}
@@ -218,6 +219,10 @@ while ($_ = $ARGV[0]) {
     }
     elsif ($_ eq "-nooldstyle") {
         $announce_oldstyle = 1;
+    }
+    elsif ($_ eq "-nocreatetime") {
+	# Mostly useful in automating tests
+	$includeCreateTime = 0;
     }
     elsif ($_ eq "-check") {
 	$check_valid_fields = 1;
@@ -403,6 +408,11 @@ while (<BIB>) {
 	# LISTFILE.
 	$headertext = $2;
         print LISTFILE "$headertext\n";
+	# Also add to stdout, and bypass any further processing of this line
+	# Add a BR to preserve formating outside of tables
+	if ($intable == 0) { s/$/<BR>/; }
+	print $headertext . "\n" if $dooutput == 1;
+	next;
     }
     else {
         # Look for a new item entry in a bib entry
@@ -412,8 +422,12 @@ while (<BIB>) {
 	# abstract entries that include an = sign.
 	# (This isn't quite right, because a line within an entry that
 	# is <blank><word><blanks>= will still match
-        if (/^\s*\w+\s*=/) {
+        if (/^\s*(\w+)\s*=/) {
 	    # Found field = .... 
+	    print "matched $1 in $_" if $debug;
+	    $fieldname = lc($1);
+
+	    # First, a field name outside of an entry is an error
 	    if ($intable == 0) {
 		print STDERR "Missing bibtex entry type for line #$line_count:$_\n";
 		print "<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>\n";
@@ -422,12 +436,10 @@ while (<BIB>) {
 	    # Finish off the previous line
 	    print "$MakeBold$inrow\n" ;
 	    $inrow = "</TR>";
+
 	    # Check to see if this line is one that we wish to 
 	    # suppress
 	    # ---- not completely implemented
-	    /^\s*(\w+)\s*=/; 
-	    print "matched $1 in $_" if $debug;
-	    $fieldname = lc( $1 );
 	    if ($fieldname eq "") {
 		print STDERR "Matched empty field in $_";
 	    }
@@ -577,8 +589,10 @@ while (<BIB>) {
     print $_ if $dooutput == 1;
 } 
 
-$curtime = localtime;
-print "Generated on $curtime with <A HREF=\"http://www.mcs.anl.gov/~gropp/bib2html\">bib2html</A>\n";
+if ($includeCreateTime) {
+    $curtime = localtime;
+    print "Generated on $curtime with <A HREF=\"http://www.mcs.anl.gov/~gropp/bib2html\">bib2html</A>\n";
+}
 print "</BODY>\n";
 print "</HTML>\n";
 
@@ -798,5 +812,8 @@ sub PrintGeneral {
         }
     }
     print LISTFILE ".\n";
-    print LISTFILE "<A HREF=\"$BibFileName#$entryinfo{'key'}\">BibTeX</A>\n";
+    if ($BibFileName ne "") {
+	# If the BibFileName is not set, this link will not be correct
+	print LISTFILE "<A HREF=\"$BibFileName#$entryinfo{'key'}\">BibTeX</A>\n";
+    }
 }

@@ -1,9 +1,14 @@
 dnl
 dnl Use the new AC_INIT format
-AC_INIT(sowing,1.1.15,wgropp@illinois.edu,sowing-1.1.15)
+AC_INIT(sowing,1.1.16,wgropp@illinois.edu,sowing-1.1.16)
 dnl We pick autoconf 2.61 because the various 2.x autoconf versions are
 dnl not compatible with each other and this lets us fix on a particular
 dnl set of macros and fixes
+dnl This won't help us, unfortunately, for lack of backward 
+dnl compatibility with later autoconf 2.x 
+dnl Proper use of version numbers requires that anything that breaks
+dnl backward compatibilty increment the major number (e.g., change 2 to 3)
+dnl not just the minor number.  Sigh.
 AC_PREREQ(2.61)
 dnl AC_CONFIG_HEADER(include/sowingconfig.h:config.h.in)
 AC_CONFIG_HEADER(include/sowingconfig.h)
@@ -216,4 +221,4 @@ COPTIONS="$optflags"
 AC_SUBST(COPTIONS)
 AC_SUBST(CXXOPTIONS)
 
-AC_OUTPUT(Makefile Makerules src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif bin/bib2html src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile docs/Makefile docs/doctext/Makefile include/patchlevel.h include/textfilt/textpath.h, chmod a+x bin/pstoxbm bin/pstogif bin/bib2html)
+AC_OUTPUT(Makefile Makerules src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif bin/bib2html src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile src/bib2html/Makefile docs/Makefile docs/doctext/Makefile include/patchlevel.h include/textfilt/textpath.h, chmod a+x bin/pstoxbm bin/pstogif bin/bib2html)

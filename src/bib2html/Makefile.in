@@ -1,0 +1,23 @@
+ALL: all-redirect
+SHELL = @SHELL@
+
+testing: 
+	../../bin/bib2html -group g.txt -listfile tout.htm -listconfig g.cfg \
+		-nocreatetime tin.bib > tout-bib.htm
+	diff -b tout.htm tout-base.htm
+	diff -b tout-bib.htm tout-bib-base.htm
+
+# Nothing to do at this time.
+# TODO: Move bib2html.in into this directory, and put install target here
+all-redirect:
+	true
+
+clean:
+	rm -f tout.htm tout-bib.htm
+
+distclean: clean
+	rm -f Makefile
+
+manpages:
+
+wwwpages:
