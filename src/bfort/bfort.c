@@ -2010,7 +2010,7 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp( token, "MPI_Status") == 0 ||
 	    strcmp( token, "PetscScalar")== 0 ||
 	    strcmp( token, "PetscReal")  == 0 ||
-	    strcmp( token, "PetscTruth") == 0 ||
+	    strcmp( token, "PetscBool") == 0 ||
 	    strcmp( token, "PetscSizeT") == 0 ||
 	    strcmp( token, "MatStructure") == 0 ||
 	    strcmp( token, "KSPConvergedReason") == 0 ||

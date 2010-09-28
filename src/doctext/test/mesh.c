@@ -155,7 +155,7 @@ int MeshRegister_Private(const char sname[], const char path[], const char name[
 
 
   MeshSerializeRegister(char *serialize_name, char *path, char *serialize_func_name,
-                        int (*serialize_func)(MPI_Comm, Mesh *, Viewer, PetscTruth))
+                        int (*serialize_func)(MPI_Comm, Mesh *, Viewer, PetscBool))
 
 
   Not Collective
@@ -199,7 +199,7 @@ M*/
 #undef __FUNC__  
 #define __FUNC__ "MeshSerializeRegister_Private"
 int MeshSerializeRegister_Private(const char sname[], const char path[], const char name[],
-                                  int (*function)(MPI_Comm, Mesh *, Viewer, PetscTruth))
+                                  int (*function)(MPI_Comm, Mesh *, Viewer, PetscBool))
 {
   char fullname[256];
   int  ierr;
@@ -318,7 +318,7 @@ int MeshRefine(Mesh mesh, PointFunction area, Mesh *newmesh)
 .keywords: mesh, refinement, reform
 .seealso: MeshReform(), MeshSetBounday()
 @*/
-int MeshReform(Mesh mesh, PetscTruth refine, PointFunction area, PetscTruth newBd, Mesh *newMesh)
+int MeshReform(Mesh mesh, PetscBool refine, PointFunction area, PetscBool newBd, Mesh *newMesh)
 {
   void *tempCtx;
   int   ierr;
@@ -383,7 +383,7 @@ int MeshReform(Mesh mesh, PetscTruth refine, PointFunction area, PetscTruth newB
 .keywords: mesh, reset, node
 .seealso: MeshReform(), MeshSetBounday()
 @*/
-int MeshResetNodes(Mesh mesh, PetscTruth resetBd)
+int MeshResetNodes(Mesh mesh, PetscBool resetBd)
 {
   int ierr;
 
@@ -582,7 +582,7 @@ int MeshCreateGrid(Mesh mesh, int fields, DiscretizationType *dtypes, int *comp,
 .seealso: MeshDestroyLocalCSR(), MeshPartition()
 @*/
 int MeshCreateLocalCSR(Mesh mesh, int *numVertices, int *numEdges, int **vertOffsets, int **vertNeighbors,
-                       int numBC, int *bcNodes, PetscTruth symmetric)
+                       int numBC, int *bcNodes, PetscBool symmetric)
 {
   int num;
   int ierr;
@@ -1077,7 +1077,7 @@ $ }
 .keywords: mesh, boundary, iterator
 .seealso: MeshGetBoundaryNext()
 @*/
-int MeshGetBoundaryStart(Mesh mesh, int boundary, int *node, PetscTruth ghost)
+int MeshGetBoundaryStart(Mesh mesh, int boundary, int *node, PetscBool ghost)
 {
   int ierr;
 
@@ -1131,7 +1131,7 @@ $ }
 .keywords: mesh, boundary, iterator
 .seealso: MeshGetBoundaryStart()
 @*/
-int MeshGetBoundaryNext(Mesh mesh, int boundary, int *node, PetscTruth ghost)
+int MeshGetBoundaryNext(Mesh mesh, int boundary, int *node, PetscBool ghost)
 {
   int ierr;
 
@@ -1559,7 +1559,7 @@ int MeshGetUserContext(Mesh mesh, void **usrCtx)
 .keywords: mesh, movement
 .seealso: MeshSetMovement()
 @*/
-int MeshGetMovement(Mesh mesh, PetscTruth *flag, MeshSolveMethod *vtype, MeshSolveMethod *atype, void **ctx)
+int MeshGetMovement(Mesh mesh, PetscBool *flag, MeshSolveMethod *vtype, MeshSolveMethod *atype, void **ctx)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(mesh, MESH_COOKIE);
@@ -1606,7 +1606,7 @@ int MeshGetMovement(Mesh mesh, PetscTruth *flag, MeshSolveMethod *vtype, MeshSol
 .keywords: mesh, movement
 .seealso: MeshGetMovement()
 @*/
-int MeshSetMovement(Mesh mesh, PetscTruth flag, MeshSolveMethod vtype, MeshSolveMethod atype, void *ctx)
+int MeshSetMovement(Mesh mesh, PetscBool flag, MeshSolveMethod vtype, MeshSolveMethod atype, void *ctx)
 {
   int ierr;
 
@@ -1826,7 +1826,7 @@ int MeshCleanupMovement(Mesh mesh)
 .keywords: mesh, movement
 .seealso: MeshCalcNodeAccelerations()
 @*/
-int MeshCalcNodeVelocities(Mesh mesh, PetscTruth flag)
+int MeshCalcNodeVelocities(Mesh mesh, PetscBool flag)
 {
   SLES   sles;
   GMat   mat;
@@ -1912,7 +1912,7 @@ int MeshCalcNodeVelocities(Mesh mesh, PetscTruth flag)
 .keywords: mesh, movement
 .seealso: MeshCalcNodeVelocities()
 @*/
-int MeshCalcNodeAccelerations(Mesh mesh, PetscTruth flag)
+int MeshCalcNodeAccelerations(Mesh mesh, PetscBool flag)
 {
   SLES   sles;
   GMat   mat;
@@ -2076,7 +2076,7 @@ int MeshSetNodeAccelerations(Mesh mesh, PointFunction func, Scalar alpha, void *
 .keywords mesh, velocity, boundary condition
 .seealso MeshAddVelocityBC(), MeshSetAccelerationBC(), GridSetBC(), GridAddBC()
 @*/
-int MeshSetVelocityBC(Mesh mesh, int bd, PointFunction f, PetscTruth reduce)
+int MeshSetVelocityBC(Mesh mesh, int bd, PointFunction f, PetscBool reduce)
 {
   int ierr;
 
@@ -2122,7 +2122,7 @@ int MeshSetVelocityBC(Mesh mesh, int bd, PointFunction f, PetscTruth reduce)
 .keywords mesh, velocity, boundary condition
 .seealso MeshSetVelocityBC(), MeshAddAccelerationBC(), GridSetBC(), GridAddBC()
 @*/
-int MeshAddVelocityBC(Mesh mesh, int bd, PointFunction f, PetscTruth reduce)
+int MeshAddVelocityBC(Mesh mesh, int bd, PointFunction f, PetscBool reduce)
 {
   int ierr;
 
@@ -2207,7 +2207,7 @@ int MeshSetVelocityBCContext(Mesh mesh, void *ctx)
 .keywords mesh, velocity, boundary condition
 .seealso MeshAddAccelerationBC(), MeshSetVelocityBC(), GridSetBC(), GridAddBC()
 @*/
-int MeshSetAccelerationBC(Mesh mesh, int bd, PointFunction f, PetscTruth reduce)
+int MeshSetAccelerationBC(Mesh mesh, int bd, PointFunction f, PetscBool reduce)
 {
   int ierr;
 
@@ -2253,7 +2253,7 @@ int MeshSetAccelerationBC(Mesh mesh, int bd, PointFunction f, PetscTruth reduce)
 .keywords mesh, velocity, boundary condition
 .seealso MeshSetAccelerationBC(), MeshAddVelocityBC(), GridSetBC(), GridAddBC()
 @*/
-int MeshAddAccelerationBC(Mesh mesh, int bd, PointFunction f, PetscTruth reduce)
+int MeshAddAccelerationBC(Mesh mesh, int bd, PointFunction f, PetscBool reduce)
 {
   int ierr;
 
@@ -2496,7 +2496,7 @@ int MeshRestoreMesh(Mesh mesh)
 .keywords: mesh, distortion, movement
 .seealso: MeshMoveMesh()
 @*/
-int MeshIsDistorted(Mesh mesh, PetscTruth *flag)
+int MeshIsDistorted(Mesh mesh, PetscBool *flag)
 {
   int ierr;
 
@@ -2569,7 +2569,7 @@ int MeshSetMovementCaption(Mesh mesh, char *caption)
 .keywords: mesh, coordinates, periodic
 .seealso: MeshPeriodicX(), MeshPeriodicRelativeX(), MeshPeriodicDiffX()
 @*/
-int MeshIsPeriodic(Mesh mesh, PetscTruth *x, PetscTruth *y, PetscTruth *z)
+int MeshIsPeriodic(Mesh mesh, PetscBool *x, PetscBool *y, PetscBool *z)
 {
   PetscFunctionBegin;
   if (x != PETSC_NULL) {
