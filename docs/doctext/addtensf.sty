@@ -1,0 +1,12 @@
+%
+% Latex2e doesn't completely simulate LaTeX, even in compatibility mode
+% This file adds the \tensf command if necessary
+%
+\expandafter\ifx\csname{tensf}\endcsname\relax
+\typeout{Warning! Using LaTeX209 incomplete compatibility}%
+\typeout{Adding font tensf}%
+% Can't use usepackage yet!
+%\usepackage[only,tensf]{rawfonts}
+% See /mcs/lib/tex/inputs/lfonts.tex
+\font\tensf  = cmss10   % sans serif
+\fi

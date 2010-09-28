@@ -1,0 +1,15 @@
+\documentclass{article}
+\begin{document}
+
+% This relies on the template processing code to work correctly
+\def\pdfbookmark{\eatbrack}
+\def\eatbrack[{\eatnum}
+\def\eatnum#1{\eatclosebrack}
+\def\eatclosebrack]{\eattwo}
+\def\eattwo#1#2{\relax}
+
+\pdfbookmark[0]{arg1}{arg2}
+
+Testing
+
+\end{document}

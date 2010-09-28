@@ -1,0 +1,35 @@
+/* This file is used by configure to set the paths for the 
+   the button bitmaps and colored balls (BMSOURCE),
+   the base definitions (BASEDEF), and the tools to convert 
+   postscript files to gif files 
+*/
+
+/* There are two kinds of source paths for the pre-defined bitmaps.  
+   One uses a location NOT available to the Web and copies the files into
+   the same directory that is holding the generated HTML files.  The
+   code generates RELATIVE locations for the bitmaps.
+  
+   The other uses a location that IS available to the Web, and generates
+   ABSOLUTE locations
+ */
+#ifndef BMDEFPATH
+#define BMDEFPATH "@expanded_datadir@"
+/* #define BMDEFPATH "/mcs/www/Images/Icons/" */
+/* #define BMDEFPATH "/mcs/graphics/icons/" */
+#endif
+
+#ifndef BMURL
+#define BMURL "http://www.mcs.anl.gov/Images/Icons/"
+#endif
+
+#ifndef BMSOURCE
+#define BMSOURCE "c:\\bill gropp\\sowing\\share"
+#endif
+
+#ifndef BASEDEF
+#define BASEDEF "c:\\bill gropp\\sowing\\share\\basedefs.txt"
+#endif
+
+#ifndef PSPATH
+#define PSPATH "c:\\bill gropp\\sowing\\share"
+#endif

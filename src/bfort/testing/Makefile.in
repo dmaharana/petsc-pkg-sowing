@@ -1,0 +1,55 @@
+ALL: all-redirect
+SHELL = /bin/sh
+
+TESTCOUTPUT = n1f.c n2f.c tstpgmaf.c tstpgma2f.c 
+TESTF90OUTPUT = tstpgmaf90.f90
+TESTOUTPUT = $(TESTCOUTPUT) $(TESTF90OUTPUT)
+
+all-redirect: $(TESTOUTPUT)
+
+n1f.c: n1.c 
+	../bfort -ferr -mnative -anyname -ansi -I pubinc -mpi n1.c
+
+n2f.c: n2.c 
+	../bfort -ferr -mapptr -mnative -anyname -ansi -I pubinc -mpi n2.c
+
+tstpgmaf90.f90 tstpgmaf.c: tstpgma.c 
+	../bfort -mnative -ansi -nomsgs -anyname -mapptr -mpi -ferr \
+	         -ptrprefix Petsc -ptr64 HAVE_64BIGS -fcaps HAVE_FORTRAN_CAPS \
+		 -fuscore HAVE_FORTRAN_UNDERSCORE \
+		 -f90modfile tstpgmaf90.f90 tstpgma.c
+
+tstpgma2f.c: tstpgma2.c 
+	../bfort -mnative -ansi -nomsgs -noprofile -anyname -mapptr -mpi \
+		 -mpi2 -ferr -ptrprefix Petsc \
+		 -ptr64 PETSC_USE_POINTER_CONVERSION \
+		 -fcaps PETSC_HAVE_FORTRAN_CAPS \
+		 -fuscore PETSC_HAVE_FORTRAN_UNDERSCORE \
+		 -f90mod_skip_header tstpgma2.c
+
+testing: $(TESTOUTPUT)
+	-@for file in $(TESTCOUTPUT) ; do \
+	   file=`basename $$file .c` ; \
+	   if diff -b $$file.c $${file}base.c 2>&1 >/dev/null ; then \
+		: ; \
+	   else \
+		echo "File $$file is different" ; \
+		diff -b  $$file.c $${file}base.c ; \
+	   fi ; \
+	done
+	-@for file in $(TESTF90OUTPUT) ; do \
+	    file=`basename $$file .f90` ; \
+	    if diff -b $$file.f90 $${file}base.f90 2>&1 >/dev/null ; then \
+		: ; \
+	    else \
+		echo "File $$file is different" ; \
+		diff -b $$file.f90 $${file}base.f90 ; \
+	    fi ; \
+	done
+
+clean:
+	/bin/rm -f $(TESTOUTPUT) config.log
+
+Makefile: Makefile.in ../../../config.status
+	(export CONFIG_FILES=src/bfort/testing/Makefile && \
+	cd ../../.. && ./config.status)

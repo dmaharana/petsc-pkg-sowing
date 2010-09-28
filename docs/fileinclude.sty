@@ -1,0 +1,34 @@
+%
+% Include an entire FILE in verbatim format.  This is cribbed from old TeX
+% code; I may have to make some changes to make it work under LaTeX
+% We'd like blank lines at the tops of pages to disappear.  To do this,
+% the line must be entirely blank (so that the \par is in vmode)
+\def\@eatpar{\futurelet\next\@checkpar}
+\def\@checkpar#1{\ifx\next\par\else#1\fi}
+\def\uncatcode#1{\catcode`#1=12}
+\def\@esp{\ \ \ \ \ \ \ \ }%
+{\obeyspaces\global\let =\ }%
+{\catcode`\^^I=\active \gdef\obeytabs{\catcode`\^^I=\active \let^^I=\@esp}}%
+\def\fileinclude#1{\begingroup\@fileverbatim\input#1\endgroup}
+\def\@fileverbatim{%
+  \hsize=6in
+  \tt
+  \parskip=\z@
+  \parindent=\z@
+    % include blank lines
+  %\def\par{\leavevmode\endgraf}%
+    % Make blank lines into vskip
+  \def\par{\ifvmode\vskip\baselineskip\else\endgraf\fi}
+    % defeat \tt ligitures for Spanish (!)
+%  \catcode`\`=\active
+    % make ^^M into a \par
+  \obeylines
+    % make | active
+%  \catcode`|=\z@
+    % remove the active chars
+  \let\do=\uncatcode
+  \dospecials
+  \obeytabs
+   % make spaces active
+  \obeyspaces\@eatpar}
+

@@ -1,0 +1,182 @@
+ALL: all-redirect
+SUBDIRS = src
+prefix      = @prefix@
+exec_prefix = @exec_prefix@
+bindir      = @bindir@
+datarootdir = @datarootdir@
+datadir     = @datadir@
+man1dir     = @mandir@/man1
+INSTALL     = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA    = @INSTALL_DATA@
+SHELL = @SHELL@
+top_srcdir=@top_srcdir@
+
+all-redirect: tohtml bfort doctext mapnames
+
+lib/libsowing.a libs:
+	@if [ ! -d lib ] ; then mkdir lib ; fi
+	(cd src/sys && ${MAKE} )
+lib/libtfilter.a:
+	@if [ ! -d lib ] ; then mkdir lib ; fi
+	(cd src/textfilt && ${MAKE} )
+tohtml: libs
+	(cd src/tohtml && ${MAKE} )
+bfort: libs
+	(cd src/bfort && ${MAKE} )
+doctext: 
+	(cd src/textfilt && ${MAKE} )
+	(cd src/doctext && ${MAKE} )
+mapnames:
+	(cd src/textfilt && ${MAKE} )
+	(cd src/mapnames && ${MAKE} )
+
+manpages: bin/doctext
+	(cd src && ${MAKE} manpages )
+wwwpages: bin/doctext
+	(cd src && ${MAKE} wwwpages )
+bin/doctext: src/doctext/doctext
+	@if [ ! -d bin ] ; then mkdir bin ; fi
+	ln -s ../src/doctext/doctext bin/doctext
+
+doc: bin/doctext
+	(cd docs && ${MAKE} )
+	(cd confdb && ${MAKE} htmldoc && ${MAKE} texdoc)
+
+install:
+	@if [ ! -d $(exec_prefix) ] ; then \
+	    @MKDIR@ $(exec_prefix) ; fi
+	@if [ ! -d $(bindir) ] ; then \
+	    @MKDIR@ $(bindir) ; fi
+	@if [ ! -d $(datadir) ] ; then \
+	    @MKDIR@ $(datadir) ; fi
+	@if [ ! -d $(datadir)/doctext ] ; then \
+	    @MKDIR@ $(datadir)/doctext ; fi
+	@if [ ! -d $(exec_prefix) ] ; then \
+	    echo "Please create $(exec_prefix)" ; exit 1 ; fi
+	@if [ ! -d $(bindir) ] ; then \
+	    echo "Please create $(bindir)" ; exit 1 ; fi
+	@if [ ! -d $(datadir) ] ; then \
+	    echo "Please create $(datadir)" ; exit 1 ; fi
+	@if [ ! -d $(datadir)/doctext ] ; then \
+	    echo "Please create $(datadir)/doctext" ; exit 1 ; fi
+	@if [ ! -d $(man1dir) ] ; then \
+	    @MKDIR@ $(man1dir) ; fi
+	@if [ ! -d $(man1dir) ] ; then \
+	    echo "Please create $(man1dir)" ; exit 1 ; fi
+	$(INSTALL_PROGRAM) bin/bib2html $(bindir)/bib2html
+	$(INSTALL_PROGRAM) src/doctext/doctext $(bindir)/doctext
+	$(INSTALL_PROGRAM) src/doctext/doc2lt $(bindir)/doc2lt
+	$(INSTALL_PROGRAM) src/tohtml/tohtml  $(bindir)/tohtml
+	if [ "`cd bin && pwd`" != "`cd $(bindir) && pwd`" ] ; then \
+	    $(INSTALL_PROGRAM) bin/pstoxbm $(bindir)/pstoxbm ; \
+	    $(INSTALL_PROGRAM) bin/pstogif $(bindir)/pstogif ; \
+	fi
+	$(INSTALL_PROGRAM) src/bfort/bfort $(bindir)/bfort
+	$(INSTALL_PROGRAM) src/mapnames/mapnames $(bindir)/mapnames
+	if [ "`cd ${top_srcdir}/share && pwd`" != "`cd $(datadir) && pwd`" ] ; then \
+	    $(INSTALL_DATA)    ${top_srcdir}/share/pstoppm.ps $(datadir)/pstoppm.ps ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/basedefs.txt $(datadir)/basedefs.txt ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/blueball.gif $(datadir)/blueball.gif ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/greenball.gif $(datadir)/greenball.gif ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/purpleball.gif $(datadir)/purpleball.gif ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/redball.gif $(datadir)/redball.gif ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/yellowball.gif $(datadir)/yellowball.gif ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/next.xbm $(datadir)/next.xbm ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/up.xbm $(datadir)/up.xbm ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/previous.xbm $(datadir)/previous.xbm ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/next.gif $(datadir)/next.gif ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/up.gif $(datadir)/up.gif ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/previous.gif $(datadir)/previous.gif ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/html.def $(datadir)/html.def ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/latex.def $(datadir)/latex.def ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/nroff.def $(datadir)/nroff.def ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/refman.def $(datadir)/refman.def ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/refman.sty $(datadir)/refman.sty ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/doctext/html.def $(datadir)/doctext/html.def ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/doctext/htmlcolor.def $(datadir)/doctext/htmlcolor.def ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/doctext/htmltabl.def $(datadir)/doctext/htmltabl.def ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/doctext/htmlargtbl.def $(datadir)/doctext/htmlargtbl.def ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/doctext/latex.def $(datadir)/doctext/latex.def ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/doctext/latexargtbl.def $(datadir)/doctext/latexargtbl.def ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/share/doctext/nroff.def $(datadir)/doctext/nroff.def ;\
+	fi
+	-if [ "`cd ${top_srcdir}/man/man1 && pwd`" != "`cd $(man1dir) && pwd`" ] ; then \
+	    $(INSTALL_DATA)    ${top_srcdir}/man/man1/tohtml.1 $(man1dir)/tohtml.1 ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/man/man1/doctext.1 $(man1dir)/doctext.1 ;\
+	    $(INSTALL_DATA)    ${top_srcdir}/man/man1/bfort.1 $(man1dir)/bfort.1 ;\
+	fi
+
+uninstall:
+	-/bin/rm $(bindir)/mapnames
+	-/bin/rm $(bindir)/doctext
+	-/bin/rm $(bindir)/tohtml
+	-/bin/rm $(bindir)/bfort
+	-if [ "`cd bin && pwd`" != "`cd $(bindir) && pwd`" ] ; then \
+	    /bin/rm $(bindir)/pstoxbm ; \
+	    /bin/rm $(bindir)/pstogif ; \
+	fi
+	-if [ "`cd share && pwd`" != "`cd $(datadir) && pwd`" ] ; then \
+	     /bin/rm $(datadir)/basedefs.txt ;\
+	     /bin/rm $(datadir)/blueball.gif ;\
+	     /bin/rm $(datadir)/greenball.gif ;\
+	     /bin/rm $(datadir)/purpleball.gif ;\
+	     /bin/rm $(datadir)/redball.gif ;\
+	     /bin/rm $(datadir)/yellowball.gif ;\
+	     /bin/rm $(datadir)/next.xbm ;\
+	     /bin/rm $(datadir)/up.xbm ;\
+	     /bin/rm $(datadir)/previous.xbm ;\
+	     /bin/rm $(datadir)/next.gif ;\
+	     /bin/rm $(datadir)/up.gif ;\
+	     /bin/rm $(datadir)/previous.gif ;\
+	     /bin/rm $(datadir)/html.def ;\
+	     /bin/rm $(datadir)/latex.def ;\
+	     /bin/rm $(datadir)/nroff.def ;\
+	     /bin/rm $(datadir)/refman.sty ;\
+	     /bin/rm $(datadir)/doctext/html.def ;\
+	     /bin/rm $(datadir)/doctext/htmltabl.def ;\
+	     /bin/rm $(datadir)/doctext/htmlcolor.def ;\
+	     /bin/rm $(datadir)/doctext/latex.def ;\
+	     /bin/rm $(datadir)/doctext/nroff.def ;\
+	fi
+	-if [ "`cd man/man1 && pwd`" != "`cd $(man1dir) && pwd`" ] ; then \
+	    /bin/rm $(man1dir)/tohtml.1 ;\
+	    /bin/rm $(man1dir)/doctext.1 ;\
+	    /bin/rm $(man1dir)/bfort.1 ;\
+	fi
+
+testing:
+	(cd src/bfort/testing && ${MAKE} testing)
+	(cd src/doctext/test && ${MAKE} testing)
+	(cd src/tohtml/testing && ${MAKE} testing)
+	(cd src/bib2html && ${MAKE} testing)
+
+configure: configure.in 
+	autoheader
+	autoconf
+
+clean:
+	-for dir in $(SUBDIRS) docs ; do ( cd $$dir && ${MAKE} clean ) ; done
+	-/bin/rm -f lib/libsowing.a lib/libtfilter.a
+distclean:
+	-for dir in ${SUBDIRS} docs ; do (cd $$dir && ${MAKE} distclean ) ; done
+	-rm -f lib/*.a config.status config.log config.cache Makerules \
+		config.system Makefile 
+	-rm -f include/sowingconfig.h 
+	-rm -f bin/pstofig bin/pstoxbm bin/bib2html
+	-rm -f src/doctext/docpath.h include/patchlevel.h include/textfilt/textpath.h
+
+SOWINGCVSHOME = :ext:shakey.mcs.anl.gov:/home/gropp/cvsMaster_z
+VERSION       = @PACKAGE_VERSION@
+dist:
+	@if [ ! -d tmpdir ] ; then mkdir tmpdir ; fi
+	@rm -rf tmpdir/*
+	@if [ -n "${TAG}" ] ; then \
+	    cd tmpdir && cvs -d $(SOWINGCVSHOME) export -r ${TAG} sowing >cvsexp.log 2>&1 ;\
+	else \
+	    cd tmpdir && cvs -d $(SOWINGCVSHOME) export -D 'now' sowing >cvsexp.log 2>&1 ;\
+	fi
+	cd tmpdir/sowing && svn export https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk/confdb confdb
+	cd tmpdir/sowing && autoheader && autoconf && rm -rf autom4te*
+	mv tmpdir/sowing tmpdir/sowing-$(VERSION)
+	cd tmpdir && tar cf - sowing-$(VERSION) | gzip -9 > ../sowing-$(VERSION).tar.gz

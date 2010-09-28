@@ -1,0 +1,35 @@
+ALL: lib
+SHELL       = @SHELL@
+
+include ../../Makerules
+top_srcdir=@top_srcdir@
+srcdir=@srcdir@
+@VPATH@
+
+INCLUDES = -I${top_srcdir}/include -I../../include
+
+OBJS = arch.o txt.o daytime.o file.o tr.o getopts.o
+
+LIBS      =  
+LDIR      = 
+CLEANFILES = 
+
+BASEOBJS = 
+
+clean:
+	-rm -f *.o *~ $(CLEANFILES)
+distclean: clean
+	rm -f Makefile
+
+lib: $(OBJS)
+	$(AR) cr ../../lib/libsowing.a ${OBJS}
+	$(RANLIB) ../../lib/libsowing.a
+
+doc_SOURCES = 
+manpages:
+
+wwwpages:
+
+source_names:
+	@echo $(CSOURCES)
+

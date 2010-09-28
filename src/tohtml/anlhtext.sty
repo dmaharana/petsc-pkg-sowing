@@ -1,0 +1,89 @@
+% 
+% This style file defines the HyperText extensions used by the MCS
+% division of Argonne National Laboratory.  These are primarily used
+% in input to our LaTeX to HTML converter when preparing input for
+% XMosaic and the WWW (World-Wide-Web).
+%
+\newif\ifwww
+\wwwfalse
+%
+\def\code#1{{\tt #1}}
+%
+% Superceded by -mapref and regular cites?
+\def\citedoc#1#2{\ifwww\else #1 Section #2}
+%
+% graphic{large}{icon}{text/action}
+\def\graphic#1#2#3{}
+%
+% sound{soundfile}{icon}{text/action}
+\def\sound#1#2#3{}
+%
+% animation{movie}{icon}{text/action}
+\def\animation#1#2#3{}
+%
+% more{label}
+% More is like ref, but formats as (Press for more information)
+\def\more#1{See \ref{#1}}
+%
+% Give the URL for a document (WWW version makes URL active)
+\def\URL#1{#1}
+%
+% Give the raw link and text to be active
+\def\AURL#1#2{{\tt #1} #2}
+%
+% keywords{name;name;name;...}
+\def\keywords#1{}
+%
+% (Not yet implemented)
+% fileinclude{filename} - include (verbatim) the given file
+\def\fileinclude#1{}
+%
+% demo{program}{icon}{text/action}
+\def\demo#1#2#3{}
+%
+% (Not yet implemented)
+% manpage{name} 
+\def\manpage#1{}
+%
+% href is a hypertext reference.  For LaTeX, it gives just the title.
+% For tohtml, it generates an active label to some name
+\def\href#1{#1}
+%
+% hcite is like cite for WWW but a nop for LaTeX
+\def\hcite#1{}
+\def\hcitea#1#2{#2}
+%
+% details is like href, but without generating any text.  The html version
+% generates (Press #1 for details)
+\def\details#1{}
+%
+% Various special features
+\def\htmlhr{\relax}
+\def\movie#1#2#3{\relax}
+%
+%
+% The ANL HTML converters provide support for mapping citations directly
+% to other hypertext documents.  See -mapref option to tohtml
+%
+% Macros for managing COLOR; output to POSTSCRIPT only
+% \RED, \GREEN, \BLUE, \BLACK change drawing color (permanently!)
+% \COLOR{red}{green}{blue} where values are between 0 and 1 sets the
+% given color.
+% Ignored if \colorslidetrue not set
+% Note that html does NOT support color.  These use a dvips command to
+% insert a raw postscript special into the output file.
+\def\CURR{0}
+\def\CURG{0}
+\def\CURB{0}
+\def\COLOR#1#2#3{\ifcolorslides%
+\special{ps:#1 #2 #3 setrgbcolor }%
+\edef\LASTR{\CURR}\edef\LASTG{\CURG}\edef\LASTB{\CURB}%
+\edef\CURR{#1}\edef\CURG{#2}\edef\CURB{#3}\else\fi}
+\def\LASTCOLOR{\COLOR{\LASTR}{\LASTG}{\LASTB}}
+\def\RED{\COLOR{1}{0}{0}}
+\def\GREEN{\COLOR{0}{1}{0}}
+\def\BLUE{\COLOR{0}{0}{1}}
+\def\BLACK{\COLOR{0}{0}{0}}
+
+
+

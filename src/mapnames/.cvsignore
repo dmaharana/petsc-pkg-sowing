@@ -1,0 +1,5 @@
+Makefile
+*.o
+mapnames
+test1.html
+test1.tex

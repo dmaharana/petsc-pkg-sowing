@@ -1,0 +1,224 @@
+dnl
+dnl Use the new AC_INIT format
+AC_INIT(sowing,1.1.16,wgropp@illinois.edu,sowing-1.1.16)
+dnl We pick autoconf 2.61 because the various 2.x autoconf versions are
+dnl not compatible with each other and this lets us fix on a particular
+dnl set of macros and fixes
+dnl This won't help us, unfortunately, for lack of backward 
+dnl compatibility with later autoconf 2.x 
+dnl Proper use of version numbers requires that anything that breaks
+dnl backward compatibilty increment the major number (e.g., change 2 to 3)
+dnl not just the minor number.  Sigh.
+AC_PREREQ(2.61)
+dnl AC_CONFIG_HEADER(include/sowingconfig.h:config.h.in)
+AC_CONFIG_HEADER(include/sowingconfig.h)
+
+PACKAGE_MAJOR_VERSION=`echo $PACKAGE_VERSION | sed -e 's/\..*//'`
+PACKAGE_MINOR_VERSION=`echo $PACKAGE_VERSION | sed -e 's/.*\.\(.*\)\..*/\1/'`
+PACKAGE_SUBMINOR_VERSION=`echo $PACKAGE_VERSION | sed -e 's/.*\..*\.//'`
+AC_SUBST(PACKAGE_MAJOR_VERSION)
+AC_SUBST(PACKAGE_MINOR_VERSION)
+AC_SUBST(PACKAGE_SUBMINOR_VERSION)
+
+PAC_ARG_CACHING 
+
+CONFIGURE_OPTIONS="$ac_configure_args"
+AC_SUBST(CONFIGURE_OPTIONS)
+dnl Special features
+dnl If this is set and needed, add -DNEEDS_STDLIB_PROTOTYPES to optflags
+check_for_needs_stdlib_proto=0
+dnl
+AC_ARG_ENABLE(strict,[
+--enable-strict - turn on strict debugging when using gcc],
+optflags="$optflags -g -Dlint";check_for_needs_stdlib_proto=1;gcc_opts="-Wall -Wstrict-prototypes -Wmissing-prototypes")
+AC_ARG_ENABLE(echo,[
+--enable-echo   - Turn on strong echoing],set -x)
+AC_SUBST(optflags)
+AC_ARG_ENABLE(inplace,[
+--enable-inplace - build the sowing program to run in the 
+                   distribution directories, not the installation ($ac_default_prefix) 
+                   directories],prefix=`pwd`)
+AC_ARG_ENABLE(memorycheck,[
+--enable-memorycheck - Compile with memory checking code],
+memcheck=$enableval,memcheck="no")
+
+AC_ARG_WITH([wwwdir],[
+--with-wwwdir=directory - Specify the root directory for HTML documentation],
+wwwdir=$withval,wwwdir='${prefix}/www')
+AC_SUBST(wwwdir)
+
+dnl Checks for programs.
+AC_PROG_RANLIB
+AC_PROG_INSTALL
+PAC_PROG_CHECK_INSTALL_WORKS
+AC_CHECK_PROGS(AR,ar)
+AC_PROG_CC
+dnl C++ is needed for the newer textfilter programs
+dnl The autoconf 2.13 list of C++ compilers is very short. 
+dnl We add to it here
+AC_CHECK_PROGS(CXX, $CCC c++ g++ gcc CC cxx cc++ cl xlC_r xlC pgCC, gcc)
+AC_PROG_CXX
+dnl
+dnl Add gcc checking options if present
+if test -n "$gcc_opts" -a "$GCC" = "yes" ; then
+    optflags="$optflags $gcc_opts"
+fi
+dnl
+dnl Make sure that VPATH is provided
+MAKE=${MAKE:-make}
+PAC_PROG_MAKE_VPATH
+
+#
+# Check that prefix is different from pwd.  This is a warning 
+# The following isn't quite good enough, since cd to the same directory
+# in different ways may cause pwd to give different output (sigh).
+if test "$prefix" != "NONE" -a -d "$prefix" ; then
+   if test "`(cd $prefix && pwd)`" = "`(cd . && pwd)`" ; then
+       AC_MSG_WARN([The prefix should be different from the build directory])
+   fi
+fi
+dnl
+dnl Programs for converting postscript to bitmaps or gifs.
+dnl Used in tohtml
+AC_PATH_PROG(LATEX,latex)
+dnl
+dnl Warning! This may find the wrong version of Ghostscript
+dnl
+AC_PATH_PROG(GS,gs)
+if test -z "$GS" ; then
+    echo "Programs to convert Postscript to GIF or XBM require Ghostscript"
+    echo "Version 3."
+    echo "Set the environment variable GS to an appropriate version of"
+    echo "Ghostscript (implementing the writeppmfile operator)."
+# We found out how to both detect the version and generate the ppm output
+# with later versions of gs.
+#else
+#    gsversion=`$GS -version | sed -n 1p | \
+#	sed -e 's/Aladdin//g' -e 's/Ghostscript//g' -e 's/(.*)//g'`
+#    gsmajorversion=`echo $gsversion | sed -e 's/[ ]*\([0-9]\)\.[0-9]*/\1/g'`
+#    if test "$gsmajorversion" -gt 3 ; then
+#        echo "! The version of Ghostscript found is $gsversion ."
+#        echo "! This version may not support the operators used to create"
+#	echo "! GIF and xbm files needed by tohtml."
+#        echo "! Programs to convert Postscript to GIF or XBM require Ghostscript"
+#        echo "! Version 3."
+#        echo "! Set the environment variable GS to an appropriate version of"
+#        echo "! Ghostscript (implementing the writeppmfile operator)."
+#    fi
+fi
+AC_PATH_PROG(PNMCROP,pnmcrop)
+AC_PATH_PROG(PBMTOXBM,pbmtoxbm)
+AC_PATH_PROG(PPMTOGIF,ppmtogif)
+AC_PATH_PROG(PNMQUANT,pnmquant)
+AC_PATH_PROG(PERL,perl)
+
+dnl Checks for libraries.
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h sys/time.h unistd.h pwd.h stdlib.h netdb.h string.h)
+
+if test $check_for_needs_stdlib_proto = 1 ; then
+    AC_MSG_CHECKING(that stdlib prototypes are needed)
+    dnl Autoconf's main program is called with no args.
+    AC_TRY_COMPILE([
+#define NO_MAIN_PROTOTYPE
+#include "include/protofix.h"
+#include <stdlib.h>
+#include <unistd.h>],void f(){},AC_MSG_RESULT(yes);optflags="$optflags -DNEEDS_STDLIB_PROTOTYPES",AC_MSG_RESULT(no))
+fi
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_C_RESTRICT
+AC_TYPE_UID_T
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+AC_STRUCT_TM
+
+if test "$memcheck" = "yes" ; then
+    AC_DEFINE(MEMORY_TRACING,1,[Define if memory tracing is desired])
+    AC_DEFINE(MEMORY_TRACING_REQUIRED,1,[Define if memory tracing is required])
+fi
+
+dnl Checks for library functions.
+dnl AC_FUNC_SETVBUF_REVERSED
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS(getcwd gethostname getwd mkdir)
+dnl
+dnl See if mkdir accepts -p
+AC_MSG_CHECKING(that mkdir accepts -p)
+rm -rf foo
+if mkdir -p foo/bar/foo/bar ; then
+   AC_MSG_RESULT(yes)
+   /bin/rm -rf foo
+   MKDIR="mkdir -p"
+else
+   AC_MSG_RESULT(no)
+   MKDIR="mkdir"
+fi
+AC_SUBST(MKDIR)
+AC_CHECK_FUNC(uname)
+if test "$ac_cv_func_uname" = "yes" ; then
+    haveuname=1
+fi
+AC_CHECK_FUNC(gethostbyname)
+if test "$ac_cv_func_gethostbyname" = "yes" ; then
+    havegethostbyname=1
+fi
+if test -z "$havegethostbyname" ; then
+    # Try again after adding libnsl.  We do it this way instead of just
+    # testing for nsl because some systems (IRIX for one) generate many
+    # warning messages when libnsl and libc are combined (!)
+    AC_CHECK_LIB(nsl,gethostbyname,LIB_LIST="$LIB_LIST -lnsl";havelibnsl=1)
+    if test "$havelibnsl" = 1 ; then
+	echo "Checking for gethostbyname in libnsl"
+        AC_CHECK_FUNC(gethostbyname)
+	if test "$ac_cv_func_gethostbyname" = "yes" ; then
+             havegethostbyname=1
+	fi
+    fi
+fi
+
+# If we have uname and gethostbyname, we can skip getdomainname ...
+if test "$haveuname" != 1 -o "$havegethostbyname" != 1 ; then
+    AC_CHECK_FUNCS(sysinfo)
+    #
+    # systeminfo is needed for sysinfo 
+    AC_CHECK_HEADERS(sys/systeminfo.h)
+    #
+    # getdomainname is special BECAUSE IT MAY BE USELESS (!Network computing 
+    # indeed - stuff like this is why Windows2000/NT WILL WIN). 
+    # We don't even check for it.
+fi
+dnl
+dnl C++ versions
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_CHECK_HEADERS(time.h sys/param.h)
+AC_CHECK_FUNCS(realpath readlink)
+AC_LANG_RESTORE
+
+dnl Checks for system services.
+
+dnl
+dnl Autoconf doesn't expand certain values, expecting them to be used
+dnl in only shell scripts or Makefiles.
+dnl
+if test x$prefix != xNONE ; then
+    eval expanded_datadir=$datadir
+else
+    prefix=$ac_default_prefix
+    eval expanded_datadir=$datadir
+    prefix="NONE"
+fi
+# Expand again in case the definition referred to another variable (such as 
+# prefix)
+eval expanded_datadir=$expanded_datadir
+AC_SUBST(expanded_datadir)
+
+COPTIONS="$optflags"
+AC_SUBST(COPTIONS)
+AC_SUBST(CXXOPTIONS)
+
+AC_OUTPUT(Makefile Makerules src/Makefile src/sys/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif bin/bib2html src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile src/bib2html/Makefile docs/Makefile docs/doctext/Makefile include/patchlevel.h include/textfilt/textpath.h, chmod a+x bin/pstoxbm bin/pstogif bin/bib2html)

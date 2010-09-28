@@ -1,0 +1,52 @@
+.TH doc2lt 1 "2/1/2000" " " ""
+.SH NAME
+doc2lt \-  program to extract short descriptions in various formats 
+.SH INPUT
+.PD 0
+.TP
+.B -html     
+- Use tabular format output in HTML
+.PD 1
+.PD 0
+.TP
+.B -mapref path 
+- Use path as a 
+.B map
+file; this contains mappings from
+names to links.  Useful mostly with 
+.I -html
+.  Multiple 
+.I -mapref
+files
+may be given.
+.PD 1
+.PD 0
+.TP
+.B -defn path 
+- Use 
+.I path
+to redefine the output commands.  See the default
+definition files 
+.I latex.def
+and 
+.I html.def
+for examples.
+.PD 1
+.PD 0
+.TP
+.B filenames 
+- Names the files from which documents are to be extracted
+.PD 1
+
+.SH NOTES
+The default format is LaTeX.
+
+The alternate definition file 
+.I htmltable.def
+creates a Netscape-style table
+for HTML.
+
+.SH AUTHOR
+William Gropp
+.SH LOCATION
+doc2lt.cc

@@ -1,0 +1,138 @@
+ALL: inplace subfiles
+
+inplace: test1.html test2.html test3.html test4.html test6.html test7.html \
+	test7a.html \
+	test8.html test9.html test10.html test11.html test12.html test13.html \
+	test14.html test15.html test16.html test17.html test18.html \
+	test20.html ../tohtml
+	touch inplace
+subfiles: test1/test1.html test2/test2.html test3/test3.html test4/test4.html \
+	test6/test6.html test7/test7.html ../tohtml
+	touch subfiles
+
+# Inplace option
+test1.html: test1.tex
+	../tohtml test1.tex
+test2.html: test2.tex
+	../tohtml test2.tex
+test3.html: test3.tex
+	../tohtml test3.tex
+test4.html: test4.tex
+	../tohtml test4.tex
+test6.html: test6.tex
+	../tohtml test6.tex
+test7.html: test7.tex
+	../tohtml test7.tex
+test8.html: test8.tex
+	../tohtml test8.tex
+test9.html: test9.tex
+	../tohtml test9.tex
+test10.html: test10.tex test10.dat
+	../tohtml -mapman test10.cit test10.tex
+test11.html: test11.tex
+	../tohtml test11.tex
+test12.html: test12.tex
+	../tohtml test12.tex
+test13.html: test13.tex
+	../tohtml test13.tex
+test14.html: test14.tex
+	../tohtml test14.tex
+test15.html: test15.tex
+	@/bin/rm -f foo.ps foo.gif ../foobar.eps ../foobar.gif
+	@/bin/rm -f foo.ps foo.gif ../foobar.eps ../foobar.gif
+	@echo "%! PS" > foo.ps
+	@echo "%! PS" > ../foobar.eps
+	@sleep 1
+	@echo "dummy gif" > foo.gif
+	@echo "dummy gif2" > ../foobar.gif
+	../tohtml test15.tex
+	@if [ ! -s foobar.gif ] ; then echo "Failed to move foobar.gif" ; fi
+	@/bin/rm -f foo.ps foo.gif ../foobar.eps ../foobar.gif foobar.gif
+test16.html: test16.tex
+	../tohtml test16.tex
+test17.html: test17.tex
+	../tohtml test17.tex
+test18.html: test18.tex
+	../tohtml test18.tex
+test20.html: test20.tex
+	../tohtml -latex test20.tex
+test25.html: test25.tex
+	rm -f testf1.gif testf1.ps
+	../tohtml test25.tex
+	if [ ! -s testf1.gif ] ; then \
+	    echo "Did not create gif file" ; \
+	fi
+	rm -f testf1.gif testf1.ps
+test26.html: test26.tex
+	../tohtml test26.tex
+
+# default
+test1/test1.html: test1.tex
+	../tohtml -default test1.tex
+	../tohtml -default test1.tex
+test2/test2.html: test2.tex
+	../tohtml -default test2.tex
+	../tohtml -default test2.tex
+test3/test3.html: test3.tex
+	../tohtml -default test3.tex
+	../tohtml -default test3.tex
+test4/test4.html: test4.tex
+	../tohtml -default test4.tex
+	../tohtml -default test4.tex
+test6/test6.html: test6.tex
+	../tohtml -default test6.tex
+	../tohtml -default test6.tex
+test7/test7.html: test7.tex
+	../tohtml -default test7.tex
+	../tohtml -default test7.tex
+test11/test11.html: test11.tex
+	../tohtml -default test11.tex
+	../tohtml -default test11.tex
+test12/test12.html: test12.tex
+	../tohtml -default test12.tex
+	../tohtml -default test12.tex
+test7a.html: test7.tex
+	../tohtml -default -htables -split -1 test7.tex
+	mv test7.html test7a.html
+
+# default with active token processing
+test5.html: test5.tex test5.cit
+	../tohtml -mapref test5.cit -mapman test5m.cit test5.tex
+
+testing: inplace subfiles compare
+
+compare:
+	-@for file in testref/* ; do \
+	if test $$file = "testref/CVS" ; then continue ; fi ; \
+	if test -d $$file ; then \
+	    for f in $$file/* ; do \
+		if test $$f = "$$file/CVS" ; then continue ; fi ; \
+		newf=`echo $$f | sed -e 's%^testref/%%g'` ; \
+		xten=`echo $$newf | sed -e 's/.*\.//g'` ; \
+		if test $$xten = "xbm" ; then continue ; fi ; \
+		if diff -b $$newf $$f >/dev/null 2>&1 ; then \
+		  : ; \
+		else \
+		   echo "File $$f is different" ; \
+		   diff -b $$newf $$f ; \
+                fi ; \
+	    done ; \
+	else \
+	   f2=`basename $$file` ; \
+	   if diff -rb $$f2 $$file >/dev/null 2>&1 ; then \
+	       : ; \
+	   else \
+	       echo "File $$file is different" ; \
+	       diff -rb $$f2 $$file ; \
+	   fi ; \
+	fi ; \
+	done
+
+clean:
+	-/bin/rm -rf test[1-9] test1[0-9] test2[0-9]
+	-/bin/rm -f test[1-9].html latex.err up.xbm down.xbm. next.xbm
+	-/bin/rm -f test1[0-9].html test2[0-9].html 
+	-/bin/rm -f test[0-9].htm test[1-2][0-9].htm
+	-/bin/rm -f previous.xbm *.hux img*.xbm
+	-/bin/rm -f inplace subfiles
+	-/bin/rm -f *.ler *.aux *.out

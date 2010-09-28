@@ -1,0 +1,33 @@
+/*@ 
+  Routine - foo is a routine 
+
+  Input Parameter:
+.  bar - drinks
+.  another - foo
+
+@*/
+Routine( bar, another )
+register double *bar;
+int another;
+{
+    }
+
+/*M
+  Name - is a macro for something
+
+  Synopsis:
+  Name(bar,foo)
+  int bar;
+  char foo;
+M*/
+
+/*M
+  Name2 - is a macro for something else
+
+  Synopsis:
+  Name2(bar,foo)
+  int bar;
+  char foo;
+
+  More stuff
+M*/

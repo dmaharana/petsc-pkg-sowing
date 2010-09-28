@@ -1,0 +1,30 @@
+ALL: bfort
+SHELL       = /bin/sh
+
+include ../../Makerules
+top_srcdir=@top_srcdir@
+srcdir=@srcdir@
+datarootdir     = @datarootdir@
+@VPATH@
+
+INCLUDES = -I${top_srcdir}/include
+
+LIBS       =  ../../lib/libsowing.a
+INCLUDES   = -I${top_srcdir}/include -I../../include
+DEFS       = -DBASEDEF='"@datarootdir@/basedefs.txt"'
+PROGRAMS   = bfort
+
+bfort: bfort.o  doc.o
+	$(C_LINK) -o bfort bfort.o doc.o $(LIBS)
+
+doc_SOURCES = bfort.c
+
+clean:
+	-/bin/rm -f *.o *~ $(PROGRAMS)
+	-/bin/rm -f bfort\ win32/debug/*
+distclean: clean
+	rm -f Makefile
+
+install:
+	$(INSTALL_PROGRAM) bfort @bindir@/bfort
+

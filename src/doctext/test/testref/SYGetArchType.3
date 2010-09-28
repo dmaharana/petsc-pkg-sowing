@@ -1,0 +1,27 @@
+.TH SYGetArchType 3 "2/10/2000" " " "PETSc"
+.SH NAME
+SYGetArchType \-  Return a standardized architecture type for the machine that is executing this routine.  This uses uname where possible, but may modify the name (for example, sun4 is returned for all sun4 types). 
+.SH SYNOPSIS
+.nf
+void SYGetArchType( str, slen )
+char *str;
+int  slen;
+.fi
+.SH INPUT PARAMETER
+slen - length of string buffer
+.SH OUTPUT PARAMETER
+.PD 0
+.TP
+.B str 
+- string area to contain architecture name.  Should be at least 
+10 characters long.
+.PD 1
+
+.SH NOTES
+This is a long block of text that contains a number of lines
+and has several sentances.  Such as this one, which is the
+second of many.  Well, maybe not many.  Maybe four or
+five sentances?
+
+.SH LOCATION
+tstpgm.c

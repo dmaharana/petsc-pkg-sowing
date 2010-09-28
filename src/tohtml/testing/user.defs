@@ -1,0 +1,3 @@
+begin-env funcdef 1 '<TABLE><TR><TD COLSPAN=2>'#1'</TD></TR>'
+end-env funcdef 0 '</TABLE>'
+hdef funcarg 3 '<TR><TD>'#1 #2'</TD><TD>'#3'</TD></TR>'

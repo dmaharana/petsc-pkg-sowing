@@ -1,0 +1,313 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD>
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>Manual Pages</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+<A NAME="Routine"><H1>Routine</H1></A>
+foo is a routine  
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+Routine( bar, another )
+double *bar;
+int another;
+</PRE>
+<H2>Input Parameter</H2>
+<DL><DT><B>bar </B> <DD> drinks
+</DL>
+<DL><DT><B>another </B> <DD> foo
+</DL>
+<P>
+<P><B>Location:</B>test.nam<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="Name"><H1>Name</H1></A>
+is a macro for something 
+<H2>Synopsis</H2>
+<PRE>
+Name(bar,foo)
+int bar;
+char foo;
+</PRE>
+<P><B>Location:</B>test.nam<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="Name2"><H1>Name2</H1></A>
+is a macro for something else 
+<H2>Synopsis</H2>
+<PRE>
+Name2(bar,foo)
+int bar;
+char foo;
+</PRE>
+More stuff
+<P><B>Location:</B>test.nam<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="foo1"><H1>foo1</H1></A>
+test  
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+
+void foo1( a, b, c )
+int a;
+char b;
+void (*c)();
+</PRE>
+<P><B>Location:</B>tstpgm.c<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="foo2"><H1>foo2</H1></A>
+test  
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+
+struct tm *foo2( a, b )
+MyType *a;
+short b;
+</PRE>
+<P><B>Location:</B>tstpgm.c<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="foo3"><H1>foo3</H1></A>
+test 
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+
+int foo3()
+</PRE>
+<P><B>Location:</B>tstpgm.c<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="SYGetArchType"><H1>SYGetArchType</H1></A>
+Return a standardized architecture type for the machine that is executing this routine.  This uses uname where possible, but may modify the name (for example, <A HREF="http://www.sun.com">sun4</A> is returned for all <A HREF="http://www.sun.com">sun4</A> types). 
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+void SYGetArchType( str, slen )
+char *str;
+int  slen;
+</PRE>
+<H2>Input Parameter</H2>
+slen - length of string buffer
+<H2>Output Parameter</H2>
+<DL><DT><B>str </B> <DD> string area to contain architecture name.  Should be at least 
+10 characters long.
+</DL>
+<P>
+<H2>Notes</H2>
+This is a long block of text that contains a number of lines
+and has several sentances.  Such as this one, which is the
+second of many.  Well, maybe not many.  Maybe four or
+five sentances?
+<P>
+<P><B>Location:</B>tstpgm.c<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="foobar"><H1>foobar</H1></A>
+test program C only 
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+int foobar( a )
+void **a;
+</PRE>
+This is used as an example of C - only (should be ignored)
+<P><B>Location:</B>tstpgm.c<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="simple"><H1>simple</H1></A>
+test 
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+
+int simple(int a, double b)
+</PRE>
+<P><B>Location:</B>tstpgma.c<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="foo1"><H1>foo1</H1></A>
+test  
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+
+void foo1( int a, char b, void (*c)() )
+</PRE>
+<P><B>Location:</B>tstpgma.c<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="foo1a"><H1>foo1a</H1></A>
+test  
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+
+void foo1a( int a, char b, void (*c)(int, char, MyType *a) )
+</PRE>
+<P><B>Location:</B>tstpgma.c<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="foo2"><H1>foo2</H1></A>
+test  
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+
+struct tm *foo2( MyType *a, short b )
+</PRE>
+<P><B>Location:</B>tstpgma.c<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="foo3"><H1>foo3</H1></A>
+test 
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+
+int foo3()
+</PRE>
+<P><B>Location:</B>tstpgma.c<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="foo3a"><H1>foo3a</H1></A>
+test ANSI should use this for empty arg 
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+
+int foo3a(void)
+</PRE>
+<P><B>Location:</B>tstpgma.c<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="Tst2_start"><H1>Tst2_start</H1></A>
+Sample C only routine 
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+void Tst2_start( a, b )
+int a, b;
+</PRE>
+This example uses
+<BR>   The $ symbol to do verbatim output
+<BR>   up to here
+<P>
+<A IMG="foo.ps"></A><CENTER><B>
+<P>
+Caption for figure
+</B></CENTER>
+<P>
+<P>
+<P>
+<P><B>Location:</B>tstpgmc.c<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="foo1"><H1>foo1</H1></A>
+test  
+<H2>Synopsis</H2>
+<PRE>
+void foo1( a, b, c )
+int a;
+char b;
+void (*c)();
+</PRE>
+<P><B>Location:</B>tstpgm.h<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="foo2"><H1>foo2</H1></A>
+test  
+<H2>Synopsis</H2>
+<PRE>
+struct tm *foo2( a, b )
+MyType *a;
+short b;
+</PRE>
+<P><B>Location:</B>tstpgm.h<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="foo3"><H1>foo3</H1></A>
+test 
+<H2>Synopsis</H2>
+<PRE>
+int foo3()
+</PRE>
+<H2>Notes</H2>
+foo
+<P><B>Location:</B>tstpgm.h<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="fancy"><H1>fancy</H1></A>
+Shows all fancy formatting 
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+#include &lt;sys/time.h&gt; 
+#include &lt;sys/types.h&gt; 
+void f1( int a, char *b )
+</PRE>
+<H2>Input Parameters</H2>
+<DL><DT><B>x, y </B> <DD> Coords
+</DL>
+<DL><DT><B>a </B> <DD> the <EM>really</EM> important value
+</DL>
+<P>
+<H2>Output Parameters</H2>
+<DL><DT><B>p1 </B> <DD> pointer <EM>to a</EM>. Is this here?
+</DL>
+<P>
+<H2>Notes</H2>
+This system uses the line
+<BR>break mechanism
+<BR>
+<P>
+as well as
+<PRE>
+   a     verbatim
+   table example
+</PRE>
+
+and a line ending in colon:
+<P>
+<BLOCKQUOTE>
+This is in quotation format
+</BLOCKQUOTE>
+<P>
+<P>
+<H2>Notes on Fnodes</H2>
+This is a sample that includes
+<PRE>
+    verbatim 
+    processing
+</PRE>
+
+<P>
+<H2>Keywords</H2>
+break, pointers
+<BR><P><B>Location:</B>allfmt.c<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+<A NAME="foobartable"><H1>foobartable</H1></A>
+Foo bar test 
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+void foobartable(int a)
+</PRE>
+<H2>Input Parameters</H2>
+<DL>
+<DT><B>-arg 1 </B><DD>foo is foo
+
+<DT><B>n, m </B><DD>fish is fish
+
+<DT><B>j </B><DD>No one here is entirely who they appear to be
+
+<DT><B>g<TT>kar </B><DD>said that, the rest of this line is a long bit of text to see how 
+the table code handles text that won</TT>t fit on a single line of text.
+</DL>
+<P>
+<P><B>Location:</B>tst1.c<P>
+<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A>
+</BODY></HTML>

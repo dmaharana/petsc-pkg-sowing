@@ -1,0 +1,43 @@
+ALL: default
+#
+#  (C) 1996 by Argonne National Laboratory.
+#      All rights reserved.  See COPYRIGHT in top-level directory.
+#
+
+SHELL = @SHELL@
+include ../../Makerules
+top_srcdir=@top_srcdir@
+srcdir=@srcdir@
+@VPATH@
+
+INCLUDES   = -I${top_srcdir}/include/textfilt -I${top_srcdir}/include
+
+LIBS = ../../lib/libtfilter.a 
+
+EXECS = mapnames
+
+default: $(EXECS)
+
+mapnames: mapnames.o
+	$(CXX_LINK) -o mapnames mapnames.o $(LIBS)
+
+doc_SOURCES = 
+wwwpages:
+manpages:
+
+clean:
+	/bin/rm -f *.o *~ $(EXECS) ccc
+distclean: clean
+	rm -f Makefile
+
+testing: mapnames
+	cat test1 | ./mapnames -map map1.cit -o test1.html 
+	cat test1 | ./mapnames -map map1.cit -latexout -o test1.tex
+	@if diff -b test1.html test/test1.html ; then : \
+	else \
+	    echo "Failure in test!" ; \
+	fi
+	@if diff -b test1.tex test/test1.tex ; then : \
+	else \
+	    echo "Failure in test!" ; \
+	fi

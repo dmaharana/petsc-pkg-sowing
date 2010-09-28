@@ -1,0 +1,43 @@
+ALL: tohtml
+SHELL       = @SHELL@
+
+include ../../Makerules
+top_srcdir=@top_srcdir@
+srcdir=@srcdir@
+datarootdir     = @datarootdir@
+@VPATH@
+
+LIBS      =  ../../lib/libsowing.a
+INCLUDES   = -I${top_srcdir}/include -I. -I../../include
+DEFS      =   -DPSPATH='"@bindir@/"' \
+              -DBMSOURCE='"@datarootdir@/"' \
+	      -DBASEDEF='"@datarootdir@/basedefs.txt"'
+PROGRAMS = tohtml tortf 
+
+BASEOBJS = search.o texactio.o rdaux.o rdindx.o label.o scan.o \
+           refmap.o style.o dimen.o userdef.o tabular.o biblio.o environ.o \
+	   math.o rddefs.o latexinfo.o accent.o simpleif.o
+
+tohtml: tohtml.o  tex2html.o $(BASEOBJS)
+	$(C_LINK) -o tohtml tohtml.o tex2html.o $(BASEOBJS) $(LIBS)
+
+xwdsize: xwdsize.o
+	$(C_LINK) -o xwdsize xwdsize.o -lX11
+
+doc_SOURCES = tohtml.c
+
+testing:
+	cd testing && ${MAKE} testing
+clean:
+	-/bin/rm -f *.o *~ $(PROGRAMS)
+	-/bin/rm -f tohtml\ win32/debug/*
+	(cd testing && ${MAKE} clean )
+distclean: clean
+	rm -f Makefile testing/Makefile tohtmlpath.h
+
+INSTALL_PROGRAM = $(INSTALL)
+INSTALL_DATA    = $(INSTALL)
+install:
+	$(INSTALL_PROGRAM) tohtml @bindir@/tohtml
+	$(INSTALL_PROGRAM) xwdsize @bindir@/xwdsize
+	$(INSTALL_DATA) basedefs.txt @datarootdir@/basedefs.txt

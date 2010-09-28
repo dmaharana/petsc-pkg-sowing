@@ -1,0 +1,50 @@
+%
+%
+% Create an environment in which _ (and other chars) are interpreted
+% as themselves
+% \code{text} puts text in the code display
+% \file{filename} does the same for a filename
+{\catcode`\_=\active\gdef_{{\tt\char`\_\@dischyph}}}
+% This assumes that _ is an active char
+{\catcode`\_=\active\gdef\makeustext{\def_{{\tt\char`\_\@dischyph}}}}
+{\catcode`\%=\active\gdef\makepercenttext{\catcode`\%=\active\def%{{\tt\char`\%}}}}
+{\catcode`\&=\active\gdef\makeamptext{\catcode`\&=\active\def&{{\tt\char`\&}}}}
+{\catcode`\#=\active\gdef\makepoundtext{\catcode`\#=\active\def#{{\tt\char`\#}}}}
+{\catcode`\$=\active\gdef\makedollartext{\catcode`\$=\active\def${{\tt\char`\$}}}}
+{\catcode`\~=\active\gdef\maketildetext{\catcode`\~=\active\def~{{\tt\char`\~}}}}
+% For Windows, we need \ in file and code.
+%{\catcode`\|=<command>|gdef|makebwtext{|catcode`\\=|active|def\{{|tt|char`\\}}}
+%
+% Turn / into a discretionary hyphen that allows a line break
+{\catcode`\/=\active\gdef/{\char`\/ \discretionary{}{}{}}}
+\def\makeslashbreak{\catcode`\/=\active}
+%
+\def\nocodespecials{\makepercenttext\makeustext\makeamptext\makepoundtext\makedollartext\maketildetext}
+\def\eatcode{\catcode`\_=\active\nocodespecials\makeslashbreak\eatnext}
+\def\eatfile{\catcode`\_=\active\nocodespecials\makeslashbreak\eatnextfile}
+\def\eatnext#1{{\tt #1}\endgroup}
+\def\eatnextfile#1{`{\tt #1}'\endgroup}
+%
+% The `\gb' here is a `goodbreak' macro that helps LaTeX break a line into 
+% a shorted (un-justifed) piece
+% I've removed the \gb from the beginning of these two eliminate the
+% ``short lines''  that this causes.  In cases where we have no better
+% alternative, we can still add \gb in front of \code cases that need
+% to be moved to the next line.
+\def\file{\begingroup\eatfile}
+\def\code{\begingroup\eatcode}
+\def\nodename{\begingroup\eatcode}
+%
+% C(aption )code doesn't handle _'s
+%\def\ccode#1{\texttt{#1}}
+%
+% Place some penalty for doing the break
+% The penalty for a ``\gb'' should be greater than a \hyphenpenalty.
+% \hyphenpenalty is 50 in plain.tex.
+%\def\gb{\penalty10000\hskip 0pt plus 8em\penalty4800\hskip 0pt plus-8em%
+%\penalty10000}
+\def\gb{\penalty10000\hskip 0pt plus 8em\penalty100\hskip 0pt plus-8em}
+%
+% Generate a raw \ in text
+\def\bw{{\texttt{\char`\\}}}
+

@@ -1,0 +1,5 @@
+\k{foo1}{\CoDe{\\void foo1( a, b, c )\\int a;\\char b;\\void (*c)();\\}\DeFn{test  }}
+\k{foo2}{\CoDe{\\struct tm *foo2( a, b )\\MyType *a;\\short b;\\}\DeFn{test  }}
+\k{foo3}{\CoDe{\\int foo3()\\}\DeFn{test }}
+\k{SYGetArchType}{\CoDe{void SYGetArchType( str, slen )\\char *str;\\int  slen;\\}\DeFn{Return a standardized architecture type for the machine that is executing this routine.  This uses uname where possible, but may modify the name (for example, sun4 is returned for all sun4 types). }}
+\k{foobar}{\CoDe{int foobar( a )\\void **a;\\}\DeFn{test program C only }}

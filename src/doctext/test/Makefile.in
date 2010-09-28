@@ -1,0 +1,59 @@
+ALL: runtests
+SHELL = /bin/sh
+
+FILES =test.nam tstpgm.c tstpgma.c tstpgmc.c tstpgm.h allfmt.c tst1.c
+
+runtests: 
+	/bin/rm -f *.3 *.2 *.tex *.html
+	(DOCTEXT_HEADING=PETSc; export DOCTEXT_HEADING ; \
+		../doctext -defn indent-man.def -date "2/10/2000" $(FILES) )
+	../doctext -html -defn indent-html.def -date "2/10/2000" $(FILES)
+	../doctext -latex -defn indent-latex.def -date "2/10/2000" $(FILES)
+	../doctext -I pubinc -index f1.cit -quotefmt -heading MTEST \
+		-ext 2 -defn indent-man.def -date "2/10/2000" $(FILES)
+	../doctext -I pubinc -outfile f.tex -quotefmt -latex -heading MTEST \
+		-defn indent-latex.def -date "2/10/2000" $(FILES)
+	../doctext -I pubinc -outfile f.html -quotefmt -html -heading MTEST \
+		-mapref tst.cit -defn indent-html.def -date "2/10/2000" \
+		$(FILES)
+	(DOCTEXT_PATH="defn" ; \
+	export DOCTEXT_PATH ; \
+	../doctext  -I pubinc -outfile f2.html -quotefmt -html -heading MTEST \
+		-mapref tst.cit -defn indent-html.def -date "2/10/2000" \
+		$(FILES) ; )
+	../doctext  -I pubinc -outfile f3.html -quotefmt -html -heading MTEST \
+		-mapref tst.cit -defn eopindex.def -defn indent-html.def \
+		-date "2/10/2000" $(FILES)
+	../doctext -html -defn htmlargtbl.def -dosnl -date "2/10/2000" tst1.c
+	../doctext -html -outfile tstcolor.html -defn htmlargtbl.def \
+		-defn htmlcolor.def -dosnl -date "2/10/2000" tst1.c
+	../doctext -html -skipprefix C -dosnl -date "2/10/2000" tst.f
+	../doctext -skipprefix C -date "2/10/2000" tst.f
+	../doctext -ignore EXPORT_API -date "2/10/2000" tst2.c
+	../doctext -html \
+	        -defn fhtml.def -outfile tstreg.html tst1.c
+	../doctext estest.h
+
+#	../doctext -html \
+#		-mpath man3 -heading PETSc \
+#		-defn /home/bsmith/petsc/docs/tex/doctext/html.def \
+#		-locdir foodir \
+#                -mapref /home/bsmith/petsc/docs/manualpages/manualpages.cit \
+#		-defn /home/bsmith/petsc/docs/manualpages/sec/eop.Vec \
+#		-date "2/10/2000" mesh.c
+compare:
+	-@for file in testref/* ; do \
+	if test $$file = "testref/CVS" ; then continue ; fi ; \
+	f2=`basename $$file` ; \
+	if diff -rb $$f2 $$file >/dev/null 2>&1 ; then \
+	    : ; \
+	else \
+	    echo "File $$file is different" ; \
+	    diff -rb $$f2 $$file ; \
+	fi ; \
+	done
+
+testing: runtests compare
+check: runtests compare
+clean:
+	/bin/rm -f *.o *~ *.3 *.2 *.html *.tex f1.cit

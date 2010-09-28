@@ -1,0 +1,68 @@
+ALL: doctext/doctext.htm doctext.ps doctext.pdf
+ALLPS: doctext.ps
+ALLWWW: doctext/doctext.htm
+SHELL = @SHELL@
+#LATEX = virtex \&latex209
+#DEFAULTPATH=`kpsewhich -show-path=.tex`
+#TEXPATH=/home/gropp/texhome/share/texmf/tex/latex209:$(DEFAULTPATH)
+#TEXPATH=.:/home/gropp/texhome/share/texmf/tex/latex209
+#TOHTML = tohtml
+TOHTML = ../../src/tohtml/tohtml
+prefix = @prefix@
+wwwdir = @wwwdir@
+
+# Need to add installation steps.
+
+.SUFFIXES: .htm .ps .dvi .tex .pdf
+# add -texindex $*.fn for large manuals
+.tex.dvi:
+	-/bin/rm -f $*.aux $*.blg $*.bbl $*.toc $*.lof $*.lot
+	-latex $* 2>&1 >/dev/null </dev/null
+	-bibtex $*
+	-latex $* 2>&1 >/dev/null </dev/null
+	-latex $*
+#	- (TEXINPUTS=$(TEXPATH) ; export TEXINPUTS ; \
+#		$(LATEX) $* )
+#	-bibtex $*
+#	- (TEXINPUTS=$(TEXPATH) ; export TEXINPUTS ; \
+#		$(LATEX) $* )
+#	- (TEXINPUTS=$(TEXPATH) ; export TEXINPUTS ; \
+#		$(LATEX) $* )
+
+.dvi.ps:
+	dvips $* 2>&1 | grep -v pdf: | grep -v 'Unknown keyword'
+.dvi.pdf:
+	dvipdfm $*
+
+doctext.dvi: doctext.tex swap.eps
+
+swap.eps: swap.txt
+	doctext -ext 3 swap.txt
+	cat Swap.3 | ptroff -man -t > swap.eps
+	doctext -latex -ext tex swap.txt
+
+.tex.htm:
+	/bin/rm -f $*.aux
+	${TOHTML} -default -dosnl -mapref ../../demos/petsc.cit \
+		-mapman ../../www/petsc.cit $*.tex
+	${TOHTML} -default -dosnl -mapref ../../demos/petsc.cit \
+		-mapman ../../www/petsc.cit $*.tex
+	/bin/mv latex.err $*.err
+
+doctext/doctext.htm: doctext.tex
+	/bin/rm -f doctext.aux
+	${TOHTML} -default -dosnl -mapref ../../demos/petsc.cit \
+		-mapman ../../www/petsc.cit doctext.tex
+	${TOHTML} -default -dosnl -mapref ../../demos/petsc.cit \
+		-mapman ../../www/petsc.cit doctext.tex
+	/bin/mv latex.err doctext.err
+
+clean:
+	rm -f *.fn *.aux *.blg *.toc *.lof *.lot *.dvi *.fns *.bbl *.log \
+		*.err *.hux doctext.ps doctext.pdf
+
+distclean: clean
+	rm -f Makefile
+
+compress:
+	for file in *.ps ; gzip $$file ; done

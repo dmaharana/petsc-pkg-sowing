@@ -1,0 +1,38 @@
+ALL: doctext doc2lt
+#
+#  (C) 1996 by Argonne National Laboratory.
+#      All rights reserved.  See COPYRIGHT in top-level directory.
+#
+
+SHELL       = @SHELL@
+INCLUDES    = -I${top_srcdir}/include/textfilt -I${top_srcdir}/include -I. -I../../include
+
+include ../../Makerules
+top_srcdir=@top_srcdir@
+srcdir=@srcdir@
+@VPATH@
+
+LIBS = ../../lib/libtfilter.a 
+
+PROGRAMS = doctext doc2lt
+
+doctext: doctext.o docutil.o keyword.o dotfmat.o incfiles.o quotefmt.o \
+	textb.o docfields.o $(LIBS)
+	$(CXX_LINK) -o doctext doctext.o docutil.o keyword.o dotfmat.o \
+	incfiles.o quotefmt.o textb.o docfields.o $(LIBS)
+
+doc2lt: doc2lt.o docutil.o docfields.o $(LIBS)
+	$(CXX_LINK) -o doc2lt doc2lt.o docutil.o docfields.o $(LIBS)
+
+bfort: bfort.o $(LIBS)
+	$(CXX_LINK) -o bfort bfort.o $(LIBS)
+
+doc_SOURCES = doctext.cc doc2lt.cc
+
+clean:
+	/bin/rm -f *.o *~ $(PROGRAMS) 
+	(cd test ; if [ -s Makefile ] ; then $(MAKE) clean ; fi )
+	-/bin/rm -f doctext\ win32/debug/*
+distclean: clean
+	rm -f Makefile docpath.h
+

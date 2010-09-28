@@ -1,0 +1,28 @@
+\startmanpage
+\mantitle{SYGetArchType}{tex}{2/10/2000}
+\manname{SYGetArchType}
+--- Return a standardized architecture type for the machine that is executing this routine.  This uses uname where possible, but may modify the name (for example, sun4 is returned for all sun4 types). 
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+void SYGetArchType( str, slen )
+char *str;
+int  slen;
+
+\end{verbatim}
+\endvb
+
+\subhead{Input Parameter}
+slen - length of string buffer
+\subhead{Output Parameter}
+\startarg{str }{string area to contain architecture name.  Should be at least 
+10 characters long.
+}
+\par
+\subhead{Notes}
+This is a long block of text that contains a number of lines
+and has several sentances.  Such as this one, which is the
+second of many.  Well, maybe not many.  Maybe four or
+five sentances?
+\par
+\location{tstpgm.c}
+\endmanpage

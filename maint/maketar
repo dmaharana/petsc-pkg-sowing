@@ -1,0 +1,131 @@
+#! /bin/sh
+#
+# Make a tar file of the SOWING code, removing the RCS files etc.
+#
+# texdir is the directory with the package files
+texdir=/homes/gropp/bin/share/tex
+TMPDIR=/sandbox/gropp
+do_install="no"
+notar="no"
+for arg in "$@" ; do
+    case $arg in 
+    -install) do_install="yes"
+    ;;
+    -notar) notar="yes"
+    ;;
+    *) echo "Unrecognized argument $arg"
+       exit 1
+       ;;
+    esac
+done
+
+echo "If you are making a distribution version, update src/doctext/doc.h"
+echo "and include/patchlevel.h.in for version number and date."
+
+if [ ! -s $texdir/code.sty ] ; then
+    echo "Could not find $texdir/code.sty"
+    echo "Fix that file or maint/maketar and re-run maketar"
+    exit 1
+fi
+
+#
+# Generate version number for file name
+m1=`grep 'PATCHLEVEL ' include/patchlevel.h.in | awk '{print $3}'`
+m2=`grep 'PATCHLEVEL_MINOR ' include/patchlevel.h.in | awk '{print $3}'`
+m3=`grep 'PATCHLEVEL_SUBMINOR ' include/patchlevel.h.in | awk '{print $3}'`
+Version="$m1.$m2.$m3"
+#
+set -x
+#
+# Use tar to copy to $TMPDIR
+if [ -d $TMPDIR/sowingcopy ] ; then
+    /bin/rm -rf $TMPDIR/sowingcopy/sowing
+else
+    mkdir $TMPDIR/sowingcopy
+fi
+cd $TMPDIR/sowingcopy
+tar cf - -C /homes/gropp/sowing-proj sowing | tar xf -
+#
+# Update a few files
+#
+# Remove the RCS files, old executables, and debris
+sowingtmp=$TMPDIR/sowingcopy/sowing
+cd $sowingtmp
+if [ -s Makefile ] ; then
+    make distclean
+fi
+# The sed for ' win32' to '\\ win32' handles blanks in the filenames
+find $sowingtmp \( -name 'RCS' -o -name '*.o' -o -name '#*#' -o \
+              -name '*~' -o -name 'mputil.mp*' -o -name Makefile -o \
+	      -name makefile -o -name '*.exe' -o -name core -o \
+	      -name '*.obj' -o -name '*.pdb' -o -name '*.lib' -o \
+	      -name '*.old' -o -name '.foo*' -o -name '*.out' -o \
+	      -name 'config.log' -o -name 'config.status' -o \
+	      -name 'config.cache' -o -name '*.orig' -o \
+	      -name '*.dvi' -o -name '*.aux' -o \
+	      -name '*.ilk' -o -name '*.pch' -o -name 'CVS' \) -print | \
+	sed -e 's/ win32/\\ win32/g' | sed 's%^%/bin/rm -rf %g' | sh
+# Remove some directories
+/bin/rm -rf  $sowingtmp/related
+/bin/rm -rf  $sowingtmp/maint
+/bin/rm -rf  $sowingtmp/docs/coding
+/bin/rm -rf  $sowingtmp/notes
+/bin/rm -rf  $sowingtmp/ToDo
+/bin/rm -f   $sowingtmp/bin/doctext
+#
+# Remove the configure-generated files
+/bin/rm -f $sowingtmp/tohtml/tohtmlpath.h
+/bin/rm -f $sowingtmp/bin/pstoxbm
+/bin/rm -f $sowingtmp/bin/pstogif
+/bin/rm -f $sowingtmp/doctext/docpath.h
+/bin/rm -f $sowingtmp/include/textfilt/textpath.h
+/bin/rm -f $sowingtmp/include/patchlevel.h
+/bin/rm -f $sowingtmp/include/sowingconfig.h
+#
+/bin/rm -f $sowingtmp/make.log
+/bin/rm -f $sowingtmp/docs/*.log
+/bin/rm -f $sowingtmp/docs/*.hux
+/bin/rm -rf $sowingtmp/src/findlibs
+
+#
+# Update the documentation files
+rm -f $TMPDIR/.f
+sed -e 's%/homes/gropp/bin/share/tex/%%g' \
+    $sowingtmp/docs/doctext/doctext.tex  > $TMPDIR/.f
+mv $TMPDIR/.f $sowingtmp/docs/doctext/doctext.tex
+#
+cp $texdir/code.sty $sowingtmp/docs/doctext
+cp $texdir/fileinclude.sty $sowingtmp/docs/doctext
+cp $texdir/urlsimple.sty $sowingtmp/docs/doctext
+sed -e 's%/homes/gropp/bin/share/tex/%%g' \
+    $sowingtmp/docs/install.tex  > $TMPDIR/.f
+mv $TMPDIR/.f $sowingtmp/docs/install.tex
+sed -e 's%/homes/gropp/bin/share/tex/%%g' \
+    $sowingtmp/docs/bfort.tex  > $TMPDIR/.f
+mv $TMPDIR/.f $sowingtmp/docs/bfort.tex
+sed -e 's%/homes/gropp/bin/share/tex/%%g' \
+    $sowingtmp/docs/tohtml.tex  > $TMPDIR/.f
+mv $TMPDIR/.f $sowingtmp/docs/tohtml.tex
+cp $texdir/code.sty $sowingtmp/docs
+cp $texdir/fileinclude.sty $sowingtmp/docs
+cp $texdir/urlsimple.sty $sowingtmp/docs
+
+if [ $notar = "yes" ] ; then exit 0 ; fi
+#
+# rebuild the tar file
+cd $TMPDIR/sowingcopy
+#
+# Rename the directory
+mv $sowingtmp $TMPDIR/sowingcopy/sowing-$Version
+tar cf - sowing-$Version | gzip > $TMPDIR/sowing-$Version.tar.gz
+if [ $do_install = "yes" ] ; then
+    cp $TMPDIR/sowing-$Version.tar.gz /home/ftp/pub/sowing
+    echo "sowing-$Version.tar.gz is in ftp:pub/sowing"
+else
+    cp $TMPDIR/sowing-$Version.tar.gz $HOME/sowing-proj
+fi
+#
+# Remove the copy
+cd $TMPDIR
+/bin/rm -rf $TMPDIR/sowingcopy $TMPDIR/sowing-$Version.tar.gz &
+

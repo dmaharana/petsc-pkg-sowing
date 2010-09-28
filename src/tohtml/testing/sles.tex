@@ -1,0 +1,73 @@
+\documentstyle[11pt,epsf,/home/gropp/HPCCP/formats/handpage,../../tex/hyper]{article}
+% Use ../../tex/hyper.sty for hypertext definitions
+\addtolength{\textheight}{2.5in}
+\pagestyle{empty}
+\begin{document}
+\pagestyle{empty}
+\title{SLES --- State-of-the-Art Linear Systems Solvers
+\thanks{Mathematics and Computer Science Division,
+Argonne National Laboratory,
+Argonne, IL 60439-4801.
+This work was supported by the Applied Mathematical
+Sciences subprogram of the Office of Energy Research, U. S. Department of
+Energy, under Contract W-31-109-Eng-38.}}
+
+\date{}
+\maketitle
+
+\section*{Description}
+
+\code{SLES} is a package of routines that 
+provides programmers with an easy to use, efficient, and
+extensible access to state-of-the-art methods, both direct and iterative,
+for solving systems of linear equations.
+The design of \code{SLES} allows new methods and implementations to be 
+added to the libraries and made available to a user without any change 
+to the user's programs.  
+
+\code{SLES} is organized into several layers.  
+The simplest layer allows the programmer to specify the matrix and solve
+a linear system.
+Calling sequences are short and simple.
+More advanced users can select from a wide variety of iterative methods
+(for both symmetric and nonsymmetric problems), preconditioners, and
+sparse direct methods.
+A ``registry'' mechanism enables users to add iterative methods,
+preconditioners, and sparse direct-ordering techniques.
+User-specified matrix formats are supported, allowing programs to
+use the data structures that are natural for them.  
+
+The methods included with the package include sparse direct methods,
+iterative preconditioners such as ILU with fill, ICC, and SSOR; and 
+accelerators such as GMRES, BiCG-Stab, CG, and transpose-free QMR.
+
+\section*{Computational Environment}
+\code{SLES} is portable, simple to install and use, and 
+efficient.
+It is installed on most new systems as they become available.
+Further, the routines are designed to be completely data-structure neutral.
+\code{SLES} is available on the Sun, DEC, Silicon Graphics, and IBM
+RS/6000 workstations; IBM SP; Intel iPSC/860, DELTA, and Paragon;
+Convex; and Cray machines.
+
+\section*{Availability}
+
+The \code{SLES} package is freely available.
+The complete distribution can be obtained by anonymous ftp from
+info.mcs.anl.gov.  Take the file sles.tar.Z from the directory pub/pdetools.
+
+\section*{Documentation}
+
+The \code{SLES} distribution contains all source code, 
+installation instructions, a \hcitea{sles-user-ref}{users guide}
+in both ASCII text and latexinfo format,
+\hcitea{sles-man-pages}{man pages}, 
+and a collection of examples in both C and Fortran.  
+The following WWW address contains additional information about the
+package: \hcitea{petsc-web-page}{http://www.mcs.anl.gov/home/gropp/petsc.html}.
+
+\contact{William Gropp}
+\email{gropp@mcs.anl.gov}
+\phone{(708) 252-4318}
+\makeinfo
+\end{document}

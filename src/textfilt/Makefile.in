@@ -1,0 +1,76 @@
+ALL: default
+#
+#  (C) 1997 by Argonne National Laboratory.
+#      All rights reserved.  See COPYRIGHT in top-level directory.
+#
+SHELL       = @SHELL@
+
+include ../../Makerules
+top_srcdir=@top_srcdir@
+srcdir=@srcdir@
+@VPATH@
+
+INCLUDES = -I${top_srcdir}/include/textfilt -I${top_srcdir}/include -I../../include -I../../include/textfilt
+
+LIBS = ../../lib/libtfilter.a 
+
+CSOURCES = cmdline.cc file.cc instream.cc outstream.cc search.cc maptok.cc \
+	   textout.cc texthtml.cc textnroff.cc texttex.cc \
+	   inutil.cc errhand.cc
+COBJECTS = cmdline.o file.o instream.o outstream.o search.o maptok.o \
+	   textout.o texthtml.o textnroff.o texttex.o \
+	   inutil.o errhand.o
+INCLUDE  = ../include/tfilter.h
+
+default: $(LIBS)
+
+doc_SOURCES = 
+
+manpages:
+
+wwwpages:
+
+source_names:
+	@echo $(CSOURCES)
+
+#
+# Dependencies on the include files.
+#
+#$(COBJECTS) :  $(INCLUDE)
+#
+# These where generated with gcc -MM -I../include *.cc
+cmdline.o: cmdline.cc ../../include/textfilt/cmdline.h
+errhand.o: errhand.cc ../../include/textfilt/errhand.h
+file.o: file.cc ../../include/textfilt/tfile.h
+instream.o: instream.cc ../../include/textfilt/instream.h
+inutil.o: inutil.cc ../../include/textfilt/instream.h
+maptok.o: maptok.cc ../../include/textfilt/maptok.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/textout.h ../../include/textfilt/srlist.h \
+ ../../include/textfilt/errhand.h
+outstream.o: outstream.cc ../../include/textfilt/outstream.h
+search.o: search.cc ../../include/textfilt/srlist.h
+texthtml.o: texthtml.cc ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
+ ../../include/textfilt/textpath.h
+textnroff.o: textnroff.cc ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
+ ../../include/textfilt/textpath.h
+textout.o: textout.cc ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h
+texttex.o: texttex.cc ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
+ ../../include/textfilt/textpath.h
+
+../../lib/libtfilter.a: $(COBJECTS) 
+	$(AR) cr $@ $?
+	$(RANLIB) $@
+
+clean:
+	/bin/rm -f *.o *~ 
+distclean: clean
+	rm -f Makefile

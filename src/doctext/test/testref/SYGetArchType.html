@@ -1,0 +1,30 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD>
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>SYGetArchType</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+<A NAME="SYGetArchType"><H1>SYGetArchType</H1></A>
+Return a standardized architecture type for the machine that is executing this routine.  This uses uname where possible, but may modify the name (for example, sun4 is returned for all sun4 types). 
+<H2>Synopsis</H2>
+<PRE>
+void SYGetArchType( str, slen )
+char *str;
+int  slen;
+</PRE>
+<H2>Input Parameter</H2>
+slen - length of string buffer
+<H2>Output Parameter</H2>
+<DL><DT><B>str </B> <DD> string area to contain architecture name.  Should be at least 
+10 characters long.
+</DL>
+<P>
+<H2>Notes</H2>
+This is a long block of text that contains a number of lines
+and has several sentances.  Such as this one, which is the
+second of many.  Well, maybe not many.  Maybe four or
+five sentances?
+<P>
+<P><B>Location:</B>tstpgm.c<P>
+</BODY></HTML>

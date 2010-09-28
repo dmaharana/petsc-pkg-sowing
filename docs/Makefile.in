@@ -1,0 +1,100 @@
+ALL: install.ps tohtml.ps bfort.ps doctext.ps install.pdf tohtml.pdf doctext.pdf
+SHELL = @SHELL@
+TOHTML = ../src/tohtml/tohtml
+prefix = @prefix@
+wwwdir = @wwwdir@
+
+doc_POSTSCRIPT = install.ps tohtml.ps bfort.ps doctext.ps
+doc_PDF = install.pdf tohtml.pdf bfort.pdf doctext.pdf
+doc_HTML = install/install.htm tohtml/tohtml.htm bfort/bfort.htm \
+	doctext/doctext/doctext.htm
+
+alldocs: $(doc_POSTSCRIPT) $(doc_PDF) $(doc_HTML)
+# Run the first latex into /dev/null to suppress message about missing
+# bib citations and forward references
+install.ps: install.tex config.txt
+	-latex install 2>&1 >/dev/null </dev/null
+	-bibtex install
+	-latex install 2>&1 >/dev/null </dev/null
+	latex install
+	dvips install 2>&1 | grep -v pdf: | grep -v 'Unknown keyword'
+tohtml.ps: tohtml.tex
+	-latex tohtml 2>&1 >/dev/null </dev/null
+	-bibtex tohtml
+	-latex tohtml 2>&1 >/dev/null </dev/null
+	latex tohtml
+	dvips tohtml 2>&1 | grep -v pdf: | grep -v 'Unknown keyword'
+bfort.ps: bfort.tex
+	-latex bfort 2>&1 >/dev/null </dev/null
+	-bibtex bfort
+	-latex bfort 2>&1 >/dev/null </dev/null
+	latex bfort
+	dvips bfort 2>&1 | grep -v pdf: | grep -v 'Unknown keyword'
+doctext.ps: doctext/doctext.tex
+	(cd doctext && make && mv doctext.ps .. && mv doctext.pdf ..)
+
+install.pdf: install.tex
+	-latex install 2>&1 >/dev/null </dev/null
+	-bibtex install
+	-latex install 2>&1 >/dev/null </dev/null
+	latex install
+	dvipdfm install
+tohtml.pdf: tohtml.tex
+	-latex tohtml 2>&1 >/dev/null </dev/null
+	-bibtex tohtml
+	-latex tohtml 2>&1 >/dev/null </dev/null
+	latex tohtml
+	dvipdfm tohtml
+bfort.pdf: bfort.tex
+	-latex bfort 2>&1 >/dev/null </dev/null
+	-bibtex bfort
+	-latex bfort 2>&1 >/dev/null </dev/null
+	latex bfort
+	dvipdfm bfort
+doctext.pdf: doctext/doctext.tex
+	(cd doctext ; latex doctext ; dvipdfm doctext ; mv doctext.pdf .. )
+
+install/install.htm: install.tex config.txt
+	${TOHTML} -default -dosnl install.tex
+	${TOHTML} -default -dosnl install.tex
+tohtml/tohtml.htm: tohtml.tex
+	${TOHTML} -default -dosnl tohtml.tex
+	${TOHTML} -default -dosnl tohtml.tex
+bfort/bfort.htm: bfort.tex
+	${TOHTML} -default -dosnl bfort.tex
+	${TOHTML} -default -dosnl bfort.tex
+doctext/doctext/doctext.htm: doctext/doctext.tex
+	(cd doctext ; ${MAKE} doctext/doctext.htm )
+config.txt: ../configure
+	../configure --help >config.txt
+clean:
+	rm -f bfort.ps tohtml.ps install.ps doctext.ps \
+	      bfort.pdf tohtml.pdf install.pdf doctext.pdf \
+		*.aux *.dvi *.toc *.log *.fn *.hux *.err *.blg *.bbl
+	(cd doctext&& ${MAKE} clean)
+
+distclean: clean
+	(cd doctext && ${MAKE} distclean )
+	rm -f Makefile
+
+install-web: ${doc_HTML}
+	rm -rf ${wwwdir}/sowinginstall
+	cp -rp install ${wwwdir}/sowinginstall
+	rm -rf ${wwwdir}/bfort
+	cp -rp bfort ${wwwdir}/bfort
+	rm -rf ${wwwdir}/tohtml
+	cp -rp tohtml ${wwwdir}/tohtml
+	rm -rf ${wwwdir}/doctext
+	cp -rp doctext/doctext ${wwwdir}/doctext
+install-postscript: ${doc_POSTSCRIPT} 
+	cp -p install.ps ${wwwdir}/sowinginstall.ps
+	cp -p bfort.ps ${wwwdir}/bfort.ps
+	cp -p tohtml.ps ${wwwdir}/tohtml.ps
+	cp -p doctext.ps ${wwwdir}/doctext.ps
+install-pdf: ${doc_PDF} 
+	cp -p install.pdf ${wwwdir}/sowinginstall.pdf
+	cp -p bfort.pdf ${wwwdir}/bfort.pdf
+	cp -p tohtml.pdf ${wwwdir}/tohtml.pdf
+	cp -p doctext.pdf ${wwwdir}/doctext.pdf
+
+install: install-web install-postscript install-pdf

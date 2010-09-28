@@ -1,0 +1,41 @@
+# Basic makefile rules that all Makes share
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+datarootdir=@datarootdir@
+libdir=@libdir@
+# Without the empty .suffixes, some makes choose the wrong rules
+.SUFFIXES:
+.SUFFIXES: .o .c .cc
+
+CC = @CC@
+COPTIONS=@COPTIONS@
+CPPFLAGS=@CPPFLAGS@
+LDFLAGS=@LDFLAGS@
+
+CXX = @CXX@
+CXXOPTIONS=@CXXOPTIONS@
+
+DOCTEXT = ${top_srcdir}/src/doctext/doctext
+
+AR          = @AR@
+RANLIB      = @RANLIB@
+
+LIBS=@LIBS@
+C_COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CPPFLAGS} ${CFLAGS} ${COPTIONS}
+C_LINK    = ${CC} ${CFLAGS} ${LDFLAGS}
+CXX_COMPILE = ${CXX} ${DEFS} ${INCLUDES} ${CPPFLAGS} ${CXXFLAGS} ${CXXOPTIONS}
+CXX_LINK    = ${CXX} ${CXXFLAGS} ${LDFLAGS}
+
+mandir=@mandir@
+wwwdir=@wwwdir@
+manpages:
+	${DOCTEXT} -quotefmt -mpath ${mandir}/man1 -ext 1 ${doc_SOURCES}
+wwwpages:
+	${DOCTEXT} -html -dosnl -quotefmt -mpath ${wwwdir}/www1 ${doc_SOURCES}
+
+
+.c.o:
+	${C_COMPILE} -c $<
+.cc.o:
+	${CXX_COMPILE} -c $<

@@ -1,0 +1,17 @@
+\documentclass{article}
+\begin{document}
+\newif\iffoobar
+\foobartrue
+Head
+\iffoobar
+right 1
+\else
+wrong 2
+\fi
+\foobarfalse
+\iffoobar
+wrong 3
+\else
+right 4
+\fi
+\end{document}

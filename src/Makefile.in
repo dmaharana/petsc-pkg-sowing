@@ -1,0 +1,16 @@
+ALL: tohtml
+SHELL = @SHELL@
+SUBDIRS = sys bfort tohtml doctext textfilt mapnames bib2html
+
+clean:
+	for dir in $(SUBDIRS) ; do ( cd $$dir ; $(MAKE) clean ) ; done
+distclean:
+	for dir in $(SUBDIRS) ; do ( cd $$dir ; $(MAKE) distclean ) ; done
+	rm -f Makefile
+
+manpages:
+	for dir in $(SUBDIRS) ; do ( cd $$dir ; $(MAKE) manpages ) ; done
+
+wwwpages:
+	for dir in $(SUBDIRS) ; do ( cd $$dir ; $(MAKE) wwwpages ) ; done
+

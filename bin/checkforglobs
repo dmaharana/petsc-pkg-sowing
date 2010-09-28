@@ -1,0 +1,299 @@
+#! /usr/local/bin/perl5
+#
+# This script searches for invalid function names.
+$debug = 0;
+$print_full_line = 0;
+# Load up a hash with known leaders
+%MPILeaders = ( "MPID_" => 1, "MPIR_" => 1, "mpir_" => 1, "MPI_" => 1, 
+	       "MPIU_" => 1, 
+	     "PMPI_" => 1, "mpi_"  => 1, "pmpi_" => 1, 
+	     "p4_"   => 1, "ADIO_" => 1, "MPIO_" => 1, "PMPIO_" => 1,
+	     "SLOG_" => 1, "MPE_"  => 1, "mpe_"  => 1, "CLOG_" => 1,
+	       "C2S1_" => 1, 
+	     "ADIOI_"=> 1, "usc_"  => 1, "xx_"   => 1, "mpi1_" => 1,
+	     "mpi2_" => 1, "MPIOI_" => 1, "pmpio_" => 1, "MD_" => 1,
+	       "mpiexec_" => 1, 
+	     "mpdlib_" => 1, "slog_" => 1, "TR_" => 1, 
+	     "execer_" => 1, "p2p_" => 1, "MPD_" => 1, "BNR_" => 1,
+	     "bnr_" => 1, "mpd_" => 1 );
+
+%MPICH2Leaders = ( "MPID_" => 1, "MPIR_" => 1, "mpir_" => 1, "MPI_" => 1, 
+	       "MPIU_" => 1, "MPIDI_" => 1, "MPIC_" => 1,
+		  "MPITEST_" => 1, "MPIDU_" => 1, 
+	     "PMPI_" => 1, "mpi_"  => 1, "pmpi_" => 1, 
+	     "ADIO_" => 1, "MPIO_" => 1, "PMPIO_" => 1,
+	     "ADIOI_"=> 1, "MPIOI_" => 1, "pmpio_" => 1, 
+		  "PMI_" => 1, "PMIU_" => 1, 
+		  );
+
+
+@MPINonConformLeaders = ( "alogf", "mpipriv", "XB", "MPICH", "CLOG" );
+
+%PETScLeaders = ( "Petsc_" => 1, "PETSC_" => 1, "VIEWER_" => 1, 
+		  "petsc_" => 1 );
+
+@PETScNonConformLeaders = ( "Petsc", "Viewer", "Xi", "Draw", "Options",
+			    "PLog", "DLLibrary", "FList", "_PLog" );
+
+%MPELeaders = ( "fbuf_" => 1, "alog_" => 1, "bswp_" => 1 );
+@MPENonConformLeaders = ( "adjust_CLOG_", "init_SLOG" );
+
+%Leaders = ();
+@NonConformLeaders = ();
+
+$is_solaris = 0;
+$is_osf     = 0;
+$is_irix    = 0;
+$_ = $ENV{'ARCH'};
+if (/solaris/) { $is_solaris = 1; }
+if (/OSF1/) { $is_osf = 1; }
+if (/irix/) { $is_irix = 1; }
+
+foreach $_ (@ARGV) {
+    if (/-prefix=(.*)/) {
+	# Add contents of file to Leaders
+	open( PREFIXFD, "<$1" ) || die "Could not open $1\n";
+	while (<PREFIXFD>) {
+	    chop;
+	    $symbol = $_;
+	    if (substr($symbol,-1,1) ne "_") {
+		print "Adding $symbol to noncomforming symbols\n" if $debug;
+		$NonConformLeaders[$#NonConformLeaders+1] = $symbol;
+	    }
+	    else {
+		print "Adding $symbol to prefixes\n" if $debug;
+		$Leaders{$symbol} = 1;
+	    }
+	}
+    }
+    elsif (/-clearprefix/) {
+	%Leaders = ();
+    }
+    elsif (/-debug/) {
+	$debug = 1;
+    }
+    elsif (/-exclude=(.*)/) {
+	# Ignore this filename
+	$excludeFilenames{$1} = 1;
+    }
+    elsif (/-mpich2/) {
+	%Leaders = %MPICH2Leaders;
+	@NonConformLeaders = @MPINonConformLeaders;
+    }
+    elsif (/-mpich/) {
+	%Leaders = %MPILeaders;
+	@NonConformLeaders = @MPINonConformLeaders;
+    }
+    elsif (/-petsc/) {
+	%Leaders = %PETScLeaders;
+	@NonConformLeaders = @PETScNonConformLeaders;
+    }
+    elsif (/-p4/) {
+	&setp4syms;
+	@NonConformLeaders = (@NonConformLeaders, @p4globsyms );
+    }
+    elsif (/-mpe/) {
+	%Leaders = ( %Leaders, %MPELeaders );
+	@NonConformLeaders = (@NonConformLeaders, @MPENonConformLeaders );
+    }
+    elsif (/-c\+\+/) {
+	# Let C++ libraries have leading underscores.
+	$Leaders{"_"} = 1; 
+    }
+    else {
+	&CheckLibForGlobs( $_ );
+    }
+}
+
+sub CheckLibForGlobs {
+    my $library = $_[0];
+    my $nm = "nm";
+    
+    # on some systems, we need options for nm.
+    # OSF: nm -B
+    # IRIX: !! nm -B doesn't include the filename!
+    #
+    if ($is_osf) { $nm = "nm -B"; }
+    if ($is_irix) { $nm = "nm -B -r"; }
+    open( INFD, "$nm $library |" ) || die "Could not run nm $library";
+
+    $found_sym = 0;
+    LINE: while (<INFD>) {
+	$found_match = 0;
+	if (/(.*):/) {
+	    $filename = $1;
+	}
+	if (defined($excludeFilenames{$filename})) {
+	    next;
+	}
+	if ($is_irix) {
+	    s/^[^\s]*//g;
+	}
+	print $_ if $debug;
+	if ($is_solaris) {
+	    if ( /\|GLOB/ && ! /\|UNDEF/) {
+		# For solaris, the name is the LAST item that starts with |
+		/.*\|([^\|]*)$/;
+		$symbol = $1;
+		$found_match = 1;
+	    }
+	}
+	elsif(/[0-9A-Fa-f]*\s([TC])\s+(.*)/) {
+	    $symtype = $1;
+	    $symbol = $2;
+	    $found_match = 1;
+	}
+
+	if ($found_match) {
+	    # Symbol head MUST include a trailing _
+	    ($symbol_head) = ($symbol =~ /^([^_]*_)/);
+	    print "Symbol head = [$symbol_head]\n" if $debug;
+	    print "$Leaders{$symbol_head}\n" if $debug;
+	    #
+	    # Here is a good place to check for common (uninitialized) 
+	    # symbols
+	    if ($symtype eq "C") {
+		print "$filename: $symtype\t$symbol\n";
+	    }
+	    if (defined($Leaders{$symbol_head})) { next; }
+	    $found_match=0;
+	    foreach $name (@NonConformLeaders) {
+		$shortsym = substr($symbol,0,length($name));
+		#print "$name <=> $shortsym\n";
+		if ($name eq $shortsym) {next LINE;}
+	    }
+
+	    # Put special cases here
+	    #if (/\|XB/) { next; }
+	    if (! $found_sym) { 
+		$found_sym = 1;
+		print "$library\n";
+	    }
+	    if ($print_full_line) {
+		print $_;
+	    }
+	    else {
+		print "$filename: $symbol\n";
+	    }
+        }
+    }
+}
+
+exit(0);
+
+#
+# p4 has a zillion nonconforming symbol names
+sub setp4syms {
+@p4globsyms = ('bm_outfile',
+	       'globmemsize',
+	       'hand_start_remotes',
+	       'listener_info',
+	       'local_domain',
+	       'logging_flag',
+	       'procgroup_file',
+	       'rm_outfile_head',
+	       'sserver_port',
+	       'whoami_p4',
+	       'data_representation',
+	       'trap_sig_errs',
+	       'process_args',
+	       'alloc_global',
+	       'alloc_listener_info',
+	       'alloc_local_bm',
+	       'alloc_local_listener',
+	       'alloc_local_rm',
+	       'alloc_local_slave',
+	       'alloc_p4_msg',
+	       'free_avail_buffs',
+	       'free_p4_msg',
+	       'init_avail_buffs',
+	       'dump_conntab',
+	       'dump_global',
+	       'dump_listener',
+	       'dump_local',
+	       'dump_procgroup',
+	       'dump_tmsg',
+	       'print_conn_type',
+	       'install_in_proctable',
+	       'read_procgroup',
+	       'alloc_quel',
+	       'free_avail_quels',
+	       'free_quel',
+	       'get_tmsg',
+	       'initialize_msg_queue',
+	       'queue_p4_message',
+	       'recv_message',
+	       'search_p4_queue',
+	       'send_message',
+	       'num_in_mon_queue',
+	       'subtree_broadcast_p4',
+	       'fork_p4',
+	       'get_execer_port',
+	       'get_pipe',
+	       'get_qualified_hostname',
+	       'getswport',
+	       'in_same_cluster',
+	       'init_usclock',
+	       'put_execer_port',
+	       'same_data_representation',
+	       'setup_conntab',
+	       'zap_p4_processes',
+	       'zap_remote_p4_processes',
+	       'bm_start',
+	       'create_bm_processes',
+	       'procgroup_to_proctable',
+	       'send_proc_table',
+	       'sync_with_remotes',
+	       'create_rm_processes',
+	       'receive_proc_table',
+	       'rm_start',
+	       'dump_sockaddr',
+	       'dump_sockinfo',
+	       'get_inet_addr',
+	       'get_inet_addr_str',
+	       'get_sock_info_by_hostname',
+	       'gethostbyname_p4',
+	       'net_accept',
+	       'net_conn_to_listener',
+	       'net_recv',
+	       'net_send',
+	       'net_set_sockbuf_size',
+	       'net_setup_anon_listener',
+	       'net_setup_listener',
+	       'create_remote_processes',
+	       'net_create_slave',
+	       'net_slave_info',
+	       'establish_connection',
+	       'handle_connection_interrupt',
+	       'request_connection',
+	       'send_ack',
+	       'shutdown_p4_socks',
+	       'sock_msg_avail_on_fd',
+	       'socket_close_conn',
+	       'socket_msgs_available',
+	       'socket_recv',
+	       'socket_recv_on_fd',
+	       'socket_send',
+	       'wait_for_ack',
+	       'xdr_recv',
+	       'xdr_send',
+	       'listener',
+	       'net_recv_timeout',
+	       'process_connect_request',
+	       'process_slave_message',
+	       'getpw_ss',
+	       'start_prog_error',
+	       'start_slave',
+	       'tty_orig',
+	       'shmem_msgs_available',
+	       'shmem_recv',
+	       'shmem_send',
+	       'ch_debug_buf',
+	       'expect_ack',
+	       'total_pack_unacked',
+	       'TR_stack_init',
+	       'expect_cancel_ack',
+	       'sysv_semid0', 'sysv_num_shmids', 'sysv_shmat', 'sysv_shmid',
+	       'init_sysv_semset', 'remove_sysv_ipc',
+	       'gethostname_p4' );
+}

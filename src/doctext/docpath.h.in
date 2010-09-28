@@ -1,0 +1,12 @@
+/*
+ * This file contains the default paths for the local definitions for
+ * the doctext input definitions
+ * The source of this file is docpath.h.in; it is edited by configure
+ * to generate the final file.
+ */
+
+#if defined(__MSDOS__) || defined(WIN32)
+#define DOCTEXT_PATH ". c:\\textfilt\\progs\\doctext f:\\textfilt\\progs\\doctext"
+#else
+#define DOCTEXT_PATH ".:@expanded_datadir@/doctext"
+#endif

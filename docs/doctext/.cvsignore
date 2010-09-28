@@ -1,0 +1,11 @@
+*.aux
+*.hux
+*.log
+doctext.ps
+*.dvi
+*.fn
+*.bbl
+*.blg
+doctext
+doctext.err
+Makefile

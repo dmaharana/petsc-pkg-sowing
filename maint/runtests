@@ -1,0 +1,14 @@
+#! /bin/sh
+#
+#
+cd src/bfort/testing
+make testing
+cd ../../..
+
+cd src/doctext/test
+make testing
+cd ../../..
+
+cd src/tohtml/testing
+make testing
+cd ../../..
