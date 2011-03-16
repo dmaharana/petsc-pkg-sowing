@@ -2031,6 +2031,9 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"MatStencil") == 0 ||
 	    strcmp(token,"DALocalInfo") == 0 ||
 	    strcmp(token,"MatFactorInfo") == 0 ||
+	    /* the following are old stuff - might be requird for older versions
+	       of PETSc */
+	    strcmp(token,"PetscTruth") == 0 ||
 	    0)
 	    type->is_native = 1;
 	/* PETSc types that are implicitly pointers are specified here */
@@ -2090,7 +2093,6 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"VecScatter") == 0 ||
 	    /* the following are old stuff - might be requird for older versions
 	       of PETSc */
-	    strcmp(token,"PetscTruth") == 0 ||
 	    strcmp(token,"PetscObjectContainer") == 0 ||
 	    strcmp(token,"DF") == 0 ||
 	    strcmp(token,"Discretization") == 0 ||
