@@ -2055,7 +2055,6 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"IS") == 0 ||
 	    strcmp(token,"ISColoring") == 0 ||
 	    strcmp(token,"ISLocalToGlobalMapping") == 0 ||
-	    strcmp(token,"SAMapping") == 0 ||
             strcmp(token,"Characteristic") == 0 ||
 	    strcmp(token,"KSP") == 0 ||
 	    strcmp(token,"Mat") == 0 ||
