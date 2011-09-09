@@ -2096,6 +2096,7 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"PetscFwk") == 0 ||
 	    strcmp(token,"MatMFFD") == 0 ||
 	    strcmp(token,"TSGLAdapt") == 0 ||
+	    strcmp(token,"TSAdapt") == 0 ||
 	    strcmp(token,"PetscCUSPIndices") == 0 ||
 	    /* the following are old stuff - might be requird for older versions
 	       of PETSc */
