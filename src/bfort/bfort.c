@@ -1491,7 +1491,7 @@ void OutputFortranToken( FILE *fout, int nsp, const char *token )
     if (curCol + nsp > maxOutputCol) nsp = 0;
     for (i=0; i<nsp; i++) putc( ' ', fout );
     curCol += nsp;
-    if (curCol + tokenLen > maxOutputCol) {
+    if (curCol + tokenLen > maxOutputCol && token[0] != '\n') {
 	while (curCol < 72) {
 	    putc( ' ', fout );
 	    curCol ++;
@@ -2055,6 +2055,7 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"IS") == 0 ||
 	    strcmp(token,"ISColoring") == 0 ||
 	    strcmp(token,"ISLocalToGlobalMapping") == 0 ||
+	    strcmp(token,"ISMapping") == 0 ||
             strcmp(token,"Characteristic") == 0 ||
 	    strcmp(token,"KSP") == 0 ||
 	    strcmp(token,"Mat") == 0 ||
@@ -2122,7 +2123,6 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"VarOrdering") == 0 ||
 	    strcmp(token,"Viewer") == 0 ||
 	    strcmp(token,"XBWindow") == 0 ||
-	    strcmp(token,"ISMapping") == 0 ||
 	    0 )  {
 	    /* type->has_star      = 1; */
 	    type->type_has_star = 1;
