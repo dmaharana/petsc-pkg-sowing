@@ -70,7 +70,7 @@ $EntryEnd = "";
 # ignorefields gives the names of fields that should not be noted as 
 # "not known".  These apply to every entry type.
 %ignorefields = ( 'area' => 1, 'areaseq' => 1, 'bibsource' => 1, 'ee' => 1,
-    'preprintof' => 1 );
+    'preprintof' => 1, 'doi' => 1, 'eprint' => 1, 'webloc' => 1  );
 # Default Formats for outlist
 # Book
     # title, author, publisher, year. 
@@ -99,7 +99,8 @@ $EntryEnd = "";
 	'bibdate', 'issn', 'coden', 'keywords',
 	'classification', 'conflocation', 'corpsource', 
 	'conftitle', 'sponsororg', 'treatment', 'key',
-	'affiliation', 'thesaurus', 'key', 'journalabr' );
+	'affiliation', 'thesaurus', 'key', 'journalabr', 
+        'publisher' );
 # InBook
     # title, author, publisher, year.
     %htmlformatsInBook = ( 'starttitle' => '<I>',
@@ -108,7 +109,7 @@ $EntryEnd = "";
     @fieldlistInBook = ('chapter', 'author', 'title', 'publisher', 'note', 
 	'year' );
     @fieldlistoptionalInBook = ('address', 'pages', 'isbn', 'lccn', 'series', 
-	'keywords', 'editor', 'annote', 'pubaddress', 'key' );
+	'keywords', 'editor', 'annote', 'pubaddress', 'key', 'number' );
 
 #
 # InProceedings 
@@ -127,11 +128,11 @@ $EntryEnd = "";
 	'conflocation', 'crossref', 'editors',
 	'conference', 'meetingaddress', 'earlier', 
 	'coden', 'key', 'pubaddress', 'category', 'place',
-	'affiliationaddress', 'journalabr' );
+	'affiliationaddress', 'journalabr', 'location', 'student' );
 
-    %htmlformatsInColl = %htmlformatsInProc;
-    @fieldlistInColl = @fieldlistInProc;
-    @fieldlistoptionalInColl = @fieldlistoptionalInProc;
+    %htmlformatsInColl = %htmlformatsInBook;
+    @fieldlistInColl = @fieldlistInBook;
+    @fieldlistoptionalInColl = @fieldlistoptionalInBook;
 #
 # Techreport 
     # title, author, institution, number, year
@@ -149,7 +150,8 @@ $EntryEnd = "";
 			'endtitle' => '</I>' );
     @fieldlistMisc = ('title', 'author', 'institution', 'organization', 
 	'number', 'note', 'year');
-    @fieldlistoptionalMisc = ( 'month', 'annote', 'key', 'address', 'type' );
+    @fieldlistoptionalMisc = ( 'month', 'annote', 'key', 'address', 'type',
+    'howpublished' );
 
 # Manual, Unpublished come from Misc for now.  We don't need to define these
 # because Misc is the default
@@ -751,6 +753,13 @@ sub PrintArbEntry {
 }
 
 sub PrintInBook {
+    # chapter, author, title, editors, pages, year
+    %htmlformats = %htmlformatsInBook;
+    @fieldlist = @fieldlistInBook;
+    &PrintGeneral;
+}
+
+sub PrintInCollection {
     # chapter, author, title, editors, pages, year
     %htmlformats = %htmlformatsInBook;
     @fieldlist = @fieldlistInBook;
