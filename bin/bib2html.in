@@ -808,7 +808,11 @@ sub PrintGeneral {
         # Here is where we look for @name and then look up name 
 	# in bibstrings.  Or we could just keep a list of strings and
 	# replacements (just like the GroupREName and GroupURL)
-	if ($key eq 'title' && defined($entryinfo{'url'})) {
+	if ($key eq 'title' && defined($entryinfo{'officialurl'})) {
+	    $url = $entryinfo{'officialurl'};
+	    print LISTFILE "<A HREF=\"$url\">$value</A>";
+        }
+	elsif ($key eq 'title' && defined($entryinfo{'url'})) {
 	    $url = $entryinfo{'url'};
 	    print LISTFILE "<A HREF=\"$url\">$value</A>";
         }
