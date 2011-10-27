@@ -2014,6 +2014,8 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp( token, "PetscSizeT") == 0 ||
 	    strcmp( token, "MatStructure") == 0 ||
 	    strcmp( token, "KSPConvergedReason") == 0 ||
+	    strcmp( token, "SNESConvergedReason") == 0 ||
+	    strcmp( token, "TSConvergedReason") == 0 ||
 	    strcmp( token, "BCArrayPart") == 0 ||
 	    strcmp( token, "PetscLogDouble") == 0 ||
 	    strcmp( token, "PetscInt") == 0 ||
