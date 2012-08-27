@@ -2088,12 +2088,14 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"PF") == 0 ||
 	    strcmp(token,"SDA") == 0 ||
 	    strcmp(token,"SNES") == 0 ||
+	    strcmp(token,"SNESLineSearch") == 0 ||
 	    strcmp(token,"StageLog") == 0 ||
 	    strcmp(token,"TS") == 0 ||
 	    strcmp(token,"Vec") == 0 ||
 	    strcmp(token,"VecPack") == 0 ||
 	    strcmp(token,"Vecs") == 0 ||
 	    strcmp(token,"VecScatter") == 0 ||
+	    strcmp(token,"PetscSection") == 0 ||
 	    strcmp(token,"SectionReal") == 0 ||
 	    strcmp(token,"SectionInt") == 0 ||
 	    strcmp(token,"PetscFwk") == 0 ||
