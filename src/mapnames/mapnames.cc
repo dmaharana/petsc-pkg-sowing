@@ -3,6 +3,7 @@
 #include "outstream.h"
 #include "maptok.h"
 #include "textout.h"
+#include <string.h>
 
 /* 
    This is a simple program that uses the in and out streams to 
@@ -26,6 +27,11 @@
                       constructions (e.g., between < and >)
    -latexout        - Output is LaTeX.  Links are writen using \href instead
                       of <A.../A>.
+
+  Format of the map file:
+  # comments
+  <tagtype>:<c>name<c><c>replacement-name<c><c><c><c>ignore<c>URL
+  where <c> is any character (but the same character).  Name  
  */
 
 class TextOutMapLatex : public TextOutMap {
@@ -39,6 +45,8 @@ class TextOutMapLatex : public TextOutMap {
 */
     virtual int PutLink( const char *, SrEntry * );
 };
+
+static char latexCmd[256];
 
 int main( int argc, char **argv )
 {
@@ -63,11 +71,19 @@ int main( int argc, char **argv )
 
     if (!cmd->HasArg( "-inhtml" )) input_is_html = 1;
 
+    if (!input_is_html) {
+      strncpy( latexCmd, "\\href", sizeof(latexCmd) );
+      // Look for alternate Latex Command for links
+      cmd->GetArg( "-latexcmd", latexCmd, sizeof(latexCmd) );
+      // Unfortunately GetArg doesn't distringuish between no arg and no
+      // value for arg.
+    }
     /* Source and destination files */
     // ins  = new InStreamFile( "map1.C", "r" );
     ins  = new InStreamFile( );
     ins->SetBreakChar( '\n', BREAK_OTHER );
     ins->SetBreakChar( '\t', BREAK_OTHER );
+    
     //outs = new OutStreamFile( "ccc", "w" );
 #define MAX_FNAME 1025
     char fname[MAX_FNAME];
@@ -115,6 +131,11 @@ int main( int argc, char **argv )
 	map->ReadMap( mapins );
       delete mapins;
     }
+    if (!cmd->HasArg( "-backslashalpha" )) {
+      ins->SetBreakChar( '\\', BREAK_ALPHA );
+      ins->SetBreakChar( '_', BREAK_ALPHA );
+      map->SetBreakChar( '\\', BREAK_ALPHA );
+    }
     if (map) {
       map->next = textout;
       textout  = map;
@@ -124,12 +145,15 @@ int main( int argc, char **argv )
       fprintf( stderr, "No map file specified\n" );
       return 1;
     }
+
+
     textout->SetOutstream( echo );
     while (!ins->GetToken( 256, token, &nsp )) {
         // As a special feature, we should accept a mode where the input
         // file is in HTML format, and in that case, we just skip until
         // we see the closing angle bracket
-      //printf( "token [0] = %c\n", token[0] );
+        //printf( "token [0] = %c\n", token[0] );
+        //printf( "token = %s\n", token );
         if (input_is_html && token[0] == '<') {
 	  //printf( "In html input\n" );
 	  map->PutQuoted(0, "\0" );  // This accomplishes a flush
@@ -170,9 +194,12 @@ typedef struct {
 int TextOutMapLatex::PutLink( const char *name, SrEntry *entry )
 {
     MapData *info = (MapData *)entry->extra_data;
-    next->PutToken( 0, "\\href{" );
+    // Use href by default
+    next->PutToken( 0, latexCmd );
+    next->PutToken( 0, "{" );
     next->PutToken( 0, info->url );
-    next->PutToken( 0, "}{" );
+    next->PutToken( 0, "}" );
+    next->PutToken( 0, "{" );
     next->PutToken( 0, info->repname );
     next->PutToken( 0, "}" );
     return 0;

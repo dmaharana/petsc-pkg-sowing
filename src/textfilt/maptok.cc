@@ -299,6 +299,14 @@ void TextOutMap::Setup( int in_maxlen )
     debug	  = 0;
 }
 
+// Allow the user to apply the same control to the tokenization in the 
+// map output as they may have set for the input
+int TextOutMap::SetBreakChar( char c, int kind )
+{
+    breaktable[c] = kind;
+	return 0;
+}
+
 TextOutMap::TextOutMap( TextOut *textout )
 {
   Setup( 1024 );

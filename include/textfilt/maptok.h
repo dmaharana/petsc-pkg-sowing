@@ -53,6 +53,7 @@ class TextOutMap : public TextOut {
     TextOutMap( TextOut * );
     TextOutMap( );
     ~TextOutMap();
+    int SetBreakChar( char, int );
     int PutChar( const char );
     int PutToken( int, const char * );
     int PutQuoted( int, const char * );
