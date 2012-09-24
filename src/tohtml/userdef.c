@@ -97,7 +97,7 @@ void TXDoUser( TeXEntry *e )
     if (pstart) p = pstart + strlen( pstart ) - 1;
     else        p = 0;
     while (p && p >= pstart) {
-	if (p[-1] == ArgChar && p > pstart) {
+	if (p > pstart && p[-1] == ArgChar) {
 	    argn = p[0] - '1';
 	    if (argn >= 0 && argn < nargs) {
 		if (DebugDef) printf( "Pushing %s back in def eval(1)\n", 
@@ -476,12 +476,12 @@ void TXAddReplaceFile( const char *value, const char *newname )
     elm = SRInsert( skipFileList, value, (char *)0, &n );
     if (elm) {
 	FREE( elm->entryname );
-	elm->entryname = MALLOC( sizeof(newname)+1 );
+	elm->entryname = MALLOC( strlen(newname)+1 );
 	strcpy( elm->entryname, newname );
     }
 }
 
-int  TXIsSkipFile( const char *name )
+int TXIsSkipFile( const char *name )
 {
     int n, rc = 0;
     LINK *elm;
@@ -494,7 +494,7 @@ int  TXIsSkipFile( const char *name )
     return rc;
 }
 
-int  TXIsReplaceFile( const char *name, char *newname )
+int TXIsReplaceFile( const char *name, char *newname )
 {
     int n, rc = 0;
     LINK *elm;

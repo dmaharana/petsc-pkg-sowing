@@ -1,3 +1,4 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
 #include <stdio.h>
 #include <ctype.h>
 #include "sowing.h"
@@ -21,7 +22,7 @@
     commentchar for TeX.
  */
 
-#define MAX_LBUFFER 5000 
+#define MAX_LBUFFER 15000 
 static char lbuffer[MAX_LBUFFER+2];
 static int  lp  = -1;
 static int  DebugScan = 0;
@@ -247,7 +248,8 @@ void SCAppendToken( char *token )
 
     len = strlen(token);
     if (lp + len >= MAX_LBUFFER) {
-	fprintf( OUTFILE, "Push-back buffer limit exceeded!\n" );
+        fprintf( OUTFILE, "Push-back buffer limit of %d characters exceeded!\n",
+	       MAX_LBUFFER );
 	exit(1);
     }
     OverlapCopy( lbuffer, len );

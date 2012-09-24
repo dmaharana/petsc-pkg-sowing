@@ -58,6 +58,12 @@ char *TXConvertQuotes( char *value, char cmdchar )
       *def_p++ = *p++;
   }
   *def_p = 0;
+  /* Sanity check */
+  if (def_p - def > strlen(value)) {
+      fprintf( stderr, "Used %d characters but allocated %d\n", 
+	       (int)(def_p - def + 1), (int)strlen(value) + 1 );
+      abort();
+  }
   return def;
 }
 
@@ -80,7 +86,7 @@ void RdBaseDef( char *infilename )
 	return;
     }
     while (fgets(buf, sizeof(buf)-1, fp)) {
-	buf[199] = 0; /* Just in case */
+	buf[sizeof(buf)-1] = 0; /* Just in case */
 	nargs = 0;   /* in case not set ... */
 	name = 0; cmd = 0; value = 0;
 	bufp = buf;

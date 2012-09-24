@@ -201,7 +201,7 @@ void PushBeginEnv( char *btext, int nargs )
     if (btext) p = btext + strlen( btext ) - 1;
     else        p = 0;
     while (p && p >= btext) {
-	if (p[-1] == '#' && p > btext) {
+	if (p > btext && p[-1] == '#') {
 	    argn = p[0] - '1';
 	    if (argn >= 0 && argn < nargs) {
 		if (DebugDef) printf( "Pushing %s back in env eval(1)\n", 

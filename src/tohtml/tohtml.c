@@ -221,15 +221,15 @@ int main( int argc, char *argv[] )
 	TeXNoContents();
 	DoContents = 0;
     }
-    if (SYArgGetString( &argc, argv, 1, "-citeprefix", tmpstr, 128 ))
+    if (SYArgGetString( &argc, argv, 1, "-citeprefix", tmpstr, sizeof(tmpstr) ))
 	TXSetCitePrefix( tmpstr );
-    if (SYArgGetString( &argc, argv, 1, "-citesuffix", tmpstr, 128 ))
+    if (SYArgGetString( &argc, argv, 1, "-citesuffix", tmpstr, sizeof(tmpstr) ))
 	TXSetCiteSuffix( tmpstr );
 
     if (SYArgHasName( &argc, argv, 1, "-useimg" ))
 	TXSetLatexAgain( 0 );
 
-    if (SYArgGetString( &argc, argv, 1, "-indexname", tmpstr, 128 )) {
+    if (SYArgGetString( &argc, argv, 1, "-indexname", tmpstr, sizeof(tmpstr) )) {
 	if (UserIndexName) {
 	    fprintf( stderr, "Only one index name allowed\n" );
 	}
@@ -299,9 +299,13 @@ int main( int argc, char *argv[] )
 	fprintf( stderr, "Missing filename!\n" );
 	return 1;
     }
-    strcpy( infilename, argv[0] );
+    if (SafeStrncpy( infilename, argv[0], sizeof(infilename) )) {
+	TeXAbort( "tohtml", "input file name too long" );
+    }
     if (outfilename[0] == 0) {
-	strcpy( outfilename, argv[0] );
+	if (SafeStrncpy( outfilename, argv[0], sizeof(outfilename) )) {
+	    TeXAbort( "tohtml", "output filename too long" );
+	}
     }
     RemoveExtension( outfilename );
     strcpy( basefilename, outfilename );
@@ -364,6 +368,8 @@ int main( int argc, char *argv[] )
 	fprintf( stdout, "User definitions in TeX format are:\n" );
 	TXDumpUserDefs( stdout, 1 );
     }
+
+    /* trdump(stdout);*/
     return 0;
 }
 
@@ -693,9 +699,10 @@ void WriteStringRaw( FILE *fp, char *str )
 }
 
 #include "search.h"
-static char ParentTitle[128];
-static char NextTitle[128];
-static char PrevTitle[128];
+#define MAX_SECTION_TITLE 512
+static char ParentTitle[MAX_SECTION_TITLE];
+static char NextTitle[MAX_SECTION_TITLE];
+static char PrevTitle[MAX_SECTION_TITLE];
 
 /*
  * Sometime we want to write only one set of buttons per page, rather than
@@ -714,9 +721,12 @@ void WriteSectionButtons( FILE *fout, char *name, LINK *l )
 
     if (DebugOutput) fprintf( stdout, "WriteSectionButtons\n" );
     /* We really need to pass the length of the third arg to the routines... */
-    has_parent = GetParent( l, name, contextParent, ParentTitle );
-    has_next   = GetNext( l, name, contextNext, NextTitle );
-    has_prev   = GetPrevious( l, name, contextPrev, PrevTitle );
+    has_parent = GetParent( l, name, contextParent, ParentTitle, 
+			    sizeof(ParentTitle) );
+    has_next   = GetNext( l, name, contextNext, NextTitle, 
+			  sizeof(NextTitle) );
+    has_prev   = GetPrevious( l, name, contextPrev, PrevTitle, 
+			      sizeof(PrevTitle) );
 
 /* This is a horizontal rule for output */
 /* fputs( "<HR>\n", fout ); */
@@ -966,7 +976,7 @@ void PrintHelp( char *pgm )
 \t-o outname\tSpecify the name to be used as the output file name (instead\n\
 \t\t\t\tof the basing the output file name on the input file name).  This\n\
 \t\t\t\tname should include the natural extension; e.g., for HTML output, \n\
-\t\t\t\tuse something like tohtml -latex -o myout.htm myfile.tex ." );
+\t\t\t\tuse something like tohtml -latex -o myout.htm myfile.tex .\n" );
     fprintf( stderr, "(for wizards): [-debug] [-debugscan] [-debugdef]\n" );
     return;
 }
@@ -977,6 +987,7 @@ void PrintHelp( char *pgm )
  * have two bop commands.
  */
 static FILE *eofpage = 0;
+static FILE *eofpagecopy = 0;
 void WriteEndPage( FILE *fpout )
 {
     int c;
@@ -990,9 +1001,14 @@ void WriteEndPage( FILE *fpout )
 			 "Could not open endpage %s\n", endpagefilename );
 		return;
 	    }
+	    eofpagecopy = eofpage;
 	}
     }
     if (eofpage) {
+	if (eofpage != eofpagecopy) {
+	    fprintf( stderr, "PANIC: eofpage %p != copy %p\n", eofpage, eofpagecopy );
+	    abort();
+	}
 	rewind( eofpage );
 	while ((c = getc( eofpage )) != EOF) 
 	    putc( c, fpout );
@@ -1159,4 +1175,34 @@ void SaveCommandLine( int argc, char *argv[] )
 char *GetCommandLine( void )
 {
     return cmdlin;
+}
+
+/* Copy at most n characters; return 0 on success and nonzero on failure.
+   Unlink strncpy, does not fill in all n characters */
+int SafeStrncpy( char *dest, const char *src, size_t n )
+{
+    char * restrict d_ptr = dest;
+    const char * restrict s_ptr = src;
+    register int i;
+
+    if (n == 0) return 0;
+
+    i = (int)n;
+    while (*s_ptr && i-- > 0) {
+	*d_ptr++ = *s_ptr++;
+    }
+    
+    if (i > 0) { 
+	*d_ptr = 0;
+	return 0;
+    }
+    else {
+	/* Force a null at the end of the string (gives better safety 
+	   in case the user fails to check the error code) */
+	dest[n-1] = 0;
+	/* We may want to force an error message here, at least in the
+	   debugging version */
+	/*printf( "failure in copying %s with length %d\n", src, n ); */
+	return 1;
+    }
 }

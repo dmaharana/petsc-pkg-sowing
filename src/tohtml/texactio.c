@@ -1386,7 +1386,7 @@ void TXsection( TeXEntry *e )
 	while (*p != 0) *p1++ = *p++;
 	*p1 = 0;
     }
-    /* Remoave any trailing blanks */
+    /* Remove any trailing blanks */
     p = curtok + strlen(curtok) - 1;
     if (*p == ' ') {
 	while (p > curtok && *p == ' ') p--;
@@ -1394,7 +1394,7 @@ void TXsection( TeXEntry *e )
     }
     strncpy( CurNodename, curtok, 255 );
 
-/* debug */
+    /* Write out section numbers in the "natural way" */
     if (IncludeSectionNumbers) {
 	int i;
 	for (i=0; i<=SSp; i++) fprintf( stdout, "%d.", sstack[i].count );
@@ -2687,8 +2687,8 @@ void TXdocumentstyle( TeXEntry *e )
     static char name[] = "documentstyle";
     char *p, *ptr, *p1;
 
-    preamble    = (char *)MALLOC( 2000 ); CHKPTR(preamble);
-    predoc	= (char *)MALLOC( 2000 ); CHKPTR(predoc);
+    preamble    = (char *)MALLOC( 20000 ); CHKPTR(preamble);
+    predoc	= (char *)MALLOC( 20000 ); CHKPTR(predoc);
     predoc[0]   = 0;
     preamble[0] = 0;
     if (!documentcmd) documentcmd = name;

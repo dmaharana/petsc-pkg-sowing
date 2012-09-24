@@ -245,10 +245,10 @@ extern void WriteBibtoauxfile ( int, char *, char * );
 extern void WRfromauxfile ( FILE *, int );
 extern int NumChildren ( LINK * );
 extern void WriteChildren ( FILE *, LINK *, int );
-extern int GetParent ( LINK *, char *, char *, char * );
-extern int GetNext ( LINK *, char *, char *, char * );
+extern int GetParent ( LINK *, char *, char *, char *, int );
+extern int GetNext ( LINK *, char *, char *, char *, int );
 extern LINK *GetNextLink ( LINK * );
-extern int GetPrevious ( LINK *, char *, char *, char * );
+extern int GetPrevious ( LINK *, char *, char *, char *, int );
 extern char *TopicFilename ( LINK * );
 
 /* rddefs.c */
@@ -511,6 +511,8 @@ extern void WriteFirstLineIndent ( FILE *, int );
 extern void WriteEndPage ( FILE * );
 extern void WriteBeginPage ( FILE * );
 extern void WriteHeadPage ( FILE * );
+
+extern int SafeStrncpy( char *, const char *, size_t );
 
 /* userdef.c */
 extern void TXDebugDef ( int );

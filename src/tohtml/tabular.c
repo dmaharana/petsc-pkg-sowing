@@ -1,3 +1,4 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
 #include <stdio.h>
 #include "sowing.h"
 #include "search.h"
@@ -32,7 +33,7 @@
  */
 /* extern int (*SCSetTranslate ())(); */
 
-#define MAX_CELLS 20
+#define MAX_CELLS 50
 typedef enum { TAB_LEFT, TAB_RIGHT, TAB_CENTER, TAB_PARAGRAPH, TAB_VBAR } 
         align_t;
 
@@ -71,16 +72,20 @@ void TeXEndHalignRow( void );
 
 void TeXGetTabularDefn( void )
 {
-    int         ncell;
+    int         ncell, i;
     char        *p;
     HTabularRow *hrow;
 
     hrow = (HTabularRow *)MALLOC( sizeof(HTabularRow) );  CHKPTR(hrow);
 
+    /* Initialize coltypes as TAB_LEFT by default */
+    for (i=0; i<MAX_CELLS; i++) 
+	hrow->coltype[i] = TAB_LEFT;
+
     ncell = 0;
     TeXGetArg( fpin[curfile], ltoken, MAX_TOKEN );
     p = ltoken;
-    while (*p) {
+    while (*p && ncell < MAX_CELLS) {
 	switch (*p) {
 	case 'l': hrow->coltype[ncell++] = TAB_LEFT; break;
 	case 'r': hrow->coltype[ncell++] = TAB_RIGHT; break;
@@ -97,6 +102,10 @@ void TeXGetTabularDefn( void )
 	    ;
 	}
 	p++;
+    }
+    if (*p) {
+	fprintf( stderr, "Too many cells in tabular environment!\n" );
+	abort();
     }
 
     if (lstack[lSp].env == TXTABULAR) {
