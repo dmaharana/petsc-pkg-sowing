@@ -1314,7 +1314,7 @@ char *ToCPointer( char *type, char *name, int implied_star )
 	    sprintf( buf, "\n\tMPI_Op_f2c( *(%s) )", name );
 	}
 	else if (strcmp( "MPI_Datatype", type ) == 0) {
-	    sprintf( buf, "\n\tMPI_Datatype_f2c( *(%s) )", name );
+	    sprintf( buf, "\n\tMPI_Type_f2c( *(%s) )", name );
 	}
 	else if (strcmp( "MPI_Win", type ) == 0) {
 	    sprintf( buf, "\n\tMPI_Win_f2c( *(%s) )", name );
