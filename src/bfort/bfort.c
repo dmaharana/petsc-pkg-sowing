@@ -2050,6 +2050,7 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"ClassRegLog") == 0 ||
 	    strcmp(token,"DA") == 0 ||
 	    strcmp(token,"DM") == 0 ||
+	    strcmp(token,"DMLabel") == 0 ||
 	    strcmp(token,"DMMG") == 0 ||
 	    strcmp(token,"EventPerfLog") == 0 ||
 	    strcmp(token,"EventRegLog") == 0 ||
