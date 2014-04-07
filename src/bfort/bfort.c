@@ -2104,6 +2104,7 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"TSGLAdapt") == 0 ||
 	    strcmp(token,"TSAdapt") == 0 ||
 	    strcmp(token,"PetscCUSPIndices") == 0 ||
+	    strcmp(token,"PetscSF") == 0 ||
 	    /* the following are old stuff - might be requird for older versions
 	       of PETSc */
 	    strcmp(token,"PetscObjectContainer") == 0 ||
