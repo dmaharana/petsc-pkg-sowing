@@ -2044,69 +2044,105 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	   info2rtf (but do a better job of it) */
 	if (
 	    strcmp(token,"AO") == 0 ||
-	    strcmp(token,"AOData") == 0 ||
-	    strcmp(token,"AOData2dGrid") == 0 ||
-	    strcmp(token,"ClassPerfLog") == 0 ||
-	    strcmp(token,"ClassRegLog") == 0 ||
-	    strcmp(token,"DA") == 0 ||
 	    strcmp(token,"DM") == 0 ||
 	    strcmp(token,"DMLabel") == 0 ||
-	    strcmp(token,"DMMG") == 0 ||
-	    strcmp(token,"EventPerfLog") == 0 ||
-	    strcmp(token,"EventRegLog") == 0 ||
-	    strcmp(token,"IntStack") == 0 ||
 	    strcmp(token,"IS") == 0 ||
 	    strcmp(token,"ISColoring") == 0 ||
 	    strcmp(token,"ISLocalToGlobalMapping") == 0 ||
-	    strcmp(token,"ISMapping") == 0 ||
             strcmp(token,"Characteristic") == 0 ||
 	    strcmp(token,"KSP") == 0 ||
 	    strcmp(token,"Mat") == 0 ||
 	    strcmp(token,"MatFDColoring") == 0 ||
 	    strcmp(token,"MatNullSpace") == 0 ||
 	    strcmp(token,"MatPartitioning") == 0 ||
-	    strcmp(token,"MatSNESMFCtx") == 0 ||
 	    strcmp(token,"PC") == 0 ||
-	    strcmp(token,"PetscADICFunction") == 0 ||
 	    strcmp(token,"PetscBag") == 0 ||
 	    strcmp(token,"PetscBagItem") == 0 ||
-	    strcmp(token,"PetscDLLibraryList") == 0 ||
 	    strcmp(token,"PetscDraw") == 0 ||
 	    strcmp(token,"PetscDrawAxis") == 0 ||
 	    strcmp(token,"PetscDrawHG") == 0 ||
 	    strcmp(token,"PetscDrawLG") == 0 ||
 	    strcmp(token,"PetscDrawSP") == 0 ||
-	    strcmp(token,"PetscFList") == 0 ||
-	    strcmp(token,"PetscMap") == 0 ||
 	    strcmp(token,"PetscMatlabEngine") == 0 ||
 	    strcmp(token,"PetscObject") == 0 ||
 	    strcmp(token,"PetscContainer") == 0 ||
-	    strcmp(token,"PetscOList") == 0 ||
 	    strcmp(token,"PetscRandom") == 0 ||
 	    strcmp(token,"PetscTable") == 0 ||
 	    strcmp(token,"PetscViewer") == 0 ||
 	    strcmp(token,"PetscViewers") == 0 ||
 	    strcmp(token,"PF") == 0 ||
-	    strcmp(token,"SDA") == 0 ||
 	    strcmp(token,"SNES") == 0 ||
 	    strcmp(token,"SNESLineSearch") == 0 ||
-	    strcmp(token,"StageLog") == 0 ||
 	    strcmp(token,"TS") == 0 ||
 	    strcmp(token,"Vec") == 0 ||
-	    strcmp(token,"VecPack") == 0 ||
 	    strcmp(token,"Vecs") == 0 ||
 	    strcmp(token,"VecScatter") == 0 ||
 	    strcmp(token,"PetscSection") == 0 ||
-	    strcmp(token,"SectionReal") == 0 ||
-	    strcmp(token,"SectionInt") == 0 ||
-	    strcmp(token,"PetscFwk") == 0 ||
 	    strcmp(token,"MatMFFD") == 0 ||
 	    strcmp(token,"TSGLAdapt") == 0 ||
 	    strcmp(token,"TSAdapt") == 0 ||
 	    strcmp(token,"PetscCUSPIndices") == 0 ||
 	    strcmp(token,"PetscSF") == 0 ||
+	    strcmp(token,"MatColoring") == 0 ||
+            strcmp(token,"DMBoundary") == 0 ||
+            strcmp(token,"DMInterpolationInfo") == 0 ||
+            strcmp(token,"KSPFischerGuess") == 0 ||
+            strcmp(token,"MatCoarsen") == 0 ||
+            strcmp(token,"MatTransposeColoring") == 0 ||
+            strcmp(token,"PetscClassPerfLog") == 0 ||
+            strcmp(token,"PetscClassRegLog") == 0 ||
+            strcmp(token,"PetscDLLibrary") == 0 ||
+            strcmp(token,"PetscDualSpace") == 0 ||
+            strcmp(token,"PetscEventPerfLog") == 0 ||
+            strcmp(token,"PetscEventRegLog") == 0 ||
+            strcmp(token,"PetscFE") == 0 ||
+            strcmp(token,"PetscFunctionList") == 0 ||
+            strcmp(token,"PetscIntStack") == 0 ||
+            strcmp(token,"PetscLayout") == 0 ||
+            strcmp(token,"PetscObjectList") == 0 ||
+            strcmp(token,"PetscOptions") == 0 ||
+            strcmp(token,"PetscQuadrature") == 0 ||
+            strcmp(token,"PetscSegBuffer") == 0 ||
+            strcmp(token,"PetscSpace") == 0 ||
+            strcmp(token,"PetscStageLog") == 0 ||
+            strcmp(token,"PetscSubcomm") == 0 ||
+            strcmp(token,"PetscThreadComm") == 0 ||
+            strcmp(token,"PetscThreadCommReduction") == 0 ||
+            strcmp(token,"PetscToken") == 0 ||
+            strcmp(token,"PetscViennaCLIndices") == 0 ||
+            strcmp(token,"Tao") == 0 ||
+            strcmp(token,"TaoDM") == 0 ||
+            strcmp(token,"TaoLineSearch") == 0 ||
+            strcmp(token,"TSMonitorDrawCtx") == 0 ||
+            strcmp(token,"TSMonitorLGCtx") == 0 ||
+            strcmp(token,"TSMonitorSPEigCtx") == 0 ||
+            strcmp(token,"VecScatterCUSPIndices_PtoP") == 0 ||
+            strcmp(token,"VecScatterCUSPIndices_StoS") == 0 ||
+
 	    /* the following are old stuff - might be requird for older versions
 	       of PETSc */
+	    strcmp(token,"AOData") == 0 ||
+	    strcmp(token,"AOData2dGrid") == 0 ||
+	    strcmp(token,"ClassPerfLog") == 0 ||
+	    strcmp(token,"ClassRegLog") == 0 ||
+	    strcmp(token,"DA") == 0 ||
+	    strcmp(token,"DMMG") == 0 ||
+	    strcmp(token,"EventPerfLog") == 0 ||
+	    strcmp(token,"EventRegLog") == 0 ||
+	    strcmp(token,"IntStack") == 0 ||
+	    strcmp(token,"ISMapping") == 0 ||
+	    strcmp(token,"MatSNESMFCtx") == 0 ||
+	    strcmp(token,"PetscADICFunction") == 0 ||
+	    strcmp(token,"PetscDLLibraryList") == 0 ||
+	    strcmp(token,"PetscFList") == 0 ||
+	    strcmp(token,"PetscFwk") == 0 ||
+	    strcmp(token,"PetscMap") == 0 ||
+	    strcmp(token,"PetscOList") == 0 ||
+	    strcmp(token,"SDA") == 0 ||
+	    strcmp(token,"SectionReal") == 0 ||
+	    strcmp(token,"SectionInt") == 0 ||
+	    strcmp(token,"StageLog") == 0 ||
+	    strcmp(token,"VecPack") == 0 ||
 	    strcmp(token,"PetscObjectContainer") == 0 ||
 	    strcmp(token,"DF") == 0 ||
 	    strcmp(token,"Discretization") == 0 ||
