@@ -2063,10 +2063,17 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"PetscDrawHG") == 0 ||
 	    strcmp(token,"PetscDrawLG") == 0 ||
 	    strcmp(token,"PetscDrawSP") == 0 ||
+	    strcmp(token,"PetscDualSpace") == 0 ||
+	    strcmp(token,"PetscFE") == 0 ||
+	    strcmp(token,"PetscFV") == 0 ||
+	    strcmp(token,"PetscLimiter") == 0 ||
 	    strcmp(token,"PetscMatlabEngine") == 0 ||
 	    strcmp(token,"PetscObject") == 0 ||
 	    strcmp(token,"PetscContainer") == 0 ||
+	    strcmp(token,"PetscProblem") == 0 ||
+	    strcmp(token,"PetscQuadrature") == 0 ||
 	    strcmp(token,"PetscRandom") == 0 ||
+	    strcmp(token,"PetscSpace") == 0 ||
 	    strcmp(token,"PetscTable") == 0 ||
 	    strcmp(token,"PetscViewer") == 0 ||
 	    strcmp(token,"PetscViewers") == 0 ||
