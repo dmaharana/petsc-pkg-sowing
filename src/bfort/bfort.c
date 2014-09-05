@@ -2072,6 +2072,7 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"PetscContainer") == 0 ||
 	    strcmp(token,"PetscProblem") == 0 ||
 	    strcmp(token,"PetscQuadrature") == 0 ||
+	    strcmp(token,"PetscDS") == 0 ||
 	    strcmp(token,"PetscRandom") == 0 ||
 	    strcmp(token,"PetscSpace") == 0 ||
 	    strcmp(token,"PetscTable") == 0 ||
@@ -2109,6 +2110,7 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
             strcmp(token,"PetscObjectList") == 0 ||
             strcmp(token,"PetscOptions") == 0 ||
             strcmp(token,"PetscQuadrature") == 0 ||
+            strcmp(token,"PetscDS") == 0 ||
             strcmp(token,"PetscSegBuffer") == 0 ||
             strcmp(token,"PetscSpace") == 0 ||
             strcmp(token,"PetscStageLog") == 0 ||
