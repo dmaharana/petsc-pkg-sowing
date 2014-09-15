@@ -8,3 +8,12 @@ loose the working versions)
 The html.def etc files still seem to live in ~/textfilt !
 
 Doctext needs a way to generate index entries.
+
+Tohtml changes needed for MPI-3 document:
+       1. Handle initial section level that is not nested (e.g., section before 
+       chapter)
+       2. Handle "*" in section (e.g., no number headings)
+       3. obeylines command/environment (behave sort of as verbatim; should 
+       this require better handling of active characters)
+       4. texorpdfstring handling
+       
