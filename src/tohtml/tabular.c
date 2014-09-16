@@ -66,10 +66,6 @@ static int DebugTab = 0;
   */
 static int Ncell = 0;
 
-void TeXNewAlignCol( void );
-void TeXPutAlign( void );
-void TeXEndHalignRow( void );
-
 void TeXGetTabularDefn( void )
 {
     int         ncell, i;

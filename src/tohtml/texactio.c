@@ -1180,9 +1180,8 @@ void TXinclude( TeXEntry *e )
 	    return;
 	}
     }
-    InFName[curfile] = (char *)MALLOC( strlen(curtok) + 1 );
+    InFName[curfile] = STRDUP( curtok );
     CHKPTR(InFName[curfile]);
-    strcpy( InFName[curfile], curtok );
     LineNo[curfile] = 1;      /* Line numbers are 1-origin */
     POPCURTOK;
 }
@@ -1300,12 +1299,15 @@ void TXIfFileExists( TeXEntry *e )
 
 static LINK *LastSection = 0;
 int splitlevel = -1;
-char splitdir[100];
+char splitdir[256];
 
 void TXSetSplitLevel( int sl, char *dir )
 {
     splitlevel = sl;
-    strcpy( splitdir, dir );
+    if (strlen(dir) > sizeof(splitdir) - 1) {
+	TeXAbort( "TXSetSplitLevel", "directory name too long" );
+    }
+    strncpy( splitdir, dir, sizeof(splitdir) );
 }
 
 /*
@@ -1320,9 +1322,10 @@ void TXSetSplitLevel( int sl, char *dir )
  */
 void TXsection( TeXEntry *e )
 {
-    int   level = (int)(e->ctx), ch;
+    int   level = (int)(PTRINT)(e->ctx), ch;
     int   dummy;
     char *p;
+    int   isUnnumbered = 0;
 
     TeXWriteContents( fpout );
 
@@ -1346,18 +1349,29 @@ void TXsection( TeXEntry *e )
 	    WriteSectionButtonsBottom( fpout, CurNodename, LastSection );
 	}
     }
+
+/* First, check for a *.  discard if seen */
+    ch = SCTxtGetChar( fpin[curfile] );
+    /* FIXME: If an asterisk, the section is neither numbered nor
+       updates the section number. */
+    if (ch == '*') 
+	isUnnumbered = 1;
+    else 
+	SCPushChar( ch );
     
 /* Start a new section (at several levels) */
 /* Pop section stack if this item is at same level or lower */
     if (SSp >= 0 && sstack[SSp].level == level) {
-	sstack[SSp].count ++;
+	if (!isUnnumbered)
+	    sstack[SSp].count ++;
     }
     else {
 	if (SSp >= 0 && sstack[SSp].level >= level) {
 	    /* Move up in heirarchy */
 	    while (SSp >= 0 && sstack[SSp].level >= level ) SSp--;
 	    SSp++;
-	    sstack[SSp].count++;
+	    if (!isUnnumbered) 
+		sstack[SSp].count++;
 	}
 	else {
 	    /* Move down */
@@ -1369,7 +1383,12 @@ void TXsection( TeXEntry *e )
 
 /* First, check for a *.  discard if seen */
     ch = SCTxtGetChar( fpin[curfile] );
-    if (ch != '*') SCPushChar( ch );
+    /* FIXME: If an asterisk, the section is neither numbered nor
+       updates the section number. */
+    if (ch == '*') 
+	isUnnumbered = 1;
+    else 
+	SCPushChar( ch );
 
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
@@ -1392,10 +1411,10 @@ void TXsection( TeXEntry *e )
 	while (p > curtok && *p == ' ') p--;
         *++p = 0;
     }
-    strncpy( CurNodename, curtok, 255 );
+    strncpy( CurNodename, curtok, sizeof(CurNodename) - 1 );
 
     /* Write out section numbers in the "natural way" */
-    if (IncludeSectionNumbers) {
+    if (IncludeSectionNumbers && !isUnnumbered) {
 	int i;
 	for (i=0; i<=SSp; i++) fprintf( stdout, "%d.", sstack[i].count );
 	fprintf( stdout, " %s\n", CurNodename );
@@ -1428,6 +1447,7 @@ void TXsection( TeXEntry *e )
     ReplaceWhite( curtok );
     WRtoauxfile( CurSeqnum++, outfile, level, curtok );
 
+    /* FIXME: Why the if (1)? */
     if (1) {
 	LastSection = GetNextLink( LastSection );
 	/* Check that this matches the name */
@@ -1445,7 +1465,7 @@ void TXsection( TeXEntry *e )
     }
 
 /* Output section headers */
-    if (IncludeSectionNumbers) {
+    if (IncludeSectionNumbers && !isUnnumbered) {
 	char tmptok[MAX_TOKEN], *p;
 	int i;
 	p = tmptok;
@@ -1455,17 +1475,19 @@ void TXsection( TeXEntry *e )
 	}
 	strcat( p, " " );
 	strcat( p, curtok );
-	WriteSectionAnchor( fpout, tmptok, "Node", CurSeqnum-1, (int)(e->ctx) );
+	WriteSectionAnchor( fpout, tmptok, "Node", CurSeqnum-1, 
+			    (int)(PTRINT)(e->ctx) );
     }
     else {
-	WriteSectionAnchor( fpout, curtok, "Node", CurSeqnum-1, (int)(e->ctx) );
+	WriteSectionAnchor( fpout, curtok, "Node", CurSeqnum-1, 
+			    (int)(PTRINT)(e->ctx) );
     }
     WriteSectionButtons( fpout, curtok, LastSection );
 
 /* These values (entrylevel, number) aren't correct */
 /* Write the section numbers by prefixing the section entry values */
     WriteSectionHeader( fpout, curtok, "Node", CurSeqnum-1, (char *)0,
-			(int)(e->ctx) );
+			(int)(PTRINT)(e->ctx) );
 /* Insert tree links to parent, child, and sibling.  Sets name for subsequent
    label statements */
     WriteTextHeader( fpout );
@@ -1481,7 +1503,7 @@ void TXsection( TeXEntry *e )
  */
 void TXtitlesection( TeXEntry *e )
 {
-    int level = (int)(e->ctx), ch;
+    int level = (int)(PTRINT)(e->ctx), ch;
     int dummy;
 
 /* Start a new section (at several levels) */
@@ -1498,7 +1520,7 @@ void TXtitlesection( TeXEntry *e )
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
     TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXsection", (char *)0 );
-    strncpy( CurNodename, curtok, 255 );
+    strncpy( CurNodename, curtok, sizeof(CurNodename) - 1 );
 
     WriteHeadPage( fpout );
     WriteFileTitle( fpout, curtok );
@@ -1513,12 +1535,13 @@ void TXtitlesection( TeXEntry *e )
     }
 
 /* Output section headers */
-    WriteSectionAnchor( fpout, curtok, "Node", CurSeqnum-1, (int)(e->ctx) );
+    WriteSectionAnchor( fpout, curtok, "Node", CurSeqnum-1, 
+			(int)(PTRINT)(e->ctx) );
     WriteSectionButtons( fpout, curtok, LastSection );
 
 /* These values (entrylevel, number) aren't correct */
     WriteSectionHeader( fpout, curtok, "Node", CurSeqnum-1, (char *)0,
-			(int)(e->ctx) );
+			(int)(PTRINT)(e->ctx) );
 
 /* Insert tree links to parent, child, and sibling.  Sets name for subsequent
    label statements */
@@ -2256,7 +2279,7 @@ void TXbegin( TeXEntry *e )
 		       "TXbegin thebibliography", e->name );
 	/* Need to act as if "Section{Bibliography}" seen */
 	SCPushToken( "{Bibliography}" );
-	e->ctx = (void*)MinSectionKind;
+	e->ctx = (void*)(PTRINT)MinSectionKind;
 	TXsection( e );
 	TeXBenign( e, "thebibliography" );
     }
@@ -2269,7 +2292,7 @@ void TXbegin( TeXEntry *e )
 	   have pages.  Instead, we skip the index entirely, then dump
 	   the results of our own use of \index */
 	SCPushToken( "{Index}" );
-	e->ctx = (void*)MinSectionKind;
+	e->ctx = (void*)(PTRINT)MinSectionKind;
 	TXsection( e );
 	TeXskipEnv( e, "theindex", 0 );
 	WriteIndex( fpout, 2 );
@@ -2279,7 +2302,7 @@ void TXbegin( TeXEntry *e )
 	   have pages.  Instead, we skip the index entirely, then dump
 	   the results of our own use of \index */
 	SCPushToken( "{Index}" );
-	e->ctx = (void*)MinSectionKind;
+	e->ctx = (void*)(PTRINT)MinSectionKind;
 	TXsection( e );
 	TeXskipEnv( e, UserIndexName, 0 );
 	WriteIndex( fpout, 2 );
@@ -2366,8 +2389,7 @@ void TXbegin( TeXEntry *e )
   }
   */
     else {
-	p = (char *)MALLOC( strlen( curtok ) + 1 );  CHKPTR(p);
-	strcpy( p, curtok );
+	p = STRDUP( curtok );  CHKPTR(p);
 	/* Identify environment as table, figure, equation, or none */
 	if (strcmp( p, "table" ) == 0) {
 	    NumberedEnvironmentType = ENV_TABLE;
@@ -3695,15 +3717,15 @@ void ProcessLatexFile( int argc, char **argv, FILE *fin, FILE *fout )
 void TXSetCitePrefix( char *s )
 {
     if (CitePrefix) FREE( CitePrefix );
-    CitePrefix = (char *)MALLOC( strlen( s ) + 1 );
-    strcpy( CitePrefix, s );
+    CitePrefix = STRDUP( s );
+    CHKPTR(s);
 }
 
 void TXSetCiteSuffix( char *s )
 {
     if (CiteSuffix) FREE( CiteSuffix );
-    CiteSuffix = (char *)MALLOC( strlen( s ) + 1 );
-    strcpy( CiteSuffix, s );
+    CiteSuffix = STRDUP( s );
+    CHKPTR(s);
 }
 
 /*

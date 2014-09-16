@@ -381,15 +381,13 @@ void TXtt( TeXEntry *e )
 }
 
 #ifdef FOO
-void TXbitmap( e, fname )
-TeXEntry *e;
-char     *fname;
+void TXbitmap( TeXEntry *e, char *fname )
 {
     if (!InDocument || !InOutputBody) return;
-/* Process a bitmap reference */	
-    TeXoutcmd( fpout, "<IMG SRC=\"" );
+/* Process a bitmap reference */
+    TeXoutcmd( fpout, "<img src=\""  );
     TeXoutstr( fpout, fname );
-    TeXoutstr( fpout, "\">" );
+        TeXoutstr( fpout, "\" alt=\"Bitmap file\">" );
 }
 #endif
 
@@ -406,22 +404,27 @@ void TXimage( TeXEntry *e, char *fname )
     int height, width;
     if (!InDocument || !InOutputBody) return;
     if (DebugOutput) fprintf( stdout, "TXimage\n" );
-    
+
     /* Try to get the width and height */
     width  = -1;
     height = -1;
+    /* Note that most browsers no longer support xbm files at all,
+       so generate a warning for xbm files */
     if (strstr( fname, ".xbm" )) {
+	fprintf( stderr, "Warning: XBM file %s found; browsers no longer support these files\n", fname );
 	TX_XBM_size( fname, &width, &height );
     }
     else if (strstr( fname, ".gif" )) {
 	TX_GIF_size( fname, &width, &height );
     }
 
+    /* Recent HTML requires an ALT field on IMG */
+    /* FIXME: Provide a way to specify a string for the alt field */
     if (height == -1 || width == -1) {
-	fprintf( fpout, "<P><IMG SRC=\"%s\"><P>%s", fname, NewLineString );
+	fprintf( fpout, "<P><img src=\"%s\" alt=\"Image file\"><P>%s", fname, NewLineString );
     }
     else {
-	fprintf( fpout, "<P><IMG WIDTH=%d HEIGHT=%d SRC=\"%s\"><P>%s", 
+	fprintf( fpout, "<P><img width=%d height=%d src=\"%s\" alt=\"Image file\"><P>%s", 
 		 width, height, fname, NewLineString );
     }
 /* This version makes the images external... */
@@ -437,7 +440,10 @@ void TXInlineImage( TeXEntry *e, char *fname )
     /* Try to get the width and height */
     width  = -1;
     height = -1;
+    /* Note that most browsers no longer support xbm files at all,
+       so generate a warning for xbm files */
     if (strstr( fname, ".xbm" )) {
+	fprintf( stderr, "Warning: XBM file %s found; browsers no longer support these files\n", fname);
 	TX_XBM_size( fname, &width, &height );
     }
     else if (strstr( fname, ".gif" )) {
@@ -445,10 +451,10 @@ void TXInlineImage( TeXEntry *e, char *fname )
     }
 
     if (height == -1 || width == -1) {
-	fprintf( fpout, "<IMG SRC=\"%s\">%s", fname, NewLineString );
+	fprintf( fpout, "<img src=\"%s\" alt=\"Image file\">%s", fname, NewLineString );
     }
     else {
-	fprintf( fpout, "<IMG WIDTH=%d HEIGHT=%d SRC=\"%s\">%s", 
+	fprintf( fpout, "<img width=%d height=%d src=\"%s\" alt=\"Image file\">%s", 
 		 width, height, fname, NewLineString );
     }
 /* This version makes the images external... */
@@ -465,7 +471,10 @@ void TXAnchoredImage( TeXEntry *e, char *anchorname, char *fname )
     /* Try to get the width and height */
     width  = -1;
     height = -1;
+    /* Note that most browsers no longer support xbm files at all,
+       so generate a warning for xbm files */
     if (strstr( fname, ".xbm" )) {
+	fprintf( stderr, "Warning: XBM file %s found; browsers no longer support these files\n", fname);
 	TX_XBM_size( fname, &width, &height );
     }
     else if (strstr( fname, ".gif" )) {
@@ -473,12 +482,12 @@ void TXAnchoredImage( TeXEntry *e, char *anchorname, char *fname )
     }
 
     if (height == -1 || width == -1) {
-	fprintf( fpout, "<P><A NAME=\"%s\"><IMG SRC=\"%s\"></a><P>%s", 
+	fprintf( fpout, "<P><a name=\"%s\"><img src=\"%s\" alt=\"Image file\"></a><P>%s", 
 		 anchorname, fname, NewLineString );
     }
     else {
 	fprintf( fpout, 
-	     "<P><A NAME=\"%s\"><IMG WIDTH=%d HEIGHT=%d SRC=\"%s\"></a><P>%s", 
+	     "<P><a name=\"%s\"><img width=%d height=%d src=\"%s\" alt=\"Image file\"></a><P>%s", 
 		 anchorname, width, height, fname, NewLineString );
     }
 }
@@ -493,23 +502,26 @@ void TXAnchoredInlineImage( TeXEntry *e, char *anchorname, char *fname )
     /* Try to get the width and height */
     width  = -1;
     height = -1;
+    /* Note that most browsers no longer support xbm files at all,
+       so generate a warning for xbm files */
     if (strstr( fname, ".xbm" )) {
+	fprintf( stderr, "Warning: XBM file %s found; browsers no longer support these files\n", fname);
 	TX_XBM_size( fname, &width, &height );
     }
     else if (strstr( fname, ".gif" )) {
 	TX_GIF_size( fname, &width, &height );
     }
 
-    fprintf( fpout, "<IMG SRC=\"%s\">%s", fname, NewLineString );
+    fprintf( fpout, "<img src=\"%s\" alt=\"Image file\">%s", fname, NewLineString );
 /* This version makes the images external... */
-    fprintf( fpout, "<A NAME=\"%s\"><IMG SRC=\"%s\"></a><P>%s", 
+    fprintf( fpout, "<a name=\"%s\"><img src=\"%s\" alt=\"Image file\"></a><P>%s", 
 	     anchorname, fname, NewLineString );
 }
 
 void TXmovie( TeXEntry *e, char *movie, char *icon, char *text )
 {
     if (!InDocument || !InOutputBody) return;
-    fprintf( fpout, "<A HREF=\"%s\"><IMG align=top src=\"%s\"></A>%s%s", 
+    fprintf( fpout, "<a href=\"%s\"><img align=top src=\"%s\" alt=\"Movie file\"></a>%s%s", 
 	     movie, icon, text, NewLineString );
 }
 

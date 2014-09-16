@@ -672,7 +672,7 @@ char *TopicFilename( LINK *l )
 static Contents *NewContents( int level, const char *lfname ) 
 {
     Contents *c;
-    c             = NEW(Contents);   CHKPTR(c);
+    c             = NEW(Contents);   CHKPTRN(c);
     /* Link for contents */
     c->Parent     = 0;
     c->Sibling    = 0;
@@ -684,7 +684,7 @@ static Contents *NewContents( int level, const char *lfname )
 
     /* File where found */
     c->fname      = (char *)MALLOC( strlen( lfname ) + 1 );
-    CHKPTR(c->fname);
+    CHKPTRN(c->fname);
     if (SafeStrncpy( c->fname, 
 		     (lfname[0] == '#') ? lfname + 1 : lfname, 
 		     strlen(lfname) + 1 )) {

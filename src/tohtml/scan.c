@@ -61,6 +61,8 @@ void SCSetAtLetter( int flag )
 /* 
    We really want to use the same mechanism that TeX does; this
    requires having a translation table for characters to types
+
+   FIXME:  This is not used yet (set but not referenced)
  */
 static int chartype[256];
 

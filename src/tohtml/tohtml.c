@@ -19,8 +19,6 @@ void PrintHelp ( char * );
 
 /* void ProcessInfoFile ( int, char **, FILE *, FILE * ); */
 
-void RemoveExtension ( char * );
-
 /* void ProcessLatexFile ( int, char **, FILE *, FILE * );*/
 
 void SaveCommandLine( int, char *[] );

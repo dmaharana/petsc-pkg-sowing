@@ -52,7 +52,7 @@ extern char *outfile;     /* Name of output file */
 extern FILE *ferr;        /* Error report file */
 
 extern int  splitlevel;
-extern char splitdir[100];/* directory for output files */
+extern char splitdir[256];/* directory for output files */
 
 extern char userpath[1024];  /* Path to search for package definitions */
 
@@ -279,6 +279,8 @@ extern void SCPushChar ( char );
 extern void SCSetCommentChar ( char );
 extern void SCSkipNewlines ( FILE * );
 extern char SCGetCommentChar ( void );
+extern void SCTxtDiscardToEndOfLine( FILE * );
+extern void SCSkipNewlines2( FILE *fp );
 
 /* simpleif.c */
 extern void TXNewif( TeXEntry * );
@@ -303,6 +305,10 @@ extern void TeXtabular ( TeXEntry * );
 extern void TeXGetTabularDefn( void );
 extern void TeXBeginHalignTable( void );
 extern void TeXEndHalignTable( void );
+extern void TeXNewAlignCol( void );
+extern void TeXPutAlign( void );
+extern void TeXEndHalignRow( void );
+
 
 /* texactio.c */
 extern void TXSetDebug ( int );
@@ -513,6 +519,10 @@ extern void WriteBeginPage ( FILE * );
 extern void WriteHeadPage ( FILE * );
 
 extern int SafeStrncpy( char *, const char *, size_t );
+
+extern void RemoveExtension ( char * );
+extern void GetMainInputFileName( char * );
+
 
 /* userdef.c */
 extern void TXDebugDef ( int );

@@ -466,6 +466,7 @@ documentcmd, preamble ? preamble : "{article}" );
 		strcpy( ext, "gif" );
 	    }
 	    else {
+		fprintf( stderr, "Warning: Output to XBM file for %s.ps found; browsers no longer support these files\n", name );
 		if (LatexQuiet) 
 		    sprintf( pgm, "%spstoxbm %s.ps %s.xbm >>%s 2>&1", 
 			     PSPATH, name, name, latex_errname );
