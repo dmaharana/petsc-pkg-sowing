@@ -208,9 +208,9 @@ int main( int argc, char *argv[] )
 	IsGaudy = 1;
     }
 
-    if (SYArgHasName( &argc, argv, 1, "-nonavnames" )) 
+    if (SYArgHasName( &argc, argv, 1, "-nonavnames" ))
 	DoNavNames = 0;
-    if (SYArgHasName( &argc, argv, 1, "-notopnames" )) 
+    if (SYArgHasName( &argc, argv, 1, "-notopnames" ))
 	DoTopNames = 0;
     if (SYArgHasName( &argc, argv, 1, "-nobottomnav" ))
 	DoBottomNav = 0;
@@ -250,12 +250,12 @@ int main( int argc, char *argv[] )
    -split 1        , chapters AND sections are in separate files.
 
    Note that in this case, ALL files are written into the split directory 
-   */    
+   */
     SYArgGetInt( &argc, argv, 1, "-split", &splitlevel );
 
     SYArgGetInt( &argc, argv, 1, "-headeroffset", &level_offset );
 
-/* Get the hypertext mappings */    
+/* Get the hypertext mappings */
     while (SYArgGetString( &argc, argv, 1, "-mapref", infilename, 256 )) {
 	RdRefMap( infilename );
     }
@@ -271,14 +271,15 @@ int main( int argc, char *argv[] )
 	TXSetProcessManPageTokens( 1 );
     }
 
-    basedir[0] = 0;    
+    basedir[0] = 0;
     SYArgGetString( &argc, argv, 1, "-basedir", basedir, 256 );
 
-    userpath[0] = 0;    
+    userpath[0] = 0;
     SYArgGetString( &argc, argv, 1, "-userpath", userpath, 256 );
 
     /* Set the default image format*/
-    strcpy( ImageExt, "xbm" );
+    /* strcpy( ImageExt, "xbm" ); *//* xbm no longer recognized by browsers */
+    strcpy( ImageExt, "gif" );
     if (SYArgHasName( &argc, argv, 1, "-allgif" ))
         strcpy( ImageExt, "gif" );
 
@@ -565,7 +566,7 @@ void RemoveExtension( char *str )
    THE FORMAL GRAMMAR (but it IS in the description of grammar elements) */
 void WriteStartNewLine( FILE *fp )
 {
-    fprintf( fp, "<BR>%s", NewLineString );
+    fprintf( fp, "<br>%s", NewLineString );
 }	
 
 void DebugWriteString( FILE *fd, const char *str, int maxlen )
@@ -758,7 +759,7 @@ void WriteSectionButtons( FILE *fout, char *name, LINK *l )
 	SetNextButton( fout, contextNext, NextTitle );
 	did_output++;
     }
-    if (did_output) fprintf( fout, "<BR>%s", NewLineString );
+    if (did_output) fprintf( fout, "<br>%s", NewLineString );
     if (DoNavNames) {
 	if (has_parent) {
 	    OutJump( fout, contextParent, ParentTitle, "Up" );
@@ -797,7 +798,7 @@ void OutJump( FILE *fp, char *context, char *name, char *label )
 void SetUpButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetUpButton\n" );
-    fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%sup.%s\"></A>", 
+    fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%sup.%s\" alt=\"Up\"></a>", 
 	     context, NoBMCopy ? BMURL : "", ImageExt );  
 /* fprintf( fp, "<b>Up: </b><A HREF=\"%s\">%s</a> ", context, name ); */
 }   
@@ -805,7 +806,7 @@ void SetUpButton( FILE *fp, char *context, char *name )
 void SetNextButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetNextButton\n" );
-    fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%snext.%s\"></A>", 
+    fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%snext.%s\" alt=\"Next\"></a>", 
 	     context, NoBMCopy ? BMURL : "", ImageExt );  
 /* fprintf( fp, "<b>Next: </b><A HREF=\"%s\">%s</a> ", context, name ); */
 }   
@@ -813,7 +814,7 @@ void SetNextButton( FILE *fp, char *context, char *name )
 void SetPreviousButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetPreviousButton\n" );
-    fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%sprevious.%s\"></A>", 
+    fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%sprevious.%s\" alt=\"Previous\"></a>", 
 	     context, NoBMCopy ? BMURL : "", ImageExt );  
 /* fprintf( fp, "<b>Previous: </b><A HREF=\"%s\">%s</a> ", context, name ); */
 }   
@@ -1012,9 +1013,9 @@ void WriteEndPage( FILE *fpout )
 	    putc( c, fpout );
     }
     if (wrotebody)
-	fprintf( fpout, "</BODY>%s", NewLineString );
+	fprintf( fpout, "</body>%s", NewLineString );
     if (wrotehead)
-	fprintf( fpout, "</HTML>%s", NewLineString );
+	fprintf( fpout, "</html>%s", NewLineString );
     wrotebody = 0;
     InOutputBody = 0;
     if (DebugOutput) printf( "Set InOutputBody and wrotebody to 0\n" );
@@ -1037,7 +1038,7 @@ void WriteBeginPage( FILE *fpout )
 
     if (DebugOutput) fprintf( stdout, "WriteBeginPage\n" );
     /* Should parameterize this - command in basedefs? */
-    fprintf( fpout, "</HEAD>%s<BODY BGCOLOR=\"#FFFFFF\">%s", 
+    fprintf( fpout, "</head>%s<body style=\"background-color:#FFFFFF\">%s", 
 	     NewLineString, NewLineString );
     if (!bofpage) {
 	if (beginpagefilename[0]) {
@@ -1061,7 +1062,7 @@ void WriteHeadPage( FILE *fpout )
     if (wrotehead) return;
     wrotehead = 1;
     if (DebugOutput) fprintf( stdout, "WriteHeadPage\n" );
-    fprintf( fpout, "<HTML>%s<HEAD>%s", NewLineString, NewLineString );
+    fprintf( fpout, "<!DOCTYPE html>\n<html lang=en>%s<head>%s", NewLineString, NewLineString );
     fprintf( fpout, "<!-- This file was generated by tohtml from %s -->%s",
 	     InFName[curfile] ? InFName[curfile] : "unknown", NewLineString );
     fprintf( fpout, "<!-- with the command%stohtml %s%s-->%s", 

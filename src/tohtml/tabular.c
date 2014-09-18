@@ -293,6 +293,10 @@ void TeXNewAlignCol( void )
 	case TAB_RIGHT: align_str = "\"RIGHT\""; break;
 	default: align_str = "\"CENTER\""; break;
 	}
+	if (DebugTab) {
+	    printf( "tabular: col = %d (max=%d), align=%s\n",
+		    hrow->curcol, hrow->ncols, align_str);
+	}
 	sprintf( buf, "<TD ALIGN=%s>", align_str );
 	TeXoutcmd( fpout, buf );
 	hrow->curcol++;
@@ -308,7 +312,6 @@ void TeXPutAlign( void )
 	TeXoutcmd( fpout, "</TD>" );
 	/* Only generate this if the next command is *not* multicolumn */
 	TeXNewAlignCol( );
-	hrow->curcol++;
     }
 }
 

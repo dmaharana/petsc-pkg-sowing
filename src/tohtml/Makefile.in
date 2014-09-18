@@ -1,5 +1,7 @@
 ALL: tohtml
 SHELL       = @SHELL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA    = @INSTALL_DATA@
 
 include ../../Makerules
 top_srcdir=@top_srcdir@
@@ -35,9 +37,12 @@ clean:
 distclean: clean
 	rm -f Makefile testing/Makefile tohtmlpath.h
 
-INSTALL_PROGRAM = $(INSTALL)
-INSTALL_DATA    = $(INSTALL)
 install:
 	$(INSTALL_PROGRAM) tohtml @bindir@/tohtml
-	$(INSTALL_PROGRAM) xwdsize @bindir@/xwdsize
-	$(INSTALL_DATA) basedefs.txt @datarootdir@/basedefs.txt
+	$(INSTALL_DATA) ../../share/basedefs.txt @datarootdir@/basedefs.txt
+
+# We no longer need this program, which is good because X11 is getting
+# harder to find
+#	$(INSTALL_PROGRAM) xwdsize @bindir@/xwdsize
+
+.PHONY: testing clean distclean install all-redirect

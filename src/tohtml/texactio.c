@@ -3138,7 +3138,7 @@ void TXepsfbox( TeXEntry *e )
 	    /* Is it in the CURRENT directory */
 	    fp = fopen( imgoutfile, "r" );
 	    if (fp) {
-		sprintf( fname, "/bin/cp %s %s", imgoutfile, splitdir );
+		sprintf( fname, "/bin/cp -f %s %s", imgoutfile, splitdir );
 		system( fname );
 	    }
 	}
@@ -3846,7 +3846,12 @@ int TXConvertFigureToGIF( char *fname )
     /* find the dirctory separator, if any */
     while (p != fname && *p != DirSep) p--;
     if (*p == DirSep) p++;
-    snprintf( fname2, sizeof(fname2), "%s%c%s", splitdir, DirSep, p );
+    if (!splitdir || *splitdir == 0) {
+	snprintf( fname2, sizeof(fname2), "%s", p );
+    }
+    else {
+	snprintf( fname2, sizeof(fname2), "%s%c%s", splitdir, DirSep, p );
+    }
     p = fname2 + strlen(fname2) - 1;
     while (p != fname2 && *p != '.') p--;
     *p = 0;
@@ -3857,7 +3862,7 @@ int TXConvertFigureToGIF( char *fname )
 	    fprintf( stderr, "Do we need to move %s to %s\n", fname, fname2 );
 	/* Copy the file into the proper directory if it isn't there */
 	if (strcmp( fname, fname2 ) != 0) {
-	    snprintf( pgm, sizeof(pgm), "cp -f %s %s", fname, fname2 );
+	    snprintf( pgm, sizeof(pgm), "/bin/cp -f %s %s", fname, fname2 );
 	    rc = system( pgm );
 	    if (rc) {
 		fprintf( stderr, "Error code %d from %s\n", rc, pgm );
@@ -3921,7 +3926,8 @@ int TXConvertFigureToGIF( char *fname )
 	while (p != fname2 && *p != '.') p--;
 	strncpy( p, ".ps", 10 );
 
-
+	/* Remove the file that we're about to create.  Ignore errors */
+	unlink( fname2 );
 	snprintf( pgm, sizeof(pgm), "pdf2ps %s %s >>%s 2>&1", fname, fname2, 
 		  latex_errname );
 	if (debugF2GIF)

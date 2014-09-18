@@ -92,7 +92,7 @@ void TXbw2( TeXEntry *e )
 {
 /* Usually a linebreak */
     if (!InDocument || !InOutputBody) return;
-    TeXoutcmd( fpout, "<BR>" );
+    TeXoutcmd( fpout, "<br>" );
 }
 /* I use \bw in LaTeXinfo to generate a \ */
 void TXbw( TeXEntry *e )
@@ -107,11 +107,11 @@ void TXoutbullet( TeXEntry *e )
     if (DoGaudy && itemlevel >= 0) {
 	char ctmp[256];
 	if (NoBMCopy)
-	    sprintf( ctmp, "<DT><IMG WIDTH=14 HEIGHT=14 SRC=\"%s%sball.gif\" ALT=\"*\">%s", 
+	    sprintf( ctmp, "<DT><img width=14 height=14 src=\"%s%sball.gif\" alt=\"*\">%s", 
 		     BMURL, itemgifs[itemlevel >= 5 ? 4 : itemlevel],
 		     NewLineString);
 	else
-	    sprintf( ctmp, "<DT><IMG WIDTH=14 HEIGHT=14 SRC=\"%sball.gif\" ALT=\"*\">%s", 
+	    sprintf( ctmp, "<DT><img width=14 height=14 src=\"%sball.gif\" alt=\"*\">%s", 
 		     itemgifs[itemlevel >= 5 ? 4 : itemlevel], 
 		     NewLineString);
 	TeXoutcmd( fpout, ctmp );
@@ -194,6 +194,7 @@ void TXsf( TeXEntry *e )
 	TeXoutcmd( fpout, buf );
     }
     if (Esp >= 0) {
+	/* Should replace this with span style="font-something:..." */
 	TeXoutcmd( fpout, "<font face=\"sans-serif\">" );
 	EndName[Esp] = "font";
 	LastFont     = "font";
@@ -540,29 +541,29 @@ void TXebrace( TeXEntry *e )
 void TXmath( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;	
-    TeXoutcmd( fpout, "<p><I>" );
+    TeXoutcmd( fpout, "<p><i>" );
 }
 void TXmathend( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;	
-    TeXoutcmd( fpout, "</I><p>" );
+    TeXoutcmd( fpout, "</i><p>" );
 }
 void TXinlinemath( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;	
-    TeXoutcmd( fpout, "<I>" );
+    TeXoutcmd( fpout, "<i>" );
 }
 void TXinlinemathend( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;	
-    TeXoutcmd( fpout, "</I>" );
+    TeXoutcmd( fpout, "</i>" );
 }
 
 void TXWriteStartNewLine( FILE *fout )
 {
     if (!InDocument || !InOutputBody) return;
     if (!IsPreformatted) {
-	TeXoutcmd( fout, "<BR>" );
+	TeXoutcmd( fout, "<br>" );
 	TeXoutstr( fout, NewLineString );
     }
     else
@@ -598,7 +599,7 @@ void TXmaketitle( TeXEntry *e, char *TitleString, char *AuthorString )
 
     TeXoutcmd( fpout, "<b>" );
     TeXoutstr( fpout, AuthorString );
-    TeXoutcmd( fpout, "</b><P>" );
+    TeXoutcmd( fpout, "</b><p>" );
     TXecenter( fpout );
     TeXoutstr( fpout, NewLineString );
 }
@@ -608,17 +609,17 @@ void TXbitemize( TeXEntry *e )
 {
     if (DoGaudy) {
 	itemlevel++;
-	TeXoutcmd( fpout, "<BLOCKQUOTE><DL>" );
+	TeXoutcmd( fpout, "<blockquote><dl>" );
     }
-    else 
-	TeXoutcmd( fpout, "<ul>" );	
+    else
+	TeXoutcmd( fpout, "<ul>" );
     TeXoutstr( fpout, NewLineString );
-}	
+}
 void TXeitemize( TeXEntry *e )
 {
     if (DoGaudy) {
 	itemlevel--;
-	TeXoutcmd( fpout, "</DL></BLOCKQUOTE>" );
+	TeXoutcmd( fpout, "</dl></blockquote>" );
     }
     else
 	TeXoutcmd( fpout, "</ul>" );	
@@ -646,15 +647,17 @@ void TXedescription( TeXEntry *e )
     TeXoutcmd( fpout, "</dl>" );
     TeXoutstr( fpout, NewLineString );
 }
-/* Menus */	
+/* Menus */
+/* HTML is deprecating and then redefining menus.  For the simple passive
+   list of elements, use an un-numbered list (ul) */
 void TXbmenu( FILE *fout )
 {
-    TeXoutcmd( fout, "<menu>" );
+    TeXoutcmd( fout, "<ul>" );
     TeXoutstr( fout, NewLineString );
 }
 void TXemenu( FILE *fout )
 {
-    TeXoutcmd( fout, "</menu>" );
+    TeXoutcmd( fout, "</ul>" );
     TeXoutstr( fout, NewLineString );
 }
 
@@ -671,22 +674,20 @@ void TXedesItem( TeXEntry *e )
     TeXoutstr( fpout, NewLineString );
 }	
 
-void TXWriteHyperLink( fout, token, url, urltype )
-FILE *fout;
-char *token, *url;
-int  urltype;
+void TXWriteHyperLink( FILE *fout, char *token, char *url, int urltype )
 {
     if (!InDocument || !InOutputBody) return;
     fprintf( fout, "<a href=\"%s\">%s</a>", url, token );	
 }	
 
+/* The <center> element has been deprecated.  Use this instead. */
 void TXbcenter( FILE *fpout )
 {
-    TeXoutcmd( fpout, "<center>" );
+    TeXoutcmd( fpout, "<div style=\"text-align:center\">" );
 }
 void TXecenter( FILE *fpout )
 {
-    TeXoutcmd( fpout, "</center>" );
+    TeXoutcmd( fpout, "</div>" );
 }
 
 void TX_XBM_size( char *fname, int *width, int *height )
