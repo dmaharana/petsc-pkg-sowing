@@ -1,6 +1,7 @@
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
 #include <stdio.h>
 #include <ctype.h>
+#include <unistd.h> /* for unlink */
 #include "sowing.h"
 #include "search.h"
 #include "tex.h"
@@ -2672,16 +2673,31 @@ void TXLoadPackage( const char *p )
 }
 
 /* Latex 2e specifies additional stuff using \usepackage, which may have
-   a comma separate list of packages. */
+   a comma separate list of packages.  Format is
+   \usepackage[optional fields]{package-name}
+   Note that it is common for the optional fields to be across multiple
+   lines.
+ */
 void TXusepackage( TeXEntry *e )
 {
     char *p, *ptr, *p1;
+    int hadOptional=0;
 
     PUSHCURTOK;
     strncpy( CmdName, e->name, 64 );
+    TXRemoveOptionalArg(curtok);
+    if (curtok[0]) {
+	strcat(preamble, "\\usepackage[");
+	strcat(preamble, curtok);
+	strcat(preamble, "]");
+	hadOptional = 1;
+    }
     TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXusepackage", e->name );
     if (curtok[0]) {
-	strcat( preamble, "\\usepackage{" );
+	if (!hadOptional) {
+	    strcat( preamble, "\\usepackage" );
+	}
+	strcat(preamble, "{");
 	strcat( preamble, curtok );
 	strcat( preamble, "}" );
     }
