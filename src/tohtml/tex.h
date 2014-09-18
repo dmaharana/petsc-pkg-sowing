@@ -308,7 +308,7 @@ extern void TeXEndHalignTable( void );
 extern void TeXNewAlignCol( void );
 extern void TeXPutAlign( void );
 extern void TeXEndHalignRow( void );
-
+extern void InitTabular(void);
 
 /* texactio.c */
 extern void TXSetDebug ( int );
@@ -430,7 +430,7 @@ extern void TXSetCiteSuffix ( char * );
 extern void TXPrintToken ( FILE *, const char * );
 extern int FileExists ( char * ); 
 extern void TXincludegraphics( TeXEntry * );
-
+extern int TXConvertFigureToGIF(char *);
 /* tex2html.c */
 extern void TXDoGaudy ( int );
 extern void TXStartDoc ( int );
