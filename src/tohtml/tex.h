@@ -428,9 +428,14 @@ extern void ProcessLatexFile ( int, char **, FILE *, FILE * );
 extern void TXSetCitePrefix ( char * );
 extern void TXSetCiteSuffix ( char * );
 extern void TXPrintToken ( FILE *, const char * );
-extern int FileExists ( char * ); 
+extern int FileExists ( char * );
 extern void TXincludegraphics( TeXEntry * );
 extern int TXConvertFigureToGIF(char *);
+extern void TXActiveCharSet( char, void (*)(char *) );
+extern void TXActiveCharClear(void);
+extern void TXActiveCharDo(char *);
+extern void TXDoObeylines(TeXEntry *);
+
 /* tex2html.c */
 extern void TXDoGaudy ( int );
 extern void TXStartDoc ( int );
@@ -477,6 +482,7 @@ extern void TXedesItem ( TeXEntry * );
 extern void TXWriteHyperLink ( FILE *, char *, char *, int );
 extern void TXbcenter( FILE * );
 extern void TXecenter( FILE * );
+extern void TXgroupPushAction( void (*)(void) );
 
 /* tohtml.c - should be moved */
 extern void RemoveFonts ( const char *, char * );

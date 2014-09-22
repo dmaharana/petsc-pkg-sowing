@@ -354,7 +354,7 @@ void TeXEndHalignTable( void )
 void TXmulticolumn( TeXEntry *e )
 {
     HTabularRow *hrow;
-    char buf[256], *align_str;
+    char buf[256], *align_str, *reqalign_p;
     int colcount;
     char aligntype;
 
@@ -368,13 +368,21 @@ void TXmulticolumn( TeXEntry *e )
 
 	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
 	    TeXAbort( "TXmulticolumn", e->name );
-	/* Find alignment type */
-	switch (curtok[0]) {
+	/* Find alignment type.  Skip over | */
+	reqalign_p = curtok;
+	while (*reqalign_p == '|') reqalign_p++;
+	switch (*reqalign_p) {
 	case 'l': align_str = "\"LEFT\"";   break;
 	case 'r': align_str = "\"RIGHT\"";  break;
 	case 'c': align_str = "\"CENTER\""; break;
+	case '\0': 
+	    fprintf( ferr, "Missing multicolumn alignment (%s) in %s, line %d\n",
+		     curtok, InFName[curfile] ? InFName[curfile] : "", LineNo[curfile] );
+	    align_str = "\"CENTER\"";
+	    break;
 	default:  
-	  fprintf( ferr, "Unrecognized multcolumn alignment %c\n", curtok[0] );
+	    fprintf( ferr, "Unrecognized multicolumn alignment %c in %s, line %d\n",
+		     curtok[0], InFName[curfile] ? InFName[curfile] : "", LineNo[curfile] );
 	  align_str = "\"CENTER\""; break;
 	}
 	POPCURTOK;

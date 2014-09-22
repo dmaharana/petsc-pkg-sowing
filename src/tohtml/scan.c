@@ -58,7 +58,7 @@ void SCSetAtLetter( int flag )
     isatletter = flag;
 }
 
-/* 
+/*
    We really want to use the same mechanism that TeX does; this
    requires having a translation table for characters to types
 

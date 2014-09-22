@@ -425,7 +425,7 @@ void WriteSectionAnchor( FILE *fp, char *name, char *entrylevel,
 /* Level must be >= 1 */
     if (DebugOutput) fprintf( stdout, "WriteSectionAnchor\n" );
     if (level < 1) level = 1;
-    fprintf( fp, "<HR><H%d><A NAME=\"%s%d\">%s</a></H%d>%s", 
+    fprintf( fp, "<hr><h%d><span id=\"%s%d\">%s</span></h%d>%s",
 	     level + level_offset, entrylevel, number, tmpname,
 	     level + level_offset, NewLineString );
 }
@@ -437,15 +437,15 @@ void WriteFileTitle( FILE *fp, char *name )
     if (DebugOutput) fprintf( stdout, "WriteFileTitle\n" );
     if (wrotebody) return;
     /* Make sure that we remove TOK_START and TOK_END from name */
-    fprintf( fp, "<TITLE>" );
+    fprintf( fp, "<title>" );
     WriteString( fp, name );
-    fprintf( fp, "</TITLE>%s", NewLineString );
+    fprintf( fp, "</title>%s", NewLineString );
 }
 
 void WriteJumpDestination( FILE *fp, char *name, char *title )
 {
     if (DebugOutput) fprintf( stdout, "WriteJumpDestination\n" );
-    fprintf( fp, "<A NAME=\"%s\">%s</a>", name, title );
+    fprintf( fp, "<span id=\"%s\">%s</span>", name, title );
 }
 
 /*
@@ -491,7 +491,7 @@ void WriteEndofTopic( FILE *fp )
     fprintf( fp, "%s<P>%s", NewLineString, NewLineString );
     /* If there is text for the bottom, add a rule ... */
     if (DoNavNames && DoBottomNav) 
-	fprintf( fp, "<HR>%s", NewLineString );
+	fprintf( fp, "<hr>%s", NewLineString );
 }	
 
 /* This translation needs to happen on output in HTML, if it hasn't 
@@ -728,7 +728,7 @@ void WriteSectionButtons( FILE *fout, char *name, LINK *l )
 			      sizeof(PrevTitle) );
 
 /* This is a horizontal rule for output */
-/* fputs( "<HR>\n", fout ); */
+/* fputs( "<hr>\n", fout ); */
     if (has_prev && DoTopNames) {
 	SetPreviousButton( fout, contextPrev, PrevTitle );
 	did_output++;
@@ -775,7 +775,7 @@ void WriteSectionButtons( FILE *fout, char *name, LINK *l )
 	}
     }
     if (did_output)
-	fprintf( fout, "<P>%s", NewLineString );
+	fprintf( fout, "<p>%s", NewLineString );
 }
 
 void WriteSectionButtonsBottom( FILE *fout, char *name, LINK *l )
@@ -788,7 +788,7 @@ void WriteSectionButtonsBottom( FILE *fout, char *name, LINK *l )
 void OutJump( FILE *fp, char *context, char *name, char *label )
 {
     if (DebugOutput) fprintf( stdout, "OutJump\n" );
-    fprintf( fp, "<b>%s: </b><A HREF=\"%s\">", label, context );
+    fprintf( fp, "<b>%s: </b><a href=\"%s\">", label, context );
     WriteString( fp, name );
     fprintf( fp, "</a>%s", NewLineString );
 }
@@ -823,7 +823,7 @@ void SetPreviousButton( FILE *fp, char *context, char *name )
 void WritePar( FILE *fp )
 {
     fprintf( stderr, "***BOGUS***\n" );
-    fprintf( fp, "<P>%s", NewLineString );
+    fprintf( fp, "<p>%s", NewLineString );
 }
 
 void WriteBeginPointerMenu( FILE *fout )

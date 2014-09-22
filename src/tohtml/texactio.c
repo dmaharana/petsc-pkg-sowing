@@ -228,6 +228,9 @@ char LbraceChar      = '{';
 char RbraceChar      = '}';
 char ArgChar         = '#';
 char AlignChar       = '&';
+char ActiveChar      = '\0';   /* Normally not set.  We allow a single char
+				  to be active; (will be) used for obeylines */
+void (*activeCharAction)(char *) = 0;
 
 /* Special user commands */
 char *UserIndexName = 0;
@@ -665,6 +668,7 @@ void TXnop( TeXEntry *e )
   POPCURTOK;
 }
 
+/* Copy a string and return it in newly allocated memory */
 char *TXCopy( char *s )
 {
     char *n;
@@ -672,12 +676,12 @@ char *TXCopy( char *s )
     strcpy( n, s );
     return n;
 }
-	
+
 /* Place the argument in the location stored in the ctx */
 void TXsavearg( TeXEntry *e )
 {
     PUSHCURTOK;
-    strncpy( CmdName, e->name, 64 );
+    strncpy( CmdName, e->name, sizeof(CmdName)-1 );
     TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXsavearg", e->name );
     strcpy( (char *)(e->ctx), curtok );
     CmdName[0] = 0;
@@ -1055,7 +1059,7 @@ void TXasisGrouped( TeXEntry *e )
     TXbgroup( e );
     if (DebugCommands)
 	fprintf( stdout, "Getting %d arguments for %s\n", e->nargs, e->name );
-    strncpy( CmdName, e->name, 64 );
+    strncpy( CmdName, e->name, sizeof(CmdName)-1 );
     for (i=0; i<e->nargs; i++) {
 	if (TeXGetArg( fpin[curfile], asistoken, MAX_TOKEN ) == -1) {
 	    fprintf( stdout, "Failed to get argument for %s\n", e->name );
@@ -1090,7 +1094,7 @@ void TXbox( TeXEntry *e )
     TXbgroup( e );
     if (DebugCommands)
 	fprintf( stdout, "Getting %d arguments for %s\n", e->nargs, e->name );
-    strncpy( CmdName, e->name, 64 );
+    strncpy( CmdName, e->name, sizeof(CmdName)-1 );
     for (i=0; i<e->nargs; i++) {
 	if (TeXGetArg( fpin[curfile], asistoken, MAX_TOKEN ) == -1) {
 	    fprintf( stdout, "Failed to get argument for %s\n", e->name );
@@ -1453,7 +1457,7 @@ void TXsection( TeXEntry *e )
 	LastSection = GetNextLink( LastSection );
 	/* Check that this matches the name */
 	if (LastSection && strcmp(LastSection->topicname,curtok) != 0) {
-	    fprintf( stderr, "Mismatch in section; expected \"%s\" found \"%s\"\n",
+	    fprintf( stderr, "**Mismatch in section; expected \"%s\" found \"%s\"\n",
 		     curtok, LastSection->topicname );
 	}
     }
@@ -1461,7 +1465,7 @@ void TXsection( TeXEntry *e )
 /* Lookup the section in the aux file list */
 	LastSection = SRLookup( topicctx, curtok, (char *)0, &dummy );
 	if (!LastSection) {
-	    fprintf( stderr, "Could not find %s in topicctx\n", curtok );
+	    fprintf( stderr, "**Could not find %s in topicctx\n", curtok );
 	}
     }
 
@@ -1496,7 +1500,7 @@ void TXsection( TeXEntry *e )
 /* Skip any newlines until we find the first non-blank */
     SCSkipNewlines( fpin[curfile] );
     POPCURTOK;
-}    
+}
 
 /*
     This is a special version of section for the first page (vtitle) of
@@ -1776,6 +1780,9 @@ void TeXskipEnv( TeXEntry *e, char *name, int flag )
 			fout = fpout;
 		    }
 		}
+	    }
+	    else if (ch == ActiveChar) {
+		TXActiveCharDo(curtok);
 	    }
 	    else {
 		if (flag) {
@@ -2485,7 +2492,7 @@ void TXitem( TeXEntry *e )
 	if (DebugCommands)
 	    fprintf( stdout, "Getting argument for item in description\n" );
 	PUSHCURTOK;
-	strncpy( CmdName, e->name, 64 );
+	strncpy( CmdName, e->name, sizeof(CmdName)-1 );
 	if (TeXGetGenArg( fpin[curfile], curtok, MAX_TOKEN, '[', ']', 1 ) != 1) {
 	  /* It is legal to forget the [], but probably unintended */
 	  fprintf( stdout, 
@@ -2495,9 +2502,18 @@ void TXitem( TeXEntry *e )
 	  /* TeXAbort( "TXbegin description", e->name ); */
 	}
 	CmdName[0] = 0;
+	/* FIXME: Need to process the curtok for commands */
+#if 0
 	TeXoutstr( fpout, curtok );
 	TXegroup( e );
 	TXedesItem( e );
+#else
+	SCPushCommand("<dd>\n");
+	/* Not quite right - need an endgroup, or need to change */
+	BraceCount++;
+	SCPushToken("}");
+	SCPushToken(curtok);
+#endif
 	POPCURTOK;
     }
     else if (lstack[lSp].env == TXENUMERATE) {
@@ -2684,7 +2700,7 @@ void TXusepackage( TeXEntry *e )
     int hadOptional=0;
 
     PUSHCURTOK;
-    strncpy( CmdName, e->name, 64 );
+    strncpy( CmdName, e->name, sizeof(CmdName)-1 );
     TXRemoveOptionalArg(curtok);
     if (curtok[0]) {
 	strcat(preamble, "\\usepackage[");
@@ -2699,9 +2715,13 @@ void TXusepackage( TeXEntry *e )
 	}
 	strcat(preamble, "{");
 	strcat( preamble, curtok );
-	strcat( preamble, "}" );
+	strcat( preamble, "}\n" );
     }
-
+    if (1) {
+	fprintf( stdout, "Procssing usepackage[...]{%s} in %s line %d\n",
+		 curtok, InFName[curfile] ? InFName[curfile]: "",
+		 LineNo[curfile] );
+    }
     /* Now, get comma-separate list of packages and load each one */
     p = curtok;
     while (*p) {
@@ -2753,11 +2773,11 @@ void TXdocumentstyle( TeXEntry *e )
 	p = ptr + 1;
       }
     }
-    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN,
 		   "TXdocumentstyle", (char *)0 );
     strcat( preamble, "{" );
     strcat( preamble, curtok );
-    strcat( preamble, "}" );
+    strcat( preamble, "}\n" );
     p = strrchr( curtok, '/' );
     if (!p) p = curtok;
     else p++;
@@ -3355,12 +3375,13 @@ void TXInsertName( SRList *list, const char *name, void (*action)( TeXEntry *),
  */
 void TXInit( FILE *fin, FILE *fout )
 {
-    if (!TeXlist) 
+    if (!TeXlist)
 	TeXlist = SRCreate();
-	
+
 /* Insert the known LaTeXinfo commands into the table for processing */
+
     TXInsertName( TeXlist, "def", TXDef, 0, (void *)0 );
-/* gdef should eventually be different */
+    /* gdef should eventually be different */
     TXInsertName( TeXlist, "gdef", TXDef, 0, (void *)0 ); 
     TXInsertName( TeXlist, "let", TXlet, 0, (void *)0 );
     TXInsertName( TeXlist, "newcommand", TXNewCommand, 0, (void *)0 );
@@ -3370,6 +3391,8 @@ void TXInit( FILE *fin, FILE *fout )
     TXInsertName( TeXlist, "renewenvironment", TXDoNewenvironment, 0, (void *)0 );
     TXInsertName( TeXlist, "newtheorem", TXDoNewtheorem, 0, (void *)0 );
     TXInsertName( TeXlist, "renewtheorem", TXDoNewtheorem, 0, (void *)0 );
+
+    TXInsertName( TeXlist, "obeylines", TXDoObeylines, 0, (void *)0 );
 
     /* LaTeX conditionals */
     TXInsertName( TeXlist, "newif", TXNewif, 0, (void *)0 );
@@ -3701,6 +3724,9 @@ void ProcessLatexFile( int argc, char **argv, FILE *fin, FILE *fout )
 	else if (ch == AlignChar && HandleAlign) {
 	    TeXPutAlign();
 	}
+	else if (ch == ActiveChar) {
+	    TXActiveCharDo(curtok);
+	}
 	else {
 	    /*
 	      for (i=0; i<nsp; i++) fputs( " ", fout );
@@ -3728,7 +3754,7 @@ void ProcessLatexFile( int argc, char **argv, FILE *fin, FILE *fout )
 
     FREE( tokbuf );
 }
-   
+
 /* Manage the citation characters */
 void TXSetCitePrefix( char *s )
 {
@@ -3961,4 +3987,41 @@ int TXConvertFigureToGIF( char *fname )
 	return rc;
     }
     return rc;
+}
+
+/* Active character handling */
+void TXActiveCharSet( char ch, void (*fcn)(char *) )
+{
+    ActiveChar       = ch;
+    activeCharAction = fcn;
+}
+void TXActiveCharClear(void)
+{
+    ActiveChar       = '\0';
+    activeCharAction = 0;
+}
+void TXActiveCharDo(char *str)
+{
+    if (activeCharAction) {
+	(*activeCharAction)(str);
+    }
+    else {
+	fprintf(stderr, "Attempt to invoke active char action with null action\n");
+    }
+}
+
+void TXObeylinesFlushLine(char *token)
+{
+    if (!InDocument) return;
+    TeXoutcmd( fpout, "<br>\n" );
+}
+void TXObeylinesClearActive(void)
+{
+    TXActiveCharClear();
+}
+/* Obeylines changes the handling of \n until the current group ends */
+void TXDoObeylines(TeXEntry *e)
+{
+    TXActiveCharSet('\n', TXObeylinesFlushLine);
+    TXgroupPushAction(TXObeylinesClearActive);
 }

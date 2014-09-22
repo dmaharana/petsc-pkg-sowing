@@ -135,4 +135,10 @@ void TXAddPredefIf( const char *ifname, int isTrue )
     def = NEW(int); CHKPTR(def);
     *def = isTrue;
     TXInsertName( TeXlist, ifname, TXDoIf, 0, (void *)def );
+    strcpy( iftoken, ifname+2 );
+    strcat( iftoken, "false" );
+    TXInsertName( TeXlist, iftoken, TXDoIfFalse, 0, (void *)def );
+    iftoken[strlen(iftoken)-5] = '\0';
+    strcat( iftoken, "true" );
+    TXInsertName( TeXlist, iftoken, TXDoIfTrue, 0, (void *)def );
 }

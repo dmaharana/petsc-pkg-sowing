@@ -72,9 +72,18 @@ void TXpreformated( FILE *fout, int flag )
     files
  */
 
+/* We may need to add actions to be performed at the end of a group (e.g.,
+   a change in character types, for obeylines, or for improved font handling).
+   This structure allows us to add general actions */
+typedef struct _action_t {
+    void (*fcn)(void); /* Action to perform */
+    struct _action_t *nextAction;
+} action_t;
+
 #define MAX_GROUP_STACK 50
 static int   Esp     = 0;
 static char *(EndName[MAX_GROUP_STACK]);
+static action_t *(endActions[MAX_GROUP_STACK]);
 static char *LastFont = 0;
 
 void TeXoutNewline( FILE *fout )
@@ -107,11 +116,11 @@ void TXoutbullet( TeXEntry *e )
     if (DoGaudy && itemlevel >= 0) {
 	char ctmp[256];
 	if (NoBMCopy)
-	    sprintf( ctmp, "<DT><img width=14 height=14 src=\"%s%sball.gif\" alt=\"*\">%s", 
+	    sprintf( ctmp, "<dt><img width=14 height=14 src=\"%s%sball.gif\" alt=\"*\">%s", 
 		     BMURL, itemgifs[itemlevel >= 5 ? 4 : itemlevel],
 		     NewLineString);
 	else
-	    sprintf( ctmp, "<DT><img width=14 height=14 src=\"%sball.gif\" alt=\"*\">%s", 
+	    sprintf( ctmp, "<dt><img width=14 height=14 src=\"%sball.gif\" alt=\"*\">%s", 
 		     itemgifs[itemlevel >= 5 ? 4 : itemlevel], 
 		     NewLineString);
 	TeXoutcmd( fpout, ctmp );
@@ -128,6 +137,13 @@ void TXbf( TeXEntry *e )
 {
   /* output start of BoldFace */
     if (!InDocument || !InOutputBody) return;
+    if (LastFont && strcmp(LastFont,"b") == 0) {
+	/* Same font, so no need to change */
+	if (DebugFont) {
+	    fprintf( stdout, "Already in bold, nothing to do\n" );
+	}
+	return;
+    }
     if (LastFont) {
 	if (DebugFont) {
 	    fprintf( stdout, "Ended font %s (LastFont):", LastFont );
@@ -137,7 +153,7 @@ void TXbf( TeXEntry *e )
 	TeXoutcmd( fpout, buf );
     }
     if (DebugFont) {
-	fprintf( stdout, "Starting font %s:", "b" );
+	fprintf( stdout, "TXbf: Starting font %s:", "b" );
 	TXPrintLocation( stdout );
     }
 
@@ -157,6 +173,13 @@ void TXem( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;
 /* output start of Emphasis (italics) */
+    if (LastFont && strcmp(LastFont,"em") == 0) {
+	/* Same font, so no need to change */
+	if (DebugFont) {
+	    fprintf( stdout, "Already in em, nothing to do\n" );
+	}
+	return;
+    }
     if (LastFont) {
 	if (DebugFont) {
 	    fprintf( stdout, "Ended font %s (LastFont):", LastFont );
@@ -185,6 +208,15 @@ void TXsf( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;
     /* output start of Sans-serif (use rm for html) */
+#if 0
+    if (LastFont && strcmp(LastFont,"font") == 0) {
+	/* Same font, so no need to change */
+	if (DebugFont) {
+	    fprintf( stdout, "Already in sans serif, nothing to do\n" );
+	}
+	return;
+    }
+#endif
     if (LastFont) {
 	if (DebugFont) {
 	    fprintf( stdout, "Ended font %s (LastFont):", LastFont );
@@ -253,8 +285,10 @@ void TXbgroup( TeXEntry *e )
 	fprintf( stdout, "TXbgroup: Esp=%d:", Esp );
 	TXPrintLocation( stdout );
     }
-    if (Esp >= 0) 
-	EndName[Esp] = 0;
+    if (Esp >= 0) {
+	EndName[Esp]    = 0;
+	endActions[Esp] = 0;
+    }
     else {
 	fprintf( ferr, "Mismatched groups - Esp < 0, = %d, ", Esp );
 	TXPrintLocation( ferr );
@@ -275,20 +309,51 @@ void TXegroup( TeXEntry *e )
 	TXPrintLocation( stdout );
     }
 
-    if (Esp >= 0 && EndName[Esp]) {
-	if (DebugFont) {
-	    fprintf( stdout, "Ended font %s:", EndName[Esp] );
-	    TXPrintLocation( stdout );
+    if (Esp >= 0) {
+	if (EndName[Esp]) {
+	    if (DebugFont) {
+		fprintf( stdout, "Ended font %s:", EndName[Esp] );
+		TXPrintLocation( stdout );
+	    }
+	    sprintf( buf, "</%s>", EndName[Esp] );
+	    TeXoutcmd( fpout, buf );
+	    EndName[Esp] = 0;
 	}
-	sprintf( buf, "</%s>", EndName[Esp] );
-	TeXoutcmd( fpout, buf );
-	EndName[Esp] = 0;
+	if (endActions[Esp]) {
+	    action_t *actions = endActions[Esp], *oldaction;
+	    while (actions) {
+		(actions->fcn)();
+		oldaction = actions;
+		actions   = actions->nextAction;
+		FREE(oldaction);
+	    }
+	    endActions[Esp] = 0;
+	}
     }
     Esp--;
     LastFont = 0;
     if (Esp < -1) { 
 	fprintf( ferr, "Setting scan debug because group count < -1\n" );
 	SCSetDebug( 1 );
+    }
+}
+/* Use this to push a routine to be invoked when the group ends */
+void TXgroupPushAction( void (*fcn)(void) )
+{
+    action_t *newaction, *tail;
+
+    newaction = (action_t *)MALLOC(sizeof(action_t));
+    newaction->fcn = fcn;
+    newaction->nextAction = 0;
+    tail = endActions[Esp];
+    if (!tail) {
+	endActions[Esp] = newaction;
+    }
+    else {
+	while (tail->nextAction) {
+	    tail = tail->nextAction;
+	}
+	tail->nextAction = newaction;
     }
 }
 
@@ -335,7 +400,7 @@ void TXfont_ss( TeXEntry *e )
 	TeXoutcmd( fpout, buf );
     }
     if (DebugFont) {
-	fprintf( stdout, "Starting font %s:", "em" );
+	fprintf( stdout, "TXfont_ss: Starting font %s:", "em" );
 	TXPrintLocation( stdout );
     }
     
@@ -483,12 +548,12 @@ void TXAnchoredImage( TeXEntry *e, char *anchorname, char *fname )
     }
 
     if (height == -1 || width == -1) {
-	fprintf( fpout, "<P><a name=\"%s\"><img src=\"%s\" alt=\"Image file\"></a><P>%s", 
+	fprintf( fpout, "<P><span id=\"%s\"><img src=\"%s\" alt=\"Image file\"></span><P>%s", 
 		 anchorname, fname, NewLineString );
     }
     else {
 	fprintf( fpout, 
-	     "<P><a name=\"%s\"><img width=%d height=%d src=\"%s\" alt=\"Image file\"></a><P>%s", 
+	     "<P><span id=\"%s\"><img width=%d height=%d src=\"%s\" alt=\"Image file\"></span><P>%s", 
 		 anchorname, width, height, fname, NewLineString );
     }
 }
@@ -515,7 +580,7 @@ void TXAnchoredInlineImage( TeXEntry *e, char *anchorname, char *fname )
 
     fprintf( fpout, "<img src=\"%s\" alt=\"Image file\">%s", fname, NewLineString );
 /* This version makes the images external... */
-    fprintf( fpout, "<a name=\"%s\"><img src=\"%s\" alt=\"Image file\"></a><P>%s", 
+    fprintf( fpout, "<span id=\"%s\"><img src=\"%s\" alt=\"Image file\"></span><P>%s", 
 	     anchorname, fname, NewLineString );
 }
 
@@ -592,14 +657,14 @@ void TXmaketitle( TeXEntry *e, char *TitleString, char *AuthorString )
 
     /* Add centering commands to title body */
     TXbcenter( fpout );
-    TeXoutcmd( fpout, "<H1>" );
+    TeXoutcmd( fpout, "<h1>" );
     TeXoutstr( fpout, tmpbuf );
-    TeXoutcmd( fpout, "</H1>" );
+    TeXoutcmd( fpout, "</h1>" );
     TeXoutstr( fpout, NewLineString );
 
-    TeXoutcmd( fpout, "<b>" );
+    TeXoutcmd( fpout, "<p><b>" );
     TeXoutstr( fpout, AuthorString );
-    TeXoutcmd( fpout, "</b><p>" );
+    TeXoutcmd( fpout, "</b></p>" );
     TXecenter( fpout );
     TeXoutstr( fpout, NewLineString );
 }
