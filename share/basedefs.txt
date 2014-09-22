@@ -135,12 +135,14 @@ name cdot 0 .
 #
 nop ve 0
 #
-hdef centerline 1 '<CENTER>'#1'</CENTER>'
+#hdef centerline 1 '<CENTER>'#1'</CENTER>'
+hdef centerline 1 '<div style=\"text-align:center\">'#1'</div>'
 # Some LaTeX uses \center where they mean to use \centerline.
 # This is commented out but can be used in a document-specific 
 # definitions file
 # hdef center 1 '<CENTER>'#1'</CENTER>'
-hdef htmlanchor 2 '<A NAME="'#1'">#2</A>'
+hdef htmlanchor 2 '<span id="'#1'">#2</span>'
+#hdef htmlanchor 2 '<A NAME="'#1'">#2</A>'
 hdef texorpdfstring 2 #1
 # LaTeX2e versions of font changes
 # These don't use the HTML font change commands because LaTeX and HTML font
@@ -158,16 +160,20 @@ hdef hrule 0 '<HR>'
 hdef footnote 1 '<A HREF="JavaScript: alert(''#1'')">*</A>'
 #
 # Environments
-begin-env center 0 '<CENTER>'
-end-env   center 0 '</CENTER>'
+#begin-env center 0 '<CENTER>'
+#end-env   center 0 '</CENTER>'
+begin-env center 0 '<div style="text-align:center">'
+end-env   center 0 '</div>'
 begin-env quote  0 '<QUOTE>'
 end-env   quote  0 '</QUOTE>'
 begin-env quotation  0 '<QUOTE>'
 end-env   quotation  0 '</QUOTE>'
 begin-env normalsize 0 
 end-env   normalsize 0 
-begin-env centering 0 '<CENTER>'
-end-env   centering 0 '</CENTER>'
+begin-env centering 0 '<div style="text-align:center">'
+end-env   centering 0 '</div>'
+#begin-env centering 0 '<CENTER>'
+#end-env   centering 0 '</CENTER>'
 begin-env abstract 0 '<QUOTE>'
 end-env   abstract 0 '</QUOTE>'
 begin-env raggedright 0 
