@@ -107,7 +107,7 @@ test20/test20.html: test20.tex $(TOHTML)
 test5.html: test5.tex test5.cit $(TOHTML)
 	$(TOHTML) -mapref test5.cit -mapman test5m.cit test5.tex
 
-testing: inplace subfiles compare
+testing: $(inplace_files) $(split_files) compare
 
 compare:
 	-@for file in testref/* ; do \
