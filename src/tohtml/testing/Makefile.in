@@ -2,15 +2,17 @@ ALL: inplace subfiles
 
 TOHTML = ../tohtml
 
-inplace: test1.html test2.html test3.html test4.html test6.html test7.html \
-	test7a.html \
+
+inplace: $(inplace_files) ../tohtml
+subfiles: $(split_files)  ../tohtml
+
+inplace_files = test1.html test2.html test3.html test4.html test6.html \
+        test7.html test7a.html \
 	test8.html test9.html test10.html test11.html test12.html test13.html \
 	test14.html test15.html test16.html test17.html test18.html \
-	test20.html ../tohtml
-	touch inplace
-subfiles: test1/test1.html test2/test2.html test3/test3.html test4/test4.html \
-	test6/test6.html test7/test7.html ../tohtml
-	touch subfiles
+	test25.html test26.html test27.html test28.html
+split_files = test1/test1.html test2/test2.html test3/test3.html \
+	test4/test4.html test6/test6.html test7/test7.html test20/test20.html
 
 # Inplace option
 test1.html: test1.tex $(TOHTML)
@@ -56,8 +58,6 @@ test17.html: test17.tex $(TOHTML)
 	$(TOHTML) test17.tex
 test18.html: test18.tex $(TOHTML)
 	$(TOHTML) test18.tex
-test20.html: test20.tex $(TOHTML)
-	$(TOHTML) -latex test20.tex
 test25.html: test25.tex $(TOHTML)
 	rm -f testf1.gif testf1.ps
 	$(TOHTML) test25.tex
@@ -69,6 +69,8 @@ test26.html: test26.tex $(TOHTML)
 	$(TOHTML) test26.tex
 test27.html: test27.tex $(TOHTML)
 	$(TOHTML) -cvtlatex test27.tex
+test28.html: test28.tex $(TOHTML)
+	$(TOHTML) test28.tex
 
 # default
 test1/test1.html: test1.tex $(TOHTML)
@@ -98,6 +100,8 @@ test12/test12.html: test12.tex $(TOHTML)
 test7a.html: test7.tex $(TOHTML)
 	rm -f test7a.html test7.html
 	$(TOHTML) -default -htables -split -1 test7.tex -o test7a.html
+test20/test20.html: test20.tex $(TOHTML)
+	$(TOHTML) -cvtmath -split 1 test20.tex
 
 # default with active token processing
 test5.html: test5.tex test5.cit $(TOHTML)
@@ -132,6 +136,36 @@ compare:
 	fi ; \
 	done
 
+compare2: $(inplace_files) $(split_files)
+	@for file in $(inplace_files) ; do \
+	   if test ! -s testref/$$file ; then \
+		echo "Missing reference file testref/$$file!" ; continue ; \
+	   fi ; \
+	   if diff -b $$file testref/$$file >/dev/null 2>&1 ; then \
+		: ; \
+	   else \
+	       echo "File $$file differs from reference:" ;\
+	       diff -b $$file testref/$$file ; \
+	   fi ; \
+	done
+	@for file in $(split_files) ; do \
+	    if test ! -s testref/$$file ; then \
+		echo "Missing reference split file or directory testref/$$file!" ; \
+	    else \
+	        sdir=`dirname $$file` ; \
+	        for sfile in testref/$$sdir/* ; do \
+		    if test -d testref/$$sdir/$$sfile ; then continue ; fi ;\
+		    if diff -b $$sfile $$sdir >/dev/null 2>&1 ; then \
+			: ;\
+		    else \
+			srcfile=`basename $$sfile` ;\
+			echo "File $$sdir/$$srcfile differs from reference:";\
+			diff -b $$sdir/$$srcfile $$sfile ; \
+		    fi ;\
+		done ;\
+	    fi ;\
+	done
+
 clean:
 	-rm -rf test[1-9] test1[0-9] test2[0-9]
 	-rm -f test[1-9].html
@@ -145,4 +179,4 @@ clean:
 
 Makefile: Makefile.in ../../../config.status
 	(cd ../../.. && ./config.status --file=src/tohtml/testing/Makefile)
-.PHONY: clean
+.PHONY: clean inplace subfiles compare compare2
