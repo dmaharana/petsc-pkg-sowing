@@ -1,1 +1,4 @@
 This file contains SYMakeAllDirs and a reference to MPI_Info_c2f.
+
+In addition, here is an uppercase-only version of MPI_INFO_C2F, for testing
+with the -nocase option.

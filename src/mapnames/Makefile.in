@@ -21,7 +21,7 @@ default: $(EXECS)
 mapnames: mapnames.o
 	$(CXX_LINK) -o mapnames mapnames.o $(LIBS)
 
-doc_SOURCES = 
+doc_SOURCES =
 wwwpages:
 manpages:
 
@@ -30,14 +30,16 @@ clean:
 distclean: clean
 	rm -f Makefile
 
-testing: mapnames
-	cat test1 | ./mapnames -map map1.cit -o test1.html 
+testing: mapnames test1
+	cat test1 | ./mapnames -map map1.cit -o test1.html
 	cat test1 | ./mapnames -map map1.cit -latexout -o test1.tex
-	@if diff -b test1.html test/test1.html ; then : \
-	else \
-	    echo "Failure in test!" ; \
-	fi
-	@if diff -b test1.tex test/test1.tex ; then : \
-	else \
-	    echo "Failure in test!" ; \
-	fi
+	cat test1 | ./mapnames -nocase -ignorerepl -map map1.cit -latexout -o test1nc.tex
+	cat test1 | ./mapnames -nocase -ignorerepl -map map1.cit -o test1nc.html
+	@for file in test1.html test1.tex test1nc.tex test1nc.html ; do \
+	    if diff -b $$file test/$$file >/dev/null 2>&1 ; then : ; else \
+	    echo "Failure in test for $$file" ; \
+	    diff -b $$file test/$$file ; fi ; \
+	done
+
+Makefile: Makefile.in
+	(cd ../.. && ./config.status --file=src/mapnames/Makefile)
