@@ -1601,7 +1601,9 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 {
     int  i;
     char *token = 0;
+    char sname[2];
     
+    sname[1] = 0;
     /* 
      * Initial setup.  Fortran is case-insensitive and C is case-sensitive
      * Check that the case-insensitive argument names are distinct, and
@@ -1621,21 +1623,23 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
     } else {
 	token = is_function ? "function" : "subroutine";
     }
-    OutputFortranToken( fout, 8, token );
+    OutputFortranToken( fout, 6, token );
     OutputFortranToken( fout, 1, name );
     OutputFortranToken( fout, 0, "(" );
     for (i=0; i<nargs-1; i++) {
-	OutputFortranToken( fout, 0, args[i].name );
-	OutputFortranToken( fout, 0, ", " );
+        sname[0] = 'a' + (char)i;
+	OutputFortranToken( fout, 0, sname );
+	OutputFortranToken( fout, 0, "," );
     }
     if (nargs > 0) {
 	/* Do the last arg, if any */
-	OutputFortranToken( fout, 0, args[nargs-1].name );
-	OutputFortranToken( fout, 0, " " );
+        sname[0] = 'a' + (char)(nargs-1);
+	OutputFortranToken( fout, 0, sname );
+        /*	OutputFortranToken( fout, 0, " " ); */
     }
     if (useFerr) {
 	if (nargs > 0) OutputFortranToken( fout, 0, "," );
-	OutputFortranToken( fout, 0, "ierr" );
+	OutputFortranToken( fout, 0, "z");
     }     
     OutputFortranToken( fout, 0, ")" );
     OutputFortranToken( fout, 0, "\n" );
@@ -1652,7 +1656,8 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 	    OutputFortranToken( fout, 7, 
 				ArgToFortran( types[args[i].type].type ) );
 	}
-	OutputFortranToken( fout, 1, args[i].name );
+        sname[0] = 'a' + (char)(i);
+	OutputFortranToken( fout, 1, sname );
 	if (args[i].has_array && !args[i].void_function) {
 	    OutputFortranToken( fout, 1, "(*)" );
 	}
@@ -1703,7 +1708,7 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 
     /* Add a "decl/result(name) for functions */
     if (useFerr) {
-	OutputFortranToken( fout, 7, "integer ierr" );
+	OutputFortranToken( fout, 7, "integer z" );
     } else if (is_function) {
 	OutputFortranToken( fout, 7, ArgToFortran( rt->name ) );
 	OutputFortranToken( fout, 1, name );
