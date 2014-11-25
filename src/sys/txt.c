@@ -358,8 +358,7 @@ return i+1;
     Input Parameter:
 .   s - Pointer to string to convert
 @*/
-void SYTxtUpperCase( s )
-char *s;
+void SYTxtUpperCase( char *s )
 {
 char c;
 while (*s) {
@@ -375,8 +374,7 @@ while (*s) {
     Input Parameter:
 .   s - Pointer to string to convert
 @*/
-void SYTxtLowerCase( s )
-char *s;
+void SYTxtLowerCase( char *s )
 {
 char c;
 while (*s) {

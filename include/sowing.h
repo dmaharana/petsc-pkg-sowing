@@ -47,4 +47,7 @@ void SYGetArchType( char *, int );
 /* Include space tracing code */
 #include "trspace.h"
 
+/* Include the configuration file routine from sys */
+#include "rdconfig.h"
+
 #endif
