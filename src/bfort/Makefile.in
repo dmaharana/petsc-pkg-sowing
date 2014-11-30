@@ -11,7 +11,8 @@ INCLUDES = -I${top_srcdir}/include
 
 LIBS       =  ../../lib/libsowing.a
 INCLUDES   = -I${top_srcdir}/include -I../../include
-DEFS       = -DBASEDEF='"@datarootdir@/basedefs.txt"'
+DEFS       = -DBASEDEF='"@datarootdir@/bfort-base.txt"' \
+	     -DBASEPATH='"@datarootdir@"'
 PROGRAMS   = bfort
 
 bfort: bfort.o  doc.o
