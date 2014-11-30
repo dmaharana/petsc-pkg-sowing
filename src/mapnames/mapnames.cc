@@ -5,6 +5,9 @@
 #include "textout.h"
 #include <string.h>
 
+static int debug = 0;
+static int debugStream = 0;
+static int debugMap = 0;
 /* 
    This is a simple program that uses the in and out streams to 
    copy one file to another, with remapping.
@@ -25,8 +28,12 @@
                       tokens.
    -inhtml          - Input is HTML.  Name mapping won't happen within HTML
                       constructions (e.g., between < and >)
+   -nocase          - Ignore case when looking up tokens
+   -ignorerepl      - Ignore the replacement text in the map file.  Normally
+                      used with -nocase
    -latexout        - Output is LaTeX.  Links are writen using \href instead
                       of <A.../A>.
+   -debug           - Turn on debugging
 
   Format of the map file:
   # comments
@@ -60,12 +67,15 @@ int main( int argc, char **argv )
     int       nsp;
     int       pflag = 0;
     int       input_is_html = 0;
+    int       ignore_case = 0;
+    int       ignoreRepl = 0;
 
     /* Allow stdin and stdout as input, output files (so that this can be a 
        filter) */
     cmd = new CmdLine( argc, argv );
 
     if (!cmd->HasArg( "-debug_paths" )) (void) InstreamDebugPaths( 1 );
+    if (!cmd->HasArg( "-debug" )) debug = 1;
 
     if (!cmd->HasArg( "-printmatch" )) pflag = 1;
 
@@ -78,8 +88,17 @@ int main( int argc, char **argv )
       // Unfortunately GetArg doesn't distringuish between no arg and no
       // value for arg.
     }
+    if (!cmd->HasArg( "-nocase" )) {
+	ignore_case = 1;
+    }
+    if (!cmd->HasArg( "-ignorerepl" )) {
+	ignoreRepl = 1;
+    }
+
     /* Source and destination files */
     // ins  = new InStreamFile( "map1.C", "r" );
+    // TODO: Allow input filename on command line; if no filename,
+    // use stdin (so this program can be a component of a pipe)
     ins  = new InStreamFile( );
     ins->SetBreakChar( '\n', BREAK_OTHER );
     ins->SetBreakChar( '\t', BREAK_OTHER );
@@ -109,7 +128,7 @@ int main( int argc, char **argv )
       //      fprintf( stderr, "No output format specified! (-html)\n" );
       // return 1;
     }
-    textout->SetDebug( 0 );
+    textout->SetDebug( debugStream );
 
     /* Get the mapping file from the command line */
     while (!cmd->GetArgPtr( "-map", &mappath )) {
@@ -122,23 +141,33 @@ int main( int argc, char **argv )
 	      map = new TextOutMap( 0, pflag );
 	  }
       }
+      if (debug) printf( "reading map...\n");
       mapins = new InStreamFile( mappath, "r" );
       if (mapins->status) {
 	fprintf( stderr, "Could not read map file %s\n", mappath );
 	perror( "Reason:" );
       }
       else 
-	map->ReadMap( mapins );
+	  map->ReadMap( mapins, ignore_case, ignoreRepl );
       delete mapins;
+      if (debug) printf( "done with reading map %s\n", mappath );
     }
     if (!cmd->HasArg( "-backslashalpha" )) {
       ins->SetBreakChar( '\\', BREAK_ALPHA );
       ins->SetBreakChar( '_', BREAK_ALPHA );
       map->SetBreakChar( '\\', BREAK_ALPHA );
     }
+
+    const char *p = 0;
+    if (!cmd->NextArg(&p)) {
+	fprintf( stderr, "Unexpected argument %s!\n", p );
+	return 1;
+    }
+    /* End of argument processing.  */
+
     if (map) {
       map->next = textout;
-      textout  = map;
+      textout   = map;
     }
 
     if (!map) {
@@ -146,19 +175,19 @@ int main( int argc, char **argv )
       return 1;
     }
 
-
     textout->SetOutstream( echo );
-    while (!ins->GetToken( 256, token, &nsp )) {
+    if (debug) printf( "Getting tokens from input...\n" );
+    while (!ins->GetToken( sizeof(token), token, &nsp )) {
         // As a special feature, we should accept a mode where the input
         // file is in HTML format, and in that case, we just skip until
         // we see the closing angle bracket
         //printf( "token [0] = %c\n", token[0] );
-        //printf( "token = %s\n", token );
+        if (debug) printf( "token = %s\n", token );
         if (input_is_html && token[0] == '<') {
 	  //printf( "In html input\n" );
 	  map->PutQuoted(0, "\0" );  // This accomplishes a flush
 	  map->next->PutToken( nsp, token );
-	  while (!ins->GetToken( 256, token, &nsp )) {
+	  while (!ins->GetToken( sizeof(token), token, &nsp )) {
 	    map->next->PutToken( nsp, token );
 	    if (token[0] == '>') break;
 	    token[0] = 0;
@@ -200,7 +229,15 @@ int TextOutMapLatex::PutLink( const char *name, SrEntry *entry )
     next->PutToken( 0, info->url );
     next->PutToken( 0, "}" );
     next->PutToken( 0, "{" );
-    next->PutToken( 0, info->repname );
+    // If there is no replacement name, use the original name
+    if (info->repname && info->repname[0] != 0) {
+	//if (debug) printf( "OutStreamMap: repname nonnull = :%s:\n", info->repname );
+	next->PutToken( 0, info->repname );
+    }
+    else {
+	//if (debug) printf( "repname null, using name = :%s:\n", name );
+	next->PutToken( 0, name );
+    }
     next->PutToken( 0, "}" );
     return 0;
 }
