@@ -7,9 +7,9 @@
 /*
  * This file contains routines to map names from string to another.
  * The mechanism is fairly general, and is implemented as an OutStream,
- * allowing it to be instered almost anywhere.
+ * allowing it to be inserted almost anywhere.
  *
- * The most convenient way to generating the mapping table is by 
+ * The most convenient way to generating the mapping table is by
  * reading a file; for this we use the command file-reading object.
  * Should probably remove Outstream version, or unify code
  */
@@ -29,10 +29,12 @@ void OutStreamMap::Setup( int in_maxlen )
     maxlen	  = in_maxlen;
     activetok	  = new char[maxlen];
     activetok[0]  = 0;
+    lctok         = new char[maxlen];  // Used for a lower case version of activetok
     curlen	  = 0;
     position	  = activetok;
     maptable	  = new SrList();
     print_matched = 0;  // For debugging
+    ignore_case   = 0;
 
     for (i=0; i<255; i++) {
 	breaktable[i] = BREAK_OTHER;
@@ -71,7 +73,14 @@ void OutStreamMap::FlushTokBuf( void )
 {
   if (curlen) {
     SrEntry *entry;
-    if (maptable->Lookup( activetok, &entry ) == 0) {
+    // Add an option to only compare lower case version?  In that case,
+    // also insert entries only in lower case.
+
+    strcpy(lctok,activetok);
+    if (ignore_case) {
+	toLower(lctok);
+    }
+    if (maptable->Lookup( lctok, &entry ) == 0) {
       PutLink( activetok, entry );
     }
     else {
@@ -81,7 +90,17 @@ void OutStreamMap::FlushTokBuf( void )
   }
 }
 
-/* 
+void OutStreamMap::toLower(char *s)
+{
+    char c;
+    while (*s) {
+	c = *s;
+	if (isascii(c) && isupper(c)) *s = tolower(c);
+	s++;
+    }
+}
+
+/*
  * This routine works by putting a token into the internal buffer.
  * Once it knows that it can (found a delimiter), it tries to look it
  * up and replace it.
@@ -136,12 +155,16 @@ int OutStreamMap::PutToken( int nsp, const char *token )
 		    activetok[maxlen-1] = 0;
 		    fprintf( stderr, "Token too long (%s)=n", activetok );
 		    return 1;
-		    }
 		}
 	    }
-	activetok[curlen] = 0;
 	}
-    if (maptable->Lookup( activetok, &entry ) == 0) {
+	activetok[curlen] = 0;
+    }
+	strcpy(lctok,activetok);
+	if (ignore_case) {
+	    toLower(lctok);
+	}
+    if (maptable->Lookup( lctok, &entry ) == 0) {
       // Allow debugging output of all matched tokens
       // Eventually, we should instead have a "token stream" operation;
       // then this filter is simply built on top of that token stream
@@ -181,13 +204,18 @@ int OutStreamMap::PutChar( const char c )
 /*
    Read a map file from the instream
  */
-int OutStreamMap::ReadMap( InStream *ins )
+int OutStreamMap::ReadMap( InStream *ins, int ignore_case, int ignoreRepl )
 {
-    char name[MAX_NAME_LEN], reptext[MAX_REPNAME_LEN], url[MAX_URL_LEN], *p;
+    char    *name, *reptext, *url, *p, *lcname;
     char ch, sepchar;
     SrEntry *entry;
     MapData *info;
     int     ln;
+
+    name    = new char[MAX_NAME_LEN];
+    lcname  = new char[MAX_NAME_LEN];
+    reptext = new char[MAX_REPNAME_LEN];
+    url     = new char[MAX_URL_LEN];
 
     while (!ins->GetChar( &ch )) {
 	/* Skip comments */
@@ -197,9 +225,11 @@ int OutStreamMap::ReadMap( InStream *ins )
 	    }
 	/* Read file line.  One format is
 	   tagtype:%cname%c%crepname%c%c%c%cskip%cURL
-	   
+
 	   where %c is any character, but the same character must be used
 	   in all places (on a line-bu-line basis).
+
+	   repname may be empty (null).
          */
 	while (!ins->GetChar( &ch ) && ch != ':' && ch != '\n') ;
 	ins->GetChar( &sepchar );
@@ -221,23 +251,45 @@ int OutStreamMap::ReadMap( InStream *ins )
 	while (!ins->GetChar( &ch ) && ch == sepchar) ;
 	while (!ins->GetChar( &ch ) && ch != sepchar) ;
 	p = url; ln = 0;
-	while (!ins->GetChar( &ch ) && ch != '\n' && ++ln < MAX_URL_LEN) 
+	while (!ins->GetChar( &ch ) && ch != '\n' && ++ln < MAX_URL_LEN)
 	  *p++ = ch;
 	if (ch != '\n') {
 	  fprintf( stderr, "URL too long in map\n" );
 	  return 1;
 	}
 	/* Install this name */
-	
-	maptable->Insert( name, &entry );
-	info = new MapData;
+	strcpy(lcname,name);
+	if (ignore_case) toLower(lcname);
+	//if (debug) printf( "Inserting :%s:\n", lcname );
+	maptable->Insert( lcname, &entry );
+	info          = new MapData;
+	if (ignoreRepl) {
+	    // Ignore the replacement - just null out the string.
+	    // if (debug) printf( "Ignoring the replacement text\n" );
+	    reptext[0] = 0;
+	}
 	info->repname = new char[strlen(reptext)+1];
 	info->url     = new char[strlen(url)+1];
 	strcpy( info->repname, reptext );
 	strcpy( info->url, url );
 	entry->extra_data = (void *)info;
 	}
-	return 0;
+
+    this->ignore_case = ignore_case;
+    delete[] name;
+    delete[] lcname;
+    delete[] reptext;
+    delete[] url;
+
+    return 0;
+}
+int OutStreamMap::ReadMap( InStream *ins, int ignore_case )
+{
+    return ReadMap( ins, ignore_case, 0 );
+}
+int OutStreamMap::ReadMap( InStream *ins )
+{
+    return ReadMap( ins, 0, 0 );
 }
 
 // This should really use a PutOp( "link", url, repname ) call to
@@ -245,11 +297,19 @@ int OutStreamMap::ReadMap( InStream *ins )
 int OutStreamMap::PutLink( const char *name, SrEntry *entry )
 {
     MapData *info = (MapData *)entry->extra_data;
-    next->PutToken( 0, "<A href=\"" );
+    next->PutToken( 0, "<a href=\"" );
     next->PutToken( 0, info->url );
     next->PutToken( 0, "\">" );
-    next->PutToken( 0, info->repname );
-    next->PutToken( 0, "</A>" );
+    // If there is no replacement name, use the original name
+    if (info->repname && info->repname[0] != 0) {
+	//if (debug) printf( "OutStreamMap: repname nonnull = :%s:\n", info->repname );
+	next->PutToken( 0, info->repname );
+    }
+    else {
+	//if (debug) printf( "repname null, using name = :%s:\n", name );
+	next->PutToken( 0, name );
+    }
+    next->PutToken( 0, "</a>" );
     return 0;
 }
 OutStreamMap::~OutStreamMap()
@@ -272,6 +332,7 @@ void TextOutMap::Setup( int in_maxlen )
     maxlen    = in_maxlen;
     activetok = new char[maxlen];
     activetok[0] = 0;
+    lctok      = new char[maxlen];  // Used for a lower case version of activetok
     curlen    = 0;
     position  = activetok;
     maptable  = new SrList();
@@ -295,6 +356,7 @@ void TextOutMap::Setup( int in_maxlen )
     next	  = 0;
     userops	  = 0;
     print_matched = 0;
+    ignore_case   = 0;
 
     debug	  = 0;
 }
@@ -351,7 +413,12 @@ void TextOutMap::FlushTokBuf( void )
 {
   if (curlen) {
     SrEntry *entry;
-    if (maptable->Lookup( activetok, &entry ) == 0) {
+    strcpy(lctok,activetok);
+    if (ignore_case) {
+	toLower(lctok);
+    }
+    if (debug) printf( "Looking up :%s:\n", lctok );
+    if (maptable->Lookup( lctok, &entry ) == 0) {
       PutLink( activetok, entry );
     }
     else {
@@ -390,7 +457,12 @@ int TextOutMap::PutToken( int nsp, const char *token )
         printf( "Looking up %s ...", activetok );
       }
       if (activetok[0] == 0) return 0;
-      if (maptable->Lookup( activetok, &entry ) == 0) {
+      strcpy(lctok,activetok);
+      if (ignore_case) {
+	  toLower(lctok);
+      }
+      if (debug) printf( "Looking up :%s:\n", lctok );
+      if (maptable->Lookup( lctok, &entry ) == 0) {
         if (debug) printf( "Found entry\n" );
         PutLink( activetok, entry );
       }
@@ -438,7 +510,12 @@ int TextOutMap::PutToken( int nsp, const char *token )
     if (debug) {
         printf( "Looking up %s ...", activetok );
 	}
-    if (maptable->Lookup( activetok, &entry ) == 0) {
+    strcpy(lctok,activetok);
+    if (ignore_case) {
+	toLower(lctok);
+    }
+    if (debug) printf( "Looking up :%s:\n", lctok );
+    if (maptable->Lookup( lctok, &entry ) == 0) {
         if (debug) printf( "Found entry\n" );
 	else if (print_matched) printf( "%s\n", activetok );
         PutLink( activetok, entry );
@@ -453,13 +530,19 @@ int TextOutMap::PutToken( int nsp, const char *token )
     }
     return 0;
 }
-int TextOutMap::ReadMap( InStream *ins )
+int TextOutMap::ReadMap( InStream *ins, int ignore_case, int ignoreRepl )
 {
-    char name[MAX_NAME_LEN], reptext[MAX_REPNAME_LEN], url[MAX_URL_LEN], *p;
+    char *name, *reptext, *url, *lcname, *p;
     char ch, sepchar;
     SrEntry *entry;
     MapData *info;
     int     ln;
+
+    name    = new char[MAX_NAME_LEN];
+    lcname  = new char[MAX_NAME_LEN];
+    reptext = new char[MAX_REPNAME_LEN];
+    url     = new char[MAX_URL_LEN];
+
 
     if (debug) printf( "Reading mappings\n" );
     while (!ins->GetChar( &ch )) {
@@ -505,9 +588,16 @@ int TextOutMap::ReadMap( InStream *ins )
 	*p = 0;
 	
 	/* Install this name */
-	
-	maptable->Insert( name, &entry );
+	strcpy(lcname,name);
+	if (ignore_case) toLower(lcname);
+	//if (debug) printf( "Inserting :%s:\n", lcname );
+	maptable->Insert( lcname, &entry );
 	info = new MapData;
+	if (ignoreRepl) {
+	    // Ignore the replacement - just null out the string.
+	    if (debug) printf( "Ignoring the replacement text\n" );
+	    reptext[0] = 0;
+	}
 	info->repname = new char[strlen(reptext)+1];
 	info->url     = new char[strlen(url)+1];
 	strcpy( info->repname, reptext );
@@ -517,20 +607,45 @@ int TextOutMap::ReadMap( InStream *ins )
 	    printf( "Installing %s with url=%s, text=%s\n", 
 		    name, url, reptext );
 	}
-	}
+    }
+
+    this->ignore_case = ignore_case;
+
+    delete[] name;
+    delete[] lcname;
+    delete[] reptext;
+    delete[] url;
+
     return 0;
 }
+int TextOutMap::ReadMap( InStream *ins, int ignore_case )
+{
+    return ReadMap( ins, ignore_case, 0 );
+}
+int TextOutMap::ReadMap( InStream *ins )
+{
+    return ReadMap( ins, 0, 0 );
+}
+
 int TextOutMap::PutLink( const char *name, SrEntry *entry )
 {
     MapData *info = (MapData *)entry->extra_data;
     // We may need to suppress the output message when no link command
     // is specified, since that is a common case
     if (next->userops->Lookup( "link", 0 )) {
-      next->PutToken( 0, "<A href=\"" );
+      next->PutToken( 0, "<a href=\"" );
       next->PutToken( 0, info->url );
       next->PutToken( 0, "\">" );
-      next->PutToken( 0, info->repname );
-      next->PutToken( 0, "</A>" );
+      // If there is no replacement name, use the original name
+      if (info->repname && info->repname[0] != 0) {
+	  if (debug) printf( "TextOutMap:repname nonnull = :%s:\n", info->repname );
+	  next->PutToken( 0, info->repname );
+      }
+      else {
+	  if (debug) printf( "repname null, using name = :%s:\n", name );
+	  next->PutToken( 0, name );
+      }
+      next->PutToken( 0, "</a>" );
     }
     else {
       next->PutOp( "link", info->url, info->repname, 0 );
@@ -557,4 +672,13 @@ int TextOutMap::SetRegisterValue( int regnum, const char * val )
   if (next)
     next->SetRegisterValue( regnum, val );
   return 0;
+}
+void TextOutMap::toLower(char *s)
+{
+    char c;
+    while (*s) {
+	c = *s;
+	if (isascii(c) && isupper(c)) *s = tolower(c);
+	s++;
+    }
 }

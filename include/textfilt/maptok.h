@@ -10,13 +10,15 @@ class OutStreamMap : public OutStream {
     
  protected:
     char breaktable[256];
-    char *activetok, *position;
+    char *activetok, *position, *lctok;
     int  curlen, maxlen;
     char squote, equote;
     SrList *maptable;
     int print_matched;
+    int ignore_case;
     void Setup( int );
     void FlushTokBuf( void );
+    void toLower(char *);
 
  public:
     OutStreamMap( OutStream * );
@@ -25,6 +27,8 @@ class OutStreamMap : public OutStream {
     OutStreamMap( int );
     ~OutStreamMap();
     int ReadMap( InStream * );
+    int ReadMap( InStream *, int );
+    int ReadMap( InStream *, int, int );
     int PutToken( int, const char * );
     int PutQuoted( int, const char * );
     int PutChar( const char );
@@ -39,13 +43,15 @@ class TextOutMap : public TextOut {
 
  protected:    
     char breaktable[256];
-    char *activetok, *position;
+    char *activetok, *position,*lctok;
     int  curlen, maxlen;
     char squote, equote;
     SrList *maptable;
     int print_matched;
+    int ignore_case;
     void Setup( int );
     void FlushTokBuf( void );
+    void toLower(char *);
 
  public:
     int  debug;
@@ -61,6 +67,8 @@ class TextOutMap : public TextOut {
     virtual int PutLink( const char *, SrEntry * );
     int SetRegisterValue( int, const char * );
     int ReadMap( InStream * );
+    int ReadMap( InStream *, int );
+    int ReadMap( InStream *, int, int );
     };
 
 #endif
