@@ -53,8 +53,11 @@ typedef u_short uid_t;
 typedef u_short gid_t;
 #endif
 
+/* Set to 1 to provide debugging output */
+static int dbg = 1;
+
 /* Prototypes for internal routines */
-int SYiTestFile( char *, char, uid_t, gid_t );
+int SYiTestFile( const char *, char, uid_t, gid_t );
 
 #if defined(HAVE_PWD_H)
 /*@
@@ -66,8 +69,16 @@ int SYiTestFile( char *, char, uid_t, gid_t );
 .   fullpath - pointer to buffer to hold full pathname
 .   flen     - size of fullpath
 
+   Notes:
+   The main role of this routine is to include the current working
+   directory in the full path name.  It also handles the case of
+   a file that starts with '/tmp_mnt/'; in the distant past, this
+   needed to be removed before processing the file path.
+
+   In addition, it handles the common shell convention of '~<username>'
+   as the home directory of user '<username>'.
 @*/
-void SYGetFullPath( char *path, char *fullpath, int flen )
+void SYGetFullPath( const char *path, char *fullpath, int flen )
 {
 struct passwd *pwde;
 int           ln;
@@ -125,7 +136,7 @@ if (strncmp( fullpath, "/tmp_mnt/", 9 ) == 0) {
 /* We could try to handle things like the removal of .. etc */
 }
 #else
-void SYGetFullPath( char *path, char *fullpath, int flen )
+void SYGetFullPath( const char *path, char *fullpath, int flen )
 {
   strcpy( fullpath, path );
 }	
@@ -140,16 +151,19 @@ void SYGetFullPath( char *path, char *fullpath, int flen )
 .   path      - pointer to buffer to hold relative pathname
 .   flen     - size of path
 
+   Notes:
+   Simply removes everything up to the last directory separator ('/'),
+   and returns that path.
 @*/
-void SYGetRelativePath( char *fullpath, char *path, int flen )
+void SYGetRelativePath( const char *fullpath, char *path, int flen )
 {
-char  *p;
+    const char  *p;
 
-/* Find last '/' */
-p = strrchr( fullpath, '/' );
-if (!p) p = fullpath;
-else    p++;
-strncpy( path, p, flen );
+    /* Find last '/' */
+    p = strrchr( fullpath, '/' );
+    if (!p) p = fullpath;
+    else    p++;
+    strncpy( path, p, flen );
 }
 
 #if defined(HAVE_PWD_H)
@@ -174,9 +188,7 @@ else
     strncpy( name, pw->pw_name,nlen );
 }
 #else
-void SYGetUserName( name, nlen )
-int  nlen;
-char *name;
+void SYGetUserName( char *name, int nlen )
 {
 strncpy( name, "Unknown", nlen );
 }
@@ -310,7 +322,7 @@ strncpy( name, "Unknown", nlen );
 #endif 
 
 #if !defined(__MSDOS__) && !defined(WIN32)
-int SYiTestFile ANSI_ARGS(( char *, char, uid_t, gid_t ));
+int SYiTestFile( const char *, char, uid_t, gid_t );
 
 /*+
   SYiTestFile - Test for a file existing with a specified mode.
@@ -323,7 +335,7 @@ int SYiTestFile ANSI_ARGS(( char *, char, uid_t, gid_t ));
   Returns:
   1 if file exists with given mode, 0 otherwise.
 +*/
-int SYiTestFile( char *fname, char mode, uid_t uid, gid_t gid )
+int SYiTestFile( const char *fname, char mode, uid_t uid, gid_t gid )
 {
 int         err;
 struct stat statbuf;
@@ -331,7 +343,7 @@ int         stmode, rbit, wbit, ebit;
 
 if (!fname) return 0;
 
-/* Check to see if the environment variable is a valid regular FILE */
+/* Check to see if fname is a valid regular FILE */
 err = stat( fname, &statbuf );
 if (err != 0) return 0;
 
@@ -373,7 +385,7 @@ else if (mode == 'e') {
     }
 return 0;
 }
-int SYiFileExists( char *fname, char mode )
+int SYiFileExists( const char *fname, char mode )
 {
     static int set_ids = 0;
     static uid_t uid;
@@ -401,70 +413,67 @@ int SYiFileExists( char *fname, char mode )
 #endif
 /* if (!S_ISREG(stmode)) return 0; */
 #if defined(intelparagon)
-if (!S_ISREG(stmode)) return 0;
+    if (!S_ISREG(stmode)) return 0;
 #else
-if (!(S_IFREG & stmode)) return 0;
+    if (!(S_IFREG & stmode)) return 0;
 #endif
 /* Test for accessible. */
-if (statbuf.st_uid == uid) {
-    rbit = S_IRUSR;
-    wbit = S_IWUSR;
-    ebit = S_IXUSR;
+    if (statbuf.st_uid == uid) {
+	rbit = S_IRUSR;
+	wbit = S_IWUSR;
+	ebit = S_IXUSR;
     }
-else if (statbuf.st_gid == gid) {
-    rbit = S_IRGRP;
-    wbit = S_IWGRP;
-    ebit = S_IXGRP;
+    else if (statbuf.st_gid == gid) {
+	rbit = S_IRGRP;
+	wbit = S_IWGRP;
+	ebit = S_IXGRP;
     }
-else {
-    rbit = S_IROTH;
-    wbit = S_IWOTH;
-    ebit = S_IXOTH;
+    else {
+	rbit = S_IROTH;
+	wbit = S_IWOTH;
+	ebit = S_IXOTH;
     }
-if (mode == 'r') {
-    if ((stmode & rbit)) return 1;
+    if (mode == 'r') {
+	if ((stmode & rbit)) return 1;
     }
-else if (mode == 'w') {
-    if ((stmode & wbit)) return 1;
+    else if (mode == 'w') {
+	if ((stmode & wbit)) return 1;
     }
-else if (mode == 'e') {
-    if ((stmode & ebit)) return 1;
+    else if (mode == 'e') {
+	if ((stmode & ebit)) return 1;
     }
-return 0;
+    return 0;
 }
 #else
-int SYiTestFile( fname, mode, uid, gid )
-char  *fname, mode;
-uid_t uid;
-gid_t gid;
+int SYiTestFile( const char *fname, char mode, uid_t uid, gid_t gid )
 {
-int         err;
-struct stat statbuf;
-int         stmode, rbit, wbit, ebit;
+    int         err;
+    struct stat statbuf;
+    int         stmode, rbit, wbit, ebit;
 
-if (!fname) return 0;
+    if (!fname) return 0;
 
 /* Check to see if the environment variable is a valid regular FILE */
-err = stat( fname, &statbuf );
-if (err != 0) return 0;
+    err = stat( fname, &statbuf );
+    if (err != 0) return 0;
 
 /* At least the file exists ... */
-stmode = statbuf.st_mode;
-if (!(S_IFREG & stmode)) return 0;
+    stmode = statbuf.st_mode;
+    if (!(S_IFREG & stmode)) return 0;
 /* Test for accessible. */
-rbit = S_IREAD;
-wbit = S_IWRITE;
-ebit = S_IEXEC;
-if (mode == 'r') {
-    if ((stmode & rbit)) return 1;
+    rbit = S_IREAD;
+    wbit = S_IWRITE;
+    ebit = S_IEXEC;
+    if (mode == 'r') {
+	if ((stmode & rbit)) return 1;
     }
-else if (mode == 'w') {
-    if ((stmode & wbit)) return 1;
+    else if (mode == 'w') {
+	if ((stmode & wbit)) return 1;
     }
-else if (mode == 'e') {
-    if ((stmode & ebit)) return 1;
+    else if (mode == 'e') {
+	if ((stmode & ebit)) return 1;
     }
-return 0;
+    return 0;
 }
 #endif /* MSDOS */
 
@@ -474,24 +483,30 @@ return 0;
                               A default may be provided.
 
    Input Parameters:
-.  path - A string containing "directory:directory:..." (without the
++  path - A string containing "directory:directory:..." (without the
 	  quotes, of course).
 	  As a special case, if the name is a single FILE, that file is
 	  used.
-
 .  defname - default name
-.  name - file name to use with the directories from env
-.  mode - file mode desired (usually 'r' for readable; 'w' for writable and
+.  name - file name to use with the directories from path
+-  mode - file mode desired (usually 'r' for readable; 'w' for writable and
           'e' for executable are also supported)
 
    Output Parameter:
 .  fname - qualified file name
 
-    Returns:
-    1 on success, 0 on failure.
+   Notes:
+   Searches through path for a file with the access mode desired.  The
+   file name is made up of a directory from the path and the 'name'.
+   If no match is found, 'fname' is retured with the value 'defname'.
+   In that case, if 'defname' does not exist with the correct mode,
+   the return value is '0' (failure).  'fname' is `always` set.
+
+   Returns:
+   1 on success, 0 on failure.
 @*/
-int SYGetFileFromPath( char *path, char *defname, char *name, char *fname, 
-		       char mode )
+int SYGetFileFromPath( const char *path, const char *defname,
+		       const char *name, char *fname, char mode )
 {
     char   *p, *cdir;
     int    ln;
@@ -510,13 +525,15 @@ int SYGetFileFromPath( char *path, char *defname, char *name, char *fname,
     if (path) {
 
 /* Check to see if the path is a valid regular FILE */
+	if (dbg)
+	    fprintf(stderr,"Testing path as file %s\n", path);
 	if (SYiTestFile( path, mode, uid, gid )) {
 	    strcpy( fname, path );
 	    return 1;
 	}
-    
+
 /* Make a local copy of path and mangle it */
-	senv = env = (char *)MALLOC( strlen(path) + 1 ); 
+	senv = env = (char *)MALLOC( strlen(path) + 1 );
 	if (!senv) { fprintf( stderr, "Error allocating memory\n" ); return 0; }
 	strcpy( env, path );
 	while (env) {
@@ -533,11 +550,13 @@ int SYGetFileFromPath( char *path, char *defname, char *name, char *fname,
 	    /* Form trial file name */
 	    strcpy( trial, cdir );
 	    ln = strlen( trial );
-	    if (trial[ln-1] != '/') 
+	    if (trial[ln-1] != '/')
 		trial[ln++] = '/';
-	
+
 	    strcpy( trial + ln, name );
 
+	    if (dbg)
+		fprintf(stderr,"Testing file %s\n", trial);
 	    if (SYiTestFile( trial, mode, uid, gid )) {
 		/* need SYGetFullPath rather then copy in case path has . in it */
 		SYGetFullPath( trial,  fname, MAX_FILE_NAME );
@@ -549,68 +568,71 @@ int SYGetFileFromPath( char *path, char *defname, char *name, char *fname,
 	FREE( senv );
     } /* end of if path */
 
+    if (dbg)
+	fprintf(stderr,"Testing file %s\n", fname);
     if (SYiTestFile( fname, mode, uid, gid )) return 1;
     else return 0;
 }
 #else
 /* MSDOS version does not use uid, gid */
-int SYGetFileFromPath( path, defname, name, fname, mode )
-char   *path, *defname, *name, *fname, mode;
+int SYGetFileFromPath( const char *path, const char *defname, const char *name,
+		       char *fname, char mode )
 {
-char   *p, *cdir;
-int    ln;
-char   trial[MAX_FILE_NAME];
-char   *senv, *env;
-uid_t  uid;
-gid_t  gid;
+    char   *p, *cdir;
+    int    ln;
+    char   trial[MAX_FILE_NAME];
+    char   *senv, *env;
+    uid_t  uid;
+    gid_t  gid;
 
 /* Setup default */
-SYGetFullPath(defname,fname,MAX_FILE_NAME);
+    SYGetFullPath(defname,fname,MAX_FILE_NAME);
 
-if (path) {
+    if (path) {
 
 /* Check to see if the path is a valid regular FILE */
-if (SYiTestFile( path, mode, uid, gid )) {
-    strcpy( fname, path );
-    return 1;
-    }
-    
+	if (SYiTestFile( path, mode, uid, gid )) {
+	    strcpy( fname, path );
+	    return 1;
+	}
+
 /* Make a local copy of path and mangle it */
-senv = env = (char *)MALLOC( strlen(path) + 1 ); 
-if (!senv) { fprintf( stderr, "Error allocating memory\n" ); return 0; }
-strcpy( env, path );
-while (env) {
+	senv = env = (char *)MALLOC( strlen(path) + 1 );
+	if (!senv) { fprintf( stderr, "Error allocating memory\n" ); return 0; }
+	strcpy( env, path );
+	while (env) {
     /* Find next directory in env */
-    cdir = env;
-    p    = strchr( env, ':' );
-    if (p) {
-	*p  = 0;
-	env = p + 1;
+	    cdir = env;
+	    p    = strchr( env, ':' );
+	    if (p) {
+		*p  = 0;
+		env = p + 1;
+	    }
+	    else
+		env = 0;
+
+	    /* Form trial file name */
+	    strcpy( trial, cdir );
+	    ln = strlen( trial );
+	    if (trial[ln-1] != '/')
+		trial[ln++] = '/';
+
+	    strcpy( trial + ln, name );
+
+	    if (SYiTestFile( trial, mode, uid, gid )) {
+		/* need SYGetFullPath rather then copy in case path has .
+		   in it */
+		SYGetFullPath( trial,  fname, MAX_FILE_NAME );
+		FREE( senv );
+		return 1;
+	    }
 	}
-    else
-	env = 0;
 
-    /* Form trial file name */
-    strcpy( trial, cdir );
-    ln = strlen( trial );
-    if (trial[ln-1] != '/') 
-	trial[ln++] = '/';
-	
-    strcpy( trial + ln, name );
-
-    if (SYiTestFile( trial, mode, uid, gid )) {
-        /* need SYGetFullPath rather then copy in case path has . in it */
-	SYGetFullPath( trial,  fname, MAX_FILE_NAME );
 	FREE( senv );
-	return 1;
-	}
-    }
+    } /* end of if path */
 
-FREE( senv );
-} /* end of if path */
-
-if (SYiTestFile( fname, mode, uid, gid )) return 1;
-else return 0;
+    if (SYiTestFile( fname, mode, uid, gid )) return 1;
+    else return 0;
 }
 #endif /* __MSDOS__ */
 
@@ -633,11 +655,15 @@ else return 0;
    Output Parameter:
 .  fname - qualified file name
 
-    Returns:
-    1 on success, 0 on failure.
+   Notes:
+   This is like 'SYGetFileFromPath', except the environement variable
+   provides the path.
+
+   Returns:
+   1 on success, 0 on failure.
 @*/
-int SYGetFileFromEnvironment( char *env, char *defname, char *name, 
-			      char *fname, char mode ) 
+int SYGetFileFromEnvironment( const char *env, const char *defname,
+			      const char *name, char *fname, char mode )
 {
     char   *edir;
 
@@ -657,7 +683,7 @@ int SYGetFileFromEnvironment( char *env, char *defname, char *name,
 	  quotes, of course).
 .  defname - default name (unused for now)
 .  name - file name to use with the directories from env
-.  istmp - if 1, use mktemp to generate a file name.  "name" must be in the 
+.  istmp - if 1, use mktemp to generate a file name.  "name" must be in the
            correct form for mktemp (six trailing X's).
 
    Output Parameter:
@@ -666,53 +692,52 @@ int SYGetFileFromEnvironment( char *env, char *defname, char *name,
    Returns:
    Pointer to open FILE.
 @*/
-FILE *SYOpenWritableFile( dirpath, defname, name, fname, istmp )
-char *dirpath, *defname, *name, *fname;
-int  istmp;
+FILE *SYOpenWritableFile( const char *dirpath, const char *defname,
+			  const char *name, char *fname, int istmp )
 {
-char   *p, *cdir;
-int    ln;
-FILE   *fp;
+    const char *cdir, *p;
+    int    ln;
+    FILE   *fp;
 
-while (dirpath && *dirpath) {
-    /* Find next directory in env */
-    cdir = dirpath;
-    p    = strchr( dirpath, ':' );
-    if (p) {
-	dirpath = p + 1;
+    while (dirpath && *dirpath) {
+	/* Find next directory in env */
+	cdir = dirpath;
+	p    = strchr( dirpath, ':' );
+	if (p) {
+	    dirpath = p + 1;
 	}
-    else {
-	p       = dirpath + strlen(dirpath);
-	dirpath = 0;
+	else {
+	    p       = dirpath + strlen(dirpath);
+	    dirpath = 0;
 	}
 
-    /* Form trial file name */
-    strncpy( fname, cdir, (int)(p-cdir) );
-    fname[(int)(p-cdir)] = 0;
-    ln = strlen( fname );
-    if (fname[ln-1] != '/') 
-	fname[ln++] = '/';
-	
-    strcpy( fname + ln, name );
-    if (istmp) 
-	fname = mktemp( fname );
+	/* Form trial file name */
+	strncpy( fname, cdir, (int)(p-cdir) );
+	fname[(int)(p-cdir)] = 0;
+	ln = strlen( fname );
+	if (fname[ln-1] != '/')
+	    fname[ln++] = '/';
 
-    /* Form full path name */
-    /* strcpy( path, fname ); */
-    /* SYGetFullPath( path, fname, MAX_FILE_LEN ); */
+	strcpy( fname + ln, name );
+	if (istmp)
+	    fname = mktemp( fname );
 
-    /* Is the file accessible? */
-    /* fprintf( stderr, "Trying filename %s\n", fname ); */
-    fp = fopen( fname, "w" );
-    if (fp) return fp;
+	/* Form full path name */
+	/* strcpy( path, fname ); */
+	/* SYGetFullPath( path, fname, MAX_FILE_LEN ); */
+
+	/* Is the file accessible? */
+	/* fprintf( stderr, "Trying filename %s\n", fname ); */
+	fp = fopen( fname, "w" );
+	if (fp) return fp;
     }
 
 /* Try the default name */
-if (istmp)
-    fname = mktemp( fname );
-fp = fopen( fname, "w" );
+    if (istmp)
+	fname = mktemp( fname );
+    fp = fopen( fname, "w" );
 
-return fp;
+    return fp;
 }
 
 /*@
@@ -722,24 +747,22 @@ return fp;
 . path - use to hold the result value
 . len  - maximum length of path
 @*/
-void SYGetwd( path, len )
-char *path;
-int  len;
+void SYGetwd( char *path, int len )
 {
 #if defined(tc2000) || (defined(sun4) && !defined(solaris))
-getwd( path );
+    getwd( path );
 #elif defined(__MSDOS__) || defined(WIN32)
 /* path[0] = 'A' + (_getdrive() - 1);
 path[1] = ':';
 _getcwd( path + 2, len - 2 );
  */
 #if defined(__TURBOC__)
-getcwd( path, len );
-#else 
-_getcwd( path, len );
+    getcwd( path, len );
+#else
+    _getcwd( path, len );
 #endif
 #else
-getcwd( path, len );
+    getcwd( path, len );
 #endif
 }
 
@@ -769,67 +792,66 @@ getcwd( path, len );
    the head of the line.  This may cause problems if, for some reason,
    /tmp_mnt is valid and not the result of the automounter.
 @*/
-char *SYGetRealpath( path, rpath )
-char *path, *rpath;
+char *SYGetRealpath( const char *path, char *rpath )
 {
 #if defined(sun4)
-extern char *realpath();
-realpath( path, rpath );
+    extern char *realpath();
+    realpath( path, rpath );
 
 #elif defined(intelnx) || defined(__MSDOS__) || defined(WIN32)
-strcpy( rpath, path );
+    strcpy( rpath, path );
 
 #else
 #if defined(IRIX)
-extern char *strchr();
+    extern char *strchr();
 #endif
 #ifdef FOO
-  int  n, m, N;
-  char tmp1[MAXPATHLEN], tmp3[MAXPATHLEN], tmp4[MAXPATHLEN], *tmp2;
+    int  n, m, N;
+    char tmp1[MAXPATHLEN], tmp3[MAXPATHLEN], tmp4[MAXPATHLEN], *tmp2;
 #endif
-  /* Algorithm: we move through the path, replacing links with the
-     real paths.
-   */
-  strcpy( rpath, path );
-#ifdef FOO  
+    /* Algorithm: we move through the path, replacing links with the
+       real paths.
+    */
+    strcpy( rpath, path );
+#ifdef FOO
   /* THIS IS BROKEN.  IT CAUSES INFINITE LOOPS ON IRIX, BECAUSE
      THE CODE ON FAILURE FROM READLINK WILL NEVER SET N TO ZERO */
-  N = strlen(rpath);
-  while (N) {
-    strncpy(tmp1,rpath,N); tmp1[N] = 0;
-    n = readlink(tmp1,tmp3,MAXPATHLEN);
-    if (n > 0) {
-      tmp3[n] = 0; /* readlink does not automatically add 0 to string end */
-      if (tmp3[0] != '/') {
-        tmp2 = strchr(tmp1,'/');
-        m = strlen(tmp1) - strlen(tmp2);
-        strncpy(tmp4,tmp1,m); tmp4[m] = 0;
-        strncat(tmp4,"/",MAXPATHLEN - strlen(tmp4));
-        strncat(tmp4,tmp3,MAXPATHLEN - strlen(tmp4));
-        SYGetRealpath(tmp4,rpath);
-        strncat(rpath,path+N,MAXPATHLEN - strlen(rpath));
-        return rpath;
-      }
-      else {
-        SYGetRealpath(tmp3,tmp1);
-        strncpy(rpath,tmp1,MAXPATHLEN);
-        strncat(rpath,path+N,MAXPATHLEN - strlen(rpath));
-        return rpath;
-      }
-    }  
-    tmp2 = strchr(tmp1,'/');
-    if (tmp2) N = strlen(tmp1) - strlen(tmp2);
-    else N = strlen(tmp1);
-  }
-  strncpy(rpath,path,MAXPATHLEN);
+    N = strlen(rpath);
+    while (N) {
+	strncpy(tmp1,rpath,N); tmp1[N] = 0;
+	n = readlink(tmp1,tmp3,MAXPATHLEN);
+	if (n > 0) {
+	    tmp3[n] = 0; /* readlink does not automatically add 0 to string end */
+	    if (tmp3[0] != '/') {
+		tmp2 = strchr(tmp1,'/');
+		m = strlen(tmp1) - strlen(tmp2);
+		strncpy(tmp4,tmp1,m); tmp4[m] = 0;
+		strncat(tmp4,"/",MAXPATHLEN - strlen(tmp4));
+		strncat(tmp4,tmp3,MAXPATHLEN - strlen(tmp4));
+		SYGetRealpath(tmp4,rpath);
+		strncat(rpath,path+N,MAXPATHLEN - strlen(rpath));
+		return rpath;
+	    }
+	    else {
+		SYGetRealpath(tmp3,tmp1);
+		strncpy(rpath,tmp1,MAXPATHLEN);
+		strncat(rpath,path+N,MAXPATHLEN - strlen(rpath));
+		return rpath;
+	    }
+	}
+	tmp2 = strchr(tmp1,'/');
+	if (tmp2) N = strlen(tmp1) - strlen(tmp2);
+	else N = strlen(tmp1);
+    }
+    strncpy(rpath,path,MAXPATHLEN);
 #endif
 #endif
-  if (strncmp( "/tmp_mnt/", rpath, 9 ) == 0) {
-      char tmp3[MAXPATHLEN];
-      strcpy( tmp3, rpath + 8 );
-      strcpy( rpath, tmp3 );
-      }
-  return rpath;
+    if (strncmp( "/tmp_mnt/", rpath, 9 ) == 0) {
+	char tmp3[MAXPATHLEN];
+	strcpy( tmp3, rpath + 8 );
+	strcpy( rpath, tmp3 );
+    }
+    return rpath;
 }
 
 #if !defined(__MSDOS__) && !defined(WIN32)
@@ -847,8 +869,7 @@ extern char *strchr();
    different names on different machines, or different names each time
    one logs in (such systems exist!).
 @*/
-void SYRemoveHomeDir( path )
-char *path;
+void SYRemoveHomeDir( char *path )
 {
   struct passwd *pw = 0;
   char          tmp1[MAXPATHLEN], tmp2[MAXPATHLEN], *d1, *d2;
@@ -868,8 +889,7 @@ char *path;
   strcpy(path,tmp1);
 }
 #else
-void SYRemoveHomeDir( path )
-char *path;
+void SYRemoveHomeDir( char *path )
 {
 }
 #endif /* MSDOS */
@@ -880,19 +900,18 @@ char *path;
 /*@
      SYIsMachineHost - returns true if name passed in matches host
                        name else false.
- 
+
   Input Paramters:
 .  machinename - Name of the machine to test
- 
+
 @*/
-int SYIsMachineHost( machinename )
-char *machinename;
+int SYIsMachineHost( const char *machinename )
 {
   static char localhost[MAXHOSTNAMELEN];
   static int  hostlength = 0;
   int         namelen;
   char        *tmp;
- 
+
   if (!hostlength) {
     SYGetHostName(localhost,MAXHOSTNAMELEN);
     hostlength = strlen(localhost);
@@ -927,21 +946,20 @@ char *machinename;
   Returns:
   1 if file is a directory, 0 otherwise
 @*/
-int SYIsDirectory( fname )
-char  *fname;
+int SYIsDirectory( const char *fname )
 {
-int         err;
-struct stat statbuf;
-int         stmode;
+    int         err;
+    struct stat statbuf;
+    int         stmode;
 
-if (!fname) return 0;
+    if (!fname) return 0;
 
-err = stat( fname, &statbuf );
-if (err != 0) return 0;
+    err = stat( fname, &statbuf );
+    if (err != 0) return 0;
 
 /* At least the file exists ... */
-stmode = statbuf.st_mode;
-return S_ISDIR(stmode);
+    stmode = statbuf.st_mode;
+    return S_ISDIR(stmode);
 }
 #ifndef __MSDOS__
 
@@ -957,9 +975,7 @@ return S_ISDIR(stmode);
   This routine attempts to create the intervening directories if they
   do not exist.
 @*/
-void SYMakeAllDirs( name, fmode )
-char *name;
-int  fmode;
+void SYMakeAllDirs( const char *name, int fmode )
 {
 char        *p, *pn;
 char        dirname[1024];
@@ -1004,7 +1020,7 @@ while (*p) {
 .   date - string to hold date (may be null)
 .   ltm   - tm structure for time (may be null)
 @*/
-void SYLastChangeToFile( char *fname, char *date, struct tm *ltm )
+void SYLastChangeToFile( const char *fname, char *date, struct tm *ltm )
 {
 struct stat buf;
 struct tm   *tim;
@@ -1166,9 +1182,7 @@ lockfile = 0;
 
 /* This version of MakeAllDirs knows about '\' instead of '/'.
    It also doesn't bother with fmode for now */
-void SYMakeAllDirs( name, fmode )
-char *name;
-int  fmode;
+void SYMakeAllDirs( const char *name, int fmode )
 {
 char        *p, *pn;
 char        dirname[1024];
@@ -1195,7 +1209,7 @@ while (*p) {
     p   = pn + 1;
     }
 }
-void SYLastChangeToFile( char *fname, char *date, struct tm *ltm )
+void SYLastChangeToFile( const char *fname, char *date, struct tm *ltm )
 {
 struct stat buf;
 struct tm   *tim;
@@ -1244,5 +1258,84 @@ int SYFindFileWithExtension( char *fname, const char *extensions )
 	    return 1;
 	}
     }
+    return 0;
+}
+
+/*@ SYGetFileFromPathEnv - Get a full filename from a path
+
+   Input Parameters:
++  path - A string containing "directory:directory:..." (without the
+	  quotes, of course).
+	  As a special case, if the name is a single FILE, that file is
+	  used.
+.  envname - Name of environment variable that also provides a path.  See
+          notes.
+.  defname - Default name (returned if 'name' not found in the 'path' or
+          path given by 'envname'.
+.  name - File name to use with the directories from path
+-  mode - File mode desired (usually 'r' for readable; 'w' for writable and
+          'e' for executable are also supported)
+
+   Output Parameter:
+.  fname - qualified file name
+
+   Returns:
+   1 on success, 0 on failure.
+
+   Notes:
+   This routine accepts both a 'path' as a set of ':' separated directories
+   and a path as the value of an environment variable.  The rule for finding
+   the file is:  First, see if the name starts with '/'.  If so, the
+   file name is absolute, and no path values ar used.  Return that file,
+   and set the return value to '0' if that file exists with the correct mode,
+   and '1' otherwise.
+
+   Second, if the environment variable has a non-null value, use that
+   as the path.  If the file exists with one of those path elements,
+   return that full path and set the return value to '0'.  Third, try the
+   specified path; if the file is found with the correct mode, return that
+   full path and set the return value to '0'.
+
+   Finally, use the 'defname' as the returned path.  Return '0' if that
+   file exists with the correct mode and '1' otherwise.
+
+   This routine is intended to simplify locating configuration and
+   other data files, where the package provides a default search path
+   (usually given by the installation data directory) but permits the
+   user to specify an alternate path with an environment variable to
+   be searched first.
+
+
+  @*/
+int SYGetFileFromPathEnv( const char *path, const char *envname,
+			  const char *defname, const char *name,
+			  char *fname, char mode )
+{
+    /* Allow null for the default name - in that case, use name */
+    if (defname == 0) defname = name;
+
+    /* Check for absolute name */
+    if (name[0] == '/') {
+	if (SYiFileExists(name, mode)) {
+	    strcpy(fname, name);
+	    return 1;
+	}
+    }
+
+    /* Check for path provided by environment variable */
+    if (envname && envname[0]) {
+	const char *s = (const char *)getenv(envname);
+	if (s && s[0]) {
+	    if (SYGetFileFromPath(s, defname, name, fname, mode) == 1) {
+		return 1;
+	    }
+	}
+    }
+
+    /* Check for file in path */
+    if (SYGetFileFromPath(path, defname, name, fname, mode) == 1) {
+	return 1;
+    }
+    /* Failed to find file */
     return 0;
 }
