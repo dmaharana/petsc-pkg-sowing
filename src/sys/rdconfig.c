@@ -77,11 +77,60 @@ int SYReadConfigFile(const char filename[], const char sepChar,
 	}
 	/* check for predefined commands */
 	if (strcmp(cmd,"include") == 0) {
-	    if (value != NULL) {
+	    if (key == NULL || *key == 0) {
+		fprintf(stderr,"include command with no file\n");
 		return 0;
 	    }
-	    err = SYReadConfigFile(key, sepChar, commentChar, cmds, ncmds);
-	    if (err != 1) return err;
+	    if (value != NULL && *value != 0) {
+		fprintf(stderr,"include command improperly formed: %s\n",
+			buf);
+		return 0;
+	    }
+	    /* Look for file first.  If not found, look in the same
+	       directory as the current file, from the filename */
+	    if (SYiFileExists(key,'r')) {
+		err = SYReadConfigFile(key, sepChar, commentChar, cmds, ncmds);
+	    }
+	    else if (*key != '/') {
+		char *fname=0, *pout;
+		const char *pin = filename;
+		fname = MALLOC(strlen(filename)+strlen(key)+2);
+		CHKPTRN(fname);
+		pout = fname;
+		while (*pin) {
+		    *pout++ = *pin++;
+		}
+		*pout = 0;
+		/* Backup to the very first / */
+		while (pout > fname && *pout != '/') pout--;
+		if (pout > fname) {
+		    pout++;  /* Position after the last / */
+		    /* Append the file name */
+		    pin = key;
+		    while (*pin) {
+			*pout++ = *pin++;
+		    }
+		    if (SYiFileExists(fname,'r')) {
+			err = SYReadConfigFile(fname, sepChar, commentChar,
+					       cmds, ncmds);
+		    }
+		    else {
+			fprintf(stderr,"include config file %s missing\n",
+				fname );
+			return 0;
+		    }
+		}
+		else {
+		    fprintf(stderr,"include command improperly formed: %s\n",
+			    buf);
+		    return 0;
+		}
+		FREE(fname);
+	    }
+	    if (err != 1) {
+		fprintf(stderr,"Error when reading include file\n");
+		return err;
+	    }
 	}
 	else {
 	    /* Find cmd in the list. Because the number of commands
@@ -104,6 +153,7 @@ int SYReadConfigFile(const char filename[], const char sepChar,
     }
 
     fclose(fp);
+    FREE(buf);
     return 1;
 }
 
@@ -150,6 +200,10 @@ int SYConfigDBInsert(const char *cmd, const char *key, const char *value,
     for (i=0; i<db->nused; i++) {
 	if (strcmp(db->items[i].key, key) == 0) {
 	    /* Duplicate entry */
+	    if (db->items[i].value) {
+		FREE( db->items[i].value );
+	    }
+	    db->items[i].value = value ? STRDUP(value) : 0;
 	    return 0;
 	}
     }
@@ -171,6 +225,13 @@ int SYConfigDBInsert(const char *cmd, const char *key, const char *value,
     return 1;
 }
 
+/*
+Output Parmeters:
+. value - If non-null, the value associated with the key
+
+Return Value:
+1 on success (value found), 0 on not found, and -1 on error.
+ */
 int SYConfigDBLookup(const char *cmd, const char *key, const char **value,
 		     void *extracmd)
 {
@@ -179,17 +240,19 @@ int SYConfigDBLookup(const char *cmd, const char *key, const char **value,
 
     if (strcmp(db->name,cmd) != 0) {
 	/* inconsistent data structures */
-	return 0;
+	return -1;
     }
 
     for (i=0; i<db->nused; i++) {
 	if (strcmp(db->items[i].key, key) == 0) {
-	    *value = db->items[i].value;
+	    if (value)
+		*value = db->items[i].value;
 	    return 1;
 	}
     }
     /* Not found */
-    *value = (const char *)0;
+    if (value)
+	*value = (const char *)0;
     return 0;
 }
 
