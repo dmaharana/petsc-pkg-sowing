@@ -61,7 +61,7 @@ int main( int argc, char ** argv )
 	    fprintf( stderr, "Could not read map file %s\n", path );
 	    }
 	else 
-	    map->ReadMap( mapins );
+	    map->ReadMap( mapins, 0 );
 	delete mapins;
 	}
     if (map)

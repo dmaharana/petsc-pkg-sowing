@@ -186,7 +186,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 	    perror( "Reason:" );
 	    }
 	else 
-	    map->ReadMap( mapins );
+	    map->ReadMap( mapins, 0 );
 	delete mapins;
 	}
     if (map) {
