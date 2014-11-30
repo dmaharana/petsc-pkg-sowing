@@ -22,8 +22,7 @@ static int LineNo = 1;
  */
 static char *altbuf = 0;
 
-int DocGetChar( fd )
-FILE *fd;
+int DocGetChar( FILE *fd )
 {
     int c;
 
@@ -56,8 +55,7 @@ void DocUnGetChar( char c, FILE *fd )
     }
 }
 
-void DocSetPushback( str )
-char *str;
+void DocSetPushback( char *str )
 {
     if (altbuf) {
 	fprintf( stderr, "Only one level of pushback string allowed\n" );
@@ -66,12 +64,12 @@ char *str;
     altbuf = str;
 }
 
-void ResetLineNo()
+void ResetLineNo(void)
 {
     LineNo = 1;
 }
 
-int GetLineNo()
+int GetLineNo(void)
 {
     return LineNo;
 }
@@ -79,20 +77,18 @@ int GetLineNo()
 
 /*************************************************************************/
 
-char GetSubClass()
+char GetSubClass(void)
 {
     return SubClass;
 }
-int GetIsX11Routine()
+int GetIsX11Routine(void)
 {
     return IsX11Routine;
 }
 
 /* Find a (non-alphanumeric) delimited token ----------------------*/
 /* (After finding / * <char>, look for additional chars */
-void FindToken( fd, token )
-FILE *fd;
-char *token;
+void FindToken( FILE *fd, char *token )
 {
     int c;
 
@@ -117,9 +113,7 @@ char *token;
    Then find the routine name (<name> - )
    Note that this routine does NOT use DocGetChar; this routine is
    the one that skips most of the text and needs to be faster.  */
-int FoundLeader( fd, routine, kind )
-FILE *fd;
-char *routine, *kind;
+int FoundLeader( FILE *fd, char *routine, char *kind )
 {
     int c;
 
@@ -138,9 +132,7 @@ char *routine, *kind;
 /* Match a leader that starts with / * and then any of the selected
    characters.  Discards characters that don't match.  If we have
    entered this routine, we have already seen the first character (/) */
-int MatchLeader( fd, Poss, kind )
-FILE *fd;
-char *Poss, *kind;
+int MatchLeader( FILE *fd, char *Poss, char *kind )
 { 
     int c;
     c = DocGetChar( fd );
@@ -160,9 +152,7 @@ char *Poss, *kind;
   Copy an "include" to a buffer.  The form is / *I include-file-spec I* / 
   Only one per line.
  */
-void CopyIncludeName( fin, buffer )
-FILE *fin;
-char *buffer;
+void CopyIncludeName( FILE *fin, char *buffer )
 {
     char *p;
     int  c;
@@ -191,9 +181,7 @@ char *buffer;
 
 /* modifies the filename by converting it to the fullpath name and
    then removing the piece TOOLSDIR */
-void ExpandFileName(infilename,rlen)
-char *infilename;
-int  rlen;
+void ExpandFileName(char *infilename, int rlen)
 {
     char tmp[MAX_FILE_SIZE],*name;
     name = tmp + rlen;
@@ -216,7 +204,7 @@ int  rlen;
 #endif
 
 /* returns the length of the full path name of the tools directory */
-int GetToolsDirLength()
+int GetToolsDirLength(void)
 {
     char *toolsdir, truepath[MAXPATHLEN];
     int  rlen;
@@ -236,8 +224,7 @@ int GetToolsDirLength()
    str2 should be upper case; str1 need not be.
    Returns 0 if they match, != 0 otherwise
  */
-int MatchTokens( str1, str2 )
-char *str1, *str2;
+int MatchTokens( char *str1, char *str2 )
 {
     char buf[256];
 
