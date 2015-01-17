@@ -1,0 +1,39 @@
+\documentclass[11pt]{article}
+\usepackage[ backref,
+              baseurl={http://www.mpi-forum.org},
+              colorlinks=true,
+              filecolor=black,
+% for normal and reviewcolors versions:
+              linkcolor=blue,
+              citecolor=red,
+              urlcolor=blue,
+% for normal and reviewcolors versions:
+% (colorlinks is not changed, to be absolutely sure that all spacing is the same)
+%              linkcolor=black,
+%              citecolor=black,
+%              urlcolor=black,
+              hypertexnames=true,
+              bookmarksnumbered=true,
+              pdfauthor={MPI-Forum},
+              pdftitle={MPI: A Message-Passing Interface Standard},
+              pdfsubject={MPI: A Message-Passing Interface Standard},
+              pdfkeywords={Message Passing, MPI, Standard},
+              pdfpagelabels,
+              plainpages=false
+              ]{hyperref}      % For hyperlinks
+\begin{document}
+An equation:
+\[
+Ax = b
+\]
+\begin{obeylines}
+This
+is a
+multiline block
+\end{obeylines}
+{\obeylines
+This is
+another
+multiline block
+}
+\end{document}
