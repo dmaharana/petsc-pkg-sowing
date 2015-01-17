@@ -64,6 +64,9 @@ static int IfdefFortranName = 0;
 /* If true, add a last integer argument to int functions and return its
    value in the last parameter */
 static int useFerr = 0;
+/* Defaults for these are "ierr" and "__ierr" */
+static const char *errArgNameParm = 0;
+static const char *errArgNameLocal = 0;
 
 /* Enable the MPI definitions */
 static int isMPI = 0;
@@ -106,6 +109,13 @@ static char FortranUscore[256] = "FORTRANUNDERSCORE";
 static char FortranDblUscore[256] = "FORTRANDOUBLEUNDERSCORE";
 static char Pointer64Bits[256] = "POINTER_64_BITS";
 static char BuildProfiling[256] = "MPI_BUILD_PROFILING";
+
+/* Lists of type names */
+static void *nativeList;
+static void *nativePtrList;
+static void *toptrList;
+static void *parmList;
+static SYConfigCmds configcmds[5];
 
 /* We also need to make some edits to the types occasionally.  First, note
    that double indirections are often bugs */
@@ -276,6 +286,25 @@ int main( int argc, char **argv )
     int  n_in_file;
     int  f90mod_skip_header = 1;
 
+    /* Initialize setup for config files */
+    SYConfigDBInit("native", &nativeList);
+    SYConfigDBInit("nativeptr", &nativePtrList);
+    SYConfigDBInit("toptr", &toptrList);
+    SYConfigDBInit("parm", &parmList);
+    configcmds[0].name     = "native";
+    configcmds[0].docmd    = SYConfigDBInsert;
+    configcmds[0].cmdextra = nativeList;
+    configcmds[1].name     = "nativeptr";
+    configcmds[1].docmd    = SYConfigDBInsert;
+    configcmds[1].cmdextra = nativePtrList;
+    configcmds[2].name     = "toptr";
+    configcmds[2].docmd    = SYConfigDBInsert;
+    configcmds[2].cmdextra = toptrList;
+    configcmds[3].name     = "parm";
+    configcmds[3].docmd    = SYConfigDBInsert;
+    configcmds[3].cmdextra = parmList;
+    configcmds[4].name     = 0;
+
 /* process all of the files */
     if (MPIU_Strncpy( dirname, ".", sizeof(dirname) )) {
 	ABORT( "Unable to set dirname to \".\"" );
@@ -303,7 +332,7 @@ int main( int argc, char **argv )
 	AnsiForm = 0;
     }
     (void) SYArgHasName( &argc, argv, 1, "-ansi" );
-    AnsiHeader		   = SYArgHasName( &argc, argv, 1, "-ansiheader" );
+    AnsiHeader		       = SYArgHasName( &argc, argv, 1, "-ansiheader" );
     AddDebugAll                = SYArgHasName( &argc, argv, 1, "-nodebug" );
     IfdefFortranName           = SYArgHasName( &argc, argv, 1, "-anyname" );
 /* Get replacement names for ifdef items in generated code */
@@ -326,7 +355,56 @@ int main( int argc, char **argv )
 		PATCHLEVEL_RELEASE_DATE );
 	exit( 1 );
     }
-/* Open up the file of public includes */    
+
+    /* Read the basics, such as predefined C types */
+    if (SYGetFileFromPathEnv(BASEPATH, "BFORT_CONFIG_PATH", NULL,
+			     "bfort-base.txt", fname, 'r')) {
+	if (!SYReadConfigFile(fname, ' ', '#', configcmds, 4)) {
+	    fprintf(stderr, "Unable to read configure file bfort-base.txt");
+	    exit(1);
+	}
+    }
+    else {
+	fprintf(stderr, "Unable to find bfort-base.txt config file in %s\n",
+		BASEPATH);
+	exit(1);
+    }
+    /* Based on options such as isMPI and isMPI2, load the appropriate
+       config files */
+    if (isMPI || isMPI2) {
+	if (SYGetFileFromPathEnv(BASEPATH, "BFORT_CONFIG_PATH", NULL,
+				 "bfort-mpi.txt", fname, 'r')) {
+	    if (!SYReadConfigFile(fname, ' ', '#', configcmds, 4)) {
+		fprintf(stderr, "Unable to read configure file bfort-mpi.txt");
+		exit(1);
+	    }
+	}
+	else {
+	    fprintf(stderr, "Uable to read MPI config file bfort-mpi.txt in %s\n",
+		    BASEPATH);
+	    exit(1);
+	}
+    }
+/*    if (isPETSc) {
+      }*/
+    /* Allow the user to override the variable name used for the error
+       parameter. */
+    if (useFerr) {
+	if (!errArgNameParm) {
+	    if (SYConfigDBLookup("parm", "errparm",
+				 &errArgNameParm, parmList) != 1) {
+		errArgNameParm = "ierr";
+	    }
+	}
+	if (!errArgNameLocal) {
+	    if (SYConfigDBLookup("parm", "errparmlocal",
+				 &errArgNameLocal, parmList) != 1) {
+		errArgNameLocal = "__ierr";
+	    }
+	}
+    }
+
+    /* Open up the file of public includes */
     if (incfile[0]) {
 	incfd = fopen( incfile, "r" );
 	if (!incfd) {
@@ -1058,7 +1136,7 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 		    /* For this to work, gettypename can't output the last
 		       closing paren */
 		    if ( useFerr ) {
-			fprintf( fout, "int *__ierr ");
+			fprintf( fout, "int *%s ", errArgNameLocal);
 		    }
 		}
 		if (c != 1) {
@@ -1105,10 +1183,12 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 		if (useFerr) {
 /* added AnsiForm BS Aug 20, 1995 */
 		    if (AnsiForm) {
-			fprintf( fout, "%sint *__ierr ", (nargs > 0) ? ", " : "" );
+			fprintf( fout, "%sint *%s ",
+				 (nargs > 0) ? ", " : "", errArgNameLocal );
 		    }
 		    else {
-			fprintf( fout, "%s__ierr ", (nargs > 0) ? ", " : "" );
+			fprintf( fout, "%s%s ",
+				 (nargs > 0) ? ", " : "", errArgNameLocal );
 		    }
 		}
 		fputs( ")", fout ); 
@@ -1189,7 +1269,7 @@ int ProcessArgDefs( FILE *fin, FILE *fout, ARG_LIST *args, int nargs,
     }
     in_function	  = 0;
     set_void	  = 0;
-    void_function	  = 0;
+    void_function = 0;
 
 /* This should really use a better parser. 
    Types are
@@ -1265,7 +1345,7 @@ int ProcessArgDefs( FILE *fin, FILE *fout, ARG_LIST *args, int nargs,
 	}
 /* Add the final error return definition */
 	if (useFerr && OutputImmed) {
-	    fputs( "int *__ierr;\n", fout );
+	    fprintf(fout, "int *%s;\n", errArgNameLocal);
 	}
 	*Ntypes   = ntypes;
 	*Nstrings = nstrings;
@@ -1296,7 +1376,14 @@ int ProcessArgDefs( FILE *fin, FILE *fout, ARG_LIST *args, int nargs,
 char *ToCPointer( char *type, char *name, int implied_star )
 {
     static char buf[300];
-    
+#if 1
+    const char *outstr = 0;
+    if (SYConfigDBLookup("toptr", type, &outstr, toptrList) == 1 && outstr) {
+	buf[0] = '\n'; buf[1] = '\t';
+	sprintf(&buf[2], outstr, name);
+	return buf;
+    }
+#else
     if (isMPI2) {
 	/* If the type is an MPI type, use the MPI conversion 
 	   function */
@@ -1324,6 +1411,7 @@ char *ToCPointer( char *type, char *name, int implied_star )
 	}
 	if (buf[0]) return buf;
     }
+#endif
     if (MapPointers) 
 	sprintf( buf, "\n\t(%s%s)%sToPointer( *(int*)(%s) )", 
 		 type, !implied_star ? "* " : "", ptrprefix, name );
@@ -1417,7 +1505,7 @@ void PrintBody( FILE *fout, int is_function, char *name, int nstrings,
 /* Generate the routine call with the return */
     if (is_function) {
 	if (useFerr) {
-	    fputs( "*__ierr = ", fout );
+	    fprintf(fout, "*%s = ", errArgNameLocal);
 	}
 	else {
 	    fputs( "return ", fout );
@@ -1491,7 +1579,7 @@ void OutputFortranToken( FILE *fout, int nsp, const char *token )
     if (curCol + nsp > maxOutputCol) nsp = 0;
     for (i=0; i<nsp; i++) putc( ' ', fout );
     curCol += nsp;
-    if (curCol + tokenLen > maxOutputCol && token[0] != '\n') {
+    if (curCol + tokenLen > maxOutputCol) {
 	while (curCol < 72) {
 	    putc( ' ', fout );
 	    curCol ++;
@@ -1601,9 +1689,7 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 {
     int  i;
     char *token = 0;
-    char sname[2];
     
-    sname[1] = 0;
     /* 
      * Initial setup.  Fortran is case-insensitive and C is case-sensitive
      * Check that the case-insensitive argument names are distinct, and
@@ -1623,24 +1709,22 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
     } else {
 	token = is_function ? "function" : "subroutine";
     }
-    OutputFortranToken( fout, 6, token );
+    OutputFortranToken( fout, 8, token );
     OutputFortranToken( fout, 1, name );
     OutputFortranToken( fout, 0, "(" );
     for (i=0; i<nargs-1; i++) {
-        sname[0] = 'a' + (char)i;
-	OutputFortranToken( fout, 0, sname );
-	OutputFortranToken( fout, 0, "," );
+	OutputFortranToken( fout, 0, args[i].name );
+	OutputFortranToken( fout, 0, ", " );
     }
     if (nargs > 0) {
 	/* Do the last arg, if any */
-        sname[0] = 'a' + (char)(nargs-1);
-	OutputFortranToken( fout, 0, sname );
-        /*	OutputFortranToken( fout, 0, " " ); */
+	OutputFortranToken( fout, 0, args[nargs-1].name );
+	OutputFortranToken( fout, 0, " " );
     }
     if (useFerr) {
 	if (nargs > 0) OutputFortranToken( fout, 0, "," );
-	OutputFortranToken( fout, 0, "z");
-    }     
+	OutputFortranToken( fout, 0, errArgNameParm );
+    }
     OutputFortranToken( fout, 0, ")" );
     OutputFortranToken( fout, 0, "\n" );
 
@@ -1656,8 +1740,7 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 	    OutputFortranToken( fout, 7, 
 				ArgToFortran( types[args[i].type].type ) );
 	}
-        sname[0] = 'a' + (char)(i);
-	OutputFortranToken( fout, 1, sname );
+	OutputFortranToken( fout, 1, args[i].name );
 	if (args[i].has_array && !args[i].void_function) {
 	    OutputFortranToken( fout, 1, "(*)" );
 	}
@@ -1708,7 +1791,8 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 
     /* Add a "decl/result(name) for functions */
     if (useFerr) {
-	OutputFortranToken( fout, 7, "integer z" );
+	OutputFortranToken( fout, 7, "integer" );
+	OutputFortranToken( fout, 1, errArgNameParm);
     } else if (is_function) {
 	OutputFortranToken( fout, 7, ArgToFortran( rt->name ) );
 	OutputFortranToken( fout, 1, name );
@@ -1900,7 +1984,7 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
     char            *typename = type->type;
     int             last_was_newline = 0;
     int             typenamelen = sizeof(type->type);
-    
+
     typename[0]	        = 0;
     type->is_char       = 0;
     type->is_native     = 0;
@@ -1909,7 +1993,7 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
     type->type_has_star = 0;
     type->is_void       = 0;
     type->is_mpi        = 0;
-    
+
     DBG("Looking for type...\n");
     /* Skip register */
     SkipWhite( fin );
@@ -1945,22 +2029,29 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 		DBG("Found end of macro defn\n");
 		return 2;
 	    }
-	    else { 
-		/* This won't work on all systems (some only allow 1 
+	    else {
+		/* This won't work on all systems (some only allow 1
 		   pushback). */
 		ungetc( '*', fin );
 		ungetc( (char)c, fin );
 	    }
 	}
-	else 
+	else {
 	    ungetc( (char)c, fin );
+	}
     }
-    
+
+    /* Ignore qualifiers register/volatile/const */
     if (strcmp( token, "register" ) == 0) {
 	c = FindNextANToken( fin, token, &nsp );
 	if (c == EOF || c == '{' || (AnsiForm && c == '(')) return 1;
     }
-    
+
+    if (strcmp( token, "volatile" ) == 0) {
+	c = FindNextANToken( fin, token, &nsp );
+	if (c == EOF || c == '{' || (AnsiForm && c == '(')) return 1;
+    }
+
     if (strcmp( token, "const" ) == 0) {
 	c = FindNextANToken( fin, token, &nsp );
 	if (c == EOF || c == '{' || (AnsiForm && c == '(')) return 1;
@@ -2002,6 +2093,11 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	   to make it easier to customize and extend this code */
 	/* Note that we might want special processing for short and long */
 	/* Some of these are NOT C types (complex, BCArrayPart)! */
+#if 1
+	if (SYConfigDBLookup("native", token, NULL, nativeList) == 1) {
+	    type->is_native = 1;
+	}
+#else
 	if (
 	    strcmp( token, "double" ) == 0 ||
 	    strcmp( token, "int"    ) == 0 ||
@@ -2015,12 +2111,10 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp( token, "MPI_Status") == 0 ||
 	    strcmp( token, "PetscScalar")== 0 ||
 	    strcmp( token, "PetscReal")  == 0 ||
-	    strcmp( token, "PetscBool") == 0 ||
+	    strcmp( token, "PetscTruth") == 0 ||
 	    strcmp( token, "PetscSizeT") == 0 ||
 	    strcmp( token, "MatStructure") == 0 ||
 	    strcmp( token, "KSPConvergedReason") == 0 ||
-	    strcmp( token, "SNESConvergedReason") == 0 ||
-	    strcmp( token, "TSConvergedReason") == 0 ||
 	    strcmp( token, "BCArrayPart") == 0 ||
 	    strcmp( token, "PetscLogDouble") == 0 ||
 	    strcmp( token, "PetscInt") == 0 ||
@@ -2038,19 +2132,31 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"MatStencil") == 0 ||
 	    strcmp(token,"DALocalInfo") == 0 ||
 	    strcmp(token,"MatFactorInfo") == 0 ||
-	    /* the following are old stuff - might be requird for older versions
-	       of PETSc */
-	    strcmp(token,"PetscTruth") == 0 ||
 	    0)
 	    type->is_native = 1;
+#endif
 	/* PETSc types that are implicitly pointers are specified here */
 	/* This really needs to take the types from a file, so that
 	   it can be configured for each package.  See the search code in 
 	   info2rtf (but do a better job of it) */
+#if 1
+	if (SYConfigDBLookup("nativeptr", token, NULL, nativePtrList) == 1) {
+	    type->type_has_star = 1;
+	    type->implied_star  = 1;
+	}
+#else
 	if (
 	    strcmp(token,"AO") == 0 ||
+	    strcmp(token,"AOData") == 0 ||
+	    strcmp(token,"AOData2dGrid") == 0 ||
+	    strcmp(token,"ClassPerfLog") == 0 ||
+	    strcmp(token,"ClassRegLog") == 0 ||
+	    strcmp(token,"DA") == 0 ||
 	    strcmp(token,"DM") == 0 ||
-	    strcmp(token,"DMLabel") == 0 ||
+	    strcmp(token,"DMMG") == 0 ||
+	    strcmp(token,"EventPerfLog") == 0 ||
+	    strcmp(token,"EventRegLog") == 0 ||
+	    strcmp(token,"IntStack") == 0 ||
 	    strcmp(token,"IS") == 0 ||
 	    strcmp(token,"ISColoring") == 0 ||
 	    strcmp(token,"ISLocalToGlobalMapping") == 0 ||
@@ -2060,103 +2166,38 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"MatFDColoring") == 0 ||
 	    strcmp(token,"MatNullSpace") == 0 ||
 	    strcmp(token,"MatPartitioning") == 0 ||
+	    strcmp(token,"MatSNESMFCtx") == 0 ||
 	    strcmp(token,"PC") == 0 ||
+	    strcmp(token,"PetscADICFunction") == 0 ||
 	    strcmp(token,"PetscBag") == 0 ||
 	    strcmp(token,"PetscBagItem") == 0 ||
+	    strcmp(token,"PetscDLLibraryList") == 0 ||
 	    strcmp(token,"PetscDraw") == 0 ||
 	    strcmp(token,"PetscDrawAxis") == 0 ||
 	    strcmp(token,"PetscDrawHG") == 0 ||
 	    strcmp(token,"PetscDrawLG") == 0 ||
 	    strcmp(token,"PetscDrawSP") == 0 ||
-	    strcmp(token,"PetscDualSpace") == 0 ||
-	    strcmp(token,"PetscFE") == 0 ||
-	    strcmp(token,"PetscFV") == 0 ||
-	    strcmp(token,"PetscLimiter") == 0 ||
+	    strcmp(token,"PetscFList") == 0 ||
+	    strcmp(token,"PetscMap") == 0 ||
 	    strcmp(token,"PetscMatlabEngine") == 0 ||
 	    strcmp(token,"PetscObject") == 0 ||
 	    strcmp(token,"PetscContainer") == 0 ||
-	    strcmp(token,"PetscProblem") == 0 ||
-	    strcmp(token,"PetscQuadrature") == 0 ||
-	    strcmp(token,"PetscDS") == 0 ||
+	    strcmp(token,"PetscOList") == 0 ||
 	    strcmp(token,"PetscRandom") == 0 ||
-	    strcmp(token,"PetscSpace") == 0 ||
 	    strcmp(token,"PetscTable") == 0 ||
 	    strcmp(token,"PetscViewer") == 0 ||
 	    strcmp(token,"PetscViewers") == 0 ||
 	    strcmp(token,"PF") == 0 ||
+	    strcmp(token,"SDA") == 0 ||
 	    strcmp(token,"SNES") == 0 ||
-	    strcmp(token,"SNESLineSearch") == 0 ||
+	    strcmp(token,"StageLog") == 0 ||
 	    strcmp(token,"TS") == 0 ||
 	    strcmp(token,"Vec") == 0 ||
+	    strcmp(token,"VecPack") == 0 ||
 	    strcmp(token,"Vecs") == 0 ||
 	    strcmp(token,"VecScatter") == 0 ||
-	    strcmp(token,"PetscSection") == 0 ||
-	    strcmp(token,"MatMFFD") == 0 ||
-	    strcmp(token,"TSGLAdapt") == 0 ||
-	    strcmp(token,"TSAdapt") == 0 ||
-	    strcmp(token,"PetscCUSPIndices") == 0 ||
-	    strcmp(token,"PetscSF") == 0 ||
-	    strcmp(token,"MatColoring") == 0 ||
-            strcmp(token,"DMBoundary") == 0 ||
-            strcmp(token,"DMInterpolationInfo") == 0 ||
-            strcmp(token,"KSPFischerGuess") == 0 ||
-            strcmp(token,"MatCoarsen") == 0 ||
-            strcmp(token,"MatTransposeColoring") == 0 ||
-            strcmp(token,"PetscClassPerfLog") == 0 ||
-            strcmp(token,"PetscClassRegLog") == 0 ||
-            strcmp(token,"PetscDLLibrary") == 0 ||
-            strcmp(token,"PetscDualSpace") == 0 ||
-            strcmp(token,"PetscEventPerfLog") == 0 ||
-            strcmp(token,"PetscEventRegLog") == 0 ||
-            strcmp(token,"PetscFE") == 0 ||
-            strcmp(token,"PetscFunctionList") == 0 ||
-            strcmp(token,"PetscIntStack") == 0 ||
-            strcmp(token,"PetscLayout") == 0 ||
-            strcmp(token,"PetscObjectList") == 0 ||
-            strcmp(token,"PetscOptions") == 0 ||
-            strcmp(token,"PetscQuadrature") == 0 ||
-            strcmp(token,"PetscDS") == 0 ||
-            strcmp(token,"PetscSegBuffer") == 0 ||
-            strcmp(token,"PetscSpace") == 0 ||
-            strcmp(token,"PetscStageLog") == 0 ||
-            strcmp(token,"PetscSubcomm") == 0 ||
-            strcmp(token,"PetscThreadComm") == 0 ||
-            strcmp(token,"PetscThreadCommReduction") == 0 ||
-            strcmp(token,"PetscToken") == 0 ||
-            strcmp(token,"PetscViennaCLIndices") == 0 ||
-            strcmp(token,"Tao") == 0 ||
-            strcmp(token,"TaoDM") == 0 ||
-            strcmp(token,"TaoLineSearch") == 0 ||
-            strcmp(token,"TSMonitorDrawCtx") == 0 ||
-            strcmp(token,"TSMonitorLGCtx") == 0 ||
-            strcmp(token,"TSMonitorSPEigCtx") == 0 ||
-            strcmp(token,"VecScatterCUSPIndices_PtoP") == 0 ||
-            strcmp(token,"VecScatterCUSPIndices_StoS") == 0 ||
-
 	    /* the following are old stuff - might be requird for older versions
 	       of PETSc */
-	    strcmp(token,"AOData") == 0 ||
-	    strcmp(token,"AOData2dGrid") == 0 ||
-	    strcmp(token,"ClassPerfLog") == 0 ||
-	    strcmp(token,"ClassRegLog") == 0 ||
-	    strcmp(token,"DA") == 0 ||
-	    strcmp(token,"DMMG") == 0 ||
-	    strcmp(token,"EventPerfLog") == 0 ||
-	    strcmp(token,"EventRegLog") == 0 ||
-	    strcmp(token,"IntStack") == 0 ||
-	    strcmp(token,"ISMapping") == 0 ||
-	    strcmp(token,"MatSNESMFCtx") == 0 ||
-	    strcmp(token,"PetscADICFunction") == 0 ||
-	    strcmp(token,"PetscDLLibraryList") == 0 ||
-	    strcmp(token,"PetscFList") == 0 ||
-	    strcmp(token,"PetscFwk") == 0 ||
-	    strcmp(token,"PetscMap") == 0 ||
-	    strcmp(token,"PetscOList") == 0 ||
-	    strcmp(token,"SDA") == 0 ||
-	    strcmp(token,"SectionReal") == 0 ||
-	    strcmp(token,"SectionInt") == 0 ||
-	    strcmp(token,"StageLog") == 0 ||
-	    strcmp(token,"VecPack") == 0 ||
 	    strcmp(token,"PetscObjectContainer") == 0 ||
 	    strcmp(token,"DF") == 0 ||
 	    strcmp(token,"Discretization") == 0 ||
@@ -2180,10 +2221,10 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    strcmp(token,"Viewer") == 0 ||
 	    strcmp(token,"XBWindow") == 0 ||
 	    0 )  {
-	    /* type->has_star      = 1; */
 	    type->type_has_star = 1;
 	    type->implied_star  = 1;
 	}
+#endif
 	
 	/* This should be an "mpi defs file" rather than just -mpi */
 	if (isMPI) {
@@ -2208,24 +2249,23 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 		strcmp( token, "MPI_Info" ) == 0       ||
 		0) {
 		type->is_mpi = 1;
-		/* type->has_star      = 1; */
 		type->type_has_star = 1;
 		type->implied_star  = 1;
 	    }
+#if 0
 	    if (strcmp( token, "MPI_Aint" ) == 0) {
 		/* For most systems, MPI_Aint is just long */
-		/* type->has_star      = 0; */
 		type->type_has_star = 0;
 		type->implied_star  = 0;
 		type->is_native     = 1;
 	    }
 	    if (strcmp( token, "MPI_Offset" ) == 0) {
 		/* For most systems, MPI_Offset is long long */
-		/* type->has_star      = 0; */
 		type->type_has_star = 0;
 		type->implied_star  = 0;
 		type->is_native     = 1;
 	    }
+#endif
 	}
 	if (strcmp( token, "void"   ) == 0) {
 	    /* Activate set_void only for the files specified by flag2 */
@@ -2299,10 +2339,10 @@ int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type,
 	   (may be (void) or () in ANSI) */
 	if (useFerr) {
 	    if (AnsiForm) {
-		fprintf( fout, "int *__ierr " );
+		fprintf( fout, "int *%s ", errArgNameLocal );
 	    }
 	    else {
-		fprintf( fout, "__ierr " );
+		fprintf( fout, "%s ", errArgNameLocal );
 	    }
 	}
 	OutputToken( fout, token, nsp );

@@ -97,7 +97,7 @@ void TXDoUser( TeXEntry *e )
     if (pstart) p = pstart + strlen( pstart ) - 1;
     else        p = 0;
     while (p && p >= pstart) {
-	if (p[-1] == ArgChar && p > pstart) {
+	if (p > pstart && p[-1] == ArgChar) {
 	    argn = p[0] - '1';
 	    if (argn >= 0 && argn < nargs) {
 		if (DebugDef) printf( "Pushing %s back in def eval(1)\n", 
@@ -197,13 +197,11 @@ void TXAddUserDef( SRList *TeXlist, TeXEntry *e )
 		    name+1, *template_buf ? template_buf : "<null>", 
 		    *ldef ? ldef : "<null>" );
         }
-	def->replacement_text = (char *)MALLOC( strlen( ldef ) + 1 );
+	def->replacement_text = STRDUP( ldef );
 	CHKPTR(def->replacement_text);
-	strcpy( def->replacement_text, ldef );
 
-	def->input_template = (char *)MALLOC( strlen( template_buf ) + 1 );
+	def->input_template = STRDUP( template_buf );
 	CHKPTR(def->input_template);
-	strcpy( def->input_template, template_buf );
 
 	TXInsertName( TeXlist, name+1, TXDoUser, nargs, (void *)def );
     }
@@ -297,9 +295,8 @@ void TXDoNewCommand( SRList *TeXlist, TeXEntry *e )
     else {
 	def = NEW(Definition);  CHKPTR(def);
 	def->nargs = nargs;
-	def->replacement_text = (char *)MALLOC( strlen( ldef ) + 1 );
+	def->replacement_text = STRDUP( ldef );
 	CHKPTR(def->replacement_text);
-	strcpy( def->replacement_text, ldef );
 
 	def->input_template = 0;
 	if (DebugDef) {
@@ -432,6 +429,10 @@ void TXDumpUserDefs( FILE *fout, int include_hdef )
 	    if (e->action == TXDoUser) {
 		d = (Definition *)(e->ctx);
 		if (d->kind != TX_HTMLCMD || include_hdef) {
+		    /* Sanity check */
+		    if ( d->kind != TX_TEXCMD ) {
+			TeXAbort( "DumpUserDefs", "definition kind" );
+		    }
 		    if (strchr( cur->topicname, '@' )) 
 			fprintf( fout, "\\makeatletter\n" );
 		    fprintf( fout, "\\def\\%s", cur->topicname );
@@ -476,12 +477,12 @@ void TXAddReplaceFile( const char *value, const char *newname )
     elm = SRInsert( skipFileList, value, (char *)0, &n );
     if (elm) {
 	FREE( elm->entryname );
-	elm->entryname = MALLOC( sizeof(newname)+1 );
-	strcpy( elm->entryname, newname );
+	elm->entryname = STRDUP( newname );
+	CHKPTR( elm->entryname );
     }
 }
 
-int  TXIsSkipFile( const char *name )
+int TXIsSkipFile( const char *name )
 {
     int n, rc = 0;
     LINK *elm;
@@ -494,7 +495,7 @@ int  TXIsSkipFile( const char *name )
     return rc;
 }
 
-int  TXIsReplaceFile( const char *name, char *newname )
+int TXIsReplaceFile( const char *name, char *newname )
 {
     int n, rc = 0;
     LINK *elm;

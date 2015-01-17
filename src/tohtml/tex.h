@@ -52,7 +52,7 @@ extern char *outfile;     /* Name of output file */
 extern FILE *ferr;        /* Error report file */
 
 extern int  splitlevel;
-extern char splitdir[100];/* directory for output files */
+extern char splitdir[256];/* directory for output files */
 
 extern char userpath[1024];  /* Path to search for package definitions */
 
@@ -245,10 +245,10 @@ extern void WriteBibtoauxfile ( int, char *, char * );
 extern void WRfromauxfile ( FILE *, int );
 extern int NumChildren ( LINK * );
 extern void WriteChildren ( FILE *, LINK *, int );
-extern int GetParent ( LINK *, char *, char *, char * );
-extern int GetNext ( LINK *, char *, char *, char * );
+extern int GetParent ( LINK *, char *, char *, char *, int );
+extern int GetNext ( LINK *, char *, char *, char *, int );
 extern LINK *GetNextLink ( LINK * );
-extern int GetPrevious ( LINK *, char *, char *, char * );
+extern int GetPrevious ( LINK *, char *, char *, char *, int );
 extern char *TopicFilename ( LINK * );
 
 /* rddefs.c */
@@ -279,6 +279,8 @@ extern void SCPushChar ( char );
 extern void SCSetCommentChar ( char );
 extern void SCSkipNewlines ( FILE * );
 extern char SCGetCommentChar ( void );
+extern void SCTxtDiscardToEndOfLine( FILE * );
+extern void SCSkipNewlines2( FILE *fp );
 
 /* simpleif.c */
 extern void TXNewif( TeXEntry * );
@@ -303,6 +305,10 @@ extern void TeXtabular ( TeXEntry * );
 extern void TeXGetTabularDefn( void );
 extern void TeXBeginHalignTable( void );
 extern void TeXEndHalignTable( void );
+extern void TeXNewAlignCol( void );
+extern void TeXPutAlign( void );
+extern void TeXEndHalignRow( void );
+extern void InitTabular(void);
 
 /* texactio.c */
 extern void TXSetDebug ( int );
@@ -422,8 +428,13 @@ extern void ProcessLatexFile ( int, char **, FILE *, FILE * );
 extern void TXSetCitePrefix ( char * );
 extern void TXSetCiteSuffix ( char * );
 extern void TXPrintToken ( FILE *, const char * );
-extern int FileExists ( char * ); 
+extern int FileExists ( char * );
 extern void TXincludegraphics( TeXEntry * );
+extern int TXConvertFigureToGIF(char *);
+extern void TXActiveCharSet( char, void (*)(char *) );
+extern void TXActiveCharClear(void);
+extern void TXActiveCharDo(char *);
+extern void TXDoObeylines(TeXEntry *);
 
 /* tex2html.c */
 extern void TXDoGaudy ( int );
@@ -471,6 +482,7 @@ extern void TXedesItem ( TeXEntry * );
 extern void TXWriteHyperLink ( FILE *, char *, char *, int );
 extern void TXbcenter( FILE * );
 extern void TXecenter( FILE * );
+extern void TXgroupPushAction( void (*)(void) );
 
 /* tohtml.c - should be moved */
 extern void RemoveFonts ( const char *, char * );
@@ -511,6 +523,12 @@ extern void WriteFirstLineIndent ( FILE *, int );
 extern void WriteEndPage ( FILE * );
 extern void WriteBeginPage ( FILE * );
 extern void WriteHeadPage ( FILE * );
+
+extern int SafeStrncpy( char *, const char *, size_t );
+
+extern void RemoveExtension ( char * );
+extern void GetMainInputFileName( char * );
+
 
 /* userdef.c */
 extern void TXDebugDef ( int );

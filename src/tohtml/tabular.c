@@ -1,3 +1,4 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
 #include <stdio.h>
 #include "sowing.h"
 #include "search.h"
@@ -32,7 +33,7 @@
  */
 /* extern int (*SCSetTranslate ())(); */
 
-#define MAX_CELLS 20
+#define MAX_CELLS 50
 typedef enum { TAB_LEFT, TAB_RIGHT, TAB_CENTER, TAB_PARAGRAPH, TAB_VBAR } 
         align_t;
 
@@ -65,22 +66,22 @@ static int DebugTab = 0;
   */
 static int Ncell = 0;
 
-void TeXNewAlignCol( void );
-void TeXPutAlign( void );
-void TeXEndHalignRow( void );
-
 void TeXGetTabularDefn( void )
 {
-    int         ncell;
+    int         ncell, i;
     char        *p;
     HTabularRow *hrow;
 
     hrow = (HTabularRow *)MALLOC( sizeof(HTabularRow) );  CHKPTR(hrow);
 
+    /* Initialize coltypes as TAB_LEFT by default */
+    for (i=0; i<MAX_CELLS; i++) 
+	hrow->coltype[i] = TAB_LEFT;
+
     ncell = 0;
     TeXGetArg( fpin[curfile], ltoken, MAX_TOKEN );
     p = ltoken;
-    while (*p) {
+    while (*p && ncell < MAX_CELLS) {
 	switch (*p) {
 	case 'l': hrow->coltype[ncell++] = TAB_LEFT; break;
 	case 'r': hrow->coltype[ncell++] = TAB_RIGHT; break;
@@ -97,6 +98,10 @@ void TeXGetTabularDefn( void )
 	    ;
 	}
 	p++;
+    }
+    if (*p) {
+	fprintf( stderr, "Too many cells in tabular environment!\n" );
+	abort();
     }
 
     if (lstack[lSp].env == TXTABULAR) {
@@ -288,6 +293,10 @@ void TeXNewAlignCol( void )
 	case TAB_RIGHT: align_str = "\"RIGHT\""; break;
 	default: align_str = "\"CENTER\""; break;
 	}
+	if (DebugTab) {
+	    printf( "tabular: col = %d (max=%d), align=%s\n",
+		    hrow->curcol, hrow->ncols, align_str);
+	}
 	sprintf( buf, "<TD ALIGN=%s>", align_str );
 	TeXoutcmd( fpout, buf );
 	hrow->curcol++;
@@ -303,7 +312,6 @@ void TeXPutAlign( void )
 	TeXoutcmd( fpout, "</TD>" );
 	/* Only generate this if the next command is *not* multicolumn */
 	TeXNewAlignCol( );
-	hrow->curcol++;
     }
 }
 
@@ -346,7 +354,7 @@ void TeXEndHalignTable( void )
 void TXmulticolumn( TeXEntry *e )
 {
     HTabularRow *hrow;
-    char buf[256], *align_str;
+    char buf[256], *align_str, *reqalign_p;
     int colcount;
     char aligntype;
 
@@ -360,13 +368,21 @@ void TXmulticolumn( TeXEntry *e )
 
 	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
 	    TeXAbort( "TXmulticolumn", e->name );
-	/* Find alignment type */
-	switch (curtok[0]) {
+	/* Find alignment type.  Skip over | */
+	reqalign_p = curtok;
+	while (*reqalign_p == '|') reqalign_p++;
+	switch (*reqalign_p) {
 	case 'l': align_str = "\"LEFT\"";   break;
 	case 'r': align_str = "\"RIGHT\"";  break;
 	case 'c': align_str = "\"CENTER\""; break;
+	case '\0': 
+	    fprintf( ferr, "Missing multicolumn alignment (%s) in %s, line %d\n",
+		     curtok, InFName[curfile] ? InFName[curfile] : "", LineNo[curfile] );
+	    align_str = "\"CENTER\"";
+	    break;
 	default:  
-	  fprintf( ferr, "Unrecognized multcolumn alignment %c\n", curtok[0] );
+	    fprintf( ferr, "Unrecognized multicolumn alignment %c in %s, line %d\n",
+		     curtok[0], InFName[curfile] ? InFName[curfile] : "", LineNo[curfile] );
 	  align_str = "\"CENTER\""; break;
 	}
 	POPCURTOK;

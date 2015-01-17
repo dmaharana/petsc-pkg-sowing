@@ -5,8 +5,8 @@
 #include "search.h"
 
 static FILE *fpaux = 0;
-static char fname[100];
-static int debugContents = 0;
+static char fname[1024];
+static int debugContents = 1;
 
 /* 
     This file contains code for reading an aux file and inserting it into
@@ -53,9 +53,12 @@ typedef struct _Contents {
     char     *name;  /* These could be gotten from Self, but this is easier */
     char     *fname; /* Filename that contains the reference */
     int      level;
+    int      visitCount; /* Sanity check */
     } Contents;
 extern void PrintContents ( FILE *, Contents * );
 extern void WriteSubChildren ( FILE *, Contents *, int );
+static Contents *NewContents( int, const char * );
+
 
 #define MAX_DEPTH 7
 static int  CurLevel = 0;
@@ -71,11 +74,18 @@ static int FirstNodeSeen = 0;
 
 void OpenAuxFile( char *name )
 {
+    int i;
     if (debugContents) {
 	fprintf( stderr, "Opening aux file %s\n", name );
     }
     fpaux = fopen( name, "r" );
-    strcpy( fname, name );
+    if (SafeStrncpy( fname, name, sizeof(fname) )) {
+	TeXAbort( "OpenAuxFile", "file name too long" );
+    }
+    /* Just in case */
+    for (i=0; i<MAX_DEPTH; i++) {
+	parents[i] = lastchild[i] = NULL;
+    }
 }
 
 void OpenWRAuxFile( void )
@@ -132,10 +142,10 @@ void RewindAuxFile( void )
 void RdAuxFile( SRList *topicctx )
 {
     int         err;
-    char        buffer[256];
-    char        lfname[256];
+    char        buffer[1024];
+    char        lfname[1024];
     int         seqnum, level, rlevel, dummy;
-    char        entrylevel[256];
+    char        entrylevel[1024];
     LINK        *l;
     Contents    *c;
     Contents    *LastRead = 0;
@@ -145,12 +155,14 @@ void RdAuxFile( SRList *topicctx )
     }
 
 /* Default value of entrylevel */
-    strcpy( entrylevel, "Document");
+    if (SafeStrncpy( entrylevel, "Document", sizeof(entrylevel) )) {
+	TeXAbort( "RdAuxFile", "Problem setting Document name" );
+    }
     if (!fpaux) return;	
     fgets( buffer, sizeof(buffer), fpaux );
     if (strcmp( buffer, "TEXAUX\n" ) != 0) {
 	/* Invalid aux file */
-	fprintf( stderr, "Aux file missing TEXAUX header\n" );
+	fprintf( stderr, "AUX file missing TEXAUX header\n" );
 	return;
     }
     while (1) {
@@ -159,12 +171,14 @@ void RdAuxFile( SRList *topicctx )
 	    /* This means end-of-file, which is not an error */
 	    break;
 	}
-	err = SYTxtGetLine( fpaux, buffer, 256 );
+	err = SYTxtGetLine( fpaux, buffer, sizeof(buffer) );
 	if (err < 0) {
 	    fprintf( stderr, "Error getting text line from buffer=%s\n",
 		     buffer );
 	    break;
 	}
+	/* labels and bib entries are intermixed within the aux file with 
+	   the chapter/section structure */
 	if (seqnum == -1) {
 	    InsertLabel( level, buffer, lfname );
         }
@@ -172,6 +186,7 @@ void RdAuxFile( SRList *topicctx )
 	    InsertBib( level, buffer );
 	}
 	else {
+	    /* Ensure buffer is null-terminated */
 	    if (buffer[strlen(buffer)-1] == '\n')
 		buffer[strlen(buffer)-1] = 0;
 	    /* We must NOT do a lookup when we insert this into the
@@ -183,23 +198,17 @@ void RdAuxFile( SRList *topicctx )
 	    l->number = seqnum;
 	    /* fprintf( stdout, "Inserting |%s|\n", buffer ); */
 	    /* We want to add links to the neighbors ... */
-	    c = NEW(Contents);   CHKPTR(c);
-	    l->priv = (void *)c;
-	    c->Parent  = 0;
-	    c->Sibling = 0;
-	    c->Child   = 0;
+	    c = NewContents( level, lfname );
+	    l->priv    = (void *)c;
 	    c->Self    = l;
-	    c->name    = (char *)MALLOC( strlen(buffer) + 1 );
+	    c->name    = STRDUP(buffer);
 	    CHKPTR(c->name);
-	    c->fname   = (char *)MALLOC( strlen( lfname ) + 1 );
-	    CHKPTR(c->fname);
-	    strcpy( c->fname, (lfname[0] == '#') ? lfname + 1 : lfname );
-	    c->level   = level;
+
+	    /* Keep track of items in the order in which they were read */
 	    c->Prev    = LastRead;
-	    c->Next    = 0;
 	    if (LastRead) LastRead->Next = c;
 	    LastRead   = c;
-	    strcpy( c->name, buffer );
+
 	    rlevel = level + 1;    /* We need to make all levels greater than 0
 				      so that multiple 0 levels can be handled */
 	    if (rlevel < RootLevel) {
@@ -208,8 +217,29 @@ void RdAuxFile( SRList *topicctx )
 		fprintf( stderr, "rlevel = %d, RootLevel = %d\n", 
 			 rlevel, RootLevel );
 		fprintf( stderr, "Line: %s\n", buffer );
-		/* Update the root */
+		/* Update the root.  Create one if there isn't one already */
+		if (!root) {
+		    Contents    *cr;
+		    if (debugContents) 
+			fprintf( stderr, "Creating a new root\n" );
+		    cr = NewContents( rlevel, lfname );
+		    l->priv     = 0;
+		    cr->Self    = l;
+		    cr->name    = STRDUP( "**ROOT**" ); /* temp */
+		    CHKPTR(cr->name);
+		    root        = cr;
+		}
+		/* */
 		for (i=rlevel;i<RootLevel;i++) {
+		    /* */
+		    if (parents[i] == 0) {
+			fprintf( stderr, "PANIC! Level %d has no parent\n", i );
+			exit(1);
+		    }
+		    if (parents[i-1] == 0) {
+			fprintf( stderr, "PANIC! level %d-1 has no parent\n", i );
+			exit(1);
+		    }
 		    parents[i-1]->Child = parents[i];
 		    lastchild[i-1]      = parents[i];
 		}
@@ -243,21 +273,13 @@ void RdAuxFile( SRList *topicctx )
 		/* Fill in the parent array in case there are higher-level
 		   entries */
 		for (i=0; i<=level; i++) {
-		    root = NEW(Contents);
+		    root = NewContents( -1, lfname );
+		    CHKPTR( root );
 		    parents[i]   = root;
 		    lastchild[i] = 0;
 		    if (i > 0 && i < level) {
 			lastchild[i-1] = parents[i];
 		    }
-		    root->Sibling = 0;
-		    root->Parent  = 0;
-		    root->Child   = 0;
-		    root->Next    = 0;
-		    root->Prev    = 0;
-		    root->name    = 0;
-		    root->level   = -1;
-		    root->Self    = 0;
-		    root->fname   = 0;
 		}
 	    }
 	    if (debugContents) {
@@ -282,8 +304,10 @@ void RdAuxFile( SRList *topicctx )
 		/* This node is a parent of the current level */
 		if (parents[rlevel-1]) {
 		    /* ??? is this code correct? */
-		    if (parents[rlevel-1]->Child)
-			lastchild[rlevel-1]->Sibling = c;
+		    if (parents[rlevel-1]->Child) {
+			if (lastchild[rlevel-1]) 
+			    lastchild[rlevel-1]->Sibling = c;
+		    }
 		    else
 			parents[rlevel-1]->Child = c;
 		}
@@ -296,8 +320,11 @@ void RdAuxFile( SRList *topicctx )
 		if (parents[rlevel-1]) {
 		    if (!parents[rlevel-1]->Child)
 			parents[rlevel-1]->Child = c;
-		    else 
-			lastchild[rlevel-1]->Sibling = c;
+		    else {
+			if (lastchild[rlevel-1]) {
+			    lastchild[rlevel-1]->Sibling = c; 
+			}
+		    }
 		}
 		lastchild[rlevel-1] = c;
 		parents[rlevel]     = c;
@@ -344,17 +371,17 @@ void WriteBibtoauxfile( int seqnum, char *labelname, char *nodename )
 void WRfromauxfile( FILE *fout, int level )
 {
     int  err;
-    char buffer[256];
+    char buffer[1024];
     int  seqnum, ilevel;
-    char fullname[256];
-    char lfname[256];
+    char fullname[1024];
+    char lfname[1024];
 
     if (!fpaux) return;
     RewindAuxFile();
     while (1) {
 	err = fscanf( fpaux, "%d#%s %d", &seqnum, lfname, &ilevel );
 	if (err < 0) break;
-	err = SYTxtGetLine( fpaux, buffer, 256 );
+	err = SYTxtGetLine( fpaux, buffer, sizeof(buffer) );
 	if (err < 0) break;
 	if (level == ilevel) {
 	    if (buffer[strlen(buffer)-1] == '\n')
@@ -362,8 +389,11 @@ void WRfromauxfile( FILE *fout, int level )
 	    if (lfname)
 		sprintf( fullname, "%s#Node", 
 			 (lfname[0] == '#') ? lfname + 1 : lfname );
-	    else
-		strcpy( fullname, "Node" );
+	    else {
+		if (SafeStrncpy( fullname, "Node", sizeof(fullname) )) {
+		    TeXAbort( "WRfromauxfile", "Unable to set fullname" );
+		}
+	    }
 	    WritePointerText( fout, buffer, fullname, seqnum );
 	    WritePar( fout );
         }
@@ -403,6 +433,21 @@ void PrintContents( FILE *fp, Contents *r )
     }
 }
 
+/* A debugging routine to print just the siblings, not the children 
+   of the siblings */
+static void PrintSiblings( FILE *, Contents * );
+
+static void PrintSiblings( FILE *fp, Contents *r )
+{
+    int maxcount = 256;
+    fprintf( fp, "Sibling list:\n" );
+    while (r && maxcount--) {
+	fprintf( fp, "\t%d:%s\n", r->level, r->name ? r->name : "NULL" );
+	r = r->Sibling;
+    }
+    if (maxcount == 0) 
+	fprintf( fp, "\t**exceeded max sibling count\n" );
+}
 /* Get the NUMBER of childen of the given node */
 int  NumChildren( LINK *l )
 {
@@ -426,21 +471,44 @@ int  NumChildren( LINK *l )
     return cnt;
 }
 
-/* Write a menu for the SIBLINGS and their CHILDREN of a given contents pointer */
+/* Write a menu for the SIBLINGS and their CHILDREN of a given contents 
+   pointer 
+ */
+#ifndef MAX_CONTENTS_ENTRIES
+#define MAX_CONTENTS_ENTRIES 2048
+#endif
+static int elementCount = 0;
 void WriteSiblings( FILE *fout, Contents *r, int depth )
 {
     if (!r) return;	
+
+    if (debugContents) {
+	PrintSiblings( stderr, r );
+    }
     TXbmenu( fout );
     while (r) {
+	if (debugContents) {
+	    fprintf( stderr, "Push sibling entry %s (level %d)\n", 
+		     r->name, r->level );
+	}
 	if (r->level <= depth) {
 	    /* Handle the case where the Self entry is empty */
 	    if (r->Self) {
-		char fullname[256];
+		char fullname[1024];
+		elementCount ++;
+		if (elementCount > MAX_CONTENTS_ENTRIES) {
+		    fprintf( stderr, "Too many contents elements (%d)\n", 
+			     elementCount );
+		    exit(1);
+		}
 		WriteBeginPointerMenu( fout );
 		if (r->fname)
 		    sprintf( fullname, "%s#Node", r->fname );
-		else
-		    strcpy( fullname, "Node" );
+		else {
+		    if (SafeStrncpy( fullname, "Node", sizeof(fullname) )) {
+			TeXAbort( "WriteSiblings", "Unable to set fullname" );
+		    }
+		}
 		WritePointerText( fout, r->name, fullname, r->Self->number );
 		WriteEndOfPointer( fout );
 	    }
@@ -456,6 +524,10 @@ void WriteSubChildren( FILE *fout, Contents *r, int depth )
 {
     if (!r || !r->Child) return;	
     r = r->Child;
+    if (debugContents) {
+	fprintf( stderr, "Push entry %s (level %d)\n", 
+		 r->name, r->level );
+    }
     WriteSiblings( fout, r, depth );
 }    	    
 
@@ -472,6 +544,7 @@ void WriteChildren( FILE *fout, LINK *l, int depth )
 	    fprintf( stderr, "No Root!\n" );
 	    return;
 	}
+	elementCount = 0;
 	/* Note that the root *can* now have siblings - in the case where
 	   the document has parts.  However, in this case we must first 
 	   write out the siblings */
@@ -491,7 +564,7 @@ void WriteChildren( FILE *fout, LINK *l, int depth )
 }
 
 /* Look up name; if found, return the name in context-ref of the PARENT.  */
-int GetParent( LINK *l, char *name, char *context, char *title )
+ int GetParent( LINK *l, char *name, char *context, char *title, int titlelen )
 {
     Contents *c = (Contents *)(l->priv);
     Contents *parent;
@@ -504,7 +577,9 @@ int GetParent( LINK *l, char *name, char *context, char *title )
     if (!parent) return 0;
     if (!parent->name || !parent->Self) return 0;
 
-    strcpy( title, parent->name );
+    if (SafeStrncpy( title, parent->name, titlelen )) {
+	TeXAbort( "GetParent", "title too long" );
+    }
     if (parent->fname)
 	sprintf( context, "%s#Node%d", parent->fname, parent->Self->number );
     else
@@ -516,7 +591,7 @@ int GetParent( LINK *l, char *name, char *context, char *title )
     return 1;
 }
 
-int GetNext( LINK *l, char *name, char *context, char *title )
+ int GetNext( LINK *l, char *name, char *context, char *title, int titlelen )
 {
     Contents *c = (Contents *)(l->priv);
     Contents *nbr;
@@ -525,7 +600,9 @@ int GetNext( LINK *l, char *name, char *context, char *title )
     if (!nbr) return 0;
     if (!nbr->name || !nbr->Self) return 0;
 
-    strcpy( title, nbr->name );
+    if (SafeStrncpy( title, nbr->name, titlelen )) {
+	TeXAbort( "GetNext", "Title too long" );
+    }
     if (nbr->fname)
 	sprintf( context, "%s#Node%d", nbr->fname, nbr->Self->number );
     else
@@ -563,7 +640,7 @@ LINK *GetNextLink( LINK *l )
     return 0;
 }
 
-int GetPrevious( LINK *l, char *name, char *context, char *title )
+int GetPrevious( LINK *l, char *name, char *context, char *title, int titlelen )
 {
     Contents *c = (Contents *)(l->priv);
     Contents *nbr;
@@ -572,7 +649,9 @@ int GetPrevious( LINK *l, char *name, char *context, char *title )
     if (!nbr) return 0;
     if (!nbr->name || !nbr->Self) return 0;
 
-    strcpy( title, nbr->name );
+    if (SafeStrncpy( title, nbr->name, titlelen) ) {
+	TeXAbort( "GetPrevious", "title too long" );
+    }
     sprintf( context, "%s#Node%d", nbr->fname, nbr->Self->number );
 
     return 1;
@@ -585,4 +664,42 @@ char *TopicFilename( LINK *l )
 
     c = (Contents *)(l->priv);
     return c->fname;
+}
+
+/* Create and safely initialize a contents element.
+   Generally initialized with null/zero elements
+ */
+static Contents *NewContents( int level, const char *lfname ) 
+{
+    Contents *c;
+    c             = NEW(Contents);   CHKPTRN(c);
+    /* Link for contents */
+    c->Parent     = 0;
+    c->Sibling    = 0;
+    c->Child      = 0;
+    c->Self       = 0;
+
+    /* Name of node */
+    c->name       = 0;
+
+    /* File where found */
+    c->fname      = (char *)MALLOC( strlen( lfname ) + 1 );
+    CHKPTRN(c->fname);
+    if (SafeStrncpy( c->fname, 
+		     (lfname[0] == '#') ? lfname + 1 : lfname, 
+		     strlen(lfname) + 1 )) {
+	TeXAbort( "NewContents", "filename too long" );
+    }
+
+    /* Level in contents */
+    c->level      = level;
+
+    /* Linear list of entries */
+    c->Prev       = 0;
+    c->Next       = 0;
+
+    /* Sanity count */
+    c->visitCount = 1;
+
+    return c;
 }

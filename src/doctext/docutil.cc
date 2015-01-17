@@ -391,13 +391,13 @@ int DocReadDefineDefinition( InStream *ins, OutStream *outs )
                              // name.  NOT FULLY IMPLEMENTED
 
     // Must handle newline as non-space
-    
+
     nl_break = ins->breaktable['\n'];
     us_break = ins->breaktable['_'];
     ins->SetBreakChar( '\n', BREAK_OTHER );
     ins->SetBreakChar( '_', BREAK_ALPHA );
     while (!ins->GetToken( maxlen, token, &nsp )) {
-      
+
 	// Check for \n and do PutNewline instead.
 	if (token[0] == '\n') {
 	  outs->PutToken( nsp, NewlineString );
@@ -413,6 +413,7 @@ int DocReadDefineDefinition( InStream *ins, OutStream *outs )
     ins->SetBreakChar( '_', us_break );
     return 0;
 }
+
 
 // Read C and/or X
 static int HasX = 0;

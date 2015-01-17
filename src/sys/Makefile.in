@@ -2,19 +2,19 @@ ALL: lib
 SHELL       = @SHELL@
 
 include ../../Makerules
-top_srcdir=@top_srcdir@
-srcdir=@srcdir@
+top_srcdir  = @top_srcdir@
+srcdir      = @srcdir@
 @VPATH@
 
 INCLUDES = -I${top_srcdir}/include -I../../include
 
-OBJS = arch.o txt.o daytime.o file.o tr.o getopts.o
+OBJS = arch.o txt.o daytime.o file.o tr.o getopts.o rdconfig.o
 
-LIBS      =  
-LDIR      = 
-CLEANFILES = 
+LIBS      =
+LDIR      =
+CLEANFILES =
 
-BASEOBJS = 
+BASEOBJS =
 
 clean:
 	-rm -f *.o *~ $(CLEANFILES)
@@ -25,11 +25,10 @@ lib: $(OBJS)
 	$(AR) cr ../../lib/libsowing.a ${OBJS}
 	$(RANLIB) ../../lib/libsowing.a
 
-doc_SOURCES = 
+doc_SOURCES =
 manpages:
 
 wwwpages:
 
 source_names:
 	@echo $(CSOURCES)
-

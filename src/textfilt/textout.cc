@@ -544,7 +544,8 @@ int TextOut::ReadCommands( InStream *ins ){
 	    }
 	   
 	/* Skip the leading space (upto newline) */
-	while (!ins->GetChar( &ch ) && isspace( ch ) && ch != '\n') ;
+	while (!ins->GetChar( &ch ) && isspace( ch ) && ch != '\n')
+	  ;
         ins->UngetChar( ch );
         
 	// Get command string for name 

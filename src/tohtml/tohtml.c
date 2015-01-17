@@ -19,8 +19,6 @@ void PrintHelp ( char * );
 
 /* void ProcessInfoFile ( int, char **, FILE *, FILE * ); */
 
-void RemoveExtension ( char * );
-
 /* void ProcessLatexFile ( int, char **, FILE *, FILE * );*/
 
 void SaveCommandLine( int, char *[] );
@@ -210,9 +208,9 @@ int main( int argc, char *argv[] )
 	IsGaudy = 1;
     }
 
-    if (SYArgHasName( &argc, argv, 1, "-nonavnames" )) 
+    if (SYArgHasName( &argc, argv, 1, "-nonavnames" ))
 	DoNavNames = 0;
-    if (SYArgHasName( &argc, argv, 1, "-notopnames" )) 
+    if (SYArgHasName( &argc, argv, 1, "-notopnames" ))
 	DoTopNames = 0;
     if (SYArgHasName( &argc, argv, 1, "-nobottomnav" ))
 	DoBottomNav = 0;
@@ -221,15 +219,15 @@ int main( int argc, char *argv[] )
 	TeXNoContents();
 	DoContents = 0;
     }
-    if (SYArgGetString( &argc, argv, 1, "-citeprefix", tmpstr, 128 ))
+    if (SYArgGetString( &argc, argv, 1, "-citeprefix", tmpstr, sizeof(tmpstr) ))
 	TXSetCitePrefix( tmpstr );
-    if (SYArgGetString( &argc, argv, 1, "-citesuffix", tmpstr, 128 ))
+    if (SYArgGetString( &argc, argv, 1, "-citesuffix", tmpstr, sizeof(tmpstr) ))
 	TXSetCiteSuffix( tmpstr );
 
     if (SYArgHasName( &argc, argv, 1, "-useimg" ))
 	TXSetLatexAgain( 0 );
 
-    if (SYArgGetString( &argc, argv, 1, "-indexname", tmpstr, 128 )) {
+    if (SYArgGetString( &argc, argv, 1, "-indexname", tmpstr, sizeof(tmpstr) )) {
 	if (UserIndexName) {
 	    fprintf( stderr, "Only one index name allowed\n" );
 	}
@@ -252,12 +250,12 @@ int main( int argc, char *argv[] )
    -split 1        , chapters AND sections are in separate files.
 
    Note that in this case, ALL files are written into the split directory 
-   */    
+   */
     SYArgGetInt( &argc, argv, 1, "-split", &splitlevel );
 
     SYArgGetInt( &argc, argv, 1, "-headeroffset", &level_offset );
 
-/* Get the hypertext mappings */    
+/* Get the hypertext mappings */
     while (SYArgGetString( &argc, argv, 1, "-mapref", infilename, 256 )) {
 	RdRefMap( infilename );
     }
@@ -273,14 +271,15 @@ int main( int argc, char *argv[] )
 	TXSetProcessManPageTokens( 1 );
     }
 
-    basedir[0] = 0;    
+    basedir[0] = 0;
     SYArgGetString( &argc, argv, 1, "-basedir", basedir, 256 );
 
-    userpath[0] = 0;    
+    userpath[0] = 0;
     SYArgGetString( &argc, argv, 1, "-userpath", userpath, 256 );
 
     /* Set the default image format*/
-    strcpy( ImageExt, "xbm" );
+    /* strcpy( ImageExt, "xbm" ); *//* xbm no longer recognized by browsers */
+    strcpy( ImageExt, "gif" );
     if (SYArgHasName( &argc, argv, 1, "-allgif" ))
         strcpy( ImageExt, "gif" );
 
@@ -299,9 +298,13 @@ int main( int argc, char *argv[] )
 	fprintf( stderr, "Missing filename!\n" );
 	return 1;
     }
-    strcpy( infilename, argv[0] );
+    if (SafeStrncpy( infilename, argv[0], sizeof(infilename) )) {
+	TeXAbort( "tohtml", "input file name too long" );
+    }
     if (outfilename[0] == 0) {
-	strcpy( outfilename, argv[0] );
+	if (SafeStrncpy( outfilename, argv[0], sizeof(outfilename) )) {
+	    TeXAbort( "tohtml", "output filename too long" );
+	}
     }
     RemoveExtension( outfilename );
     strcpy( basefilename, outfilename );
@@ -364,6 +367,8 @@ int main( int argc, char *argv[] )
 	fprintf( stdout, "User definitions in TeX format are:\n" );
 	TXDumpUserDefs( stdout, 1 );
     }
+
+    /* trdump(stdout);*/
     return 0;
 }
 
@@ -420,7 +425,7 @@ void WriteSectionAnchor( FILE *fp, char *name, char *entrylevel,
 /* Level must be >= 1 */
     if (DebugOutput) fprintf( stdout, "WriteSectionAnchor\n" );
     if (level < 1) level = 1;
-    fprintf( fp, "<HR><H%d><A NAME=\"%s%d\">%s</a></H%d>%s", 
+    fprintf( fp, "<hr><h%d><span id=\"%s%d\">%s</span></h%d>%s",
 	     level + level_offset, entrylevel, number, tmpname,
 	     level + level_offset, NewLineString );
 }
@@ -432,15 +437,15 @@ void WriteFileTitle( FILE *fp, char *name )
     if (DebugOutput) fprintf( stdout, "WriteFileTitle\n" );
     if (wrotebody) return;
     /* Make sure that we remove TOK_START and TOK_END from name */
-    fprintf( fp, "<TITLE>" );
+    fprintf( fp, "<title>" );
     WriteString( fp, name );
-    fprintf( fp, "</TITLE>%s", NewLineString );
+    fprintf( fp, "</title>%s", NewLineString );
 }
 
 void WriteJumpDestination( FILE *fp, char *name, char *title )
 {
     if (DebugOutput) fprintf( stdout, "WriteJumpDestination\n" );
-    fprintf( fp, "<A NAME=\"%s\">%s</a>", name, title );
+    fprintf( fp, "<span id=\"%s\">%s</span>", name, title );
 }
 
 /*
@@ -486,7 +491,7 @@ void WriteEndofTopic( FILE *fp )
     fprintf( fp, "%s<P>%s", NewLineString, NewLineString );
     /* If there is text for the bottom, add a rule ... */
     if (DoNavNames && DoBottomNav) 
-	fprintf( fp, "<HR>%s", NewLineString );
+	fprintf( fp, "<hr>%s", NewLineString );
 }	
 
 /* This translation needs to happen on output in HTML, if it hasn't 
@@ -561,7 +566,7 @@ void RemoveExtension( char *str )
    THE FORMAL GRAMMAR (but it IS in the description of grammar elements) */
 void WriteStartNewLine( FILE *fp )
 {
-    fprintf( fp, "<BR>%s", NewLineString );
+    fprintf( fp, "<br>%s", NewLineString );
 }	
 
 void DebugWriteString( FILE *fd, const char *str, int maxlen )
@@ -693,9 +698,10 @@ void WriteStringRaw( FILE *fp, char *str )
 }
 
 #include "search.h"
-static char ParentTitle[128];
-static char NextTitle[128];
-static char PrevTitle[128];
+#define MAX_SECTION_TITLE 512
+static char ParentTitle[MAX_SECTION_TITLE];
+static char NextTitle[MAX_SECTION_TITLE];
+static char PrevTitle[MAX_SECTION_TITLE];
 
 /*
  * Sometime we want to write only one set of buttons per page, rather than
@@ -714,12 +720,15 @@ void WriteSectionButtons( FILE *fout, char *name, LINK *l )
 
     if (DebugOutput) fprintf( stdout, "WriteSectionButtons\n" );
     /* We really need to pass the length of the third arg to the routines... */
-    has_parent = GetParent( l, name, contextParent, ParentTitle );
-    has_next   = GetNext( l, name, contextNext, NextTitle );
-    has_prev   = GetPrevious( l, name, contextPrev, PrevTitle );
+    has_parent = GetParent( l, name, contextParent, ParentTitle, 
+			    sizeof(ParentTitle) );
+    has_next   = GetNext( l, name, contextNext, NextTitle, 
+			  sizeof(NextTitle) );
+    has_prev   = GetPrevious( l, name, contextPrev, PrevTitle, 
+			      sizeof(PrevTitle) );
 
 /* This is a horizontal rule for output */
-/* fputs( "<HR>\n", fout ); */
+/* fputs( "<hr>\n", fout ); */
     if (has_prev && DoTopNames) {
 	SetPreviousButton( fout, contextPrev, PrevTitle );
 	did_output++;
@@ -750,7 +759,7 @@ void WriteSectionButtons( FILE *fout, char *name, LINK *l )
 	SetNextButton( fout, contextNext, NextTitle );
 	did_output++;
     }
-    if (did_output) fprintf( fout, "<BR>%s", NewLineString );
+    if (did_output) fprintf( fout, "<br>%s", NewLineString );
     if (DoNavNames) {
 	if (has_parent) {
 	    OutJump( fout, contextParent, ParentTitle, "Up" );
@@ -766,7 +775,7 @@ void WriteSectionButtons( FILE *fout, char *name, LINK *l )
 	}
     }
     if (did_output)
-	fprintf( fout, "<P>%s", NewLineString );
+	fprintf( fout, "<p>%s", NewLineString );
 }
 
 void WriteSectionButtonsBottom( FILE *fout, char *name, LINK *l )
@@ -779,7 +788,7 @@ void WriteSectionButtonsBottom( FILE *fout, char *name, LINK *l )
 void OutJump( FILE *fp, char *context, char *name, char *label )
 {
     if (DebugOutput) fprintf( stdout, "OutJump\n" );
-    fprintf( fp, "<b>%s: </b><A HREF=\"%s\">", label, context );
+    fprintf( fp, "<b>%s: </b><a href=\"%s\">", label, context );
     WriteString( fp, name );
     fprintf( fp, "</a>%s", NewLineString );
 }
@@ -789,7 +798,7 @@ void OutJump( FILE *fp, char *context, char *name, char *label )
 void SetUpButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetUpButton\n" );
-    fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%sup.%s\"></A>", 
+    fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%sup.%s\" alt=\"Up\"></a>", 
 	     context, NoBMCopy ? BMURL : "", ImageExt );  
 /* fprintf( fp, "<b>Up: </b><A HREF=\"%s\">%s</a> ", context, name ); */
 }   
@@ -797,7 +806,7 @@ void SetUpButton( FILE *fp, char *context, char *name )
 void SetNextButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetNextButton\n" );
-    fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%snext.%s\"></A>", 
+    fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%snext.%s\" alt=\"Next\"></a>", 
 	     context, NoBMCopy ? BMURL : "", ImageExt );  
 /* fprintf( fp, "<b>Next: </b><A HREF=\"%s\">%s</a> ", context, name ); */
 }   
@@ -805,7 +814,7 @@ void SetNextButton( FILE *fp, char *context, char *name )
 void SetPreviousButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetPreviousButton\n" );
-    fprintf( fp, "<A HREF=\"%s\"><IMG WIDTH=16 HEIGHT=16 SRC=\"%sprevious.%s\"></A>", 
+    fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%sprevious.%s\" alt=\"Previous\"></a>", 
 	     context, NoBMCopy ? BMURL : "", ImageExt );  
 /* fprintf( fp, "<b>Previous: </b><A HREF=\"%s\">%s</a> ", context, name ); */
 }   
@@ -814,7 +823,7 @@ void SetPreviousButton( FILE *fp, char *context, char *name )
 void WritePar( FILE *fp )
 {
     fprintf( stderr, "***BOGUS***\n" );
-    fprintf( fp, "<P>%s", NewLineString );
+    fprintf( fp, "<p>%s", NewLineString );
 }
 
 void WriteBeginPointerMenu( FILE *fout )
@@ -966,7 +975,7 @@ void PrintHelp( char *pgm )
 \t-o outname\tSpecify the name to be used as the output file name (instead\n\
 \t\t\t\tof the basing the output file name on the input file name).  This\n\
 \t\t\t\tname should include the natural extension; e.g., for HTML output, \n\
-\t\t\t\tuse something like tohtml -latex -o myout.htm myfile.tex ." );
+\t\t\t\tuse something like tohtml -latex -o myout.htm myfile.tex .\n" );
     fprintf( stderr, "(for wizards): [-debug] [-debugscan] [-debugdef]\n" );
     return;
 }
@@ -977,6 +986,7 @@ void PrintHelp( char *pgm )
  * have two bop commands.
  */
 static FILE *eofpage = 0;
+static FILE *eofpagecopy = 0;
 void WriteEndPage( FILE *fpout )
 {
     int c;
@@ -990,17 +1000,22 @@ void WriteEndPage( FILE *fpout )
 			 "Could not open endpage %s\n", endpagefilename );
 		return;
 	    }
+	    eofpagecopy = eofpage;
 	}
     }
     if (eofpage) {
+	if (eofpage != eofpagecopy) {
+	    fprintf( stderr, "PANIC: eofpage %p != copy %p\n", eofpage, eofpagecopy );
+	    abort();
+	}
 	rewind( eofpage );
 	while ((c = getc( eofpage )) != EOF) 
 	    putc( c, fpout );
     }
     if (wrotebody)
-	fprintf( fpout, "</BODY>%s", NewLineString );
+	fprintf( fpout, "</body>%s", NewLineString );
     if (wrotehead)
-	fprintf( fpout, "</HTML>%s", NewLineString );
+	fprintf( fpout, "</html>%s", NewLineString );
     wrotebody = 0;
     InOutputBody = 0;
     if (DebugOutput) printf( "Set InOutputBody and wrotebody to 0\n" );
@@ -1023,7 +1038,7 @@ void WriteBeginPage( FILE *fpout )
 
     if (DebugOutput) fprintf( stdout, "WriteBeginPage\n" );
     /* Should parameterize this - command in basedefs? */
-    fprintf( fpout, "</HEAD>%s<BODY BGCOLOR=\"#FFFFFF\">%s", 
+    fprintf( fpout, "</head>%s<body style=\"background-color:#FFFFFF\">%s", 
 	     NewLineString, NewLineString );
     if (!bofpage) {
 	if (beginpagefilename[0]) {
@@ -1047,7 +1062,7 @@ void WriteHeadPage( FILE *fpout )
     if (wrotehead) return;
     wrotehead = 1;
     if (DebugOutput) fprintf( stdout, "WriteHeadPage\n" );
-    fprintf( fpout, "<HTML>%s<HEAD>%s", NewLineString, NewLineString );
+    fprintf( fpout, "<!DOCTYPE html>\n<html lang=en>%s<head>%s", NewLineString, NewLineString );
     fprintf( fpout, "<!-- This file was generated by tohtml from %s -->%s",
 	     InFName[curfile] ? InFName[curfile] : "unknown", NewLineString );
     fprintf( fpout, "<!-- with the command%stohtml %s%s-->%s", 
@@ -1159,4 +1174,34 @@ void SaveCommandLine( int argc, char *argv[] )
 char *GetCommandLine( void )
 {
     return cmdlin;
+}
+
+/* Copy at most n characters; return 0 on success and nonzero on failure.
+   Unlink strncpy, does not fill in all n characters */
+int SafeStrncpy( char *dest, const char *src, size_t n )
+{
+    char * restrict d_ptr = dest;
+    const char * restrict s_ptr = src;
+    register int i;
+
+    if (n == 0) return 0;
+
+    i = (int)n;
+    while (*s_ptr && i-- > 0) {
+	*d_ptr++ = *s_ptr++;
+    }
+    
+    if (i > 0) { 
+	*d_ptr = 0;
+	return 0;
+    }
+    else {
+	/* Force a null at the end of the string (gives better safety 
+	   in case the user fails to check the error code) */
+	dest[n-1] = 0;
+	/* We may want to force an error message here, at least in the
+	   debugging version */
+	/*printf( "failure in copying %s with length %d\n", src, n ); */
+	return 1;
+    }
 }

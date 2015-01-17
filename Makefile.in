@@ -161,22 +161,16 @@ clean:
 distclean:
 	-for dir in ${SUBDIRS} docs ; do (cd $$dir && ${MAKE} distclean ) ; done
 	-rm -f lib/*.a config.status config.log config.cache Makerules \
-		config.system Makefile 
-	-rm -f include/sowingconfig.h 
+		config.system Makefile
+	-rm -f include/sowingconfig.h
 	-rm -f bin/pstofig bin/pstoxbm bin/bib2html
 	-rm -f src/doctext/docpath.h include/patchlevel.h include/textfilt/textpath.h
 
-SOWINGCVSHOME = :ext:shakey.mcs.anl.gov:/home/gropp/cvsMaster_z
 VERSION       = @PACKAGE_VERSION@
 dist:
 	@if [ ! -d tmpdir ] ; then mkdir tmpdir ; fi
 	@rm -rf tmpdir/*
-	@if [ -n "${TAG}" ] ; then \
-	    cd tmpdir && cvs -d $(SOWINGCVSHOME) export -r ${TAG} sowing >cvsexp.log 2>&1 ;\
-	else \
-	    cd tmpdir && cvs -d $(SOWINGCVSHOME) export -D 'now' sowing >cvsexp.log 2>&1 ;\
-	fi
-	cd tmpdir/sowing && svn export https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk/confdb confdb
-	cd tmpdir/sowing && autoheader && autoconf && rm -rf autom4te*
+	cd tmpdir && svn export https://svn.mcs.anl.gov/repos/sowing/trunk sowing
+	cd tmpdir/sowing && ./makeconfigure
 	mv tmpdir/sowing tmpdir/sowing-$(VERSION)
 	cd tmpdir && tar cf - sowing-$(VERSION) | gzip -9 > ../sowing-$(VERSION).tar.gz

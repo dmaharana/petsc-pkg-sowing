@@ -1,3 +1,4 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
 #include <stdio.h>
 #include <ctype.h>
 #include "sowing.h"
@@ -21,7 +22,7 @@
     commentchar for TeX.
  */
 
-#define MAX_LBUFFER 5000 
+#define MAX_LBUFFER 15000 
 static char lbuffer[MAX_LBUFFER+2];
 static int  lp  = -1;
 static int  DebugScan = 0;
@@ -57,9 +58,11 @@ void SCSetAtLetter( int flag )
     isatletter = flag;
 }
 
-/* 
+/*
    We really want to use the same mechanism that TeX does; this
    requires having a translation table for characters to types
+
+   FIXME:  This is not used yet (set but not referenced)
  */
 static int chartype[256];
 
@@ -247,7 +250,8 @@ void SCAppendToken( char *token )
 
     len = strlen(token);
     if (lp + len >= MAX_LBUFFER) {
-	fprintf( OUTFILE, "Push-back buffer limit exceeded!\n" );
+        fprintf( OUTFILE, "Push-back buffer limit of %d characters exceeded!\n",
+	       MAX_LBUFFER );
 	exit(1);
     }
     OverlapCopy( lbuffer, len );

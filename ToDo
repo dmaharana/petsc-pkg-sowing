@@ -8,3 +8,25 @@ loose the working versions)
 The html.def etc files still seem to live in ~/textfilt !
 
 Doctext needs a way to generate index entries.
+
+Mapnames:
+       1. Allow case-insensitive match (done), but..
+       2. Need to allow replacement text to be original (with its case).
+          Currently, it uses the text as it appears in the map file, which
+          has no way to say "use original".  That's probably the correct option.
+
+Tohtml changes needed for MPI-3 document:
+       1. Handle initial section level that is not nested (e.g., section before 
+       chapter)
+       2. Handle "*" in section (e.g., no number headings)
+       3. obeylines command/environment (behave sort of as verbatim; should 
+       this require better handling of active characters) - DONE (?)
+       4. texorpdfstring handling
+       5. In split mode, it needs to make the html clean and then, on the
+       next page, restore any open elements.  For example, things like font
+       color and face.
+       6. Provide an option to dump index file and to import an HTML file
+       to use as the index.  This permits a separate index-processing step.
+       7. HTML paragraphs are now <p>....</p>, not a separator.  Need to
+       change the generated HTML to match.
+       

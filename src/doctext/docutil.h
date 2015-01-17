@@ -1,7 +1,7 @@
 #ifndef DOCUTIL
 #define DOCUTIL
 #include "textout.h"
-
+int DocReadDefineDefinition( InStream *ins, OutStream *outs );
 int DocReadName( InStream *ins, char *routinename, int maxlen );
 int DocReadDescription( InStream *ins, char *matchstring, 
 			TextOut *textout, int flag, int *at_end );
@@ -11,7 +11,6 @@ int DocSkipToMacroSynopsis( InStream *ins, char *matchstring );
 int DocReadMacroSynopsis( InStream *ins, char *matchstring, OutStream *outs, 
 			  int *at_end );
 int DocReadTypeDefinition( InStream *ins, OutStream *outs );
-int DocReadDefineDefinition( InStream *ins, OutStream *outs );
 int DocGetSubOptions( InStream *ins );
 int DocMatchTokens( const char *, const char * );
 int IncludeNameBlock( InStream *, char * );

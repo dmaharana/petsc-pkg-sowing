@@ -1,6 +1,7 @@
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
 #include <stdio.h>
 #include <ctype.h>
+#include <unistd.h> /* for unlink */
 #include "sowing.h"
 #include "search.h"
 #include "tex.h"
@@ -227,6 +228,9 @@ char LbraceChar      = '{';
 char RbraceChar      = '}';
 char ArgChar         = '#';
 char AlignChar       = '&';
+char ActiveChar      = '\0';   /* Normally not set.  We allow a single char
+				  to be active; (will be) used for obeylines */
+void (*activeCharAction)(char *) = 0;
 
 /* Special user commands */
 char *UserIndexName = 0;
@@ -664,6 +668,7 @@ void TXnop( TeXEntry *e )
   POPCURTOK;
 }
 
+/* Copy a string and return it in newly allocated memory */
 char *TXCopy( char *s )
 {
     char *n;
@@ -671,12 +676,12 @@ char *TXCopy( char *s )
     strcpy( n, s );
     return n;
 }
-	
+
 /* Place the argument in the location stored in the ctx */
 void TXsavearg( TeXEntry *e )
 {
     PUSHCURTOK;
-    strncpy( CmdName, e->name, 64 );
+    strncpy( CmdName, e->name, sizeof(CmdName)-1 );
     TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXsavearg", e->name );
     strcpy( (char *)(e->ctx), curtok );
     CmdName[0] = 0;
@@ -1054,7 +1059,7 @@ void TXasisGrouped( TeXEntry *e )
     TXbgroup( e );
     if (DebugCommands)
 	fprintf( stdout, "Getting %d arguments for %s\n", e->nargs, e->name );
-    strncpy( CmdName, e->name, 64 );
+    strncpy( CmdName, e->name, sizeof(CmdName)-1 );
     for (i=0; i<e->nargs; i++) {
 	if (TeXGetArg( fpin[curfile], asistoken, MAX_TOKEN ) == -1) {
 	    fprintf( stdout, "Failed to get argument for %s\n", e->name );
@@ -1089,7 +1094,7 @@ void TXbox( TeXEntry *e )
     TXbgroup( e );
     if (DebugCommands)
 	fprintf( stdout, "Getting %d arguments for %s\n", e->nargs, e->name );
-    strncpy( CmdName, e->name, 64 );
+    strncpy( CmdName, e->name, sizeof(CmdName)-1 );
     for (i=0; i<e->nargs; i++) {
 	if (TeXGetArg( fpin[curfile], asistoken, MAX_TOKEN ) == -1) {
 	    fprintf( stdout, "Failed to get argument for %s\n", e->name );
@@ -1180,9 +1185,8 @@ void TXinclude( TeXEntry *e )
 	    return;
 	}
     }
-    InFName[curfile] = (char *)MALLOC( strlen(curtok) + 1 );
+    InFName[curfile] = STRDUP( curtok );
     CHKPTR(InFName[curfile]);
-    strcpy( InFName[curfile], curtok );
     LineNo[curfile] = 1;      /* Line numbers are 1-origin */
     POPCURTOK;
 }
@@ -1300,12 +1304,15 @@ void TXIfFileExists( TeXEntry *e )
 
 static LINK *LastSection = 0;
 int splitlevel = -1;
-char splitdir[100];
+char splitdir[256];
 
 void TXSetSplitLevel( int sl, char *dir )
 {
     splitlevel = sl;
-    strcpy( splitdir, dir );
+    if (strlen(dir) > sizeof(splitdir) - 1) {
+	TeXAbort( "TXSetSplitLevel", "directory name too long" );
+    }
+    strncpy( splitdir, dir, sizeof(splitdir) );
 }
 
 /*
@@ -1320,9 +1327,10 @@ void TXSetSplitLevel( int sl, char *dir )
  */
 void TXsection( TeXEntry *e )
 {
-    int   level = (int)(e->ctx), ch;
+    int   level = (int)(PTRINT)(e->ctx), ch;
     int   dummy;
     char *p;
+    int   isUnnumbered = 0;
 
     TeXWriteContents( fpout );
 
@@ -1346,18 +1354,29 @@ void TXsection( TeXEntry *e )
 	    WriteSectionButtonsBottom( fpout, CurNodename, LastSection );
 	}
     }
+
+/* First, check for a *.  discard if seen */
+    ch = SCTxtGetChar( fpin[curfile] );
+    /* FIXME: If an asterisk, the section is neither numbered nor
+       updates the section number. */
+    if (ch == '*') 
+	isUnnumbered = 1;
+    else 
+	SCPushChar( ch );
     
 /* Start a new section (at several levels) */
 /* Pop section stack if this item is at same level or lower */
     if (SSp >= 0 && sstack[SSp].level == level) {
-	sstack[SSp].count ++;
+	if (!isUnnumbered)
+	    sstack[SSp].count ++;
     }
     else {
 	if (SSp >= 0 && sstack[SSp].level >= level) {
 	    /* Move up in heirarchy */
 	    while (SSp >= 0 && sstack[SSp].level >= level ) SSp--;
 	    SSp++;
-	    sstack[SSp].count++;
+	    if (!isUnnumbered) 
+		sstack[SSp].count++;
 	}
 	else {
 	    /* Move down */
@@ -1369,7 +1388,12 @@ void TXsection( TeXEntry *e )
 
 /* First, check for a *.  discard if seen */
     ch = SCTxtGetChar( fpin[curfile] );
-    if (ch != '*') SCPushChar( ch );
+    /* FIXME: If an asterisk, the section is neither numbered nor
+       updates the section number. */
+    if (ch == '*') 
+	isUnnumbered = 1;
+    else 
+	SCPushChar( ch );
 
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
@@ -1386,16 +1410,16 @@ void TXsection( TeXEntry *e )
 	while (*p != 0) *p1++ = *p++;
 	*p1 = 0;
     }
-    /* Remoave any trailing blanks */
+    /* Remove any trailing blanks */
     p = curtok + strlen(curtok) - 1;
     if (*p == ' ') {
 	while (p > curtok && *p == ' ') p--;
         *++p = 0;
     }
-    strncpy( CurNodename, curtok, 255 );
+    strncpy( CurNodename, curtok, sizeof(CurNodename) - 1 );
 
-/* debug */
-    if (IncludeSectionNumbers) {
+    /* Write out section numbers in the "natural way" */
+    if (IncludeSectionNumbers && !isUnnumbered) {
 	int i;
 	for (i=0; i<=SSp; i++) fprintf( stdout, "%d.", sstack[i].count );
 	fprintf( stdout, " %s\n", CurNodename );
@@ -1428,11 +1452,12 @@ void TXsection( TeXEntry *e )
     ReplaceWhite( curtok );
     WRtoauxfile( CurSeqnum++, outfile, level, curtok );
 
+    /* FIXME: Why the if (1)? */
     if (1) {
 	LastSection = GetNextLink( LastSection );
 	/* Check that this matches the name */
 	if (LastSection && strcmp(LastSection->topicname,curtok) != 0) {
-	    fprintf( stderr, "Mismatch in section; expected \"%s\" found \"%s\"\n",
+	    fprintf( stderr, "**Mismatch in section; expected \"%s\" found \"%s\"\n",
 		     curtok, LastSection->topicname );
 	}
     }
@@ -1440,12 +1465,12 @@ void TXsection( TeXEntry *e )
 /* Lookup the section in the aux file list */
 	LastSection = SRLookup( topicctx, curtok, (char *)0, &dummy );
 	if (!LastSection) {
-	    fprintf( stderr, "Could not find %s in topicctx\n", curtok );
+	    fprintf( stderr, "**Could not find %s in topicctx\n", curtok );
 	}
     }
 
 /* Output section headers */
-    if (IncludeSectionNumbers) {
+    if (IncludeSectionNumbers && !isUnnumbered) {
 	char tmptok[MAX_TOKEN], *p;
 	int i;
 	p = tmptok;
@@ -1455,17 +1480,19 @@ void TXsection( TeXEntry *e )
 	}
 	strcat( p, " " );
 	strcat( p, curtok );
-	WriteSectionAnchor( fpout, tmptok, "Node", CurSeqnum-1, (int)(e->ctx) );
+	WriteSectionAnchor( fpout, tmptok, "Node", CurSeqnum-1, 
+			    (int)(PTRINT)(e->ctx) );
     }
     else {
-	WriteSectionAnchor( fpout, curtok, "Node", CurSeqnum-1, (int)(e->ctx) );
+	WriteSectionAnchor( fpout, curtok, "Node", CurSeqnum-1, 
+			    (int)(PTRINT)(e->ctx) );
     }
     WriteSectionButtons( fpout, curtok, LastSection );
 
 /* These values (entrylevel, number) aren't correct */
 /* Write the section numbers by prefixing the section entry values */
     WriteSectionHeader( fpout, curtok, "Node", CurSeqnum-1, (char *)0,
-			(int)(e->ctx) );
+			(int)(PTRINT)(e->ctx) );
 /* Insert tree links to parent, child, and sibling.  Sets name for subsequent
    label statements */
     WriteTextHeader( fpout );
@@ -1473,7 +1500,7 @@ void TXsection( TeXEntry *e )
 /* Skip any newlines until we find the first non-blank */
     SCSkipNewlines( fpin[curfile] );
     POPCURTOK;
-}    
+}
 
 /*
     This is a special version of section for the first page (vtitle) of
@@ -1481,7 +1508,7 @@ void TXsection( TeXEntry *e )
  */
 void TXtitlesection( TeXEntry *e )
 {
-    int level = (int)(e->ctx), ch;
+    int level = (int)(PTRINT)(e->ctx), ch;
     int dummy;
 
 /* Start a new section (at several levels) */
@@ -1498,7 +1525,7 @@ void TXtitlesection( TeXEntry *e )
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
     TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXsection", (char *)0 );
-    strncpy( CurNodename, curtok, 255 );
+    strncpy( CurNodename, curtok, sizeof(CurNodename) - 1 );
 
     WriteHeadPage( fpout );
     WriteFileTitle( fpout, curtok );
@@ -1513,12 +1540,13 @@ void TXtitlesection( TeXEntry *e )
     }
 
 /* Output section headers */
-    WriteSectionAnchor( fpout, curtok, "Node", CurSeqnum-1, (int)(e->ctx) );
+    WriteSectionAnchor( fpout, curtok, "Node", CurSeqnum-1, 
+			(int)(PTRINT)(e->ctx) );
     WriteSectionButtons( fpout, curtok, LastSection );
 
 /* These values (entrylevel, number) aren't correct */
     WriteSectionHeader( fpout, curtok, "Node", CurSeqnum-1, (char *)0,
-			(int)(e->ctx) );
+			(int)(PTRINT)(e->ctx) );
 
 /* Insert tree links to parent, child, and sibling.  Sets name for subsequent
    label statements */
@@ -1752,6 +1780,9 @@ void TeXskipEnv( TeXEntry *e, char *name, int flag )
 			fout = fpout;
 		    }
 		}
+	    }
+	    else if (ch == ActiveChar) {
+		TXActiveCharDo(curtok);
 	    }
 	    else {
 		if (flag) {
@@ -2256,7 +2287,7 @@ void TXbegin( TeXEntry *e )
 		       "TXbegin thebibliography", e->name );
 	/* Need to act as if "Section{Bibliography}" seen */
 	SCPushToken( "{Bibliography}" );
-	e->ctx = (void*)MinSectionKind;
+	e->ctx = (void*)(PTRINT)MinSectionKind;
 	TXsection( e );
 	TeXBenign( e, "thebibliography" );
     }
@@ -2269,7 +2300,7 @@ void TXbegin( TeXEntry *e )
 	   have pages.  Instead, we skip the index entirely, then dump
 	   the results of our own use of \index */
 	SCPushToken( "{Index}" );
-	e->ctx = (void*)MinSectionKind;
+	e->ctx = (void*)(PTRINT)MinSectionKind;
 	TXsection( e );
 	TeXskipEnv( e, "theindex", 0 );
 	WriteIndex( fpout, 2 );
@@ -2279,7 +2310,7 @@ void TXbegin( TeXEntry *e )
 	   have pages.  Instead, we skip the index entirely, then dump
 	   the results of our own use of \index */
 	SCPushToken( "{Index}" );
-	e->ctx = (void*)MinSectionKind;
+	e->ctx = (void*)(PTRINT)MinSectionKind;
 	TXsection( e );
 	TeXskipEnv( e, UserIndexName, 0 );
 	WriteIndex( fpout, 2 );
@@ -2366,8 +2397,7 @@ void TXbegin( TeXEntry *e )
   }
   */
     else {
-	p = (char *)MALLOC( strlen( curtok ) + 1 );  CHKPTR(p);
-	strcpy( p, curtok );
+	p = STRDUP( curtok );  CHKPTR(p);
 	/* Identify environment as table, figure, equation, or none */
 	if (strcmp( p, "table" ) == 0) {
 	    NumberedEnvironmentType = ENV_TABLE;
@@ -2462,7 +2492,7 @@ void TXitem( TeXEntry *e )
 	if (DebugCommands)
 	    fprintf( stdout, "Getting argument for item in description\n" );
 	PUSHCURTOK;
-	strncpy( CmdName, e->name, 64 );
+	strncpy( CmdName, e->name, sizeof(CmdName)-1 );
 	if (TeXGetGenArg( fpin[curfile], curtok, MAX_TOKEN, '[', ']', 1 ) != 1) {
 	  /* It is legal to forget the [], but probably unintended */
 	  fprintf( stdout, 
@@ -2472,9 +2502,18 @@ void TXitem( TeXEntry *e )
 	  /* TeXAbort( "TXbegin description", e->name ); */
 	}
 	CmdName[0] = 0;
+	/* FIXME: Need to process the curtok for commands */
+#if 0
 	TeXoutstr( fpout, curtok );
 	TXegroup( e );
 	TXedesItem( e );
+#else
+	SCPushCommand("<dd>\n");
+	/* Not quite right - need an endgroup, or need to change */
+	BraceCount++;
+	SCPushToken("}");
+	SCPushToken(curtok);
+#endif
 	POPCURTOK;
     }
     else if (lstack[lSp].env == TXENUMERATE) {
@@ -2650,20 +2689,39 @@ void TXLoadPackage( const char *p )
 }
 
 /* Latex 2e specifies additional stuff using \usepackage, which may have
-   a comma separate list of packages. */
+   a comma separate list of packages.  Format is
+   \usepackage[optional fields]{package-name}
+   Note that it is common for the optional fields to be across multiple
+   lines.
+ */
 void TXusepackage( TeXEntry *e )
 {
     char *p, *ptr, *p1;
+    int hadOptional=0;
 
     PUSHCURTOK;
-    strncpy( CmdName, e->name, 64 );
+    strncpy( CmdName, e->name, sizeof(CmdName)-1 );
+    TXRemoveOptionalArg(curtok);
+    if (curtok[0]) {
+	strcat(preamble, "\\usepackage[");
+	strcat(preamble, curtok);
+	strcat(preamble, "]");
+	hadOptional = 1;
+    }
     TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, "TXusepackage", e->name );
     if (curtok[0]) {
-	strcat( preamble, "\\usepackage{" );
+	if (!hadOptional) {
+	    strcat( preamble, "\\usepackage" );
+	}
+	strcat(preamble, "{");
 	strcat( preamble, curtok );
-	strcat( preamble, "}" );
+	strcat( preamble, "}\n" );
     }
-
+    if (1) {
+	fprintf( stdout, "Procssing usepackage[...]{%s} in %s line %d\n",
+		 curtok, InFName[curfile] ? InFName[curfile]: "",
+		 LineNo[curfile] );
+    }
     /* Now, get comma-separate list of packages and load each one */
     p = curtok;
     while (*p) {
@@ -2687,8 +2745,8 @@ void TXdocumentstyle( TeXEntry *e )
     static char name[] = "documentstyle";
     char *p, *ptr, *p1;
 
-    preamble    = (char *)MALLOC( 2000 ); CHKPTR(preamble);
-    predoc	= (char *)MALLOC( 2000 ); CHKPTR(predoc);
+    preamble    = (char *)MALLOC( 20000 ); CHKPTR(preamble);
+    predoc	= (char *)MALLOC( 20000 ); CHKPTR(predoc);
     predoc[0]   = 0;
     preamble[0] = 0;
     if (!documentcmd) documentcmd = name;
@@ -2715,11 +2773,11 @@ void TXdocumentstyle( TeXEntry *e )
 	p = ptr + 1;
       }
     }
-    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN, 
+    TeXMustGetArg( fpin[curfile], curtok, MAX_TOKEN,
 		   "TXdocumentstyle", (char *)0 );
     strcat( preamble, "{" );
     strcat( preamble, curtok );
-    strcat( preamble, "}" );
+    strcat( preamble, "}\n" );
     p = strrchr( curtok, '/' );
     if (!p) p = curtok;
     else p++;
@@ -3116,7 +3174,7 @@ void TXepsfbox( TeXEntry *e )
 	    /* Is it in the CURRENT directory */
 	    fp = fopen( imgoutfile, "r" );
 	    if (fp) {
-		sprintf( fname, "/bin/cp %s %s", imgoutfile, splitdir );
+		sprintf( fname, "/bin/cp -f %s %s", imgoutfile, splitdir );
 		system( fname );
 	    }
 	}
@@ -3317,12 +3375,13 @@ void TXInsertName( SRList *list, const char *name, void (*action)( TeXEntry *),
  */
 void TXInit( FILE *fin, FILE *fout )
 {
-    if (!TeXlist) 
+    if (!TeXlist)
 	TeXlist = SRCreate();
-	
+
 /* Insert the known LaTeXinfo commands into the table for processing */
+
     TXInsertName( TeXlist, "def", TXDef, 0, (void *)0 );
-/* gdef should eventually be different */
+    /* gdef should eventually be different */
     TXInsertName( TeXlist, "gdef", TXDef, 0, (void *)0 ); 
     TXInsertName( TeXlist, "let", TXlet, 0, (void *)0 );
     TXInsertName( TeXlist, "newcommand", TXNewCommand, 0, (void *)0 );
@@ -3332,6 +3391,8 @@ void TXInit( FILE *fin, FILE *fout )
     TXInsertName( TeXlist, "renewenvironment", TXDoNewenvironment, 0, (void *)0 );
     TXInsertName( TeXlist, "newtheorem", TXDoNewtheorem, 0, (void *)0 );
     TXInsertName( TeXlist, "renewtheorem", TXDoNewtheorem, 0, (void *)0 );
+
+    TXInsertName( TeXlist, "obeylines", TXDoObeylines, 0, (void *)0 );
 
     /* LaTeX conditionals */
     TXInsertName( TeXlist, "newif", TXNewif, 0, (void *)0 );
@@ -3663,6 +3724,9 @@ void ProcessLatexFile( int argc, char **argv, FILE *fin, FILE *fout )
 	else if (ch == AlignChar && HandleAlign) {
 	    TeXPutAlign();
 	}
+	else if (ch == ActiveChar) {
+	    TXActiveCharDo(curtok);
+	}
 	else {
 	    /*
 	      for (i=0; i<nsp; i++) fputs( " ", fout );
@@ -3690,20 +3754,20 @@ void ProcessLatexFile( int argc, char **argv, FILE *fin, FILE *fout )
 
     FREE( tokbuf );
 }
-   
+
 /* Manage the citation characters */
 void TXSetCitePrefix( char *s )
 {
     if (CitePrefix) FREE( CitePrefix );
-    CitePrefix = (char *)MALLOC( strlen( s ) + 1 );
-    strcpy( CitePrefix, s );
+    CitePrefix = STRDUP( s );
+    CHKPTR(s);
 }
 
 void TXSetCiteSuffix( char *s )
 {
     if (CiteSuffix) FREE( CiteSuffix );
-    CiteSuffix = (char *)MALLOC( strlen( s ) + 1 );
-    strcpy( CiteSuffix, s );
+    CiteSuffix = STRDUP( s );
+    CHKPTR(s);
 }
 
 /*
@@ -3824,7 +3888,12 @@ int TXConvertFigureToGIF( char *fname )
     /* find the dirctory separator, if any */
     while (p != fname && *p != DirSep) p--;
     if (*p == DirSep) p++;
-    snprintf( fname2, sizeof(fname2), "%s%c%s", splitdir, DirSep, p );
+    if (!splitdir || *splitdir == 0) {
+	snprintf( fname2, sizeof(fname2), "%s", p );
+    }
+    else {
+	snprintf( fname2, sizeof(fname2), "%s%c%s", splitdir, DirSep, p );
+    }
     p = fname2 + strlen(fname2) - 1;
     while (p != fname2 && *p != '.') p--;
     *p = 0;
@@ -3835,7 +3904,7 @@ int TXConvertFigureToGIF( char *fname )
 	    fprintf( stderr, "Do we need to move %s to %s\n", fname, fname2 );
 	/* Copy the file into the proper directory if it isn't there */
 	if (strcmp( fname, fname2 ) != 0) {
-	    snprintf( pgm, sizeof(pgm), "cp -f %s %s", fname, fname2 );
+	    snprintf( pgm, sizeof(pgm), "/bin/cp -f %s %s", fname, fname2 );
 	    rc = system( pgm );
 	    if (rc) {
 		fprintf( stderr, "Error code %d from %s\n", rc, pgm );
@@ -3899,7 +3968,8 @@ int TXConvertFigureToGIF( char *fname )
 	while (p != fname2 && *p != '.') p--;
 	strncpy( p, ".ps", 10 );
 
-
+	/* Remove the file that we're about to create.  Ignore errors */
+	unlink( fname2 );
 	snprintf( pgm, sizeof(pgm), "pdf2ps %s %s >>%s 2>&1", fname, fname2, 
 		  latex_errname );
 	if (debugF2GIF)
@@ -3917,4 +3987,41 @@ int TXConvertFigureToGIF( char *fname )
 	return rc;
     }
     return rc;
+}
+
+/* Active character handling */
+void TXActiveCharSet( char ch, void (*fcn)(char *) )
+{
+    ActiveChar       = ch;
+    activeCharAction = fcn;
+}
+void TXActiveCharClear(void)
+{
+    ActiveChar       = '\0';
+    activeCharAction = 0;
+}
+void TXActiveCharDo(char *str)
+{
+    if (activeCharAction) {
+	(*activeCharAction)(str);
+    }
+    else {
+	fprintf(stderr, "Attempt to invoke active char action with null action\n");
+    }
+}
+
+void TXObeylinesFlushLine(char *token)
+{
+    if (!InDocument) return;
+    TeXoutcmd( fpout, "<br>\n" );
+}
+void TXObeylinesClearActive(void)
+{
+    TXActiveCharClear();
+}
+/* Obeylines changes the handling of \n until the current group ends */
+void TXDoObeylines(TeXEntry *e)
+{
+    TXActiveCharSet('\n', TXObeylinesFlushLine);
+    TXgroupPushAction(TXObeylinesClearActive);
 }

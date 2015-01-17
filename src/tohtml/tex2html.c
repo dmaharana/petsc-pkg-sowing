@@ -72,9 +72,18 @@ void TXpreformated( FILE *fout, int flag )
     files
  */
 
+/* We may need to add actions to be performed at the end of a group (e.g.,
+   a change in character types, for obeylines, or for improved font handling).
+   This structure allows us to add general actions */
+typedef struct _action_t {
+    void (*fcn)(void); /* Action to perform */
+    struct _action_t *nextAction;
+} action_t;
+
 #define MAX_GROUP_STACK 50
 static int   Esp     = 0;
 static char *(EndName[MAX_GROUP_STACK]);
+static action_t *(endActions[MAX_GROUP_STACK]);
 static char *LastFont = 0;
 
 void TeXoutNewline( FILE *fout )
@@ -92,7 +101,7 @@ void TXbw2( TeXEntry *e )
 {
 /* Usually a linebreak */
     if (!InDocument || !InOutputBody) return;
-    TeXoutcmd( fpout, "<BR>" );
+    TeXoutcmd( fpout, "<br>" );
 }
 /* I use \bw in LaTeXinfo to generate a \ */
 void TXbw( TeXEntry *e )
@@ -107,11 +116,11 @@ void TXoutbullet( TeXEntry *e )
     if (DoGaudy && itemlevel >= 0) {
 	char ctmp[256];
 	if (NoBMCopy)
-	    sprintf( ctmp, "<DT><IMG WIDTH=14 HEIGHT=14 SRC=\"%s%sball.gif\" ALT=\"*\">%s", 
+	    sprintf( ctmp, "<dt><img width=14 height=14 src=\"%s%sball.gif\" alt=\"*\">%s", 
 		     BMURL, itemgifs[itemlevel >= 5 ? 4 : itemlevel],
 		     NewLineString);
 	else
-	    sprintf( ctmp, "<DT><IMG WIDTH=14 HEIGHT=14 SRC=\"%sball.gif\" ALT=\"*\">%s", 
+	    sprintf( ctmp, "<dt><img width=14 height=14 src=\"%sball.gif\" alt=\"*\">%s", 
 		     itemgifs[itemlevel >= 5 ? 4 : itemlevel], 
 		     NewLineString);
 	TeXoutcmd( fpout, ctmp );
@@ -128,6 +137,13 @@ void TXbf( TeXEntry *e )
 {
   /* output start of BoldFace */
     if (!InDocument || !InOutputBody) return;
+    if (LastFont && strcmp(LastFont,"b") == 0) {
+	/* Same font, so no need to change */
+	if (DebugFont) {
+	    fprintf( stdout, "Already in bold, nothing to do\n" );
+	}
+	return;
+    }
     if (LastFont) {
 	if (DebugFont) {
 	    fprintf( stdout, "Ended font %s (LastFont):", LastFont );
@@ -137,7 +153,7 @@ void TXbf( TeXEntry *e )
 	TeXoutcmd( fpout, buf );
     }
     if (DebugFont) {
-	fprintf( stdout, "Starting font %s:", "b" );
+	fprintf( stdout, "TXbf: Starting font %s:", "b" );
 	TXPrintLocation( stdout );
     }
 
@@ -157,6 +173,13 @@ void TXem( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;
 /* output start of Emphasis (italics) */
+    if (LastFont && strcmp(LastFont,"em") == 0) {
+	/* Same font, so no need to change */
+	if (DebugFont) {
+	    fprintf( stdout, "Already in em, nothing to do\n" );
+	}
+	return;
+    }
     if (LastFont) {
 	if (DebugFont) {
 	    fprintf( stdout, "Ended font %s (LastFont):", LastFont );
@@ -185,6 +208,15 @@ void TXsf( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;
     /* output start of Sans-serif (use rm for html) */
+#if 0
+    if (LastFont && strcmp(LastFont,"font") == 0) {
+	/* Same font, so no need to change */
+	if (DebugFont) {
+	    fprintf( stdout, "Already in sans serif, nothing to do\n" );
+	}
+	return;
+    }
+#endif
     if (LastFont) {
 	if (DebugFont) {
 	    fprintf( stdout, "Ended font %s (LastFont):", LastFont );
@@ -194,6 +226,7 @@ void TXsf( TeXEntry *e )
 	TeXoutcmd( fpout, buf );
     }
     if (Esp >= 0) {
+	/* Should replace this with span style="font-something:..." */
 	TeXoutcmd( fpout, "<font face=\"sans-serif\">" );
 	EndName[Esp] = "font";
 	LastFont     = "font";
@@ -252,8 +285,10 @@ void TXbgroup( TeXEntry *e )
 	fprintf( stdout, "TXbgroup: Esp=%d:", Esp );
 	TXPrintLocation( stdout );
     }
-    if (Esp >= 0) 
-	EndName[Esp] = 0;
+    if (Esp >= 0) {
+	EndName[Esp]    = 0;
+	endActions[Esp] = 0;
+    }
     else {
 	fprintf( ferr, "Mismatched groups - Esp < 0, = %d, ", Esp );
 	TXPrintLocation( ferr );
@@ -274,20 +309,51 @@ void TXegroup( TeXEntry *e )
 	TXPrintLocation( stdout );
     }
 
-    if (Esp >= 0 && EndName[Esp]) {
-	if (DebugFont) {
-	    fprintf( stdout, "Ended font %s:", EndName[Esp] );
-	    TXPrintLocation( stdout );
+    if (Esp >= 0) {
+	if (EndName[Esp]) {
+	    if (DebugFont) {
+		fprintf( stdout, "Ended font %s:", EndName[Esp] );
+		TXPrintLocation( stdout );
+	    }
+	    sprintf( buf, "</%s>", EndName[Esp] );
+	    TeXoutcmd( fpout, buf );
+	    EndName[Esp] = 0;
 	}
-	sprintf( buf, "</%s>", EndName[Esp] );
-	TeXoutcmd( fpout, buf );
-	EndName[Esp] = 0;
+	if (endActions[Esp]) {
+	    action_t *actions = endActions[Esp], *oldaction;
+	    while (actions) {
+		(actions->fcn)();
+		oldaction = actions;
+		actions   = actions->nextAction;
+		FREE(oldaction);
+	    }
+	    endActions[Esp] = 0;
+	}
     }
     Esp--;
     LastFont = 0;
     if (Esp < -1) { 
 	fprintf( ferr, "Setting scan debug because group count < -1\n" );
 	SCSetDebug( 1 );
+    }
+}
+/* Use this to push a routine to be invoked when the group ends */
+void TXgroupPushAction( void (*fcn)(void) )
+{
+    action_t *newaction, *tail;
+
+    newaction = (action_t *)MALLOC(sizeof(action_t));
+    newaction->fcn = fcn;
+    newaction->nextAction = 0;
+    tail = endActions[Esp];
+    if (!tail) {
+	endActions[Esp] = newaction;
+    }
+    else {
+	while (tail->nextAction) {
+	    tail = tail->nextAction;
+	}
+	tail->nextAction = newaction;
     }
 }
 
@@ -334,7 +400,7 @@ void TXfont_ss( TeXEntry *e )
 	TeXoutcmd( fpout, buf );
     }
     if (DebugFont) {
-	fprintf( stdout, "Starting font %s:", "em" );
+	fprintf( stdout, "TXfont_ss: Starting font %s:", "em" );
 	TXPrintLocation( stdout );
     }
     
@@ -381,15 +447,13 @@ void TXtt( TeXEntry *e )
 }
 
 #ifdef FOO
-void TXbitmap( e, fname )
-TeXEntry *e;
-char     *fname;
+void TXbitmap( TeXEntry *e, char *fname )
 {
     if (!InDocument || !InOutputBody) return;
-/* Process a bitmap reference */	
-    TeXoutcmd( fpout, "<IMG SRC=\"" );
+/* Process a bitmap reference */
+    TeXoutcmd( fpout, "<img src=\""  );
     TeXoutstr( fpout, fname );
-    TeXoutstr( fpout, "\">" );
+        TeXoutstr( fpout, "\" alt=\"Bitmap file\">" );
 }
 #endif
 
@@ -406,22 +470,27 @@ void TXimage( TeXEntry *e, char *fname )
     int height, width;
     if (!InDocument || !InOutputBody) return;
     if (DebugOutput) fprintf( stdout, "TXimage\n" );
-    
+
     /* Try to get the width and height */
     width  = -1;
     height = -1;
+    /* Note that most browsers no longer support xbm files at all,
+       so generate a warning for xbm files */
     if (strstr( fname, ".xbm" )) {
+	fprintf( stderr, "Warning: XBM file %s found; browsers no longer support these files\n", fname );
 	TX_XBM_size( fname, &width, &height );
     }
     else if (strstr( fname, ".gif" )) {
 	TX_GIF_size( fname, &width, &height );
     }
 
+    /* Recent HTML requires an ALT field on IMG */
+    /* FIXME: Provide a way to specify a string for the alt field */
     if (height == -1 || width == -1) {
-	fprintf( fpout, "<P><IMG SRC=\"%s\"><P>%s", fname, NewLineString );
+	fprintf( fpout, "<P><img src=\"%s\" alt=\"Image file\"><P>%s", fname, NewLineString );
     }
     else {
-	fprintf( fpout, "<P><IMG WIDTH=%d HEIGHT=%d SRC=\"%s\"><P>%s", 
+	fprintf( fpout, "<P><img width=%d height=%d src=\"%s\" alt=\"Image file\"><P>%s", 
 		 width, height, fname, NewLineString );
     }
 /* This version makes the images external... */
@@ -437,7 +506,10 @@ void TXInlineImage( TeXEntry *e, char *fname )
     /* Try to get the width and height */
     width  = -1;
     height = -1;
+    /* Note that most browsers no longer support xbm files at all,
+       so generate a warning for xbm files */
     if (strstr( fname, ".xbm" )) {
+	fprintf( stderr, "Warning: XBM file %s found; browsers no longer support these files\n", fname);
 	TX_XBM_size( fname, &width, &height );
     }
     else if (strstr( fname, ".gif" )) {
@@ -445,10 +517,10 @@ void TXInlineImage( TeXEntry *e, char *fname )
     }
 
     if (height == -1 || width == -1) {
-	fprintf( fpout, "<IMG SRC=\"%s\">%s", fname, NewLineString );
+	fprintf( fpout, "<img src=\"%s\" alt=\"Image file\">%s", fname, NewLineString );
     }
     else {
-	fprintf( fpout, "<IMG WIDTH=%d HEIGHT=%d SRC=\"%s\">%s", 
+	fprintf( fpout, "<img width=%d height=%d src=\"%s\" alt=\"Image file\">%s", 
 		 width, height, fname, NewLineString );
     }
 /* This version makes the images external... */
@@ -465,7 +537,10 @@ void TXAnchoredImage( TeXEntry *e, char *anchorname, char *fname )
     /* Try to get the width and height */
     width  = -1;
     height = -1;
+    /* Note that most browsers no longer support xbm files at all,
+       so generate a warning for xbm files */
     if (strstr( fname, ".xbm" )) {
+	fprintf( stderr, "Warning: XBM file %s found; browsers no longer support these files\n", fname);
 	TX_XBM_size( fname, &width, &height );
     }
     else if (strstr( fname, ".gif" )) {
@@ -473,12 +548,12 @@ void TXAnchoredImage( TeXEntry *e, char *anchorname, char *fname )
     }
 
     if (height == -1 || width == -1) {
-	fprintf( fpout, "<P><A NAME=\"%s\"><IMG SRC=\"%s\"></a><P>%s", 
+	fprintf( fpout, "<P><span id=\"%s\"><img src=\"%s\" alt=\"Image file\"></span><P>%s", 
 		 anchorname, fname, NewLineString );
     }
     else {
 	fprintf( fpout, 
-	     "<P><A NAME=\"%s\"><IMG WIDTH=%d HEIGHT=%d SRC=\"%s\"></a><P>%s", 
+	     "<P><span id=\"%s\"><img width=%d height=%d src=\"%s\" alt=\"Image file\"></span><P>%s", 
 		 anchorname, width, height, fname, NewLineString );
     }
 }
@@ -493,23 +568,26 @@ void TXAnchoredInlineImage( TeXEntry *e, char *anchorname, char *fname )
     /* Try to get the width and height */
     width  = -1;
     height = -1;
+    /* Note that most browsers no longer support xbm files at all,
+       so generate a warning for xbm files */
     if (strstr( fname, ".xbm" )) {
+	fprintf( stderr, "Warning: XBM file %s found; browsers no longer support these files\n", fname);
 	TX_XBM_size( fname, &width, &height );
     }
     else if (strstr( fname, ".gif" )) {
 	TX_GIF_size( fname, &width, &height );
     }
 
-    fprintf( fpout, "<IMG SRC=\"%s\">%s", fname, NewLineString );
+    fprintf( fpout, "<img src=\"%s\" alt=\"Image file\">%s", fname, NewLineString );
 /* This version makes the images external... */
-    fprintf( fpout, "<A NAME=\"%s\"><IMG SRC=\"%s\"></a><P>%s", 
+    fprintf( fpout, "<span id=\"%s\"><img src=\"%s\" alt=\"Image file\"></span><P>%s", 
 	     anchorname, fname, NewLineString );
 }
 
 void TXmovie( TeXEntry *e, char *movie, char *icon, char *text )
 {
     if (!InDocument || !InOutputBody) return;
-    fprintf( fpout, "<A HREF=\"%s\"><IMG align=top src=\"%s\"></A>%s%s", 
+    fprintf( fpout, "<a href=\"%s\"><img align=top src=\"%s\" alt=\"Movie file\"></a>%s%s", 
 	     movie, icon, text, NewLineString );
 }
 
@@ -528,29 +606,29 @@ void TXebrace( TeXEntry *e )
 void TXmath( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;	
-    TeXoutcmd( fpout, "<p><I>" );
+    TeXoutcmd( fpout, "<p><i>" );
 }
 void TXmathend( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;	
-    TeXoutcmd( fpout, "</I><p>" );
+    TeXoutcmd( fpout, "</i><p>" );
 }
 void TXinlinemath( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;	
-    TeXoutcmd( fpout, "<I>" );
+    TeXoutcmd( fpout, "<i>" );
 }
 void TXinlinemathend( TeXEntry *e )
 {
     if (!InDocument || !InOutputBody) return;	
-    TeXoutcmd( fpout, "</I>" );
+    TeXoutcmd( fpout, "</i>" );
 }
 
 void TXWriteStartNewLine( FILE *fout )
 {
     if (!InDocument || !InOutputBody) return;
     if (!IsPreformatted) {
-	TeXoutcmd( fout, "<BR>" );
+	TeXoutcmd( fout, "<br>" );
 	TeXoutstr( fout, NewLineString );
     }
     else
@@ -579,14 +657,14 @@ void TXmaketitle( TeXEntry *e, char *TitleString, char *AuthorString )
 
     /* Add centering commands to title body */
     TXbcenter( fpout );
-    TeXoutcmd( fpout, "<H1>" );
+    TeXoutcmd( fpout, "<h1>" );
     TeXoutstr( fpout, tmpbuf );
-    TeXoutcmd( fpout, "</H1>" );
+    TeXoutcmd( fpout, "</h1>" );
     TeXoutstr( fpout, NewLineString );
 
-    TeXoutcmd( fpout, "<b>" );
+    TeXoutcmd( fpout, "<p><b>" );
     TeXoutstr( fpout, AuthorString );
-    TeXoutcmd( fpout, "</b><P>" );
+    TeXoutcmd( fpout, "</b></p>" );
     TXecenter( fpout );
     TeXoutstr( fpout, NewLineString );
 }
@@ -596,17 +674,17 @@ void TXbitemize( TeXEntry *e )
 {
     if (DoGaudy) {
 	itemlevel++;
-	TeXoutcmd( fpout, "<BLOCKQUOTE><DL>" );
+	TeXoutcmd( fpout, "<blockquote><dl>" );
     }
-    else 
-	TeXoutcmd( fpout, "<ul>" );	
+    else
+	TeXoutcmd( fpout, "<ul>" );
     TeXoutstr( fpout, NewLineString );
-}	
+}
 void TXeitemize( TeXEntry *e )
 {
     if (DoGaudy) {
 	itemlevel--;
-	TeXoutcmd( fpout, "</DL></BLOCKQUOTE>" );
+	TeXoutcmd( fpout, "</dl></blockquote>" );
     }
     else
 	TeXoutcmd( fpout, "</ul>" );	
@@ -634,15 +712,17 @@ void TXedescription( TeXEntry *e )
     TeXoutcmd( fpout, "</dl>" );
     TeXoutstr( fpout, NewLineString );
 }
-/* Menus */	
+/* Menus */
+/* HTML is deprecating and then redefining menus.  For the simple passive
+   list of elements, use an un-numbered list (ul) */
 void TXbmenu( FILE *fout )
 {
-    TeXoutcmd( fout, "<menu>" );
+    TeXoutcmd( fout, "<ul>" );
     TeXoutstr( fout, NewLineString );
 }
 void TXemenu( FILE *fout )
 {
-    TeXoutcmd( fout, "</menu>" );
+    TeXoutcmd( fout, "</ul>" );
     TeXoutstr( fout, NewLineString );
 }
 
@@ -659,22 +739,20 @@ void TXedesItem( TeXEntry *e )
     TeXoutstr( fpout, NewLineString );
 }	
 
-void TXWriteHyperLink( fout, token, url, urltype )
-FILE *fout;
-char *token, *url;
-int  urltype;
+void TXWriteHyperLink( FILE *fout, char *token, char *url, int urltype )
 {
     if (!InDocument || !InOutputBody) return;
     fprintf( fout, "<a href=\"%s\">%s</a>", url, token );	
 }	
 
+/* The <center> element has been deprecated.  Use this instead. */
 void TXbcenter( FILE *fpout )
 {
-    TeXoutcmd( fpout, "<center>" );
+    TeXoutcmd( fpout, "<div style=\"text-align:center\">" );
 }
 void TXecenter( FILE *fpout )
 {
-    TeXoutcmd( fpout, "</center>" );
+    TeXoutcmd( fpout, "</div>" );
 }
 
 void TX_XBM_size( char *fname, int *width, int *height )

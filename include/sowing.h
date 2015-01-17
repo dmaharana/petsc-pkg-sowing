@@ -2,6 +2,10 @@
 #ifndef _SOWING
 #define _SOWING
 
+#ifndef INCLUDED_SOWINGCONF
+#include "sowingconfig.h"
+#endif
+
 /* 
    Include prototypes for the basic functions that some compilation systems, 
    such as Gnu gcc under SunOS, do not provide(!) 
@@ -42,5 +46,8 @@ void SYGetArchType( char *, int );
 
 /* Include space tracing code */
 #include "trspace.h"
+
+/* Include the configuration file routine from sys */
+#include "rdconfig.h"
 
 #endif

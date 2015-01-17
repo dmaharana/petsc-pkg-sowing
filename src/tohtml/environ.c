@@ -201,7 +201,7 @@ void PushBeginEnv( char *btext, int nargs )
     if (btext) p = btext + strlen( btext ) - 1;
     else        p = 0;
     while (p && p >= btext) {
-	if (p[-1] == '#' && p > btext) {
+	if (p > btext && p[-1] == '#') {
 	    argn = p[0] - '1';
 	    if (argn >= 0 && argn < nargs) {
 		if (DebugDef) printf( "Pushing %s back in env eval(1)\n", 
@@ -341,7 +341,10 @@ documentcmd, preamble ? preamble : "{article}" );
 	    int  nltype;
 
 	    fprintf( fp, "%% Beginning of Environment to be handled\n" );
-	    fprintf( fp, "\\begin{%s}\n", envname );
+	    /* If there is an optional argument after the environment,
+	       we need it to follow without a newline (e.g.,
+	       begin{Verbatim}[commandchars=...]) */
+	    fprintf( fp, "\\begin{%s}", envname );
 	    /* We'll start by using SkipEnv ... */
 	    foutsave = fpout;
 	    fpout    = fp;
@@ -438,22 +441,42 @@ documentcmd, preamble ? preamble : "{article}" );
 	}
 	/* Some dvips send to the PRINTER by default! */
 	/* Add -q to make quiet */
-	
-	if (LatexQuiet) {
-	    sprintf( pgm, "dvips %s -o %s.ps >>%s 2>&1", 
-		     name, name, latex_errname );
-	}
-	else {
-	    sprintf( pgm, "dvips %s -o %s.ps", name, name );
-	}
+	/* Its now possible to bypass the creation of a dvi file, breaking
+	   the original TeX design.  We check to see if there is
+	   a .dvi or a .pdf file, and create the image file from that */
 	strcpy( fdviname, name );
 	strcat( fdviname, ".dvi" );
-	if (!SYiFileExists( fdviname, 'r' )) {
-	    /* Could not find the dvi file */
-	    problem_with_file = 1;
-	    fprintf( ferr, "No DVI file created for %s.tex\n", name );
+	if (SYiFileExists( fdviname, 'r' )) {
+	    if (LatexQuiet) {
+		sprintf( pgm, "dvips %s -o %s.ps >>%s 2>&1", 
+			 name, name, latex_errname );
+	    }
+	    else {
+		sprintf( pgm, "dvips %s -o %s.ps", name, name );
+	    }
 	}
-        else {
+	else {
+	    strcpy( fdviname, name );
+	    strcat( fdviname, ".pdf" );
+	    if (SYiFileExists( fdviname, 'r' )) {
+		if (LatexQuiet) {
+		    sprintf( pgm, "pdftops %s.pdf %s.ps >>%s 2>&1", 
+			     name, name, latex_errname );
+		}
+		else {
+		    sprintf( pgm, "pdftops %s.pdf %s.ps", name, name );
+		}
+	    }
+	    else {
+		/* Could not find the dvi file */
+		problem_with_file = 1;
+		fprintf( ferr, "No DVI or PDF file created for %s.tex\n", name );
+	    }
+	}
+
+	/* Now that we have the correct program to conver the LaTeX output
+	   to Postscript, create a gif from it */
+	if (!problem_with_file) {
 	    system( pgm );
 	    /* Add "figure" as third argument to get color output */
 	    /* Could use pstoxbm instead */
@@ -466,6 +489,7 @@ documentcmd, preamble ? preamble : "{article}" );
 		strcpy( ext, "gif" );
 	    }
 	    else {
+		fprintf( stderr, "Warning: Output to XBM file for %s.ps found; browsers no longer support these files\n", name );
 		if (LatexQuiet) 
 		    sprintf( pgm, "%spstoxbm %s.ps %s.xbm >>%s 2>&1", 
 			     PSPATH, name, name, latex_errname );
@@ -484,11 +508,11 @@ documentcmd, preamble ? preamble : "{article}" );
 		system ( pgm );
 	    }
 	}
-	sprintf( pgm, "/bin/rm -f %s.dvi %s.ps %s.aux %s.log", 
-		 name, name, name, name );
+	sprintf( pgm, "rm -f %s.dvi %s.ps %s.pdf %s.out %s.aux %s.log", 
+		 name, name, name, name, name, name );
 	system( pgm );
 	if (!problem_with_file && !leave_tex_files) {
-	    sprintf( pgm, "/bin/rm -f %s.tex", name );
+	    sprintf( pgm, "rm -f %s.tex", name );
 	    system( pgm );
 	}
     }
