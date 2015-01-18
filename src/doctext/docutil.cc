@@ -146,7 +146,7 @@ int DocSkipToFuncSynopsis( InStream *ins, char *matchstring )
 // if is appears.
 // Also strip any ignore tokens.
 //
-int DocReadFuncSynopsis( InStream *ins, OutStream *outs )
+int DocReadFuncSynopsis( InStream *ins, TextOut *outs )
 {
     char ch;
     char token[256];
@@ -331,7 +331,7 @@ int DocReadMacroSynopsis( InStream *ins, char *matchstring, OutStream *outs,
 // Enums aren't too hard, but struct definitions can contain things like
 // int (*foo)( char *(name)([][]), double (*name2)( int (*)(int,int) ) );
 // See bfort for some examples.
-int DocReadTypeDefinition( InStream *ins, OutStream *outs )
+int DocReadTypeDefinition( InStream *ins, TextOut *outs )
 {
     char ch;
     char token[256];
@@ -378,7 +378,7 @@ int DocReadTypeDefinition( InStream *ins, OutStream *outs )
     return 0;
 }
 
-int DocReadDefineDefinition( InStream *ins, OutStream *outs )
+int DocReadDefineDefinition( InStream *ins, TextOut *outs )
 {
     char ch;
     char token[256];

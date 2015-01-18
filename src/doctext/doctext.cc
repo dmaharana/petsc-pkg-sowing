@@ -413,7 +413,7 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
 	// e_synopsis should do <end verbatim> in most cases.
 	textout->PutOp( "s_synopsis" );
         OutputIncludeInfo( textout );
-	if (DocReadFuncSynopsis( ins, textout->out )) return 1;
+	if (DocReadFuncSynopsis( ins, textout )) return 1;
 	textout->PutOp( "e_synopsis" );
 	ins->SetLoc( position );
     }
@@ -430,8 +430,8 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
        // e_synopsis should do <end verbatim> in most cases.
        textout->PutOp( "s_synopsis" );
         OutputIncludeInfo( textout );
-       if (DocReadDefineDefinition( ins, textout->out )) return 1;
-       textout->PutOp( "e_synopsis" );
+       if (DocReadDefineDefinition( ins, textout )) return 1;
+        textout->PutOp( "e_synopsis" );
        ins->SetLoc( position );
     }
     else if (kind == ENUMDEF || kind == STRUCTDEF) {
@@ -448,7 +448,7 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
 	// e_synopsis should do <end verbatim> in most cases.
 	textout->PutOp( "s_synopsis" );
         OutputIncludeInfo( textout );
-	if (DocReadTypeDefinition( ins, textout->out )) return 1;
+	if (DocReadTypeDefinition( ins, textout )) return 1;
 	textout->PutOp( "e_synopsis" );
 	ins->SetLoc( position );
     }
