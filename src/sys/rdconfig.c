@@ -110,6 +110,7 @@ int SYReadConfigFile(const char filename[], const char sepChar,
 		    while (*pin) {
 			*pout++ = *pin++;
 		    }
+		    *pout = 0;
 		    if (SYiFileExists(fname,'r')) {
 			err = SYReadConfigFile(fname, sepChar, commentChar,
 					       cmds, ncmds);
