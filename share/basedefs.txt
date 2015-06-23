@@ -160,22 +160,22 @@ hdef hrule 0 '<HR>'
 hdef footnote 1 '<A HREF="JavaScript: alert(''#1'')">*</A>'
 #
 # Environments
-#begin-env center 0 '<CENTER>'
-#end-env   center 0 '</CENTER>'
+#begin-env center 0 '<center>'
+#end-env   center 0 '</center>'
 begin-env center 0 '<div style="text-align:center">'
 end-env   center 0 '</div>'
-begin-env quote  0 '<QUOTE>'
-end-env   quote  0 '</QUOTE>'
-begin-env quotation  0 '<QUOTE>'
-end-env   quotation  0 '</QUOTE>'
+begin-env quote  0 '<blockquote>'
+end-env   quote  0 '</blockquote>'
+begin-env quotation  0 '<blockquote>'
+end-env   quotation  0 '</blockquote>'
 begin-env normalsize 0 
 end-env   normalsize 0 
 begin-env centering 0 '<div style="text-align:center">'
 end-env   centering 0 '</div>'
-#begin-env centering 0 '<CENTER>'
-#end-env   centering 0 '</CENTER>'
-begin-env abstract 0 '<QUOTE>'
-end-env   abstract 0 '</QUOTE>'
+#begin-env centering 0 '<center>'
+#end-env   centering 0 '</center>'
+begin-env abstract 0 '<blockquote>'
+end-env   abstract 0 '</blockquote>'
 begin-env raggedright 0 
 end-env   raggedright 0
 begin-env flushleft 0
