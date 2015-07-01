@@ -111,10 +111,8 @@ testing: $(inplace_files) $(split_files) compare
 
 compare:
 	-@for file in testref/* ; do \
-	if test $$file = "testref/CVS" ; then continue ; fi ; \
 	if test -d $$file ; then \
 	    for f in $$file/* ; do \
-		if test $$f = "$$file/CVS" ; then continue ; fi ; \
 		newf=`echo $$f | sed -e 's%^testref/%%g'` ; \
 		xten=`echo $$newf | sed -e 's/.*\.//g'` ; \
 		if test $$xten = "xbm" ; then continue ; fi ; \
@@ -179,4 +177,5 @@ clean:
 
 Makefile: Makefile.in ../../../config.status
 	(cd ../../.. && ./config.status --file=src/tohtml/testing/Makefile)
+
 .PHONY: clean inplace subfiles compare compare2

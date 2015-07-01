@@ -71,3 +71,10 @@ int TextOutHTML::PutToken( int nsp, const char *token )
      }
      return 0;
 }
+
+int TextOutHTML::PutTokenRaw(int nsp, const char *token)
+{
+    // Nothing special in this case
+    int rc = PutToken(nsp, token);
+    return rc;
+}

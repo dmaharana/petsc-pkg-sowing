@@ -85,3 +85,10 @@ int TextOutNroff::PutToken( int nsp, const char *token )
 	 }
      return 0;
 }
+
+int TextOutNroff::PutTokenRaw(int nsp, const char *token)
+{
+    // Nothing special in this case
+    int rc = PutToken(nsp, token);
+    return rc;
+}

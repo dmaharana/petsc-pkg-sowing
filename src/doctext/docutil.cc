@@ -257,16 +257,16 @@ int DocSkipToMacroSynopsis( InStream *ins, char *matchstring )
 	    }    
 	}
 
-    // Skip to the first non-blank character 
+    // Skip to the first non-blank character
     while (!ins->GetChar( &ch ) && isspace(ch)) ;
     ins->UngetChar( ch );
 
     return 0;
 }
 
-/* Read until we get two newlines */
-int DocReadMacroSynopsis( InStream *ins, char *matchstring, OutStream *outs,
-			  int *at_end )
+/* Read (and output) until we get two newlines */
+int DocReadMacroSynopsis( InStream *ins, char *matchstring,
+			  TextOut /*OutStream*/ *outs, int *at_end )
 {
     char ch;
     int  newline_cnt, i;
@@ -331,7 +331,7 @@ int DocReadMacroSynopsis( InStream *ins, char *matchstring, OutStream *outs,
 // Enums aren't too hard, but struct definitions can contain things like
 // int (*foo)( char *(name)([][]), double (*name2)( int (*)(int,int) ) );
 // See bfort for some examples.
-int DocReadTypeDefinition( InStream *ins, OutStream *outs )
+int DocReadTypeDefinition( InStream *ins, TextOut /*OutStream*/ *outs )
 {
     char ch;
     char token[256];

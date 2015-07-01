@@ -197,7 +197,7 @@ int DocOutMacro( InStream *ins, TextOut *text, char *matchstring )
     if (DocSkipToMacroSynopsis( ins, matchstring )) return 1;
 
     outsynop = new OutStreamBuf( 16000 );
-    if (DocReadMacroSynopsis( ins, matchstring, outsynop, &at_end )) return 1;
+    if (DocReadMacroSynopsis( ins, matchstring, textout/*outsynop*/, &at_end )) return 1;
 
     // Generate the output.
     text->PutOp( "key", routinename );
