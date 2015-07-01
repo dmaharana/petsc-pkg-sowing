@@ -67,6 +67,10 @@ class TextOut {
     virtual int UpdateNL( int );
     virtual int PutNewline( );
 
+    // Verbatim mode output (mostly raw output, but for html, needs to
+    // handle the html special characters
+    virtual int PutTokenRaw(int, const char *);
+
     /* Special output */
     virtual int PutOp( const char * );
     virtual int PutOp( const char *, char *, char *, int );
@@ -89,6 +93,7 @@ class TextOutHTML : public TextOut {
     TextOutHTML( );
     int PutChar( const char );
     int PutToken( int, const char * );
+    int PutTokenRaw(int, const char *);
     };
 
 class TextOutTeX : public TextOut {
@@ -100,6 +105,7 @@ class TextOutTeX : public TextOut {
     TextOutTeX( );
     int PutChar( const char );
     int PutToken( int, const char * );
+    int PutTokenRaw(int, const char *);
     };
 
 class TextOutNroff : public TextOut {
@@ -111,6 +117,7 @@ class TextOutNroff : public TextOut {
     TextOutNroff( );
     int PutChar( const char );
     int PutToken( int, const char * );
+    int PutTokenRaw(int, const char *);
     };
 
 class TextOutStrm : public TextOut {
