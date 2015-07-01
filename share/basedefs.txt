@@ -136,7 +136,7 @@ name cdot 0 .
 nop ve 0
 #
 #hdef centerline 1 '<CENTER>'#1'</CENTER>'
-hdef centerline 1 '<div style=\"text-align:center\">'#1'</div>'
+hdef centerline 1 '<div style="text-align:center">'#1'</div>'
 # Some LaTeX uses \center where they mean to use \centerline.
 # This is commented out but can be used in a document-specific 
 # definitions file
