@@ -176,7 +176,7 @@ dist:
 	cd tmpdir/sowing && ./makeconfigure export
 	if test "`uname -s`" = "Darwin" ; then \
 	  xattr -rd tmpdir/sowing/* ; \
-	  chmod -N tmpdir/sowing/* ; fi
+	  chmod -RN tmpdir/sowing/* ; fi
 	mv tmpdir/sowing tmpdir/sowing-$(VERSION)
 	cd tmpdir && tar cf - sowing-$(VERSION) | gzip -9 > ../sowing-$(VERSION).tar.gz
 
