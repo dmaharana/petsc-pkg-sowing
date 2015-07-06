@@ -1,6 +1,6 @@
 dnl
 dnl Use the new AC_INIT format
-AC_INIT(sowing,1.1.17,wgropp@illinois.edu,sowing-1.1.17)
+AC_INIT(sowing,1.1.18,wgropp@illinois.edu,sowing-1.1.18)
 dnl We pick autoconf 2.61 because the various 2.x autoconf versions are
 dnl not compatible with each other and this lets us fix on a particular
 dnl set of macros and fixes
@@ -225,18 +225,28 @@ dnl in only shell scripts or Makefiles.
 dnl
 if test x$prefix != xNONE ; then
     eval expanded_datadir=$datadir
+    eval expanded_bindir=$bindir
+    eval expanded_datarootdir=$datarootdir
 else
     prefix=$ac_default_prefix
     eval expanded_datadir=$datadir
+    eval expanded_bindir=$bindir
+    eval expanded_datarootdir=$datarootdir
     prefix="NONE"
 fi
 # Expand again in case the definition referred to another variable (such as 
 # prefix)
 eval expanded_datadir=$expanded_datadir
+eval expanded_datarootdir=$expanded_datarootdir
+eval expanded_bindir=$expanded_bindir
 AC_SUBST(expanded_datadir)
+AC_SUBST(expanded_datarootdir)
+AC_SUBST(expanded_bindir)
 
 COPTIONS="$optflags"
 AC_SUBST(COPTIONS)
 AC_SUBST(CXXOPTIONS)
 
-AC_OUTPUT(Makefile Makerules src/Makefile src/sys/Makefile src/sys/testing/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif bin/bib2html src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile src/bib2html/Makefile docs/Makefile docs/doctext/Makefile include/patchlevel.h include/textfilt/textpath.h, chmod a+x bin/pstoxbm bin/pstogif bin/bib2html)
+AC_CONFIG_FILES([Makefile Makerules src/Makefile src/sys/Makefile src/sys/testing/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif bin/bib2html src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile src/bib2html/Makefile docs/Makefile docs/doctext/Makefile include/patchlevel.h include/textfilt/textpath.h])
+AC_CONFIG_COMMANDS([bib2html],[chmod a+x bin/pstoxbm bin/pstogif bin/bib2html],[])
+AC_OUTPUT
