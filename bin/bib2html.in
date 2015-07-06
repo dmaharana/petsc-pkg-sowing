@@ -770,7 +770,7 @@ sub PrintArbEntry {
     my $entrytype = $1;
     my $entryname = ucfirst $entry_type;
     my $var = "htmlformats$entryname";
-    if (defined(%$var)) {
+    if (%$var) {
 	%htmlformats = %$var;
     }
     else {
@@ -778,7 +778,7 @@ sub PrintArbEntry {
 	%htmlformats = %htmlformatsMisc;
     }
     $var = "fieldlist$entryname";
-    if (defined(@$var)) {
+    if (@$var) {
 	@fieldlist = @$var;
     }
     else {
