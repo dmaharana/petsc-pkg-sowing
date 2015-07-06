@@ -173,7 +173,7 @@ dist:
 	@if [ ! -d tmpdir ] ; then mkdir tmpdir ; fi
 	@rm -rf tmpdir/*
 	cd tmpdir && svn export https://svn.mcs.anl.gov/repos/sowing/trunk sowing
-	cd tmpdir/sowing && ./makeconfigure
+	cd tmpdir/sowing && ./makeconfigure export
 	if test "`uname -s`" = "Darwin" ; then \
 	  xattr -rd tmpdir/sowing/* ; \
 	  chmod -N tmpdir/sowing/* ; fi
