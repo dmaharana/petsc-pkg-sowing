@@ -6,7 +6,7 @@
 
 static FILE *fpaux = 0;
 static char fname[1024];
-static int debugContents = 1;
+static int debugContents = 0;
 
 /* 
     This file contains code for reading an aux file and inserting it into
@@ -431,6 +431,10 @@ void PrintContents( FILE *fp, Contents *r )
 	fputs( "Siblings...\n", fp );
 	PrintContents( fp, r->Sibling );
     }
+}
+void PrintAllContents(FILE *fp)
+{
+    PrintContents(fp, 0);
 }
 
 /* A debugging routine to print just the siblings, not the children 

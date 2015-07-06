@@ -117,7 +117,7 @@ void TXoutbullet( TeXEntry *e )
 	char ctmp[256];
 	if (NoBMCopy)
 	    sprintf( ctmp, "<dt><img width=14 height=14 src=\"%s%sball.gif\" alt=\"*\">%s", 
-		     BMURL, itemgifs[itemlevel >= 5 ? 4 : itemlevel],
+		     IMAGEURL, itemgifs[itemlevel >= 5 ? 4 : itemlevel],
 		     NewLineString);
 	else
 	    sprintf( ctmp, "<dt><img width=14 height=14 src=\"%sball.gif\" alt=\"*\">%s", 
@@ -807,6 +807,9 @@ void TX_GIF_size( char *fname, int *width, int *height )
     */
     /* printf( "Looking at %s\n", fname ); */
     if (fscanf( f, "GIF8%ca", &c ) < 1 ) {
+	/* We don't recognize the file.  Set the sizes to unknown */
+	*width = -1;
+	*height = -1;
 	fclose( f );
 	return;
     }

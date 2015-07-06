@@ -238,6 +238,9 @@ char *UserIndexName = 0;
 /* File for latex or graphics output errors */
 char latex_errname[300];
 
+/* File name base for generated image files (default img) */
+char imgfilebase[MAX_IMAGE_FILE_BASE];
+
 /*
     This file contains the actions for processing a subset of LaTeXinfo
     files
@@ -1999,10 +2002,10 @@ void TXmathmode( TeXEntry *e )
 #else
     if (DebugCommands) fprintf( stdout, "Starting math mode processing\n" );
     if (LatexUnknownEnvs || LatexMath) {
-	char bname[100]; 
+	char bname[100];
 	char fname[100];
 	char name[4];
-	sprintf( bname, "img%d", imageno++ );
+	snprintf( bname, sizeof(bname), "%s%d", imgfilebase, imageno++ );
 	strcpy( fname, bname );
 	strcat( fname, "." );
 	strcat( fname, ImageExt );
@@ -2421,7 +2424,7 @@ void TXbegin( TeXEntry *e )
 	    if (DebugCommands) {
 		fprintf( stdout, "Using Latex to process an environment\n" );
 	    }
-	    sprintf( bname, "img%d", imageno++ );
+	    snprintf( bname, sizeof(bname), "%s%d", imgfilebase, imageno++ );
 	    strcpy( fname, bname );
 	    strcat( fname, "." );
 	    strcat( fname, ImageExt );
@@ -3741,7 +3744,7 @@ void ProcessLatexFile( int argc, char **argv, FILE *fin, FILE *fout )
     WriteEndofTopic( fout );
     fclose( ferr );   
     if (0) 
-	PrintContents( stdout, (void *)0 );
+	PrintAllContents(stdout);
     if (BraceCount != 0) {
 	fprintf( stderr, "Brace count = %d\n", BraceCount );
 	if (BraceCount > 0) {
