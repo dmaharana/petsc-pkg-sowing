@@ -378,7 +378,7 @@ int DocReadTypeDefinition( InStream *ins, TextOut /*OutStream*/ *outs )
     return 0;
 }
 
-int DocReadDefineDefinition( InStream *ins, OutStream *outs )
+int DocReadDefineDefinition( InStream *ins, TextOut *outs )
 {
     char ch;
     char token[256];
