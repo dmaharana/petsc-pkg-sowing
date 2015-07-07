@@ -164,8 +164,10 @@ int DocOutRoutine( InStream *ins, TextOut *text, char *matchstring )
       if (DocSkipToFuncSynopsis( ins, matchstring )) return 1;
 
     outsynop = new OutStreamBuf( 16000 );
+#if defined(forbill)
+    comment this out because I don't want to fix it. I changed DocReadFuncSynopsis to allowing mapping names for html
     if (DocReadFuncSynopsis( ins, outsynop )) return 1;
-
+#endif
     // Generate the output.
     text->PutOp( "key", routinename );
     text->PutOp( "synopsis", outsynop->GetBuffer() );

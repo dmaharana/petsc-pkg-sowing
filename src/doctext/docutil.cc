@@ -146,7 +146,7 @@ int DocSkipToFuncSynopsis( InStream *ins, char *matchstring )
 // if is appears.
 // Also strip any ignore tokens.
 //
-int DocReadFuncSynopsis( InStream *ins, OutStream *outs )
+int DocReadFuncSynopsis( InStream *ins, TextOut *outs )
 {
     char ch;
     char token[256];

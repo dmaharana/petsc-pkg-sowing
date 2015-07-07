@@ -6,7 +6,7 @@ int DocReadName( InStream *ins, char *routinename, int maxlen );
 int DocReadDescription( InStream *ins, char *matchstring,
 			TextOut *textout, int flag, int *at_end );
 int DocSkipToFuncSynopsis( InStream *ins, char *matchstring );
-int DocReadFuncSynopsis( InStream *ins, OutStream *outs );
+int DocReadFuncSynopsis( InStream *ins, TextOut /*OutStream*/ *outs );
 int DocSkipToMacroSynopsis( InStream *ins, char *matchstring );
 int DocReadMacroSynopsis( InStream *ins, char *matchstring,
 			  TextOut /*OutStream*/ *outs,
