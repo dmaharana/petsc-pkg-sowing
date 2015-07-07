@@ -1,0 +1,357 @@
+\startmanpage
+\mantitle{fancy}{tex}{2/10/2000}
+\manname{fancy}
+--- Shows all fancy formatting 
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+#include <sys/time.h> 
+#include <sys/types.h> 
+void f1( int a, char *b )
+\end{verbatim}
+\endvb
+
+\subhead{Input Parameters}
+\startarg{x, y }{Coords
+}
+\startarg{a }{the {\em really} important value
+}
+\par
+\subhead{Output Parameters}
+\startarg{p1 }{pointer {\em to a}. Is this here?
+}
+\par
+\subhead{Notes}
+This system uses the line
+\nextline
+break mechanism
+\nextline
+\par
+as well as
+\begin{verbatim}
+   a     verbatim
+   table example
+\end{verbatim}
+
+and a line ending in colon:
+\par
+\begin{quotation}\noindent
+This is in quotation format
+\end{quotation}
+\par
+\par
+\subhead{Notes on Fnodes}
+This is a sample that includes
+\begin{verbatim}
+    verbatim 
+    processing
+\end{verbatim}
+
+\par
+\subhead{Keywords}
+break, pointers
+\nextline
+\location{allfmt.c}
+\endmanpage
+\startmanpage
+\mantitle{Routine}{tex}{2/10/2000}
+\manname{Routine}
+--- foo is a routine  
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+Routine( bar, another )
+double *bar;
+int another;
+\end{verbatim}
+\endvb
+
+\subhead{Input Parameter}
+\startarg{bar }{drinks
+}
+\startarg{another }{foo
+}
+\par
+\location{test.nam}
+\endmanpage
+\startmanpage
+\mantitle{Name}{tex}{2/10/2000}
+\manname{Name}
+--- is a macro for something 
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+Name(bar,foo)
+int bar;
+char foo;
+\end{verbatim}
+\endvb
+
+\location{test.nam}
+\endmanpage
+\startmanpage
+\mantitle{Name2}{tex}{2/10/2000}
+\manname{Name2}
+--- is a macro for something else 
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+Name2(bar,foo)
+int bar;
+char foo;
+\end{verbatim}
+\endvb
+More stuff
+\location{test.nam}
+\endmanpage
+\startmanpage
+\mantitle{foo1}{tex}{2/10/2000}
+\manname{foo1}
+--- test  
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+
+void foo1( a, b, c )
+int a;
+char b;
+void (*c)();
+\end{verbatim}
+\endvb
+
+\location{tstpgm.c}
+\endmanpage
+\startmanpage
+\mantitle{foo2}{tex}{2/10/2000}
+\manname{foo2}
+--- test  
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+
+struct tm *foo2( a, b )
+MyType *a;
+short b;
+\end{verbatim}
+\endvb
+
+\location{tstpgm.c}
+\endmanpage
+\startmanpage
+\mantitle{foo3}{tex}{2/10/2000}
+\manname{foo3}
+--- test 
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+
+int foo3()
+\end{verbatim}
+\endvb
+
+\location{tstpgm.c}
+\endmanpage
+\startmanpage
+\mantitle{SYGetArchType}{tex}{2/10/2000}
+\manname{SYGetArchType}
+--- Return a standardized architecture type for the machine that is executing this routine.  This uses uname where possible, but may modify the name (for example, sun4 is returned for all sun4 types). 
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+void SYGetArchType( str, slen )
+char *str;
+int  slen;
+\end{verbatim}
+\endvb
+
+\subhead{Input Parameter}
+slen - length of string buffer
+\subhead{Output Parameter}
+\startarg{str }{string area to contain architecture name.  Should be at least 
+10 characters long.
+}
+\par
+\subhead{Notes}
+This is a long block of text that contains a number of lines
+and has several sentances.  Such as this one, which is the
+second of many.  Well, maybe not many.  Maybe four or
+five sentances?
+\par
+\location{tstpgm.c}
+\endmanpage
+\startmanpage
+\mantitle{foobar}{tex}{2/10/2000}
+\manname{foobar}
+--- test program C only 
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+int foobar( a )
+void **a;
+\end{verbatim}
+\endvb
+This is used as an example of C - only (should be ignored)
+\location{tstpgm.c}
+\endmanpage
+\startmanpage
+\mantitle{simple}{tex}{2/10/2000}
+\manname{simple}
+--- test 
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+
+int simple(int a, double b)
+\end{verbatim}
+\endvb
+
+\location{tstpgma.c}
+\endmanpage
+\startmanpage
+\mantitle{foo1}{tex}{2/10/2000}
+\manname{foo1}
+--- test  
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+
+void foo1( int a, char b, void (*c)() )
+\end{verbatim}
+\endvb
+
+\location{tstpgma.c}
+\endmanpage
+\startmanpage
+\mantitle{foo1a}{tex}{2/10/2000}
+\manname{foo1a}
+--- test  
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+
+void foo1a( int a, char b, void (*c)(int, char, MyType *a) )
+\end{verbatim}
+\endvb
+
+\location{tstpgma.c}
+\endmanpage
+\startmanpage
+\mantitle{foo2}{tex}{2/10/2000}
+\manname{foo2}
+--- test  
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+
+struct tm *foo2( MyType *a, short b )
+\end{verbatim}
+\endvb
+
+\location{tstpgma.c}
+\endmanpage
+\startmanpage
+\mantitle{foo3}{tex}{2/10/2000}
+\manname{foo3}
+--- test 
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+
+int foo3()
+\end{verbatim}
+\endvb
+
+\location{tstpgma.c}
+\endmanpage
+\startmanpage
+\mantitle{foo3a}{tex}{2/10/2000}
+\manname{foo3a}
+--- test ANSI should use this for empty arg 
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+
+int foo3a(void)
+\end{verbatim}
+\endvb
+
+\location{tstpgma.c}
+\endmanpage
+\startmanpage
+\mantitle{Tst2{\tt \char`\_}start}{tex}{2/10/2000}
+\manname{Tst2{\tt \char`\_}start}
+--- Sample C only routine 
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+void Tst2_start( a, b )
+int a, b;
+\end{verbatim}
+\endvb
+This example uses
+\linebreak   The \$ symbol to do verbatim output\linebreak   up to here
+\par
+\centerline{\epsf{foo.ps}}\begin{center}\bf
+\par
+Caption for figure
+\end{center}
+\par
+\par
+\par
+\location{tstpgmc.c}
+\endmanpage
+\startmanpage
+\mantitle{foo1}{tex}{2/10/2000}
+\manname{foo1}
+--- test  
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+void foo1( a, b, c )
+int a;
+char b;
+void (*c)();
+\end{verbatim}
+\endvb
+
+\location{tstpgm.h}
+\endmanpage
+\startmanpage
+\mantitle{foo2}{tex}{2/10/2000}
+\manname{foo2}
+--- test  
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+struct tm *foo2( a, b )
+MyType *a;
+short b;
+\end{verbatim}
+\endvb
+
+\location{tstpgm.h}
+\endmanpage
+\startmanpage
+\mantitle{foo3}{tex}{2/10/2000}
+\manname{foo3}
+--- test 
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+int foo3()
+\end{verbatim}
+\endvb
+
+\subhead{Notes}
+foo
+\location{tstpgm.h}
+\endmanpage

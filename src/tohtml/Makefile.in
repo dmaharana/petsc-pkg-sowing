@@ -11,18 +11,18 @@ datarootdir     = @datarootdir@
 
 LIBS      =  ../../lib/libsowing.a
 INCLUDES   = -I${top_srcdir}/include -I. -I../../include
-DEFS      =   -DPSPATH='"@bindir@/"' \
-              -DBMSOURCE='"@datarootdir@/"' \
-	      -DBASEDEF='"@datarootdir@/basedefs.txt"'
-PROGRAMS = tohtml tortf 
+DEFS       =
+PROGRAMS = tohtml tortf
 
 BASEOBJS = search.o texactio.o rdaux.o rdindx.o label.o scan.o \
            refmap.o style.o dimen.o userdef.o tabular.o biblio.o environ.o \
 	   math.o rddefs.o latexinfo.o accent.o simpleif.o
+HEADERFILES = tex.h tohtmlpath.h search.h
 
-tohtml: tohtml.o  tex2html.o $(BASEOBJS)
+tohtml: Makefile $(HEADERFILES) tohtml.o tex2html.o $(BASEOBJS)
 	$(C_LINK) -o tohtml tohtml.o tex2html.o $(BASEOBJS) $(LIBS)
 
+# This is an obsolete program and is no longer used
 xwdsize: xwdsize.o
 	$(C_LINK) -o xwdsize xwdsize.o -lX11
 
@@ -44,5 +44,12 @@ install:
 # We no longer need this program, which is good because X11 is getting
 # harder to find
 #	$(INSTALL_PROGRAM) xwdsize @bindir@/xwdsize
+
+Makefile: Makefile.in
+	(cd ../.. && CONFIG_FILES=src/tohtml/Makefile && \
+	 export CONFIG_FILES && ./config.status)
+tohtmlpath.h: tohtmlpath.h.in ../../config.status
+	(cd ../.. && CONFIG_FILES=src/tohtml/tohtmlpath.h && \
+	 export CONFIG_FILES && ./config.status)
 
 .PHONY: testing clean distclean install all-redirect

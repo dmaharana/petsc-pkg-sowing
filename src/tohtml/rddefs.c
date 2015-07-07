@@ -85,6 +85,9 @@ void RdBaseDef( char *infilename )
 	fprintf( stderr, "Could not open definition file %s\n", infilename );
 	return;
     }
+    if (DebugFile || DebugCommands) {
+	fprintf(stdout, "Reading base definitions in %s\n", infilename);
+    }
     while (fgets(buf, sizeof(buf)-1, fp)) {
 	buf[sizeof(buf)-1] = 0; /* Just in case */
 	nargs = 0;   /* in case not set ... */

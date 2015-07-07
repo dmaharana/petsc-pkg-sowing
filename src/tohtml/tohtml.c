@@ -27,6 +27,7 @@ char *GetCommandLine( void );
 /* We make these globals in consideration of the DOS version of this code */
 char infilename[256], outfilename[256], projfilename[256], auxfilename[256];
 char latexerrfilename[256];
+char imgfilenase[MAX_IMAGE_FILE_BASE];
 
 /* Linux defines a basename FUNCTION in string.h ! */
 char basefilename[256];
@@ -51,7 +52,7 @@ int IsGaudy     = 0;
 int level_offset = 0;
 
 /* If NoBMCopy is chosen, then the predefined bitmaps are not copied, and
-   the path in BMURL is used instead */
+   the path in IMAGEURL is used instead */
 int NoBMCopy = 0;
 
 /* Change this to turn off output translations */
@@ -292,6 +293,11 @@ int main( int argc, char *argv[] )
     outfilename[0] = 0;
     SYArgGetString( &argc, argv, 1, "-o", outfilename, sizeof(outfilename) );
 
+    /* Set a default for the base name for img files */
+    strcpy(imgfilebase, "img");
+    SYArgGetString(&argc, argv, 1, "-imgbase",
+		   imgfilebase, sizeof(imgfilebase));
+
     argv++;
     argc--;
     if (argc == 0 || !argv[0]) {
@@ -445,7 +451,10 @@ void WriteFileTitle( FILE *fp, char *name )
 void WriteJumpDestination( FILE *fp, char *name, char *title )
 {
     if (DebugOutput) fprintf( stdout, "WriteJumpDestination\n" );
-    fprintf( fp, "<span id=\"%s\">%s</span>", name, title );
+    fprintf(fp, "<span id=\"%s\">", name);
+    WriteString(fp, title);
+    /* fprintf( fp, "<span id=\"%s\">%s</span>", name, title ); */
+    fprintf(fp,"</span>");
 }
 
 /*
@@ -664,6 +673,7 @@ void WriteString( FILE *fp, char *str )
    to <char>\n<space>  I'll use the former since we may not want
    the space after the newline.
    */
+#if 0
 void WriteStringRaw( FILE *fp, char *str )
 {
     char *p;
@@ -691,11 +701,12 @@ void WriteStringRaw( FILE *fp, char *str )
         }
 	p++;        
     }
-/* Flush the remaining text */
+    /* Flush the remaining text */
     if (p > str) {
 	fputs( str, fp );
     }
 }
+#endif 
 
 #include "search.h"
 #define MAX_SECTION_TITLE 512
@@ -799,25 +810,22 @@ void SetUpButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetUpButton\n" );
     fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%sup.%s\" alt=\"Up\"></a>", 
-	     context, NoBMCopy ? BMURL : "", ImageExt );  
-/* fprintf( fp, "<b>Up: </b><A HREF=\"%s\">%s</a> ", context, name ); */
-}   
+	     context, NoBMCopy ? IMAGEURL : "", ImageExt );  
+}
 
 void SetNextButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetNextButton\n" );
     fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%snext.%s\" alt=\"Next\"></a>", 
-	     context, NoBMCopy ? BMURL : "", ImageExt );  
-/* fprintf( fp, "<b>Next: </b><A HREF=\"%s\">%s</a> ", context, name ); */
-}   
+	     context, NoBMCopy ? IMAGEURL : "", ImageExt );  
+}
 
 void SetPreviousButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetPreviousButton\n" );
     fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%sprevious.%s\" alt=\"Previous\"></a>", 
-	     context, NoBMCopy ? BMURL : "", ImageExt );  
-/* fprintf( fp, "<b>Previous: </b><A HREF=\"%s\">%s</a> ", context, name ); */
-}   
+	     context, NoBMCopy ? IMAGEURL : "", ImageExt );  
+}
 
 /* THIS SHOULD NOT BE USED (see "InDocument check in tex2html" ) */
 void WritePar( FILE *fp )
@@ -940,7 +948,8 @@ void PrintHelp( char *pgm )
     fprintf( stderr,
 	     "%s [-latex] [-info] [-mapref filename] [-basedir dirname]\n\
 [-iftex] [-split n] [-mapman filename ] [-cvtlatex] [-cvttables]\n\
-[-cvtmath] [-simplemath] [-useimg] [-gaudy] [-iftex] [-default]\n\
+[-cvtmath] [-simplemath] [-useimg] [-imgbase name]\n\
+[-gaudy] [-iftex] [-default]\n\
 [-nonavnames] [-notopnames] [-nobottomnav]\n\
 [-basedef filename] [-endpage filename ] [-beginpage filename]\n\
 [-citeprefix str] [-citesuffix str] filename\n", pgm );
@@ -950,6 +959,7 @@ void PrintHelp( char *pgm )
 \t\t\tbitmaps\n\
 \t-cvttables\tConvert tabular environments into bitmaps\n\
 \t-useimg\t\tWhen used with -cvtlatex, use existing bitmaps from a\n\
+\t-imgbase\t\tUse the value as the basename for generated images\n\
 \t\t\tprevious run\n\
 \t-gaudy\t\tUse color images for itemize bullets\n\
 \t-nocopy\t\tDo not copy the pre-defined bitmaps\n\
@@ -1079,45 +1089,45 @@ void CopyImgFiles( char *basefilename )
 
     if (c1 == '\\')
 	basefilename[strlen(basefilename)-1] = 0;
-    sprintf( pgm, "copy \"%s\\next.%s\" %s", BMSOURCE, ImageExt, basefilename );
+    sprintf( pgm, "copy \"%s\\next.%s\" %s", IMAGEDIR, ImageExt, basefilename );
     system( pgm );
-    sprintf( pgm, "copy \"%s\\previous.%s\" %s", BMSOURCE, ImageExt, 
+    sprintf( pgm, "copy \"%s\\previous.%s\" %s", IMAGEDIR, ImageExt, 
 	     basefilename );
     system( pgm );
-    sprintf( pgm, "copy \"%s\\up.%s\" %s", BMSOURCE, ImageExt, basefilename );
+    sprintf( pgm, "copy \"%s\\up.%s\" %s", IMAGEDIR, ImageExt, basefilename );
     system( pgm );
     if (IsGaudy) {
-	sprintf( pgm, "copy \"%s\\purpleball.gif\" %s", BMSOURCE, basefilename );
+	sprintf( pgm, "copy \"%s\\purpleball.gif\" %s", IMAGEDIR, basefilename );
 	system( pgm );
-	sprintf( pgm, "copy \"%s\\redball.gif\" %s", BMSOURCE, basefilename );
+	sprintf( pgm, "copy \"%s\\redball.gif\" %s", IMAGEDIR, basefilename );
 	system( pgm );
-	sprintf( pgm, "copy \"%s\\blueball.gif\" %s", BMSOURCE, basefilename );
+	sprintf( pgm, "copy \"%s\\blueball.gif\" %s", IMAGEDIR, basefilename );
 	system( pgm );
-	sprintf( pgm, "copy \"%s\\greenball.gif\" %s", BMSOURCE, basefilename );
+	sprintf( pgm, "copy \"%s\\greenball.gif\" %s", IMAGEDIR, basefilename );
 	system( pgm );
-	sprintf( pgm, "copy \"%s\\yellowball.gif\" %s", BMSOURCE, basefilename );
+	sprintf( pgm, "copy \"%s\\yellowball.gif\" %s", IMAGEDIR, basefilename );
 	system( pgm );
     }
     if (c1 == '\\')
 	basefilename[strlen(basefilename)] = c1;
 #else
-    sprintf( pgm, "/bin/cp %s/next.%s %s", BMSOURCE, ImageExt, basefilename );
+    sprintf( pgm, "/bin/cp %s/next.%s %s", IMAGEDIR, ImageExt, basefilename );
     system( pgm );
-    sprintf( pgm, "/bin/cp %s/previous.%s %s", BMSOURCE, ImageExt, 
+    sprintf( pgm, "/bin/cp %s/previous.%s %s", IMAGEDIR, ImageExt, 
 	     basefilename );
     system( pgm );
-    sprintf( pgm, "/bin/cp %s/up.%s %s", BMSOURCE, ImageExt, basefilename );
+    sprintf( pgm, "/bin/cp %s/up.%s %s", IMAGEDIR, ImageExt, basefilename );
     system( pgm );
     if (IsGaudy) {
-	sprintf( pgm, "/bin/cp %s/purpleball.gif %s", BMSOURCE, basefilename );
+	sprintf( pgm, "/bin/cp %s/purpleball.gif %s", IMAGEDIR, basefilename );
 	system( pgm );
-	sprintf( pgm, "/bin/cp %s/redball.gif %s", BMSOURCE, basefilename );
+	sprintf( pgm, "/bin/cp %s/redball.gif %s", IMAGEDIR, basefilename );
 	system( pgm );
-	sprintf( pgm, "/bin/cp %s/blueball.gif %s", BMSOURCE, basefilename );
+	sprintf( pgm, "/bin/cp %s/blueball.gif %s", IMAGEDIR, basefilename );
 	system( pgm );
-	sprintf( pgm, "/bin/cp %s/greenball.gif %s", BMSOURCE, basefilename );
+	sprintf( pgm, "/bin/cp %s/greenball.gif %s", IMAGEDIR, basefilename );
 	system( pgm );
-	sprintf( pgm, "/bin/cp %s/yellowball.gif %s", BMSOURCE, basefilename );
+	sprintf( pgm, "/bin/cp %s/yellowball.gif %s", IMAGEDIR, basefilename );
 	system( pgm );
     }
 #endif

@@ -26,7 +26,7 @@
 // E Enum definition
 // P routine in prototype form (may be prototype definition instead
 //   of actual function definition
-#define MATCH_STRING "/*[@MDINSEPJ]"
+#define MATCH_STRING "/*[@MDINSEP]"
 
 // Leading string (null for C, could be // for C++, C for Fortran, # for
 // perl or shells)
@@ -53,7 +53,6 @@ extern char NewlineString[3];
 #define ENUMDEF     'E'
 #define STRUCTDEF   'S'
 #define PROTOTYPEDEF 'P'
-#define DEFINE       'J'
 
 // Special lead character types (only in the first column in a comment)
 #define ARGUMENT    '.'

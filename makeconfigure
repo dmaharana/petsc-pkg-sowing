@@ -1,4 +1,7 @@
 #! /bin/sh
+# Allow makeconfigure to be used within the dist target
+svnco=co
+if test "X$1" = "Xexport" ; then svnco=export ; fi
 # runs autoheader and autoconf with local macros
 echo making configure in `pwd`
 # autoconf doesn't correctly determine when the cache values are not
@@ -7,7 +10,7 @@ svn=svn
 if [ -n "$SVN" ] ; then svn=$SVN ; fi
 rm -rf autom4te.cache
 if [ ! -d confdb ] ; then
-   $svn co https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk/confdb
+   $svn $svnco https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk/confdb
 else
    $svn update 
 fi

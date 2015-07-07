@@ -260,12 +260,17 @@ in the distribution, where ... is the path to the sowing directory\n\
         ins = new InStreamBuf( 16000, insin );
 
 	// We'd like to override this, particularly for testing, but also
-	// for specifying a data for a release rather than the last change
+	// for specifying a date for a release rather than the last change
 	// to a file.
-	if (!masterdate)
-	  SYLastChangeToFile( infilename, date, (struct tm *)0 ); 
+	if (!masterdate) {
+	    SYLastChangeToFile( infilename, date, (struct tm *)0 );
+	    if (DebugDoc) printf("Date from last change %s\n", date);
+	}
+	else if (DebugDoc) {
+	    printf("Date from cmdnline %s\n", date);
+	}
 	// else already copied masterdate to date.
-	  
+
 	ClearIncludeFile( );
 	/* At this point, we can trim the filename of any leading trash, 
 	   such as "./".  Later.... */
@@ -313,13 +318,15 @@ in the distribution, where ... is the path to the sowing directory\n\
 		}
 	    // We may also want to generate a separate index entry for each
 	    // "D" object.  Why doesn't this happen?
+	    // Note that we append to the index file - we don't check for,
+	    // or warn about, duplicate entries
 	    if (idxfd) {
 		/* If there is an indexdir, we need to remove all directories
 		   from the filename */
 		char *pp;
 		pp = outfilename + strlen(outfilename) - 1;
-		while (pp > outfilename && pp[0] != '/') pp--;
-		pp++;
+		while (pp > outfilename && *pp != '/') pp--;
+		if (*pp == '/') pp++;  // If there was no directory, leave the name alone
 		fprintf( idxfd, "man:+%s++%s++++man+%s/%s#%s\n", 
 			routine, routine, idxdir, pp, routine );
 		}
@@ -417,23 +424,6 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
 	textout->PutOp( "e_synopsis" );
 	ins->SetLoc( position );
     }
-    else if (kind == DEFINE) {
-       // This is a simple way to get a define
-       // definition into a doctext block. 
-       long position;
-       ins->GetLoc( &position );
-       // Skip to func synopsis simply skips to the end of the comment
-       // block
-       if (!at_end)
-           DocSkipToFuncSynopsis( ins, matchstring );
-       // s_synopsis should do Synopsis: <begin verbatim> and
-       // e_synopsis should do <end verbatim> in most cases.
-       textout->PutOp( "s_synopsis" );
-        OutputIncludeInfo( textout );
-       if (DocReadDefineDefinition( ins, textout->out )) return 1;
-       textout->PutOp( "e_synopsis" );
-       ins->SetLoc( position );
-    }
     else if (kind == ENUMDEF || kind == STRUCTDEF) {
 	// This is a simple way to get a struct or enum
 	// definition into a doctext block.  Eventually we'll want
@@ -448,7 +438,11 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
 	// e_synopsis should do <end verbatim> in most cases.
 	textout->PutOp( "s_synopsis" );
         OutputIncludeInfo( textout );
-	if (DocReadTypeDefinition( ins, textout->out )) return 1;
+	// We may need to process characters even in the "verbatim"
+	// mode in some cases.
+	// FIXME: Pass textout, not textout->out, and indicate verbatim
+	// mode.
+	if (DocReadTypeDefinition( ins, textout/*->outs*/ )) return 1;
 	textout->PutOp( "e_synopsis" );
 	ins->SetLoc( position );
     }
@@ -581,7 +575,7 @@ int OutputText( InStream *ins, char *matchstring,
 		    doing_synopsis= 1;
 		    textout->PutOp( "s_synopsis" );
 		    if (kind == MACRO) {
-		      DocReadMacroSynopsis( ins, matchstring, textout->out, 
+			DocReadMacroSynopsis( ins, matchstring, textout/*->out*/, 
 					    &at_end );
 		      doing_synopsis = 0;
 		      textout->PutOp( "e_synopsis" );

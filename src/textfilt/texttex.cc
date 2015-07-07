@@ -93,3 +93,18 @@ int TextOutTeX::PutToken( int nsp, const char *token )
 	 }
      return rc;
 }
+
+int TextOutTeX::PutTokenRaw(int nsp, const char *token)
+{
+    // This is the special case: Assume in LaTeX verbatim mode
+    // or equivalent.  Pass characters through to the underlying
+    // stream
+    int rc;
+    rc = out->PutToken( nsp, (char *)0 );
+    if (!rc) err->ErrMsg( rc, "Error writing token" );
+    while (*token) {
+	 rc = out->PutChar( *token++ );
+	 if (rc) { err->ErrMsg( rc, "Error writing character" ); break; }
+    }
+    return rc;
+}

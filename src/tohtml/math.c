@@ -432,13 +432,13 @@ void TXProcessDollar( TeXEntry *e, int latexmath, int checkdollar )
 /* If hasCommand is false, we can skip the latexmath step... */
     if (latexmath && hasCommand && numCommands > numDoableCommands) {
 	/* Eventually needs to handle LatexAgain ... */
-	char bname[100]; 
+	char bname[100];
 	char fname[100];
 
-	sprintf( bname, "img%d", imageno++ );
-	strncpy( fname, bname, 100 );
-	strncat( fname, ".", 100 );
-	strncat( fname, ImageExt, 100 );
+	snprintf( bname, sizeof(bname), "%s%d", imgfilebase, imageno++ );
+	strncpy( fname, bname, sizeof(fname) );
+	strncat( fname, ".", sizeof(fname)-strlen(fname)-1 );
+	strncat( fname, ImageExt, sizeof(fname)-strlen(fname)-1 );
 	if (!hasBackwack) strcat( mathbuf, "\\" );
 	if (checkdollar) {
 	    if (displaymode)

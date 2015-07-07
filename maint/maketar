@@ -63,7 +63,7 @@ find $sowingtmp \( -name 'RCS' -o -name '*.o' -o -name '#*#' -o \
 	      -name 'config.log' -o -name 'config.status' -o \
 	      -name 'config.cache' -o -name '*.orig' -o \
 	      -name '*.dvi' -o -name '*.aux' -o \
-	      -name '*.ilk' -o -name '*.pch' -o -name 'CVS' \) -print | \
+	      -name '*.ilk' -o -name '*.pch' -o -name '.svn' \) -print | \
 	sed -e 's/ win32/\\ win32/g' | sed 's%^%/bin/rm -rf %g' | sh
 # Remove some directories
 /bin/rm -rf  $sowingtmp/related

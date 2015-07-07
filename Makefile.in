@@ -12,7 +12,7 @@ INSTALL_DATA    = @INSTALL_DATA@
 SHELL = @SHELL@
 top_srcdir=@top_srcdir@
 
-all-redirect: tohtml bfort doctext mapnames
+all-redirect: tohtml bfort doctext mapnames bin/bib2html
 
 lib/libsowing.a libs:
 	@if [ ! -d lib ] ; then mkdir lib ; fi
@@ -167,10 +167,21 @@ distclean:
 	-rm -f src/doctext/docpath.h include/patchlevel.h include/textfilt/textpath.h
 
 VERSION       = @PACKAGE_VERSION@
+# Note: The xattr and chmod commands are needed on Mac OSX to prevent the
+# tar file from containing extraneous and irrelevant files.
 dist:
 	@if [ ! -d tmpdir ] ; then mkdir tmpdir ; fi
 	@rm -rf tmpdir/*
 	cd tmpdir && svn export https://svn.mcs.anl.gov/repos/sowing/trunk sowing
-	cd tmpdir/sowing && ./makeconfigure
+	cd tmpdir/sowing && ./makeconfigure export
+	if test "`uname -s`" = "Darwin" ; then \
+	  xattr -rd tmpdir/sowing/* ; \
+	  chmod -RN tmpdir/sowing/* ; fi
 	mv tmpdir/sowing tmpdir/sowing-$(VERSION)
 	cd tmpdir && tar cf - sowing-$(VERSION) | gzip -9 > ../sowing-$(VERSION).tar.gz
+
+Makefile: Makefile.in config.status
+	./config.status --file=Makefile
+
+bin/bib2html: bin/bib2html.in config.status
+	./config.status --file=bin/bib2html

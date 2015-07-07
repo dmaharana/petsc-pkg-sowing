@@ -9,7 +9,7 @@ section    %n<H2>%1</H2>%n
 s_synopsis %n<H2>Synopsis</H2>%n<PRE><CODE>%n
 e_synopsis %n</CODE></PRE>%n
 em_dash    
-eop        %n<BR><A HREF="http://www.mcs.anl.gov/myindex">Index</A></BODY></HTML>%n
+eop        %n<br><A HREF="http://www.mcs.anl.gov/myindex">Index</A></BODY></HTML>%n
 bop        <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">%n<HTML>%n
 bof
 eof

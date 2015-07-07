@@ -438,6 +438,12 @@ int TextOut::PutToken( int nsp, const char *token )
     else      return out->PutToken( nsp, token );
 }
 
+int TextOut::PutTokenRaw( int nsp, const char *token )
+{
+    /* This really needs to remember newlines in last_was_nl */
+    return PutToken(nsp, token);
+}
+
 int TextOut::PutQuoted( int nsp, const char *token )
 {
   if (debug_flag && token && *token) 

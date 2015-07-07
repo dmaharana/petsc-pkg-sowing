@@ -136,7 +136,7 @@ name cdot 0 .
 nop ve 0
 #
 #hdef centerline 1 '<CENTER>'#1'</CENTER>'
-hdef centerline 1 '<div style=\"text-align:center\">'#1'</div>'
+hdef centerline 1 '<div style="text-align:center">'#1'</div>'
 # Some LaTeX uses \center where they mean to use \centerline.
 # This is commented out but can be used in a document-specific 
 # definitions file
@@ -160,22 +160,22 @@ hdef hrule 0 '<HR>'
 hdef footnote 1 '<A HREF="JavaScript: alert(''#1'')">*</A>'
 #
 # Environments
-#begin-env center 0 '<CENTER>'
-#end-env   center 0 '</CENTER>'
+#begin-env center 0 '<center>'
+#end-env   center 0 '</center>'
 begin-env center 0 '<div style="text-align:center">'
 end-env   center 0 '</div>'
-begin-env quote  0 '<QUOTE>'
-end-env   quote  0 '</QUOTE>'
-begin-env quotation  0 '<QUOTE>'
-end-env   quotation  0 '</QUOTE>'
+begin-env quote  0 '<blockquote>'
+end-env   quote  0 '</blockquote>'
+begin-env quotation  0 '<blockquote>'
+end-env   quotation  0 '</blockquote>'
 begin-env normalsize 0 
 end-env   normalsize 0 
 begin-env centering 0 '<div style="text-align:center">'
 end-env   centering 0 '</div>'
-#begin-env centering 0 '<CENTER>'
-#end-env   centering 0 '</CENTER>'
-begin-env abstract 0 '<QUOTE>'
-end-env   abstract 0 '</QUOTE>'
+#begin-env centering 0 '<center>'
+#end-env   centering 0 '</center>'
+begin-env abstract 0 '<blockquote>'
+end-env   abstract 0 '</blockquote>'
 begin-env raggedright 0 
 end-env   raggedright 0
 begin-env flushleft 0
@@ -188,4 +188,50 @@ end-env   tiny 0
 # If's (not yet supported)
 #if ifvmode
 #if ifmmode
-
+# TeX's predefined math characters (this is a subset)
+hdef alpha 0 '&alpha;'
+hdef Alpha 0 '&Alpha;'
+hdef beta 0 '&beta;'
+hdef Beta 0 '&Beta;'
+hdef gamma 0 '&gamma;'
+hdef Gamma 0 '&Gamma;'
+hdef delta 0 '&delta;'
+hdef Delta 0 '&Delta;'
+hdef epsilon 0 '&epsilon;'
+hdef Epsilon 0 '&Epsilon;'
+hdef zeta 0 '&zeta;'
+hdef Zeta 0 '&Zeta;'
+hdef eta 0 '&eta;'
+hdef Eta 0 '&Eta;'
+hdef theta 0 '&theta;'
+hdef Theta 0 '&Theta;'
+hdef iota 0 '&iota;'
+hdef Iota 0 '&Iota;'
+hdef kappa 0 '&kappa;'
+hdef Kappa 0 '&Kappa;'
+hdef lambda 0 '&lambda;'
+hdef Lambda 0 '&Lambda;'
+hdef mu 0 '&mu;'
+hdef Mu 0 '&Mu;'
+hdef xi 0 '&xi;'
+hdef Xi 0 '&Xi;'
+hdef omicron 0 '&omicron;'
+hdef Omicron 0 '&Omicron;'
+hdef pi 0 '&pi;'
+hdef Pi 0 '&Pi;'
+hdef rho 0 '&rho;'
+hdef Rho 0 '&Rho;'
+hdef sigma 0 '&sigma;'
+hdef Sigma 0 '&Sigma;'
+hdef tau 0 '&tau;'
+hdef Tau 0 '&Tau;'
+hdef upsilon 0 '&upsilon;'
+hdef Upsilon 0 '&Upsilon;'
+hdef phi 0 '&phi;'
+hdef Phi 0 '&Phi;'
+hdef chi 0 '&chi;'
+hdef Chi 0 '&Chi;'
+hdef psi 0 '&psi;'
+hdef Psi 0 '&Psi;'
+hdef omega 0 '&omega;'
+hdef Omega 0 '&Omega;'

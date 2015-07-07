@@ -63,6 +63,10 @@ extern char ImageExt[4];     /* Choose the image type.  Used as both the
 extern char latex_errname[300];  /* File name used for errors in 
 				    generating latex or graphics files */
 
+#define MAX_IMAGE_FILE_BASE 256
+extern char imgfilebase[MAX_IMAGE_FILE_BASE];  /* Use for generated image
+						  files (img by default) */
+
 extern int InDocument;
 
 extern int InOutputBody;
@@ -172,6 +176,7 @@ extern char ActiveChar;      /* often ~ */
 extern int  DebugCommands;
 extern int  DebugOutput;
 extern int  DebugFont;
+extern int  DebugFile;
 extern int  warnRedefinition;
 
 extern char *tokbuf, *curtok;
@@ -250,6 +255,7 @@ extern int GetNext ( LINK *, char *, char *, char *, int );
 extern LINK *GetNextLink ( LINK * );
 extern int GetPrevious ( LINK *, char *, char *, char *, int );
 extern char *TopicFilename ( LINK * );
+extern void PrintAllContents(FILE *);
 
 /* rddefs.c */
 extern void RdBaseDef ( char * );

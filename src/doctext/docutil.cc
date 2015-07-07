@@ -257,16 +257,16 @@ int DocSkipToMacroSynopsis( InStream *ins, char *matchstring )
 	    }    
 	}
 
-    // Skip to the first non-blank character 
+    // Skip to the first non-blank character
     while (!ins->GetChar( &ch ) && isspace(ch)) ;
     ins->UngetChar( ch );
 
     return 0;
 }
 
-/* Read until we get two newlines */
-int DocReadMacroSynopsis( InStream *ins, char *matchstring, OutStream *outs,
-			  int *at_end )
+/* Read (and output) until we get two newlines */
+int DocReadMacroSynopsis( InStream *ins, char *matchstring,
+			  TextOut /*OutStream*/ *outs, int *at_end )
 {
     char ch;
     int  newline_cnt, i;
@@ -331,7 +331,7 @@ int DocReadMacroSynopsis( InStream *ins, char *matchstring, OutStream *outs,
 // Enums aren't too hard, but struct definitions can contain things like
 // int (*foo)( char *(name)([][]), double (*name2)( int (*)(int,int) ) );
 // See bfort for some examples.
-int DocReadTypeDefinition( InStream *ins, OutStream *outs )
+int DocReadTypeDefinition( InStream *ins, TextOut /*OutStream*/ *outs )
 {
     char ch;
     char token[256];
@@ -377,43 +377,6 @@ int DocReadTypeDefinition( InStream *ins, OutStream *outs )
     ins->SetBreakChar( '_', us_break );
     return 0;
 }
-
-int DocReadDefineDefinition( InStream *ins, OutStream *outs )
-{
-    char ch;
-    char token[256];
-    int  nl_break;
-    int  us_break;
-    int in_brace = 0;
-    int maxlen = 255, nsp;
-    int prevnewline = 0;
-    void *fieldlist=0;       // Fieldlist records the entries in the
-                             // name.  NOT FULLY IMPLEMENTED
-
-    // Must handle newline as non-space
-
-    nl_break = ins->breaktable['\n'];
-    us_break = ins->breaktable['_'];
-    ins->SetBreakChar( '\n', BREAK_OTHER );
-    ins->SetBreakChar( '_', BREAK_ALPHA );
-    while (!ins->GetToken( maxlen, token, &nsp )) {
-
-	// Check for \n and do PutNewline instead.
-	if (token[0] == '\n') {
-	  outs->PutToken( nsp, NewlineString );
-          if (prevnewline) break;
-          prevnewline = 1;
-	}
-	else {
-	  outs->PutToken( nsp, token );
-          prevnewline = 0;
-      }
-    }
-    ins->SetBreakChar( '\n', nl_break );
-    ins->SetBreakChar( '_', us_break );
-    return 0;
-}
-
 
 // Read C and/or X
 static int HasX = 0;

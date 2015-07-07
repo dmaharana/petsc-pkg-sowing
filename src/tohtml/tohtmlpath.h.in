@@ -1,35 +1,32 @@
-/* This file is used by configure to set the paths for the 
-   the button bitmaps and colored balls (BMSOURCE),
-   the base definitions (BASEDEF), and the tools to convert 
-   postscript files to gif files 
+/* This file is used by configure to set the paths for the
+   the button images and colored balls (IMAGESOURCE),
+   the base definitions (BASEDEF), and the tools to convert
+   postscript files to gif files
 */
 
-/* There are two kinds of source paths for the pre-defined bitmaps.  
+/* There are two kinds of source paths for the pre-defined images
    One uses a location NOT available to the Web and copies the files into
    the same directory that is holding the generated HTML files.  The
-   code generates RELATIVE locations for the bitmaps.
-  
+   code generates RELATIVE locations for the images.
+
    The other uses a location that IS available to the Web, and generates
    ABSOLUTE locations
  */
-#ifndef BMDEFPATH
-#define BMDEFPATH "@expanded_datadir@"
-/* #define BMDEFPATH "/mcs/www/Images/Icons/" */
-/* #define BMDEFPATH "/mcs/graphics/icons/" */
-#endif
 
-#ifndef BMURL
-#define BMURL "http://www.mcs.anl.gov/Images/Icons/"
-#endif
-
-#ifndef BMSOURCE
-#define BMSOURCE "c:\\bill gropp\\sowing\\share"
+#ifndef PSPATH
+#define PSPATH "@expanded_bindir@/"
 #endif
 
 #ifndef BASEDEF
-#define BASEDEF "c:\\bill gropp\\sowing\\share\\basedefs.txt"
+#define BASEDEF "@expanded_datarootdir@/basedefs.txt"
 #endif
 
-#ifndef PSPATH
-#define PSPATH "c:\\bill gropp\\sowing\\share"
+#ifndef IMAGEDIR
+#define IMAGEDIR "@expanded_datarootdir@/"
+#endif
+
+/* This can be set to the base URL for a directory that contains the image
+   files */
+#ifndef IMAGEURL
+#define IMAGEURL ""
 #endif
