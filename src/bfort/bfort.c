@@ -94,6 +94,10 @@ static int AddDebugAll = 1;
 static int F90Module = 0;
 static FILE *fmodout = 0;
 
+/* if 0, use original argument name. If 1, use a single character name
+   instead*/
+static int useShortNames = 0;
+
 /* Catch serious problems */
 #define MAX_ERR 100
 static int ErrCnt = 0;
@@ -201,6 +205,8 @@ void DoBfortHelp ( char * );
 . -ferr     - Fortran versions return the value of the routine as the last
               argument (an integer).  This is used in MPI and is a not 
 	      uncommon approach for handling error returns.
+. -shortargname - Use short (single character) argument names instead of the
+              name in the C definition.
 . -mpi      - Handle MPI datatypes (some things are pointers by definition)
 . -mpi2     - Handle MPI datatypes using MPI2 converstion functions 
               (some things are pointers by definition)
@@ -335,6 +341,8 @@ int main( int argc, char **argv )
     AnsiHeader		       = SYArgHasName( &argc, argv, 1, "-ansiheader" );
     AddDebugAll                = SYArgHasName( &argc, argv, 1, "-nodebug" );
     IfdefFortranName           = SYArgHasName( &argc, argv, 1, "-anyname" );
+    useShortNames              = SYArgHasName( &argc, argv, 1, "-shortargname");
+
 /* Get replacement names for ifdef items in generated code */
     SYArgGetString( &argc, argv, 1, "-fcaps", FortranCaps, 256 );
     SYArgGetString( &argc, argv, 1, "-fuscore", FortranUscore, 256 );
@@ -393,7 +401,10 @@ int main( int argc, char **argv )
 	if (!errArgNameParm) {
 	    if (SYConfigDBLookup("parm", "errparm",
 				 &errArgNameParm, parmList) != 1) {
-		errArgNameParm = "ierr";
+		if (useShortNames)
+		    errArgNameParm = "z";
+		else
+		    errArgNameParm = "ierr";
 	    }
 	}
 	if (!errArgNameLocal) {
@@ -1689,7 +1700,10 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 {
     int  i;
     char *token = 0;
-    
+    char sname[2];      /* Use for short argnames, if enabled */
+
+    sname[1] = 0;       /* sname is a single character name */
+
     /* 
      * Initial setup.  Fortran is case-insensitive and C is case-sensitive
      * Check that the case-insensitive argument names are distinct, and
@@ -1709,17 +1723,46 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
     } else {
 	token = is_function ? "function" : "subroutine";
     }
-    OutputFortranToken( fout, 8, token );
+    OutputFortranToken( fout, 6, token );
     OutputFortranToken( fout, 1, name );
     OutputFortranToken( fout, 0, "(" );
     for (i=0; i<nargs-1; i++) {
-	OutputFortranToken( fout, 0, args[i].name );
-	OutputFortranToken( fout, 0, ", " );
+	if (useShortNames) {
+	    sname[0] = 'a' + (char)i;
+	    if (i >=25) {
+		ErrCnt++;
+		fprintf(stderr,
+		"Too many arguments in %s for -shortargname option\n", name);
+		if (ErrCnt > MAX_ERR) ABORT("");
+		/* Use a likely to still be valid name just to continue */
+		sname[0] = 'A'+i-25;
+	    }
+	    OutputFortranToken(fout, 0, sname);
+	    OutputFortranToken(fout, 0, ",");
+	}
+	else {
+	    OutputFortranToken( fout, 0, args[i].name );
+	    OutputFortranToken( fout, 0, ", " );
+	}
     }
     if (nargs > 0) {
 	/* Do the last arg, if any */
-	OutputFortranToken( fout, 0, args[nargs-1].name );
-	OutputFortranToken( fout, 0, " " );
+	if (useShortNames) {
+	    sname[0] = 'a' + (char)(nargs-1);
+	    if (nargs-1 >=25) {
+		ErrCnt++;
+		fprintf(stderr,
+		"Too many arguments in %s for -shortargname option\n", name);
+		if (ErrCnt > MAX_ERR) ABORT("");
+		/* Use a likely to still be valid name just to continue */
+		sname[0] = 'A'+nargs-1-25;
+	    }
+	    OutputFortranToken( fout, 0, sname );
+	}
+	else {
+	    OutputFortranToken( fout, 0, args[nargs-1].name );
+	    OutputFortranToken( fout, 0, " " );
+	}
     }
     if (useFerr) {
 	if (nargs > 0) OutputFortranToken( fout, 0, "," );
@@ -1740,7 +1783,21 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 	    OutputFortranToken( fout, 7, 
 				ArgToFortran( types[args[i].type].type ) );
 	}
-	OutputFortranToken( fout, 1, args[i].name );
+	if (useShortNames) {
+	    sname[0] = 'a' + (char)(i);
+	    if (i >=25) {
+		ErrCnt++;
+		fprintf(stderr,
+		"Too many arguments in %s for -shortargname option\n", name);
+		if (ErrCnt > MAX_ERR) ABORT("");
+		/* Use a likely to still be valid name just to continue */
+		sname[0] = 'A'+(char)(i-25);
+	    }
+	    OutputFortranToken( fout, 0, sname );
+	}
+	else {
+	    OutputFortranToken( fout, 1, args[i].name );
+	}
 	if (args[i].has_array && !args[i].void_function) {
 	    OutputFortranToken( fout, 1, "(*)" );
 	}
