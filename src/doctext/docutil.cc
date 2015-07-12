@@ -378,6 +378,41 @@ int DocReadTypeDefinition( InStream *ins, TextOut /*OutStream*/ *outs )
     return 0;
 }
 
+int DocReadDefineDefinition( InStream *ins, TextOut *outs )
+{
+    char ch;
+    char token[256];
+    int  nl_break;
+    int  us_break;
+    int in_brace = 0;
+    int maxlen = 255, nsp;
+    int prevnewline = 0;
+    void *fieldlist=0;       // Fieldlist records the entries in the
+                             // name.  NOT FULLY IMPLEMENTED
+
+    // Must handle newline as non-space
+
+    nl_break = ins->breaktable['\n'];
+    us_break = ins->breaktable['_'];
+    ins->SetBreakChar( '\n', BREAK_OTHER );
+    ins->SetBreakChar( '_', BREAK_ALPHA );
+    while (!ins->GetToken( maxlen, token, &nsp )) {
+	// Check for \n and do PutNewline instead.
+	if (token[0] == '\n') {
+	  outs->PutToken( nsp, NewlineString );
+          if (prevnewline) break;
+          prevnewline = 1;
+	}
+	else {
+	  outs->PutToken( nsp, token );
+          prevnewline = 0;
+      }
+    }
+    ins->SetBreakChar( '\n', nl_break );
+    ins->SetBreakChar( '_', us_break );
+    return 0;
+}
+
 // Read C and/or X
 static int HasX = 0;
 static int HasC = 0;

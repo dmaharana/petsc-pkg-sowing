@@ -424,6 +424,23 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
 	textout->PutOp( "e_synopsis" );
 	ins->SetLoc( position );
     }
+    else if (kind == DEFINE) {
+	// This is a simple way to get a define
+	// definition into a doctext block. 
+	long position;
+	ins->GetLoc( &position );
+	// Skip to func synopsis simply skips to the end of the comment
+	// block
+	if (!at_end)
+	    DocSkipToFuncSynopsis( ins, matchstring );
+	// s_synopsis should do Synopsis: <begin verbatim> and
+	// e_synopsis should do <end verbatim> in most cases.
+	textout->PutOp( "s_synopsis" );
+        OutputIncludeInfo( textout );
+	if (DocReadDefineDefinition( ins, textout )) return 1;
+	textout->PutOp( "e_synopsis" );
+	ins->SetLoc( position );
+    }
     else if (kind == ENUMDEF || kind == STRUCTDEF) {
 	// This is a simple way to get a struct or enum
 	// definition into a doctext block.  Eventually we'll want
