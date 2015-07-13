@@ -398,13 +398,13 @@ int main( int argc, char **argv )
     /* Allow the user to override the variable name used for the error
        parameter. */
     if (useFerr) {
+	/* -shortargname overrides config file for the err arg name */
+	if (! errArgNameParm && useShortNames)
+	    errArgNameParm = "z";
 	if (!errArgNameParm) {
 	    if (SYConfigDBLookup("parm", "errparm",
 				 &errArgNameParm, parmList) != 1) {
-		if (useShortNames)
-		    errArgNameParm = "z";
-		else
-		    errArgNameParm = "ierr";
+		errArgNameParm = "ierr";
 	    }
 	}
 	if (!errArgNameLocal) {
@@ -1735,7 +1735,7 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 		"Too many arguments in %s for -shortargname option\n", name);
 		if (ErrCnt > MAX_ERR) ABORT("");
 		/* Use a likely to still be valid name just to continue */
-		sname[0] = 'A'+i-25;
+		sname[0] = 'A'+(char)(i-25);
 	    }
 	    OutputFortranToken(fout, 0, sname);
 	    OutputFortranToken(fout, 0, ",");
@@ -1793,7 +1793,7 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 		/* Use a likely to still be valid name just to continue */
 		sname[0] = 'A'+(char)(i-25);
 	    }
-	    OutputFortranToken( fout, 0, sname );
+	    OutputFortranToken( fout, 1, sname );  /* space needed here */
 	}
 	else {
 	    OutputFortranToken( fout, 1, args[i].name );
