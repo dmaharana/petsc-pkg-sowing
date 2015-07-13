@@ -2,28 +2,38 @@ ALL: all-redirect
 SHELL = /bin/sh
 BFORT = ../bfort
 
-TESTCOUTPUT = n1f.c n2f.c tstpgmaf.c tstpgma2f.c 
-TESTF90OUTPUT = tstpgmaf90.f90
+TESTCOUTPUT = n1f.c n2f.c tstpgmaf.c tstpgma2f.c tstpgmbf.c
+TESTF90OUTPUT = tstpgmaf90.f90 tstpgmbf90.f90
 TESTOUTPUT = $(TESTCOUTPUT) $(TESTF90OUTPUT)
 
 all-redirect: $(TESTOUTPUT)
 
-n1f.c: n1.c 
+# Note that we set the BFORT_CONFIG_PATH to permit running the tests before
+# installing the program
+
+n1f.c: n1.c $(BFORT)
 	export BFORT_CONFIG_PATH=../../../share && \
 	$(BFORT) -ferr -mnative -anyname -ansi -I pubinc -mpi n1.c
 
-n2f.c: n2.c 
+n2f.c: n2.c $(BFORT)
 	export BFORT_CONFIG_PATH=../../../share && \
 	$(BFORT) -ferr -mapptr -mnative -anyname -ansi -I pubinc -mpi n2.c
 
-tstpgmaf90.f90 tstpgmaf.c: tstpgma.c 
+tstpgmaf90.f90 tstpgmaf.c: tstpgma.c $(BFORT)
 	export BFORT_CONFIG_PATH=../../../share && \
 	$(BFORT) -mnative -ansi -nomsgs -anyname -mapptr -mpi -ferr \
 	         -ptrprefix Petsc -ptr64 HAVE_64BIGS -fcaps HAVE_FORTRAN_CAPS \
 		 -fuscore HAVE_FORTRAN_UNDERSCORE \
 		 -f90modfile tstpgmaf90.f90 tstpgma.c
 
-tstpgma2f.c: tstpgma2.c 
+tstpgmbf90.f90 tstpgmbf.c: tstpgmb.c  $(BFORT)
+	export BFORT_CONFIG_PATH=../../../share && \
+	$(BFORT) -mnative -ansi -nomsgs -anyname -mapptr -mpi -ferr \
+	         -ptrprefix Petsc -ptr64 HAVE_64BIGS -fcaps HAVE_FORTRAN_CAPS \
+		 -fuscore HAVE_FORTRAN_UNDERSCORE -shortargname \
+		 -f90modfile tstpgmbf90.f90 tstpgmb.c
+
+tstpgma2f.c: tstpgma2.c $(BFORT)
 	export BFORT_CONFIG_PATH=../../../share && \
 	$(BFORT) -mnative -ansi -nomsgs -noprofile -anyname -mapptr -mpi \
 		 -mpi2 -ferr -ptrprefix Petsc \
@@ -35,20 +45,20 @@ tstpgma2f.c: tstpgma2.c
 testing: $(TESTOUTPUT)
 	-@for file in $(TESTCOUTPUT) ; do \
 	   file=`basename $$file .c` ; \
-	   if diff -b $$file.c $${file}base.c 2>&1 >/dev/null ; then \
+	   if diff -b $$file.c testref/$${file}.c 2>&1 >/dev/null ; then \
 		: ; \
 	   else \
 		echo "File $$file is different" ; \
-		diff -b  $$file.c $${file}base.c ; \
+		diff -b  $$file.c testref/$${file}.c ; \
 	   fi ; \
 	done
 	-@for file in $(TESTF90OUTPUT) ; do \
 	    file=`basename $$file .f90` ; \
-	    if diff -b $$file.f90 $${file}base.f90 2>&1 >/dev/null ; then \
+	    if diff -b $$file.f90 testref/$${file}.f90 2>&1 >/dev/null ; then \
 		: ; \
 	    else \
 		echo "File $$file is different" ; \
-		diff -b $$file.f90 $${file}base.f90 ; \
+		diff -b $$file.f90 testref/$${file}.f90 ; \
 	    fi ; \
 	done
 
