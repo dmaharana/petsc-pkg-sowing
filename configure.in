@@ -1,11 +1,11 @@
 dnl
 dnl Use the new AC_INIT format
-AC_INIT(sowing,1.1.18,wgropp@illinois.edu,sowing-1.1.18)
+AC_INIT(sowing,1.1.19,wgropp@illinois.edu,sowing-1.1.18)
 dnl We pick autoconf 2.61 because the various 2.x autoconf versions are
 dnl not compatible with each other and this lets us fix on a particular
 dnl set of macros and fixes
-dnl This won't help us, unfortunately, for lack of backward 
-dnl compatibility with later autoconf 2.x 
+dnl This won't help us, unfortunately, for lack of backward
+dnl compatibility with later autoconf 2.x
 dnl Proper use of version numbers requires that anything that breaks
 dnl backward compatibilty increment the major number (e.g., change 2 to 3)
 dnl not just the minor number.  Sigh.
@@ -21,7 +21,7 @@ AC_SUBST(PACKAGE_MAJOR_VERSION)
 AC_SUBST(PACKAGE_MINOR_VERSION)
 AC_SUBST(PACKAGE_SUBMINOR_VERSION)
 
-PAC_ARG_CACHING 
+PAC_ARG_CACHING
 
 CONFIGURE_OPTIONS="$ac_configure_args"
 AC_SUBST(CONFIGURE_OPTIONS)
