@@ -76,9 +76,13 @@ int GetLineNo(void)
 
 
 /*************************************************************************/
-
-char GetSubClass(void)
+/* Return the character after the entry kind.  This character must be
+   either a space or the letter 'C'.  If it is not, set ierr to 1, otherwise
+   set to zero. */
+char GetSubClass(int *ierr)
 {
+    *ierr = 0;
+    if (SubClass != 'C' && SubClass != ' ') *ierr = 1;
     return SubClass;
 }
 int GetIsX11Routine(void)

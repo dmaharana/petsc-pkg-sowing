@@ -32,8 +32,6 @@
    from pointers to void structures.  
  */
 
-/* extern char GetSubClass(); */
-
 static int NoFortMsgs = 1;
 /* NoFortWarnings turns off messages about things not being available in
    Fortran */
@@ -505,12 +503,20 @@ int main( int argc, char **argv )
 	   single, simpler block of definitions.
 	   */
 	while (FoundLeader( fd, routine, &kind )) {
+	    /* Check for a valid leader first */
+	    int cerr;
+	    char subclass = GetSubClass(&cerr);
+	    if (cerr != 0) {
+		fprintf(stderr, "Invalid structured comment.  Did you forget to leave a blank after /* in %s:%d?\n",
+			infilename, GetLineNo());
+		continue;
+	    }
 	    if (!fout) {
 		OutputBuf( &fout, infilename, outfilename, incfd, (char*)0 );
 	    }
-	    if (IfdefFortranName && fout && routine[0] && 
+	    if (IfdefFortranName && fout && routine[0] &&
 		(kind == ROUTINE || kind == MACRO)) {
-		if (GetSubClass() != 'C') 
+		if (subclass != 'C') 
 		    OutputUniversalName( fout, routine );
 		SkipText( fd, routine, infilename, kind );
 	    }
@@ -558,6 +564,7 @@ int main( int argc, char **argv )
 
 	}
 	rewind( fd );
+	ResetLineNo();
 	if (fout) {
 	    fprintf( fout, "\n\n/* Definitions of Fortran Wrapper routines */\n" );
 /* BFS - next lines are to allow C++ code to be called from fortran */
@@ -570,9 +577,17 @@ int main( int argc, char **argv )
 
 	/* Pass 2: Generate the actual code */
 	while (FoundLeader( fd, routine, &kind )) {
-	    /* We need this test first to avoid creating an empty file, 
+	    /* Check for a valid leader first */
+	    int cerr;
+	    char subclass = GetSubClass(&cerr);
+	    if (cerr != 0) {
+		fprintf(stderr, "Invalid structured comment.  Did you forget to leave a blank after /* in %s:%d?\n",
+			infilename, GetLineNo());
+		continue;
+	    }
+	    /* We need this test first to avoid creating an empty file,
 	       particularly for initf.c */
-	    if ((kind == ROUTINE || kind == MACRO) && GetSubClass() == 'C') {
+	    if ((kind == ROUTINE || kind == MACRO) && subclass == 'C') {
 		if (!NoFortMsgs && !NoFortWarnings) {
 		    fprintf( stderr, 
 			     "%s %s(%s) can not be translated into Fortran\n",
@@ -671,10 +686,10 @@ void OutputRoutine( FILE *fin, FILE *fout, char *name, char *filename,
     RETURN_TYPE rt;
     int         nargs, nstrings;
     int         ntypes;
-    int         flag2 = 0;
+    int         flag2 = 0, cerr;
 
     /* Check to see if this is a C-only routine */
-    if (GetSubClass() == 'C') {
+    if (GetSubClass(&cerr) == 'C' && cerr == 0) {
 	if (!NoFortMsgs && !NoFortWarnings) {
 	    fprintf( stderr, "Routine %s(%s) can not be translated into Fortran\n",
 		     name, CurrentFilename );
@@ -904,10 +919,10 @@ void OutputMacro( FILE *fin, FILE *fout, char *routine_name, char *filename )
     int         ntypes;
     int         has_synopsis;
     int         done;
-    int         flag2 = 0;
+    int         flag2 = 0, cerr;
 
 /* Check to see if this is a C-only macro */
-    if (GetSubClass() == 'C') {
+    if (GetSubClass(&cerr) == 'C' && cerr == 0) {
 	if (!NoFortMsgs && !NoFortWarnings) {
 	    fprintf( stderr, "Macro %s(%s) can not be translated into Fortran\n",
 		     routine_name, CurrentFilename );

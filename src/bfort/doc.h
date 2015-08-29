@@ -112,19 +112,19 @@ extern DocOutput  *CreateOutputLaTeX( ), *CreateOutputMan(),
 
 #endif 
 
-extern int DocGetChar ANSI_ARGS(( FILE * ));
-extern void DocUnGetChar ANSI_ARGS(( char, FILE * ));
-extern void DocSetPushback ANSI_ARGS(( char * ));
-extern void ResetLineNo ANSI_ARGS(( void ));
-extern int GetLineNo ANSI_ARGS(( void ));
-extern char GetSubClass ANSI_ARGS(( void ));
-extern int GetIsX11Routine ANSI_ARGS(( void ));
-extern void FindToken ANSI_ARGS(( FILE *, char * ));
-extern int FoundLeader ANSI_ARGS(( FILE *, char *, char * ));
-extern int MatchLeader ANSI_ARGS(( FILE *, char *, char * ));
-extern void CopyIncludeName ANSI_ARGS(( FILE *, char * ));
-extern void ExpandFileName ANSI_ARGS(( char *, int ));
-extern int GetToolsDirLength ANSI_ARGS(( void ));
-extern int MatchTokens ANSI_ARGS(( char *, char * ));
+extern int DocGetChar ( FILE * );
+extern void DocUnGetChar ( char, FILE * );
+extern void DocSetPushback ( char * );
+extern void ResetLineNo ( void );
+extern int GetLineNo ( void );
+extern char GetSubClass ( int * );
+extern int GetIsX11Routine ( void );
+extern void FindToken ( FILE *, char * );
+extern int FoundLeader ( FILE *, char *, char * );
+extern int MatchLeader ( FILE *, char *, char * );
+extern void CopyIncludeName ( FILE *, char * );
+extern void ExpandFileName ( char *, int );
+extern int GetToolsDirLength ( void );
+extern int MatchTokens ( char *, char * );
 
 #endif

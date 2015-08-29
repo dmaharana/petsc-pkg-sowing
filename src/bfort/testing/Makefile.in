@@ -68,3 +68,6 @@ clean:
 Makefile: Makefile.in ../../../config.status
 	(export CONFIG_FILES=src/bfort/testing/Makefile && \
 	cd ../../.. && ./config.status)
+
+#
+# malform.c is used to check that bfort can handle a malformed comment
