@@ -30,3 +30,8 @@ int foo3()
 int foo3a(void)
 {
 }
+/*@ foov - test with a void * argument 
+  @*/
+int foov(void *buf, int len)
+{
+}

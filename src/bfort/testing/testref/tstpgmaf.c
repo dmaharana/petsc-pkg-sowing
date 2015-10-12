@@ -120,6 +120,22 @@ extern void PetscRmPointer(int);
 #endif
 #endif
 
+#ifdef MPI_BUILD_PROFILING
+#ifdef HAVE_FORTRAN_CAPS
+#define foov_ PFOOV
+#elif !defined(HAVE_FORTRAN_UNDERSCORE) && !defined(FORTRANDOUBLEUNDERSCORE)
+#define foov_ pfoov
+#else
+#define foov_ pfoov_
+#endif
+#else
+#ifdef HAVE_FORTRAN_CAPS
+#define foov_ FOOV
+#elif !defined(HAVE_FORTRAN_UNDERSCORE) && !defined(FORTRANDOUBLEUNDERSCORE)
+#define foov_ foov
+#endif
+#endif
+
 
 
 /* Definitions of Fortran Wrapper routines */
@@ -144,6 +160,9 @@ void foo3_(int *__ierr ){
 }
 void foo3a_(int *__ierr ){
 *__ierr = foo3a();
+}
+void foov_(void*buf,int *len, int *__ierr ){
+*__ierr = foov(buf,*len);
 }
 #if defined(__cplusplus)
 }
