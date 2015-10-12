@@ -82,7 +82,7 @@ int GetLineNo(void)
 char GetSubClass(int *ierr)
 {
     *ierr = 0;
-    if (SubClass != 'C' && SubClass != ' ') *ierr = 1;
+    if (SubClass != 'C' && !isspace(SubClass)) *ierr = 1;
     return SubClass;
 }
 int GetIsX11Routine(void)
