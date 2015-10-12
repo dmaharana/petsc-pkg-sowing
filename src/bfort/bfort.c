@@ -66,11 +66,8 @@ static int useFerr = 0;
 static const char *errArgNameParm = 0;
 static const char *errArgNameLocal = 0;
 
-/* Enable the MPI definitions */
+/* Enable the MPI definitions and conversion functions */
 static int isMPI = 0;
-
-/* Enable and use MPI-2 conversion functions */
-static int isMPI2 = 0;
 
 /* Enable profiling name output */
 static int DoProfileNames = 0;
@@ -91,6 +88,7 @@ static int AddDebugAll = 1;
 /* If 0, do not generate Fortran 9x interface module */
 static int F90Module = 0;
 static FILE *fmodout = 0;
+static char *f90headerName = "f90header";
 
 /* if 0, use original argument name. If 1, use a single character name
    instead*/
@@ -205,9 +203,7 @@ void DoBfortHelp ( char * );
 	      uncommon approach for handling error returns.
 . -shortargname - Use short (single character) argument names instead of the
               name in the C definition.
-. -mpi      - Handle MPI datatypes (some things are pointers by definition)
-. -mpi2     - Handle MPI datatypes using MPI2 converstion functions 
-              (some things are pointers by definition)
+. -mpi      - Handle MPI types (some things are pointers by definition)
 . -no_pmpi  - Do not generate PMPI names
 . -pmpi name - Change macro used to select MPI profiling version
 . -noprofile - Turn off the generation of the profiling version
@@ -323,8 +319,9 @@ int main( int argc, char **argv )
     }
     useFerr		   = SYArgHasName( &argc, argv, 1, "-ferr" );
     isMPI		   = SYArgHasName( &argc, argv, 1, "-mpi" );
-    isMPI2      	   = SYArgHasName( &argc, argv, 1, "-mpi2" );
-    if (isMPI || isMPI2) DoProfileNames = 1;
+    /* For backward compatibility, allow -mpi2 */
+    if (SYArgHasName( &argc, argv, 1, "-mpi2" )) isMPI = 1;
+    if (isMPI) DoProfileNames = 1;
     if (SYArgHasName( &argc, argv, 1, "-no_pmpi" ))
 	DoProfileNames = 0;
     TranslateVoidStar	   = SYArgHasName( &argc, argv, 1, "-voidisptr" );
@@ -375,9 +372,9 @@ int main( int argc, char **argv )
 		BASEPATH);
 	exit(1);
     }
-    /* Based on options such as isMPI and isMPI2, load the appropriate
+    /* Based on options such as isMPI, load the appropriate
        config files */
-    if (isMPI || isMPI2) {
+    if (isMPI) {
 	if (SYGetFileFromPathEnv(BASEPATH, "BFORT_CONFIG_PATH", NULL,
 				 "bfort-mpi.txt", fname, 'r')) {
 	    if (!SYReadConfigFile(fname, ' ', '#', configcmds, 4)) {
@@ -456,7 +453,8 @@ int main( int argc, char **argv )
 	}
 	else {
 	  if (!f90mod_skip_header) {
-	      OutputFortranToken( fmodout, 0, "module f90header" );
+	      OutputFortranToken( fmodout, 0, "module" );
+	      OutputFortranToken( fmodout, 1, f90headerName );
 	      OutputFortranToken( fmodout, 0,"\n" );
 	      OutputFortranToken( fmodout, 0, "interface" );
 	      OutputFortranToken( fmodout, 0, "\n" );
@@ -507,8 +505,8 @@ int main( int argc, char **argv )
 	    int cerr;
 	    char subclass = GetSubClass(&cerr);
 	    if (cerr != 0) {
-		fprintf(stderr, "Invalid structured comment.  Did you forget to leave a blank after /* in %s:%d?\n",
-			infilename, GetLineNo());
+		fprintf(stderr, "Invalid structured comment.  Did you forget to leave a blank after /* in %s:%d?  Unexpected character is \"%c\"\n",
+			infilename, GetLineNo(), subclass);
 		continue;
 	    }
 	    if (!fout) {
@@ -581,8 +579,8 @@ int main( int argc, char **argv )
 	    int cerr;
 	    char subclass = GetSubClass(&cerr);
 	    if (cerr != 0) {
-		fprintf(stderr, "Invalid structured comment.  Did you forget to leave a blank after /* in %s:%d?\n",
-			infilename, GetLineNo());
+		fprintf(stderr, "Invalid structured comment.  Did you forget to leave a blank after /* in %s:%d?  Unexpected character is \"%c\"\n",
+			infilename, GetLineNo(), subclass);
 		continue;
 	    }
 	    /* We need this test first to avoid creating an empty file,
@@ -1402,49 +1400,19 @@ int ProcessArgDefs( FILE *fin, FILE *fout, ARG_LIST *args, int nargs,
 char *ToCPointer( char *type, char *name, int implied_star )
 {
     static char buf[300];
-#if 1
     const char *outstr = 0;
     if (SYConfigDBLookup("toptr", type, &outstr, toptrList) == 1 && outstr) {
 	buf[0] = '\n'; buf[1] = '\t';
 	sprintf(&buf[2], outstr, name);
 	return buf;
     }
-#else
-    if (isMPI2) {
-	/* If the type is an MPI type, use the MPI conversion 
-	   function */
-	buf[0] = 0;
-	if (strcmp("MPI_Comm",type) == 0) {
-	    sprintf( buf, "\n\tMPI_Comm_f2c( *(%s) )", name );
-	}
-	else if (strcmp( "MPI_Request",type) == 0) {
-	    sprintf( buf, "\n\tMPI_Request_f2c( *(%s) )", name );
-	}
-	else if (strcmp( "MPI_Group", type) == 0) {
-	    sprintf( buf, "\n\tMPI_Group_f2c( *(%s) )", name );
-	}
-	else if (strcmp( "MPI_Op", type ) == 0) {
-	    sprintf( buf, "\n\tMPI_Op_f2c( *(%s) )", name );
-	}
-	else if (strcmp( "MPI_Datatype", type ) == 0) {
-	    sprintf( buf, "\n\tMPI_Type_f2c( *(%s) )", name );
-	}
-	else if (strcmp( "MPI_Win", type ) == 0) {
-	    sprintf( buf, "\n\tMPI_Win_f2c( *(%s) )", name );
-	}
-	else if (strcmp( "MPI_File", type ) == 0) {
-	    sprintf( buf, "\n\tMPI_File_f2c( *(%s) )", name );
-	}
-	if (buf[0]) return buf;
-    }
-#endif
-    if (MapPointers) 
-	sprintf( buf, "\n\t(%s%s)%sToPointer( *(int*)(%s) )", 
+    if (MapPointers)
+	sprintf( buf, "\n\t(%s%s)%sToPointer( *(int*)(%s) )",
 		 type, !implied_star ? "* " : "", ptrprefix, name );
     else
-	sprintf( buf, "\n\t(%s%s)*((int*)%s)", type, !implied_star ? "* " : "", 
+	sprintf( buf, "\n\t(%s%s)*((int*)%s)", type, !implied_star ? "* " : "",
 		 name );
-    
+
     return buf;
 }
 /*
@@ -1727,6 +1695,24 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
      * includes $1 ($ is permitted in Fortran names (check))
      */
     FixupArgNames( nargs, args );
+
+    /* Check for void * args.  If found, we don't generate an interface,
+       since we can't (at least until F2008+extensions for MPI) */
+    for (i=0; i<nargs; i++) {
+	/* Look for problems types */
+	if (types[args[i].type].is_void ||
+	    (strcmp(types[args[i].type].type,"void") == 0 &&
+	     args[i].void_function == 0) ) {
+	    break;
+	}
+    }
+    if (i != nargs) {
+	if (Debug)
+	    fprintf(stderr,"Found void arg in routine.  Skipping f90 definition\n");
+	/* Found a void argument.  Just return */
+	return;
+    }
+
     curCol = 0;
     /* Known bugs in ansiheader:
        Definitions like     void (*fcn)() fail
@@ -2352,7 +2338,7 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	ungetc( c, fin );
 	if (c == ')') return 0;
     }
-    if (type->is_mpi && isMPI2) {
+    if (type->is_mpi && isMPI) {
 	OutputToken( fout, "MPI_Fint *", nsp );
     }
     else {
@@ -2556,7 +2542,7 @@ fprintf( stderr, "\
 -ferr     - Fortran versions return the value of the routine as the last\n\
             argument (an integer).  This is used in MPI and is a not\n\
             uncommon approach for handling error returns.\n\
--mpi      - Handle MPI datatypes (some things are pointers by definition)\n\
+-mpi      - Handle MPI types (some things are pointers by definition)\n\
             The macro used to determine whether the MPI profiling version\n\
             is being built can be changed with\n\
 \t-pmpi name\tReplace MPI_BUILD_PROFILING\n\
