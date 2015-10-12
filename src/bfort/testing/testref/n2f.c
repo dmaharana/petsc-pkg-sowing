@@ -111,9 +111,9 @@ extern void __RmPointer(int);
 #if defined(__cplusplus)
 extern "C" {
 #endif
-void foobar_(MPI_File f,int *a,double *b, int *__ierr ){
+void foobar_(MPI_Fint * f,int *a,double *b, int *__ierr ){
 *__ierr = foobar(
-	(MPI_File)__ToPointer( *(int*)(f) ),*a,*b);
+	MPI_File_f2c(*(f)),*a,*b);
 }
 void barfoo_( int f[], int *a, int *b, int *__ierr ){
 *__ierr = barfoo(f,a,*b);
