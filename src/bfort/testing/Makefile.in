@@ -36,7 +36,7 @@ tstpgmbf90.f90 tstpgmbf.c: tstpgmb.c  $(BFORT)
 tstpgma2f.c: tstpgma2.c $(BFORT)
 	export BFORT_CONFIG_PATH=../../../share && \
 	$(BFORT) -mnative -ansi -nomsgs -noprofile -anyname -mapptr -mpi \
-		 -mpi2 -ferr -ptrprefix Petsc \
+		 -ferr -ptrprefix Petsc \
 		 -ptr64 PETSC_USE_POINTER_CONVERSION \
 		 -fcaps PETSC_HAVE_FORTRAN_CAPS \
 		 -fuscore PETSC_HAVE_FORTRAN_UNDERSCORE \
