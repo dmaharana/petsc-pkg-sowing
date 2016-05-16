@@ -231,6 +231,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 	if (DebugDoc) outs->Debug(1);
 	textout->SetOutstream( outs );
 	if (DoDosFileNewlines) textout->SetNewlineString( "\r\n" );
+        else textout->SetNewlineString( "\n" );
 	// bof isn't correct ? Why?
 	if (basedir) textout->PutOp( "bof", (char *)basedir );
 	else textout->PutOp( "bof", NULL );
@@ -309,6 +310,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 		// This really needs to set the BOTTOM stream, incase we
 		// have interposed mapref outstream handlers
 		if (DoDosFileNewlines) textout->SetNewlineString( "\r\n" );
+                else textout->SetNewlineString( "\n" );
 // debugging
 		outs->SetBufMode(1); // debugging
 		if (DebugDoc) textout->Debug(1);
