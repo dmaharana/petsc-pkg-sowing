@@ -1,0 +1,12 @@
+man:+Read_t++Read_t++++man+./Read_t.3#Read_t
+man:+foo++foo++++man+./Read_t.3#Read_t
+man:+bar++bar++++man+./Read_t.3#Read_t
+man:+last++last++++man+./Read_t.3#Read_t
+man:+Write_t++Write_t++++man+./Write_t.3#Write_t
+man:+foo++foo++++man+./Write_t.3#Write_t
+man:+bar++bar++++man+./Write_t.3#Write_t
+man:+last++last++++man+./Write_t.3#Write_t
+man:+File_t++File_t++++man+./File_t.3#File_t
+man:+foo1++foo1++++man+./File_t.3#File_t
+man:+buf1++buf1++++man+./File_t.3#File_t
+man:+readfn++readfn++++man+./File_t.3#File_t

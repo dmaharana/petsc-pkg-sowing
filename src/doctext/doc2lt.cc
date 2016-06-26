@@ -10,6 +10,8 @@ int DocOutMacro( InStream *ins, TextOut *text, char *matchstring );
 
 char *IgnoreString = 0;
 
+int verbose = 0;
+
 char NewlineString[3];
 /*D
 doc2lt - program to extract short descriptions in various formats
@@ -153,7 +155,7 @@ int DocOutRoutine( InStream *ins, TextOut *text, char *matchstring )
     char routinename[128];
     int  at_end;
     OutStreamBuf *outdesc, *outsynop;
-    TextOutStrm  *textout;
+    TextOutStrm  *textout, *toutsynop;
 
     outdesc = new OutStreamBuf( 1024 );
     textout = new TextOutStrm( outdesc );
@@ -164,16 +166,20 @@ int DocOutRoutine( InStream *ins, TextOut *text, char *matchstring )
       if (DocSkipToFuncSynopsis( ins, matchstring )) return 1;
 
     outsynop = new OutStreamBuf( 16000 );
-    if (DocReadFuncSynopsis( ins, outsynop )) return 1;
+    toutsynop = new TextOutStrm(outsynop);
+    if (DocReadFuncSynopsis( ins, toutsynop )) return 1;
 
     // Generate the output.
     text->PutOp( "key", routinename );
-    text->PutOp( "synopsis", outsynop->GetBuffer() );
+    // Horrible hack which indicates a design flaw.  Will need to fix
+    // eventually
+    text->PutOp( "synopsis", ((OutStreamBuf *)(toutsynop->out))->GetBuffer() );
     text->PutOp( "definition", outdesc->GetBuffer() );
 
     delete outdesc;
     delete outsynop;
     delete textout;
+    delete toutsynop;
     
     return 0;
 }
@@ -209,3 +215,16 @@ int DocOutMacro( InStream *ins, TextOut *text, char *matchstring )
     
     return 0;
 }
+
+// These are needed for the Enum code, but only for the index case, which
+// is not supported for doc2lt
+const char *GetCurrentRoutinename( void )
+{
+    return "";
+}
+
+const char *GetCurrentFileName( void )
+{
+    return "";
+}
+

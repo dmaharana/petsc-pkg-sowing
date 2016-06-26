@@ -50,7 +50,8 @@ runtests: Makefile
 	$(DOCTEXT) -ignore EXPORT_API -date "2/10/2000" tst2.c
 	$(DOCTEXT) -html \
 	        -defn fhtml.def -outfile tstreg.html tst1.c
-	$(DOCTEXT) -date "2/10/2000" estest.h
+	rm -f es.cit
+	$(DOCTEXT) -date "2/10/2000" -index es.cit estest.h
 
 # This test is not part of the default tests, in part because it generates
 # large number of output files, and in part because the original reason

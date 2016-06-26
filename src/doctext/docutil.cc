@@ -1,4 +1,5 @@
 #include "textout.h"
+#include "tfile.h"
 #include "doc.h"
 #include "docutil.h"
 #include <ctype.h>
@@ -6,13 +7,22 @@
 
 char LeadingString[10] = "";
 
+#define MAX_TOKEN_SIZE 255
+
+static int  skipIgnore(char *token, InStream *ins);
+static void skipBlanks(InStream *ins);
+
+static int outToken(int nsp, char *token, TextOut *outs);
+static void pushBreakchars(InStream *ins);
+static void popBreakchars(InStream *ins);
+
 /*
    This file contains service routines to do things like read
    a description and skip to the Synopsis
  */
 
 /*
-   The description is of the form 
+   The description is of the form
    [space]*<name>[space]*[-]*[text,including\n]\n\n
    That is, two consequtive newlines end the description.
 
@@ -38,14 +48,14 @@ int DocReadName( InStream *ins, char *routinename, int maxlen )
     // <name>
     while (!ins->GetChar( &ch ) && !isspace(ch) && ch != ',' && maxlen) {
 	*routinename++ = ch; maxlen--;
-	}
+    }
     *routinename = 0;
     return 0;
 
 }
 
-// If flag is true, output the - 
-int DocReadDescription( InStream *ins, char *matchstring, 
+// If flag is true, output the "-"
+int DocReadDescription( InStream *ins, char *matchstring,
 			TextOut *textout, int flag, int *at_end )
 {
     char ch;
@@ -65,9 +75,9 @@ int DocReadDescription( InStream *ins, char *matchstring,
     // [-]*
     while (!ins->GetChar( &ch ) && ch == '-') ;
     // This needs to be \- for nroff, --- for LaTeX, and <BR> for HTML.
-    if (flag) 
+    if (flag)
 	textout->PutChar( '-' );
-	
+
     // [space]*
     while (!ins->GetChar( &ch ) && isspace(ch)) {
       if (ch == '\n') {
@@ -146,23 +156,17 @@ int DocSkipToFuncSynopsis( InStream *ins, char *matchstring )
 // if is appears.
 // Also strip any ignore tokens.
 //
-int DocReadFuncSynopsis( InStream *ins, OutStream *outs )
+int DocReadFuncSynopsis( InStream *ins, TextOut /*OutStream */ *outs)
 {
     char ch;
-    char token[256];
-    int  nl_break;
-    int  us_break;
-    int maxlen = 255, nsp;
-    int findingForm = 1;
-    int exitOnSemicolon = 0;
-    int parenCount = 0;
+    char token[MAX_TOKEN_SIZE+1];
+    int  maxlen = MAX_TOKEN_SIZE, nsp;
+    int  findingForm = 1;
+    int  exitOnSemicolon = 0;
+    int  parenCount = 0;
 
     // Must handle newline as non-space
-    
-    nl_break = ins->breaktable['\n'];
-    us_break = ins->breaktable['_'];
-    ins->SetBreakChar( '\n', BREAK_OTHER );
-    ins->SetBreakChar( '_', BREAK_ALPHA );
+    pushBreakchars(ins);
     // Stop when we find *either* a { or a ; 
     // The semicolon test lets us handle prototype definitions
     // Note that a semicolon should stop the scanning ONLY 
@@ -175,18 +179,12 @@ int DocReadFuncSynopsis( InStream *ins, OutStream *outs )
 	if (token[0] == ';') break;
 	exitOnSemicolon = 0;
       }
+
       if (strcmp( token, "register" ) == 0) {
-	/* Skip blanks */
-	while (!ins->GetChar( &ch ) && isspace(ch) ) ;
-	ins->UngetChar( ch );
+	  skipBlanks(ins);
       }
-      else if (IgnoreString && strcmp( token, IgnoreString ) == 0) {
-	/* Skip blanks */
-	while (!ins->GetChar( &ch ) && isspace(ch) ) ;
-	ins->UngetChar( ch );
-      }
-      else {
-	// Check for parenthesis to determine whether we're in 
+      else if (!skipIgnore(token, ins)) {
+	// Check for parenthesis to determine whether we're in
 	// prototype form
 	if (token[0] == '(') parenCount++;
 	else if (token[0] == ')') {
@@ -199,25 +197,18 @@ int DocReadFuncSynopsis( InStream *ins, OutStream *outs )
 	  }
 	  parenCount --;
 	}
-
-	// Check for \n and do PutNewline instead.
-	if (token[0] == '\n') {
-	  outs->PutToken( nsp, NewlineString );
-	}
-	else
-	  outs->PutToken( nsp, token );
+	outToken(nsp, token, outs);
       }
     }
-    ins->SetBreakChar( '\n', nl_break );
-    ins->SetBreakChar( '_', us_break );
+    popBreakchars(ins);
     return 0;
 }
 
-/* 
-   Skip to the START of a macro synopsis.  This is just skipping to 
-   EITHER the end (no synopsis) or finding a line containing 
-   Synopsis:
-   on it 
+/*
+   Skip to the START of a macro synopsis.  This is just skipping to
+   EITHER the end (no synopsis) or finding a line containing
+     Synopsis:
+   on it
  */
 int DocSkipToMacroSynopsis( InStream *ins, char *matchstring )
 {
@@ -334,36 +325,18 @@ int DocReadMacroSynopsis( InStream *ins, char *matchstring,
 int DocReadTypeDefinition( InStream *ins, TextOut /*OutStream*/ *outs )
 {
     char ch;
-    char token[256];
-    int  nl_break;
-    int  us_break;
+    char token[MAX_TOKEN_SIZE+1];
     int in_brace = 0;
-    int maxlen = 255, nsp;
+    int maxlen = MAX_TOKEN_SIZE, nsp;
     void *fieldlist=0;       // Fieldlist records the entries in the
                              // name.  NOT FULLY IMPLEMENTED
 
     // Must handle newline as non-space
-    
-    nl_break = ins->breaktable['\n'];
-    us_break = ins->breaktable['_'];
-    ins->SetBreakChar( '\n', BREAK_OTHER );
-    ins->SetBreakChar( '_', BREAK_ALPHA );
+    pushBreakchars(ins);
     while (!ins->GetToken( maxlen, token, &nsp )) {
-      
-      // Eventually we need to combine these into a single lookup list.
-      if (IgnoreString && strcmp( token, IgnoreString ) == 0) {
-	/* Skip blanks */
-	while (!ins->GetChar( &ch ) && isspace(ch) ) ;
-	ins->UngetChar( ch );
-      }
-      else {
-	// Check for \n and do PutNewline instead.
-	if (token[0] == '\n') {
-	  outs->PutToken( nsp, NewlineString );
-	}
-	else
-	  outs->PutToken( nsp, token );
-      }
+	// Eventually we need to combine these into a single lookup list.
+	if (!skipIgnore(token, ins))
+	    outToken(nsp, token, outs);
 
       // If that was the last character, exit
       if (in_brace == 0 && token[0] == ';') {
@@ -373,43 +346,106 @@ int DocReadTypeDefinition( InStream *ins, TextOut /*OutStream*/ *outs )
       else if (token[0] == '}') in_brace--;
     }
     outs->PutToken( nsp, NewlineString );
-    ins->SetBreakChar( '\n', nl_break );
-    ins->SetBreakChar( '_', us_break );
+    popBreakchars(ins);
     return 0;
 }
 
 int DocReadDefineDefinition( InStream *ins, TextOut *outs )
 {
     char ch;
-    char token[256];
-    int  nl_break;
-    int  us_break;
+    char token[MAX_TOKEN_SIZE+1];
     int in_brace = 0;
-    int maxlen = 255, nsp;
+    int maxlen = MAX_TOKEN_SIZE, nsp;
     int prevnewline = 0;
     void *fieldlist=0;       // Fieldlist records the entries in the
                              // name.  NOT FULLY IMPLEMENTED
 
     // Must handle newline as non-space
-
-    nl_break = ins->breaktable['\n'];
-    us_break = ins->breaktable['_'];
-    ins->SetBreakChar( '\n', BREAK_OTHER );
-    ins->SetBreakChar( '_', BREAK_ALPHA );
+    pushBreakchars(ins);
     while (!ins->GetToken( maxlen, token, &nsp )) {
 	// Check for \n and do PutNewline instead.
-	if (token[0] == '\n') {
-	  outs->PutToken( nsp, NewlineString );
-          if (prevnewline) break;
-          prevnewline = 1;
-	}
-	else {
-	  outs->PutToken( nsp, token );
-          prevnewline = 0;
-      }
+	int sawNewline = outToken(nsp, token, outs);
+	if (sawNewline && prevnewline) break;
+	prevnewline = sawNewline;
     }
-    ins->SetBreakChar( '\n', nl_break );
-    ins->SetBreakChar( '_', us_break );
+    popBreakchars(ins);
+    return 0;
+}
+
+// Read an enum definition, including a optional typedef and
+// optional values for the names.  E.g.,
+//   typedef enum { foo, bar=2, last } name;
+// Must also output the text, and generate additional links
+int DocReadEnumDefinition(InStream *ins, TextOut *outs)
+{
+    char ch;
+    char token[MAX_TOKEN_SIZE+1];
+    int  in_brace = 0;
+    int  maxlen = MAX_TOKEN_SIZE, nsp;
+    int  isEnum = 1;      // Used to check if recognized as enum or typedef enum
+    enum { nxt_val, has_name, has_val } state;
+
+    // Must handle newline as non-space
+    pushBreakchars(ins);
+
+    if (verbose) printf("Reading enum definition\n");
+    // Skip any initial newlines
+    while (!ins->GetToken(maxlen, token, &nsp)) {
+	if (token[0] != '\n') break;
+	if (verbose) printf("Read token :%s:\n",token);
+    }
+    // Look for a leading [typedef] enum.  Return the first token after
+    // enum, or first token that doesn't match
+    if (strcmp(token, "typedef") == 0) {
+	if (verbose) printf("Saw typedef in enum doc\n");
+	outs->PutToken(nsp, token);
+	if (ins->GetToken(maxlen, token, &nsp)) { isEnum = 0; }
+    }
+    if (strcmp(token, "enum") != 0) isEnum = 0;
+    else {
+	if (verbose) printf("Saw enum in enum doc\n");
+	outs->PutToken(nsp, token);
+	ins->GetToken(maxlen, token, &nsp);
+    }
+
+    // Now have first token that is not typedef enum
+    state = nxt_val;
+    do {
+	if (verbose) printf("processing token :%s:\n",token);
+	// Eventually we need to combine these into a single lookup list.
+	if (!skipIgnore(token, ins))
+	    outToken(nsp, token, outs);
+
+	// If that was the last character, exit
+	if (in_brace == 0 && token[0] == ';') {
+	    break;
+	}
+	if (token[0] == '{') in_brace++;
+	else if (token[0] == '}') in_brace--;
+	else if (token[0] == ',') state=nxt_val;
+	else if (in_brace == 1 &&
+		 token[0] != '\n' && token[0] != ',' && isEnum) {
+	    switch (state) {
+	    case nxt_val:
+		state=has_name;
+		if (verbose) printf("enum name = %s\n", token);
+		// possible enum name; format is name [=value], ...
+		IndexFileAdd(token, token, GetCurrentFileName(),
+			     GetCurrentRoutinename());
+		break;
+	    case has_name:
+		if (token[0] == '=') state=has_val; else state=nxt_val;
+		break;
+	    case has_val:
+		state=nxt_val;
+		if (verbose) printf("enum value is %s\n", token);
+		break;
+	    }
+	}
+    } while (!ins->GetToken(maxlen, token, &nsp));
+
+    outs->PutToken(nsp, NewlineString);
+    popBreakchars(ins);
     return 0;
 }
 
@@ -522,9 +558,9 @@ typedef struct {
 
 void ReadEnumName( InStream *ins, OutStream *outs, EnumList *enumlist )
 {
-    char enumname[256];
-    char enumint[256];
-    int maxlen = 255, nsp;
+    char enumname[MAX_TOKEN_SIZE+1];
+    char enumint[MAX_TOKEN_SIZE+1];
+    int maxlen = MAX_TOKEN_SIZE, nsp;
     EnumEntry *newentry = new(EnumEntry);
 
     // Get the name
@@ -563,3 +599,133 @@ void ReadEnumName( InStream *ins, OutStream *outs, EnumList *enumlist )
 }
 
 #endif
+
+// Manage the index and jump file
+static FILE *idxfd=0, *jumpfd=0;
+static const char *idxdir = 0;
+int IndexFileInit(const char idxname[], const char *idxdir_in)
+{
+    idxfd  = fopen(idxname, "a");
+    idxdir = idxdir_in;
+    return 0;
+}
+// Add an index that matches "name" without label (output name) outname,
+// and mapped to outfile#label (or outfile is label is null)
+int IndexFileAdd(const char *name, const char *outname,
+		 const char *outfilename, const char *label)
+{
+    const char *pp;
+    if (!idxfd) return 0;  // Skip if no index file
+    pp = outfilename + strlen(outfilename) - 1;
+    while (pp > outfilename && *pp != '/') pp--;
+    if (*pp == '/') pp++;  // If there was no directory, leave the name alone
+    // The output is
+    //    type (manual) name-to-match name-to-replace directory location
+    if (label)
+	fprintf(idxfd, "man:+%s++%s++++man+%s/%s#%s\n",
+		name, outname, idxdir, pp, label);
+    else
+	fprintf(idxfd, "man:+%s++%s++++man+%s/%s\n",
+		name, outname, idxdir, pp);
+
+    return 0;
+}
+void IndexFileEnd(void)
+{
+    if (idxfd) fclose(idxfd);
+}
+int JumpFileInit(const char *jumpfile)
+{
+    jumpfd = fopen( jumpfile, "a" );
+    return 0;
+}
+int JumpFileAdd(const char *infilename, const char *routine, int linenum)
+{
+    char rpath[1024];
+    if (!jumpfd) return 0;
+    /* If there is a jumpfile, add the line */
+    /* Note that we want an ABSOLUTE path for the infilename */
+    SYGetRealpath(infilename, rpath);
+    fprintf(jumpfd, "%s:%s:%d\n", routine, rpath, linenum);
+    return 0;
+}
+void JumpFileEnd(void)
+{
+    if (jumpfd) fclose(jumpfd);
+}
+
+// --------------------------------------------------------------------------
+// Skip any ignore string (considered as an attribute in a function declaration,
+// such as "EXPORT_API").  Return true if the ignore string was found.
+// Skips any blanks after ignore string if found.
+static int skipIgnore(char *token, InStream *ins)
+{
+    char ch;
+    if (IgnoreString && strcmp(token, IgnoreString) == 0) {
+	skipBlanks(ins);
+	return 1;
+    }
+    return 0;
+}
+// Skip blanks
+static void skipBlanks(InStream *ins)
+{
+    char ch;
+    while (!ins->GetChar(&ch) && isspace(ch) ) ;
+    ins->UngetChar(ch);
+}
+
+// Output token or correct newline.
+// Return 1 if newline seen, 0 otherwise
+static int outToken(int nsp, char *token, TextOut *outs)
+{
+    if (token[0] == '\n') {
+	outs->PutToken(nsp, NewlineString);
+	return 1;
+    }
+    outs->PutToken(nsp, token);
+    return 0;
+}
+
+// --------------------------------------------------------------------------
+// Update the input break table for newlines and underscores
+static int nl_break;
+static int us_break;
+static int breaklevel = 0; // Use to insure not nested
+static void pushBreakchars(InStream *ins)
+{
+    breaklevel++;
+    if (breaklevel != 1) {
+	fprintf(stderr, "Internal error: Nested call to pushBreakchars\n");
+	return;
+    }
+    nl_break = ins->breaktable['\n'];
+    us_break = ins->breaktable['_'];
+    ins->SetBreakChar( '\n', BREAK_OTHER );
+    ins->SetBreakChar( '_', BREAK_ALPHA );
+}
+static void popBreakchars(InStream *ins)
+{
+    breaklevel--;
+    if (breaklevel != 0) {
+	fprintf(stderr, "Internal error: Nested call to popBreakchars\n");
+	return;
+    }
+    ins->SetBreakChar( '\n', nl_break );
+    ins->SetBreakChar( '_', us_break );
+}
+
+// --------------------------------------------------------------------------
+// These routines allow us to add index entries for values in an argument
+// list that point back to the containing page.
+static int qIndexArgs=0;
+void indexArgsSet(int val)
+{
+    qIndexArgs = val;
+}
+void indexArgsPut(const char *argname)
+{
+    if (!qIndexArgs) return;
+    IndexFileAdd(argname, argname, GetCurrentFileName(),
+		 GetCurrentRoutinename());
+}

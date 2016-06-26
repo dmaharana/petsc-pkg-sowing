@@ -1,13 +1,22 @@
 /*E
    Read_t - Enum describing read types
-
  E*/
 typedef enum { foo, bar, last } Read_t;
+
+/*E
+   Write_t - Enum describing write types
+ E*/
+typedef enum { foo, bar=1, last = 3 } Write_t;
 
 /*S
   File_t - Structure describing files
 
++I foo1 - First struct item
+.  buf1 - Second struct item
+-  readfn - Last struct item
+
+
 S*/
-typedef struct { int foo; char *buf;
+typedef struct { int foo1; char *buf1;
 	int (*readfn)( int, void * );
 	} File_t;

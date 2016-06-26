@@ -28,8 +28,10 @@ int DeTabFile = 1;
 const char *IgnoreString = 0;
 
 int DoDosFileNewlines = 0;
-
 char NewlineString[3];
+
+// Set true for debugging
+int verbose = 0;
 
 // Indicate if we're in an argument list or not
 int InArgList = 0;
@@ -66,9 +68,8 @@ int main( int argc, char ** argv )
     int  masterdate;
     const char *heading=0;
     const char *incfile=0;
-    const char *indexfile=0, *infilename=0, *basedir=0, *baseoutfile=0, 
+    const char *indexfile=0, *infilename=0, *basedir=0, *baseoutfile=0,
       *jumpfile=0;
-    FILE *idxfd, *jumpfd;
     const char *idxdir=0, *locdir;
     char kind;
     CmdLine   *cmd;
@@ -205,17 +206,11 @@ in the distribution, where ... is the path to the sowing directory\n\
     /* Open up the file of public includes */    
     SetIncludeFile( incfile );
     
-    /* Open up the index file */    
-    if (indexfile)
-	idxfd = fopen( indexfile, "a" );
-    else
-	idxfd = 0;
+    /* Open up the index file */
+    IndexFileInit(indexfile, idxdir);
 
     /* Open up the jump file */    
-    if (jumpfile)
-	jumpfd = fopen( jumpfile, "a" );
-    else
-	jumpfd = 0;
+    if (jumpfile) JumpFileInit(jumpfile);
 
     /* Open user-selected output file */
     one_per_file = 1;
@@ -320,28 +315,12 @@ in the distribution, where ... is the path to the sowing directory\n\
 	    // "D" object.  Why doesn't this happen?
 	    // Note that we append to the index file - we don't check for,
 	    // or warn about, duplicate entries
-	    if (idxfd) {
-		/* If there is an indexdir, we need to remove all directories
-		   from the filename */
-		char *pp;
-		pp = outfilename + strlen(outfilename) - 1;
-		while (pp > outfilename && *pp != '/') pp--;
-		if (*pp == '/') pp++;  // If there was no directory, leave the name alone
-		fprintf( idxfd, "man:+%s++%s++++man+%s/%s#%s\n", 
-			routine, routine, idxdir, pp, routine );
-		}
-	    if (jumpfd) {
-		char rpath[1024];
-		/* If there is a jumpfile, add the line */
-		/* Note that we want an ABSOLUTE path for the infilename */
-		SYGetRealpath( infilename, rpath );
-		fprintf( jumpfd, "%s:%s:%d\n", routine, rpath, 
-			 ins->GetLineNum() );
-		}
+	    IndexFileAdd(routine, routine, outfilename, routine);
+	    JumpFileAdd(infilename, routine, ins->GetLineNum());
 	    if (!baseoutfile) {
 	      // Why do we need this test?
-	      if (basedir) 
-		textout->PutOp( "bof", (char *)basedir );        
+	      if (basedir)
+		textout->PutOp( "bof", (char *)basedir );
 	      else
 		textout->PutOp( "bof", NULL );
 	    }
@@ -366,6 +345,10 @@ in the distribution, where ... is the path to the sowing directory\n\
       delete outs;
     }
     if (map) delete map;
+
+    // Close index and jump file if they were used.
+    IndexFileEnd();
+    JumpFileEnd();
     return 0;
 }
 
@@ -411,6 +394,7 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
 
     // Next, output the synopsis if any (kind = ROUTINE or kind = MACRO)
     // We might want a flag to indicate in-line synopsis?
+    if (verbose) printf("Synopsis output for kind %c\n", kind);
     if (kind == ROUTINE || kind == PROTOTYPEDEF) {
 	long position;
 	ins->GetLoc( &position );
@@ -420,7 +404,7 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
 	// e_synopsis should do <end verbatim> in most cases.
 	textout->PutOp( "s_synopsis" );
         OutputIncludeInfo( textout );
-	if (DocReadFuncSynopsis( ins, textout->out )) return 1;
+	if (DocReadFuncSynopsis( ins, textout )) return 1;
 	textout->PutOp( "e_synopsis" );
 	ins->SetLoc( position );
     }
@@ -441,7 +425,30 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
 	textout->PutOp( "e_synopsis" );
 	ins->SetLoc( position );
     }
-    else if (kind == ENUMDEF || kind == STRUCTDEF) {
+    else if (kind == ENUMDEF) {
+	// This is a simple way to get an enum definition into a
+	// doctext block.  We handle this differently than a struct
+	// so that we can generate index references for the enum values
+	// as well as the enum type.
+	long position;
+	ins->GetLoc(&position);
+	// Skip to func synopsis simply skips to the end of the comment
+	// block
+	if (!at_end)
+	    DocSkipToFuncSynopsis(ins, matchstring);
+	// s_synopsis should do Synopsis: <begin verbatim> and
+	// e_synopsis should do <end verbatim> in most cases.
+	textout->PutOp("s_synopsis");
+        OutputIncludeInfo(textout);
+	// We may need to process characters even in the "verbatim"
+	// mode in some cases.
+	// FIXME: Pass textout, not textout->out, and indicate verbatim
+	// mode.
+	if (DocReadEnumDefinition(ins, textout)) return 1;
+	textout->PutOp("e_synopsis");
+	ins->SetLoc(position);
+    }
+    else if (kind == STRUCTDEF) {
 	// This is a simple way to get a struct or enum
 	// definition into a doctext block.  Eventually we'll want
 	// to handle enums differently by simply extracting the names
@@ -507,7 +514,7 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
 
     In some source formats, all comments have a leading character string.
     This is the "LeadingString" value, it may be null.
- */        
+ */
 int OutputText( InStream *ins, char *matchstring, 
 		TextOut *textout, char *name, char *level, 
 	        const char *filename, char kind, char *date, 
@@ -515,11 +522,9 @@ int OutputText( InStream *ins, char *matchstring,
 {
     char ch;
     char lineBuffer[MAX_LINE], *lp;
-    int  lastWasNl;
+    int  lastWasNl=1;
     int  doing_synopsis = 0;
     int  at_end, ln;
-	
-    lastWasNl   = 1;
 
     /* Note that the NAME field can't use a font changes */
     lineBuffer[0] = '+';   /* Sentinal on lineBuffer */
@@ -559,7 +564,7 @@ int OutputText( InStream *ins, char *matchstring,
 	      continue;
 	    }
  	    *lp++ = ch; ln++;
-	    
+
 	    /* Copy to end of line; do NOT include the EOL */
 	    while (!ins->GetChar( &ch ) && ch != '\n' && ++ln < MAX_LINE) 
 		*lp++ = ch;
@@ -722,6 +727,16 @@ int HandleArgs( CmdLine *cmd, const char **path, const char **extension,
   }
   else
     strcpy( NewlineString, "\n" );
+
+  // for verbose, its often most convenient to set an environment variable
+  {
+      char *c = getenv("DOCTEXT_VERBOSE");
+      if (c && (strcmp(c,"yes") == 0 || strcmp(c,"YES") == 0 ||
+		strcmp(c,"true") == 0 || strcmp(c,"TRUE") == 0)) {
+	  verbose = 1;
+	  //printf("Setting verbose to true\n");
+      }
+  }
 
   return 0;
 }

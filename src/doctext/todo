@@ -1,0 +1,6 @@
+Add a way to specify: Add each argument name in the following list to
+the index that points back to this page.  This is similar to an ENUM,
+but can be used for values defined as macros
+
+Add a way to read in index information (e.g., for the MPI standard) and
+generate links to the appropriate location.

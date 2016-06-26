@@ -3,9 +3,26 @@
 File_t \-  Structure describing files 
 .SH SYNOPSIS
 .nf
-typedef struct { int foo; char *buf;
- int (*readfn)( int, void * );
- } File_t;
+typedef struct { int foo1; char *buf1;
+        int (*readfn)( int, void * );
+        } File_t;
 .fi
+.PD 0
+.TP
+.B foo1 
+- First struct item
+.PD 1
+.PD 0
+.TP
+.B buf1 
+- Second struct item
+.PD 1
+.PD 0
+.TP
+.B readfn 
+- Last struct item
+.PD 1
+
+
 .SH LOCATION
 estest.h

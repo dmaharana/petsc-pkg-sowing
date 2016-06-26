@@ -4,22 +4,26 @@
     that are indicated by a "." in the first column
 
     Currently, we support
-    . (. space)   for arguments
+    . (. space)   For arguments
+    .I            For arguments; add a index entry to the routine (for
+                  all arguments in the same list, as in +I)
     + and -(space)for argument lists (beginning and end)
-    .\t           for arguments (\t is tab)
+    +I            Like .I, but for the beginning of the list.  I is applied
+                  to every argument
+    .\t           For arguments (\t is tab)
     .N name       Insert the previously defined name block (*N name ... N*)
-    .n            new line at here
+    .n            New line at here
     .vb           Begin verbatim (i.e., LaTeX verbatim or HTML PRE)
     .ve           End verbatim
     .p filename   Picture (PS files)
     .cb           Begin picture caption
-    .ce           End picture caption                   
+    .ce           End picture caption
     .f            Execute user-defined function (e.g., .fin, .fout)
+    .i            item (like a \item in LaTeX)
 
     Adding now
     .Es           Begin enumerate
     .Ee           End enumerate
-    .i            item (like a \item in LaTeX)
     .Bqs          Begin block quote
     .Bqe          End block quote
 
@@ -40,7 +44,8 @@
 #include <stdio.h>
 #include <ctype.h>
 
-/* Handle . name - description (argument definition) 
+#define MAX_ARG_NAME 256
+/* Handle . name - description (argument definition)
  * The old form was
  *     . name description
  * but this doesn't let you handle things like
@@ -57,20 +62,21 @@
  * In addition, an argument list can start with a + instead of a . and
  * end with a - instead of a dot; this allows the argument list as a whole
  * to be formatted.
- */  
+ */
 int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout, 
 		   int *lastWasNl )
 {
     char ch;
     int  at_first = 1;
     int  last_was_backslash;
+    char argname[MAX_ARG_NAME+1], *p=argname;
 
     SkipWhite( ins );
 
     switch (arg_kind) {
     case ARGUMENT_BEGIN:
       InArgList = 1;
-      textout->PutOp( "s_arg_list" );  
+      textout->PutOp( "s_arg_list" );
       /* No break; we fall through to the end */
     case ARGUMENT:
     case ARGUMENT_END:
@@ -90,12 +96,20 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 	  textout->PutChar( '\\' );
 	}
 	last_was_backslash = (ch == '\\');
+	// Keep a copy of the argument
+	if (p - argname < MAX_ARG_NAME)
+	    *p++ = ch;
 	if (!last_was_backslash) {
 	  // We don't output the - (separator)
 	  textout->PutChar( ch );
 	}
 	at_first = 0;
     }
+    p--;                                     // Move p back to last character
+    while (p > argname && isspace(*p)) p--;  // skip back over white space
+    *++p = 0;                                // We always have room for the NULL
+    indexArgsPut(argname);
+
     if (InArgList) {
       textout->PutOp( "e_arg_inlist" );
       textout->PutOp( "s_defn_inlist" );
@@ -106,7 +120,7 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
     }
     SkipWhite( ins );
     while ( !ins->GetChar( &ch ) ) {
-	if (ch != '\n') { 
+	if (ch != '\n') {
 	    textout->PutChar( ch );
 	}
 	else {
@@ -172,6 +186,9 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
     if (arg_kind == ARGUMENT_END) {
       textout->PutOp( "e_arg_list" );
       InArgList = 0;
+      indexArgsSet(0);    // We will also need to set this to 0 for change
+                          // in formatting for lists that don't start with
+                          // the ARGUMENT_BEGIN string
     }
     return 0;
 }
@@ -411,15 +428,19 @@ int ProcessBlockOp( InStream *ins, TextOut *textout, int *lastWasNl )
     return 0;
 }
 
-int ProcessDotFmt( char arg_kind, InStream *ins, TextOut *textout, 
+// Process after a "." command
+int ProcessDotFmt( char arg_kind, InStream *ins, TextOut *textout,
 		   int *lastWasNl )
 {
     char ch;
     extern const char *GetCurrentRoutinename( void );
     extern const char *GetCurrentFileName( void );
-    
+
     if (ins->GetChar( &ch )) return 1;
     switch (ch) {
+        case 'I':
+	          indexArgsSet(1);
+		  return ProcessArgFmt( arg_kind, ins, textout, lastWasNl );
 	case '\t':
 	case ' ': ins->UngetChar( ' ' );
 		  return ProcessArgFmt( arg_kind, ins, textout, lastWasNl );
@@ -435,10 +456,10 @@ int ProcessDotFmt( char arg_kind, InStream *ins, TextOut *textout,
         case 'E': return ProcessEnumerate( ins, textout, lastWasNl );
         case 'B': return ProcessBlockOp( ins, textout, lastWasNl );
         case 'i': return ProcessItemize( ins, textout, lastWasNl );
-    
+
         default:
-    	      fprintf( stderr, "Unknown dot command `%c' in file %s(%s)\n", 
+    	      fprintf( stderr, "Unknown dot command `%c' in file %s(%s)\n",
 		       ch, GetCurrentFileName(), GetCurrentRoutinename() );
     }
-    return 0;    
+    return 0;
 }

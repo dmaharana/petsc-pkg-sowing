@@ -42,6 +42,9 @@ extern const char *IgnoreString;
 // Used for newlines.
 extern char NewlineString[3];
 
+// Used for debugging
+extern int verbose;
+
 // Many of these are KINDS returned by the tests
 #define ROUTINE     '@'
 #define DESCRIPTION 'D'
