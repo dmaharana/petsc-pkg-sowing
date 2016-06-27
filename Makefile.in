@@ -24,7 +24,7 @@ tohtml: libs
 	(cd src/tohtml && ${MAKE} )
 bfort: libs
 	(cd src/bfort && ${MAKE} )
-doctext: 
+doctext:
 	(cd src/textfilt && ${MAKE} )
 	(cd src/doctext && ${MAKE} )
 mapnames:
@@ -169,7 +169,7 @@ distclean:
 VERSION       = @PACKAGE_VERSION@
 # Note: The xattr and chmod commands are needed on Mac OSX to prevent the
 # tar file from containing extraneous and irrelevant files.
-dist:
+sowing-$(VERSION).tar.gz dist:
 	@if [ ! -d tmpdir ] ; then mkdir tmpdir ; fi
 	@rm -rf tmpdir/*
 	cd tmpdir && svn export https://svn.mcs.anl.gov/repos/sowing/trunk sowing
@@ -180,8 +180,16 @@ dist:
 	mv tmpdir/sowing tmpdir/sowing-$(VERSION)
 	cd tmpdir && tar cf - sowing-$(VERSION) | gzip -9 > ../sowing-$(VERSION).tar.gz
 
+# A private publish target
+# This should add the Sowing web pages and documentation
+publish: sowing-$(VERSION).tar.gz
+	rsync -av sowing-$(VERSION).tar.gz wgropp@web.engr.illinois.edu:public_html/projects/software/sowing
+	ssh wgropp@web.engr.illinois.edu 'cd public_html/projects/software/sowing && ln -sf sowing-$(VERSION).tar.gz sowing.tar.gz'
+
 Makefile: Makefile.in config.status
 	./config.status --file=Makefile
 
 bin/bib2html: bin/bib2html.in config.status
 	./config.status --file=bin/bib2html
+
+.PHONY: dist publish clean distclean install uninstall
