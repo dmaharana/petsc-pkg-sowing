@@ -442,8 +442,6 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
         OutputIncludeInfo(textout);
 	// We may need to process characters even in the "verbatim"
 	// mode in some cases.
-	// FIXME: Pass textout, not textout->out, and indicate verbatim
-	// mode.
 	if (DocReadEnumDefinition(ins, textout)) return 1;
 	textout->PutOp("e_synopsis");
 	ins->SetLoc(position);
