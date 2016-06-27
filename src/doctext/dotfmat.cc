@@ -44,7 +44,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#define MAX_ARG_NAME 256
+#define MAX_ARG_NAME 255
 /* Handle . name - description (argument definition)
  * The old form was
  *     . name description
