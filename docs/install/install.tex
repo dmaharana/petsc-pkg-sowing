@@ -1,10 +1,10 @@
 \documentclass[11pt,twoside]{article}
 \usepackage[dvipdfm]{hyperref}
 \usepackage{epsf}
-\usepackage{doctext/tpage}
-\usepackage{/homes/gropp/bin/share/tex/code}
-\usepackage{/homes/gropp/bin/share/tex/fileinclude}
-\usepackage{/homes/gropp/bin/share/tex/urlsimple}
+\usepackage{../texlocal/tpage}
+\usepackage{../texlocal/code}
+\usepackage{../texlocal/fileinclude}
+\usepackage{../texlocal/urlsimple}
 
 %% This is the MPICH installation guide!
 \textwidth=6.0in
@@ -294,9 +294,9 @@ Web (HTML) versions are available from
 \URL{ftp://ftp.mcs.anl.gov/pub/sowing/sowingwww.tar.Z}.  They are available
 at \URL{http://www.mcs.anl.gov/sowing/www}.
 A sample Web page is shown below, and is also available in
-\file{sowing/docs/sowingsite.html} 
+\file{docs/install/sowingsite.html} 
 
-\fileinclude{/home/gropp/sowing-proj/sowing/docs/sowingsite.html}
+\fileinclude{sowingsite.html}
 
 \section{Problems}
 \label{sec:problems}
@@ -506,6 +506,6 @@ Particular thanks goes to Barry Smith and Lois McInnes for valuable help
 in the implementation and development of sowing.
 
 \bibliographystyle{plain}
-\bibliography{doctext/tools}
+\bibliography{../tools}
 
 \end{document}

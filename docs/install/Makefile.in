@@ -5,11 +5,14 @@ prefix = @prefix@
 wwwdir = @wwwdir@
 MKDIR  = @MKDIR@
 
-DOCNAME = doctext
-DOC_FILES = swap.man
+DOCNAME = install
+DOC_FILES = config.txt
 LATEX = latex
 
 all-redirect: $(DOCNAME).pdf $(DOCNAME)/$(DOCNAME).htm
+
+config.txt: ../../configure
+	../../configure --help >config.txt
 
 # Run the first latex into /dev/null to suppress message about missing
 # bib citations and forward references
@@ -40,10 +43,10 @@ install-web: $(DOCNAME)/$(DOCNAME).htm
 install-pdf: $(DOCNAME).pdf
 	cp -p $(DOCNAME).pdf $(wwwdir)/$(DOCNAME).pdf
 
-install: install-prefix install-web install-pdf
-
 install-prefix:
 	if [ ! -d $(wwwdir) ] ; then $(MKDIR) $(wwwdir) ; fi
+
+install: install-prefix install-web install-pdf
 
 .PHONY: clean distclean \
 	install-prefix install-web install-pdf install all-redirect

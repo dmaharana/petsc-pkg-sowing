@@ -5,8 +5,8 @@ prefix = @prefix@
 wwwdir = @wwwdir@
 MKDIR  = @MKDIR@
 
-DOCNAME = doctext
-DOC_FILES = swap.man
+DOCNAME = bfort
+DOC_FILES =
 LATEX = latex
 
 all-redirect: $(DOCNAME).pdf $(DOCNAME)/$(DOCNAME).htm

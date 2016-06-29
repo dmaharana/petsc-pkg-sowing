@@ -1,9 +1,8 @@
 %\tracingall
-\documentclass[twoside]{linfoem}
+\documentclass[twoside]{../texlocal/linfoem}
 \c\usepackage[dvipdfm]{hyperref}
-\usepackage{epsf,refman2,tpage}
-\usepackage{../fileinclude}
-\c\documentstyle[epsf,refman2,twoside,tpage,addtensf,latexinfo]{article} 
+\usepackage{epsf,../texlocal/refman2,../texlocal/tpage}
+\usepackage{../texlocal/fileinclude}
 \c If you have latex2e, then you don't have a complete simulation of LaTeX.
 \c The following detects that and tries to fix it.
 \c Unfortunately, this needs to be done BEFORE loading latexinfo.  And since
@@ -1213,7 +1212,7 @@ Ewing Lusk for valuable suggestions about additional functionality.
 
 \begin{tex}
 \addcontentsline{toc}{section}{References}
-\bibliography{tools}
+\bibliography{../tools}
 \bibliographystyle{plain}
 \end{tex}
 

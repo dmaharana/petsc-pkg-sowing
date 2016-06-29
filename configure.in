@@ -234,7 +234,7 @@ else
     eval expanded_datarootdir=$datarootdir
     prefix="NONE"
 fi
-# Expand again in case the definition referred to another variable (such as 
+# Expand again in case the definition referred to another variable (such as
 # prefix)
 eval expanded_datadir=$expanded_datadir
 eval expanded_datarootdir=$expanded_datarootdir
@@ -247,6 +247,6 @@ COPTIONS="$optflags"
 AC_SUBST(COPTIONS)
 AC_SUBST(CXXOPTIONS)
 
-AC_CONFIG_FILES([Makefile Makerules src/Makefile src/sys/Makefile src/sys/testing/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif bin/bib2html src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile src/bib2html/Makefile docs/Makefile docs/doctext/Makefile include/patchlevel.h include/textfilt/textpath.h])
+AC_CONFIG_FILES([Makefile Makerules src/Makefile src/sys/Makefile src/sys/testing/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif bin/bib2html src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile src/bib2html/Makefile docs/Makefile docs/bfort/Makefile docs/doctext/Makefile docs/install/Makefile docs/tohtml/Makefile include/patchlevel.h include/textfilt/textpath.h])
 AC_CONFIG_COMMANDS([bib2html],[chmod a+x bin/pstoxbm bin/pstogif bin/bib2html],[])
 AC_OUTPUT

@@ -5,8 +5,8 @@ prefix = @prefix@
 wwwdir = @wwwdir@
 MKDIR  = @MKDIR@
 
-DOCNAME = doctext
-DOC_FILES = swap.man
+DOCNAME = tohtml
+DOC_FILES =
 LATEX = latex
 
 all-redirect: $(DOCNAME).pdf $(DOCNAME)/$(DOCNAME).htm
@@ -40,10 +40,10 @@ install-web: $(DOCNAME)/$(DOCNAME).htm
 install-pdf: $(DOCNAME).pdf
 	cp -p $(DOCNAME).pdf $(wwwdir)/$(DOCNAME).pdf
 
-install: install-prefix install-web install-pdf
-
 install-prefix:
 	if [ ! -d $(wwwdir) ] ; then $(MKDIR) $(wwwdir) ; fi
+
+install: install-prefix install-web install-pdf
 
 .PHONY: clean distclean \
 	install-prefix install-web install-pdf install all-redirect
