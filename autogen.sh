@@ -1,5 +1,5 @@
 #! /bin/sh
-# Allow makeconfigure to be used within the dist target
+# Allow autogen.sh to be used within the dist target
 svnco=co
 if test "X$1" = "Xexport" ; then svnco=export ; fi
 # runs autoheader and autoconf with local macros

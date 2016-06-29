@@ -173,7 +173,7 @@ sowing-$(VERSION).tar.gz dist:
 	@if [ ! -d tmpdir ] ; then mkdir tmpdir ; fi
 	@rm -rf tmpdir/*
 	cd tmpdir && svn export https://svn.mcs.anl.gov/repos/sowing/trunk sowing
-	cd tmpdir/sowing && ./makeconfigure export
+	cd tmpdir/sowing && ./autogen.sh export
 	if test "`uname -s`" = "Darwin" ; then \
 	  xattr -rd tmpdir/sowing/* ; \
 	  chmod -RN tmpdir/sowing/* ; fi
