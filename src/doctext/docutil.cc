@@ -603,10 +603,13 @@ void ReadEnumName( InStream *ins, OutStream *outs, EnumList *enumlist )
 // Manage the index and jump file
 static FILE *idxfd=0, *jumpfd=0;
 static const char *idxdir = 0;
-int IndexFileInit(const char idxname[], const char *idxdir_in)
+// Set the index file.  If idxname is null, ignore (no error)
+int IndexFileInit(const char *idxname, const char *idxdir_in)
 {
-    idxfd  = fopen(idxname, "a");
-    idxdir = idxdir_in;
+    if (idxname && idxname[0]) {
+	idxfd  = fopen(idxname, "a");
+	idxdir = idxdir_in;
+    }
     return 0;
 }
 // Add an index that matches "name" without label (output name) outname,
@@ -616,6 +619,11 @@ int IndexFileAdd(const char *name, const char *outname,
 {
     const char *pp;
     if (!idxfd) return 0;  // Skip if no index file
+    // Check for valid input
+    if (!name || name[0] == 0 || !outname || outname[0] == 0) {
+	fprintf(stderr, "Internal error: Empty index entry or name\n");
+	return -1;
+    }
     pp = outfilename + strlen(outfilename) - 1;
     while (pp > outfilename && *pp != '/') pp--;
     if (*pp == '/') pp++;  // If there was no directory, leave the name alone
@@ -636,7 +644,9 @@ void IndexFileEnd(void)
 }
 int JumpFileInit(const char *jumpfile)
 {
-    jumpfd = fopen( jumpfile, "a" );
+    if (jumpfile && jumpfile[0]) {
+	jumpfd = fopen( jumpfile, "a" );
+    }
     return 0;
 }
 int JumpFileAdd(const char *infilename, const char *routine, int linenum)

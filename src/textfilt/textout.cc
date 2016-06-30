@@ -526,11 +526,15 @@ int TextOut::ReadCommands( InStream *ins ){
     ins->SetBreakChar( '_', BREAK_ALPHA );
     ins->SetBreakChar( '+', BREAK_ALPHA );
     while (!ins->GetToken( MAX_NAME, nametoken, &nsp )) {
-	/* Skip comments */
+	// Skip comments
 	if (nametoken[0] == '#') {
 	    ins->SkipLine();
 	    continue;
 	    }
+	// Check for empty lines
+	if (nametoken[0] == 0) {
+	    continue;
+	}
 	// Check for prepend/postpend markers
 	prepend  = 0;
 	postpend = 0;
@@ -540,7 +544,7 @@ int TextOut::ReadCommands( InStream *ins ){
 	    namep++;
 	    }
 	ln = strlen( nametoken );
-	if (nametoken[ln-1] == '+') {
+	if (ln > 0 && nametoken[ln-1] == '+') {
 	    postpend = 1;
 	    nametoken[ln-1] = 0;
 	    }
@@ -548,13 +552,13 @@ int TextOut::ReadCommands( InStream *ins ){
 	    // Should issue error message
 	    postpend = 0;
 	    }
-	   
-	/* Skip the leading space (upto newline) */
+
+	// Skip the leading space (upto newline)
 	while (!ins->GetChar( &ch ) && isspace( ch ) && ch != '\n')
-	  ;
+	    ;
         ins->UngetChar( ch );
-        
-	// Get command string for name 
+
+	// Get command string for name
 	p      = command;
 	maxlen = MAX_COMMAND - 1;
 	// Allow \<space> and \<newline> as special characters.
@@ -562,7 +566,7 @@ int TextOut::ReadCommands( InStream *ins ){
 	    if (ch == '\n') break;
 	    if (ch == '\\') {
 		ins->GetChar( &ch );
-		if (ch == '\n') 
+		if (ch == '\n')
 		    continue;
 		else if (ch != ' ') {
 		    *p++ = '\\';
@@ -573,8 +577,8 @@ int TextOut::ReadCommands( InStream *ins ){
 	    maxlen--;
 	    }
 	if (ch != '\n' && maxlen == 0) {
-	  // command too long
-	  return 1;
+	    // command too long
+	    return 1;
 	}
 	*p = 0;
 	// Add to definitions.

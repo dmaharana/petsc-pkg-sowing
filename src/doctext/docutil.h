@@ -24,7 +24,7 @@ int SkipLeadingString( InStream *, char * );
 char *SkipOverLeadingString( char * );
 void UngetLeadingString( InStream * );
 
-int IndexFileInit(const char idxname[], const char *idxdir_in);
+int IndexFileInit(const char *idxname, const char *idxdir_in);
 int IndexFileAdd(const char *name, const char *outname,
 		 const char *outfilename, const char *label);
 void IndexFileEnd(void);
