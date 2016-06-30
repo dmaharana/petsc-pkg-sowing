@@ -601,7 +601,9 @@ int TextOut::ReadCommands( InStream *ins ){
 	            if (!p) return 1;
 	            strcpy( p, command );
 	            }
-	        delete (char*)entry->extra_data;
+		// Because we'll allocate the space with new name[] above,
+		// we need to use delete[]
+	        delete[] (char*)entry->extra_data;
 	        }
 	    else {
 	            p = new char[strlen(command)+1];

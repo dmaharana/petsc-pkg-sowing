@@ -314,7 +314,7 @@ int OutStreamMap::PutLink( const char *name, SrEntry *entry )
 }
 OutStreamMap::~OutStreamMap()
 {
-    delete activetok;
+    delete[] activetok;
     delete maptable;
     if (next)
 	delete next;
@@ -354,6 +354,7 @@ void TextOutMap::Setup( int in_maxlen )
     last_was_par  = 1;
     debug_flag	  = 0;
     next	  = 0;
+    strcpy( newline_onoutput, "\n" );
     userops	  = 0;
     print_matched = 0;
     ignore_case   = 0;
@@ -366,7 +367,7 @@ void TextOutMap::Setup( int in_maxlen )
 int TextOutMap::SetBreakChar( char c, int kind )
 {
     breaktable[c] = kind;
-	return 0;
+    return 0;
 }
 
 TextOutMap::TextOutMap( TextOut *textout )
@@ -662,7 +663,7 @@ int TextOutMap::PutQuoted( int nsp, const char *token )
 
 TextOutMap::~TextOutMap()
 {
-    delete activetok;
+    delete[] activetok;
     delete maptable;
     if (next)
 	delete next;

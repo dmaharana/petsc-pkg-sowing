@@ -48,12 +48,12 @@ SrList::~SrList()
 	if ((p = table[i])) {
 	    while (p) {
 		n = p->next;
-		delete(p);
+		delete p;
 		p = n;
 		}
 	    }
 	}
-    delete(table);
+    delete[] table;
 }
 
 // val may be null, in which case this returns 0 if the entry is found and
@@ -116,7 +116,7 @@ int SrList::Delete( const char *name )
 		n->next = p->next;
 	    else
 		table[i] = p->next;
-	    delete(p);
+	    delete p;
 	    }
 	n = p;
 	p = p->next;
