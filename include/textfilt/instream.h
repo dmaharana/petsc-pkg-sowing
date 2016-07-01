@@ -13,6 +13,10 @@ extern int InstreamDebugPaths( int );
  * of InStreams 
  */
 class InStream {
+    private:
+    int getSpaces(void);
+    int getQuote(char, int, char*);
+
     public:
     char     breaktable[256];
     char     squote, equote;
@@ -23,6 +27,7 @@ class InStream {
     virtual ~InStream();
     virtual int GetChar( char * );
     virtual int GetToken( int, char *, int * );
+    virtual int GetANToken(int, char *, int *);   // Next token, may be alphanum
     virtual int GetLine( char *, int );
     virtual int UngetChar( char );
     virtual int UngetToken( char * );

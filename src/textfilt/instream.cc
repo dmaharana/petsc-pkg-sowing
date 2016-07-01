@@ -19,9 +19,40 @@ int InstreamDebugPaths( int flag )
   return old_flag;
 }
 
+// Utility routines for GetToken and GetANToken
+int InStream::getSpaces(void)
+{
+    int nsp = 0, err;
+    char c;
+
+    while (!(err = GetChar(&c)) && breaktable[c] == BREAK_SPACE) nsp++;
+    if (!err) UngetChar(c);
+    return nsp;
+}
+
+// Call if a quote character has been seen
+// Return 0 if quote successfully processed, 1 otherwise
+// c is the starting quote character.
+int InStream::getQuote(char c, int maxlen, char *token)
+{
+    int  quote_cnt = 1;
+
+    *token++ = c; maxlen--;
+    while (maxlen && quote_cnt > 0) {
+	if (GetChar(&c)) break;
+	if (c == squote) quote_cnt++;
+	else if (c == equote) quote_cnt--;
+	*token++ = c; maxlen--;
+    }
+    *token = 0;
+    // Purge token if quote_cnt != 0?
+    if (quote_cnt) return 1;
+    return 0;
+}
+
 /*
  * Input streams
- * 
+ *
  * These are more powerful than the default C++ streams because they
  * allow for simple composition of streams and for dynamic definition
  * of tokens (replaces <ctype.h>).
@@ -66,54 +97,93 @@ int InStream::GetChar( char *c )
 	return 1;
 }
 
-int InStream::GetToken( int maxlen, char *token, int *nsp )
+int InStream::GetANToken( int maxlen, char *token, int *nsp )
 {
-    int Nsp;
     int char_class;
     int quote_cnt;
+    int err;
     char c;
-    
-    *nsp = 0;
-    if (GetChar( &c )) return 1;
-    /* Handle leading space first */
-    if (breaktable[c] == BREAK_SPACE) {
-	Nsp = 1;
-	while (!GetChar( &c ) && breaktable[c] == 1) Nsp++;
-	*nsp = Nsp;
-	}
-    /* Quoted strings are handled separately */
+
+    *nsp = getSpaces();
+
+    if (GetChar(&c)) return 1;
+    // Quoted strings are handled separately
     if (c && c == squote) {
-	quote_cnt = 1;
-	*token++ = c; maxlen--;
-	while (maxlen && quote_cnt > 0) {
-	    if (GetChar( &c )) break;
-	    if (c == squote) quote_cnt++;
-	    else if (c == equote) quote_cnt--;
-	    *token++ = c; maxlen--;
-	    }
+	err = getQuote(c, maxlen, token);
+	return err;
+    }
+
+    char_class = breaktable[c];
+    *token++ = c; maxlen--;
+    if (char_class == BREAK_OTHER) {
 	*token = 0;
-	/* Purge token if quote_cnt != 0? */
-	if (quote_cnt) return 1;
-	}
-    else {
-	char_class = breaktable[c];
-	*token++ = c; maxlen--;
-	if (char_class == BREAK_OTHER) {
-	    *token = 0;
-	    return 0;
+	return 0;
+    }
+    if (char_class == BREAK_ALPHA) {
+	while (maxlen) {
+	    if (GetChar( &c )) break;
+	    if (breaktable[c] != BREAK_ALPHA && breaktable[c] != BREAK_DIGIT) {
+		UngetChar( c );
+		break;
 	    }
+	    *token++ = c; maxlen--;
+	}
+    }
+    else {
 	while (maxlen) {
 	    if (GetChar( &c )) break;
 	    if (breaktable[c] != char_class) {
 		UngetChar( c );
 		break;
-		}
-	    *token++ = c; maxlen--;
 	    }
-	*token = 0;
+	    *token++ = c; maxlen--;
 	}
+    }
+    *token = 0;
     return 0;
 }
+
+
+// This is a simple get token routine:
+//   Skip anything labeled a space (i.e., breaktable[c] == BREAK_SPACE)
+//   Return an entire quoted string (use squote, if defined)
+//        FIXME: Allow BREAK_QUOTE
+//   Return a single name (BREAK_ALPHA) or digit (BREAK_DIGIT) token
+//   Return a single character (BREAK_OTHER)
+int InStream::GetToken( int maxlen, char *token, int *nsp )
+{
+    int char_class;
+    int quote_cnt;
+    int err;
+    char c;
+
+    *nsp = getSpaces();
+
+    if (GetChar(&c)) return 1;
+    // Quoted strings are handled separately
+    if (c && c == squote) {
+	err = getQuote(c, maxlen, token);
+	return err;
+    }
+
+    char_class = breaktable[c];
+    *token++ = c; maxlen--;
+    if (char_class == BREAK_OTHER) {
+	*token = 0;
+	return 0;
+    }
+    while (maxlen) {
+	if (GetChar( &c )) break;
+	if (breaktable[c] != char_class) {
+	    UngetChar( c );
+	    break;
+	}
+	*token++ = c; maxlen--;
+    }
+    *token = 0;
+    return 0;
+}
+
 
 int InStream::GetLine( char *line, int maxlen )
 {

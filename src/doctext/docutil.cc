@@ -376,6 +376,8 @@ int DocReadDefineDefinition( InStream *ins, TextOut *outs )
 // optional values for the names.  E.g.,
 //   typedef enum { foo, bar=2, last } name;
 // Must also output the text, and generate additional links
+// Note that enum names can be alphanumeric, so we need to allow
+// tokens that start with alpha but include numeric characters.
 int DocReadEnumDefinition(InStream *ins, TextOut *outs)
 {
     char ch;
@@ -383,7 +385,8 @@ int DocReadEnumDefinition(InStream *ins, TextOut *outs)
     int  in_brace = 0;
     int  maxlen = MAX_TOKEN_SIZE, nsp;
     int  isEnum = 1;      // Used to check if recognized as enum or typedef enum
-    enum { nxt_val, has_name, has_val } state;
+    enum { nxt_val, has_name, has_val, nxt_comment, in_c_cmt, in_c_cmt_end }
+    state, oldstate;
 
     // Must handle newline as non-space
     pushBreakchars(ins);
@@ -408,13 +411,27 @@ int DocReadEnumDefinition(InStream *ins, TextOut *outs)
 	ins->GetToken(maxlen, token, &nsp);
     }
 
+    // We don't start with GetANToken because we must first see an
+    // open brace
     // Now have first token that is not typedef enum
     state = nxt_val;
     do {
 	if (verbose) printf("processing token :%s:\n",token);
+
 	// Eventually we need to combine these into a single lookup list.
 	if (!skipIgnore(token, ins))
 	    outToken(nsp, token, outs);
+
+	// Must first check for processing inside of a C comment
+	if (state == in_c_cmt) {
+	    if (token[0] == '*') state = in_c_cmt_end;
+	    continue;
+	}
+	else if (state == in_c_cmt_end) {
+	    if (token[0] == '/') state = oldstate;
+	    else state = in_c_cmt;
+	    continue;
+	}
 
 	// If that was the last character, exit
 	if (in_brace == 0 && token[0] == ';') {
@@ -423,6 +440,21 @@ int DocReadEnumDefinition(InStream *ins, TextOut *outs)
 	if (token[0] == '{') in_brace++;
 	else if (token[0] == '}') in_brace--;
 	else if (token[0] == ',') state=nxt_val;
+	else if (token[0] == '/') {
+	    if (state != nxt_comment) {
+		oldstate = state;
+		state=nxt_comment;
+	    }
+	    else {
+		// saw a // - skip to end of line
+		char c;
+		while (!ins->GetChar(&c)) {
+		    outs->PutChar(c);
+		    if (c == '\n') break;
+		}
+		state = oldstate;
+	    }
+	}
 	else if (in_brace == 1 &&
 		 token[0] != '\n' && token[0] != ',' && isEnum) {
 	    switch (state) {
@@ -440,9 +472,18 @@ int DocReadEnumDefinition(InStream *ins, TextOut *outs)
 		state=nxt_val;
 		if (verbose) printf("enum value is %s\n", token);
 		break;
+	    case nxt_comment:
+		if (token[0] == '*') {
+		    // Found a C comment - read until closing */
+		    state = in_c_cmt;
+		}
+		else  // Did not start a C comment
+		    state = oldstate;
+		break;
+	    default: break;
 	    }
 	}
-    } while (!ins->GetToken(maxlen, token, &nsp));
+    } while (!ins->GetANToken(maxlen, token, &nsp));
 
     outs->PutToken(nsp, NewlineString);
     popBreakchars(ins);

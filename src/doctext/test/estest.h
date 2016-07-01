@@ -8,6 +8,15 @@ typedef enum { foo, bar, last } Read_t;
  E*/
 typedef enum { foo, bar=1, last = 3 } Write_t;
 
+/*E
+  Norm_t - Enum describing norm types
+  E*/
+typedef enum {
+    NORM2,       /* Some comment */
+    NORM_1_OR_2, // Another comment
+    NORM_Inf,
+} Norm_t;
+
 /*S
   File_t - Structure describing files
 
