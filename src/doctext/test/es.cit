@@ -7,8 +7,10 @@ man:+foo++foo++++man+./Write_t.3#Write_t
 man:+bar++bar++++man+./Write_t.3#Write_t
 man:+last++last++++man+./Write_t.3#Write_t
 man:+Norm_t++Norm_t++++man+./Norm_t.3#Norm_t
+man:+NORM1++NORM1++++man+./Norm_t.3#Norm_t
 man:+NORM2++NORM2++++man+./Norm_t.3#Norm_t
 man:+NORM_1_OR_2++NORM_1_OR_2++++man+./Norm_t.3#Norm_t
+man:+NORM_I++NORM_I++++man+./Norm_t.3#Norm_t
 man:+NORM_Inf++NORM_Inf++++man+./Norm_t.3#Norm_t
 man:+File_t++File_t++++man+./File_t.3#File_t
 man:+foo1++foo1++++man+./File_t.3#File_t

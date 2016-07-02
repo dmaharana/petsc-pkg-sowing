@@ -4,8 +4,10 @@ Norm_t \-  Enum describing norm types
 .SH SYNOPSIS
 .nf
 typedef enum {
-    NORM2,
-    NORM_1_OR_2,
+    NORM1 = -1 ,
+    NORM2,       /* Some comment */
+    NORM_1_OR_2, // Another comment
+    NORM_I = +3,
     NORM_Inf,
 } Norm_t;
 .fi

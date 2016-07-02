@@ -12,8 +12,10 @@ typedef enum { foo, bar=1, last = 3 } Write_t;
   Norm_t - Enum describing norm types
   E*/
 typedef enum {
+    NORM1 = -1 ,
     NORM2,       /* Some comment */
     NORM_1_OR_2, // Another comment
+    NORM_I = +3,
     NORM_Inf,
 } Norm_t;
 

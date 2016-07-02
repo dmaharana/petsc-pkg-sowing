@@ -469,8 +469,14 @@ int DocReadEnumDefinition(InStream *ins, TextOut *outs)
 		if (token[0] == '=') state=has_val; else state=nxt_val;
 		break;
 	    case has_val:
-		state=nxt_val;
-		if (verbose) printf("enum value is %s\n", token);
+		// Allow sign in enum
+		if (token[0] == '+' || token[0] == '-') {
+		    if (verbose) printf("enum sign is %s,", token);
+		}
+		else {
+		    state=nxt_val;
+		    if (verbose) printf("enum value is %s\n", token);
+		}
 		break;
 	    case nxt_comment:
 		if (token[0] == '*') {
