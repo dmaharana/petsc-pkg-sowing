@@ -165,14 +165,19 @@ int OutStreamMap::PutToken( int nsp, const char *token )
 	    toLower(lctok);
 	}
     if (maptable->Lookup( lctok, &entry ) == 0) {
-      // Allow debugging output of all matched tokens
-      // Eventually, we should instead have a "token stream" operation;
-      // then this filter is simply built on top of that token stream
+	// Allow debugging output of all matched tokens
+	// Eventually, we should instead have a "token stream" operation;
+	// then this filter is simply built on top of that token stream
+	// Added an option to print both the key and the value (link)
       if (print_matched) {
-	printf( "%s\n", activetok );
+	  if (print_matched == 1)
+	      printf("%s\n", activetok);
+	  else if (print_matched == 2)
+	      printf("%s\t%s\n", activetok,
+		     ((MapData *)entry->extra_data)->url);
       }
       PutLink( activetok, entry );
-	}
+    }
     else {
 	next->PutToken( 0, activetok );
 	}
@@ -518,7 +523,12 @@ int TextOutMap::PutToken( int nsp, const char *token )
     if (debug) printf( "Looking up :%s:\n", lctok );
     if (maptable->Lookup( lctok, &entry ) == 0) {
         if (debug) printf( "Found entry\n" );
-	else if (print_matched) printf( "%s\n", activetok );
+	else {
+	    if (print_matched == 1) printf( "%s\n", activetok );
+	    else if (print_matched == 2)
+		     printf("%s\t%s\n", activetok,
+			    ((MapData *)entry->extra_data)->url);
+	}
         PutLink( activetok, entry );
 	}
     else {

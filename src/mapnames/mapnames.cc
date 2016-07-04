@@ -8,16 +8,12 @@
 static int debug = 0;
 static int debugStream = 0;
 static int debugMap = 0;
-/* 
-   This is a simple program that uses the in and out streams to 
+/*
+   This is a simple program that uses the in and out streams to
    copy one file to another, with remapping.
 
    Note that we MUST use pointers to an InStream/OutStream for the
    virtual functions to work.  Wierd.
-
-   sles_user_ref
-
-   chameleon_user_ref
 
    Options:
    -map mapname     - Name of map file.  For multiple map files, repeat.
@@ -26,6 +22,9 @@ static int debugMap = 0;
    -printmatch      - Print all matched tokens to stdout.  Use
                       -printmatch -o /dev/null to see ONLY the matched
                       tokens.
+   -printmatch-link - Print all matched tokens and the link to stdout.
+                      Use -printmatch-link -o /dev/null to see ONLY the
+                      matched tokens and their destination links.
    -inhtml          - Input is HTML.  Name mapping won't happen within HTML
                       constructions (e.g., between < and >)
    -nocase          - Ignore case when looking up tokens
@@ -38,7 +37,7 @@ static int debugMap = 0;
   Format of the map file:
   # comments
   <tagtype>:<c>name<c><c>replacement-name<c><c><c><c>ignore<c>URL
-  where <c> is any character (but the same character).  Name  
+  where <c> is any character (but the same character).
  */
 
 class TextOutMapLatex : public TextOutMap {
@@ -77,7 +76,8 @@ int main( int argc, char **argv )
     if (!cmd->HasArg( "-debug_paths" )) (void) InstreamDebugPaths( 1 );
     if (!cmd->HasArg( "-debug" )) debug = 1;
 
-    if (!cmd->HasArg( "-printmatch" )) pflag = 1;
+    if (!cmd->HasArg( "-printmatch-link")) pflag = 2;
+    else if (!cmd->HasArg( "-printmatch" )) pflag = 1;
 
     if (!cmd->HasArg( "-inhtml" )) input_is_html = 1;
 

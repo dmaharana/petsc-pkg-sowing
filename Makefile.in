@@ -150,8 +150,9 @@ testing:
 	(cd src/doctext/test && ${MAKE} testing)
 	(cd src/tohtml/testing && ${MAKE} testing)
 	(cd src/bib2html && ${MAKE} testing)
+	(cd src/mapnames && ${MAKE} testing)
 
-configure: configure.in 
+configure: configure.in
 	autoheader
 	autoconf
 

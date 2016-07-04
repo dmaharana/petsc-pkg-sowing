@@ -20,13 +20,14 @@ default: $(EXECS)
 
 mapnames: mapnames.o
 	$(CXX_LINK) -o mapnames mapnames.o $(LIBS)
+TESTOUTPUT = test1.html test1.tex test1nc.tex test1nc.html test1.pmap
 
 doc_SOURCES =
 wwwpages:
 manpages:
 
 clean:
-	/bin/rm -f *.o *~ $(EXECS) ccc
+	/bin/rm -f *.o *~ $(EXECS) ccc $(TESTOUTPUT)
 distclean: clean
 	rm -f Makefile
 
@@ -35,7 +36,9 @@ testing: mapnames test1
 	cat test1 | ./mapnames -map map1.cit -latexout -o test1.tex
 	cat test1 | ./mapnames -nocase -ignorerepl -map map1.cit -latexout -o test1nc.tex
 	cat test1 | ./mapnames -nocase -ignorerepl -map map1.cit -o test1nc.html
-	@for file in test1.html test1.tex test1nc.tex test1nc.html ; do \
+	cat test1 | ./mapnames -map map1.cit -printmatch-link -o /dev/null \
+		> test1.pmap
+	@for file in $(TESTOUTPUT) ; do \
 	    if diff -b $$file test/$$file >/dev/null 2>&1 ; then : ; else \
 	    echo "Failure in test for $$file" ; \
 	    diff -b $$file test/$$file ; fi ; \
