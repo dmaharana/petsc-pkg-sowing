@@ -37,3 +37,4 @@ picture    \centerline{\epsf{%1}}
 mantitle   \mantitle{%1}{%2}{%3}%n\manname{%1}%n
 mantitlemany   \mantitle{%1}{%2}{%3}%n\manname{%1}%n
 location   %n\location{%1}%n
+anchor	   \hypertarget{%1}{}%n

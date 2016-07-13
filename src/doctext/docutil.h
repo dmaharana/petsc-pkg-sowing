@@ -33,6 +33,6 @@ int JumpFileAdd(const char *infilename, const char *routine, int linenum);
 void JumpFileEnd(void);
 
 void indexArgsSet(int val);
-void indexArgsPut(const char *argname);
+int indexArgsPut(const char *argname);
 
 #endif

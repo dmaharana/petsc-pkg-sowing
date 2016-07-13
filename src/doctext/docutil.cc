@@ -780,9 +780,12 @@ void indexArgsSet(int val)
 {
     qIndexArgs = val;
 }
-void indexArgsPut(const char *argname)
+// Return 1 if an index entry is added, 0 otherwise
+int indexArgsPut(const char *argname)
 {
-    if (!qIndexArgs) return;
-    IndexFileAdd(argname, argname, GetCurrentFileName(),
-		 GetCurrentRoutinename());
+    if (!qIndexArgs) return 0;
+    // Use argname as the anchor name
+    IndexFileAdd(argname, argname, GetCurrentFileName(), argname);
+    // GetCurrentRoutinename());
+    return 1;
 }

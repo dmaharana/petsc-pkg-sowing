@@ -108,7 +108,11 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
     p--;                                     // Move p back to last character
     while (p > argname && isspace(*p)) p--;  // skip back over white space
     *++p = 0;                                // We always have room for the NULL
-    indexArgsPut(argname);
+    // If this arg is indexed, and we are generating HTML, we
+    // should generate and HTML anchor to use in the index.
+    if (indexArgsPut(argname)) {
+	textout->PutOp("anchor", argname);
+    }
 
     if (InArgList) {
       textout->PutOp( "e_arg_inlist" );

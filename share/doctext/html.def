@@ -55,4 +55,5 @@ mantitle   <TITLE>%1</TITLE>%n</HEAD>%n<BODY BGCOLOR="FFFFFF">%n<A NAME="%1"><H1
 mantitlemany   %n<A NAME="%1"><H1>%1</H1></A>%n
 # bofmanyend is needed for mantitlemany
 bofmanyend  <TITLE>Manual Pages</TITLE>%n</HEAD>%n<BODY BGCOLOR="FFFFFF">%n
+anchor	    <a name="%1"></a>
 
