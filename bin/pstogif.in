@@ -164,7 +164,10 @@ fi
 rm -f $TMPDIR/$$-${BASE}.ppm $TMPDIR/$$-${BASE}.pnm
 rm -f $TMPDIR/$$-${BASE}.[1-9]*ppm
 if [ "$BASE" = ".foo" ] ; then
+    # Remove a copy that may have been created in the TMPDIR
     rm -f $TMPDIR/$$-.foo.ps
+    # Remove the copy in this directory
+    rm -f .foo.ps
 fi
 
 exit 0
