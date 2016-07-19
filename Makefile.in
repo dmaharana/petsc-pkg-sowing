@@ -184,8 +184,8 @@ sowing-$(VERSION).tar.gz dist:
 # A private publish target
 # This should add the Sowing web pages and documentation
 publish: sowing-$(VERSION).tar.gz
-	rsync -av sowing-$(VERSION).tar.gz wgropp@web.engr.illinois.edu:public_html/projects/software/sowing
-	ssh wgropp@web.engr.illinois.edu 'cd public_html/projects/software/sowing && ln -sf sowing-$(VERSION).tar.gz sowing.tar.gz'
+	rsync -av sowing-$(VERSION).tar.gz wgropp@webhost.engr.illinois.edu:public_html/projects/software/sowing
+	ssh wgropp@webhost.engr.illinois.edu 'cd public_html/projects/software/sowing && ln -sf sowing-$(VERSION).tar.gz sowing.tar.gz'
 
 Makefile: Makefile.in config.status
 	./config.status --file=Makefile
