@@ -66,6 +66,25 @@ static int useFerr = 0;
 static const char *errArgNameParm = 0;
 static const char *errArgNameLocal = 0;
 
+/* Handle character string arguments
+   Note that there is no standard for how Fortran passing variables of
+   type character*(*).  However, many Fortran implementations implement
+   strings by passing a pointer to the character storage at the location
+   of the argument in the argument list, and append a value int with
+   the length at the end of the argument list.
+
+   If stringStyle is 1, add an argument with the length of the string
+   at the end of the argument list with the length of the string,
+   as passed by Fortran.  This is the most common approach by Fortran
+   compilers.
+
+   Note that in addition to this, it may be necessary to copy the data
+   either into or out of the Fortran storage (MPICH does this with its
+   own Fortran interface generator).
+ */
+static const char *stringArgLenName = "cl";
+static int   stringStyle = 1;
+
 /* Enable the MPI definitions and conversion functions */
 static int isMPI = 0;
 
@@ -99,7 +118,7 @@ static int useShortNames = 0;
 static int ErrCnt = 0;
 
 /* Debugging for development */
-static int Debug = 0;
+static int Debug = 1;
 #define DBG(a) {if (Debug) printf(a);}
 #define DBG2(a,b) {if (Debug)printf(a,b);}
 
@@ -199,7 +218,7 @@ void DoBfortHelp ( char * );
                systems, by adding C preprocessor names (see below).  These
                names can be changed with -fcaps, -fuscore, and -fduscore.
 . -ferr     - Fortran versions return the value of the routine as the last
-              argument (an integer).  This is used in MPI and is a not 
+              argument (an integer).  This is used in MPI and is a not
 	      uncommon approach for handling error returns.
 . -shortargname - Use short (single character) argument names instead of the
               name in the C definition.
@@ -212,9 +231,9 @@ void DoBfortHelp ( char * );
 . -ansi      - C routines use ANSI prototype form rather than K&R C form
 . -noansi    - C routines use K&R C form (no prototypes)
 . -ansiheader - Generate ANSI-C style headers instead of Fortran interfaces
-  This will be useful for creating ANSI prototypes   without ANSI-fying the 
+  This is useful for creating ANSI prototypes   without ANSI-fying the
   code.  These use a trick to provide both ANSI and non-ANSI prototypes.
-  The declarations are wrapped in "ANSI_ARGS", the definition of which 
+  The declarations are wrapped in "ANSI_ARGS", the definition of which
   should be
 .vb
   #ifdef ANSI_ARG
@@ -1127,6 +1146,7 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
     int             nargs, in_args;
     TYPE_LIST       *curtype;
     int             outparen;
+    int             nstrings = 0;
 
     ProcessFunctionType( fin, fout, filename, is_function, name, rt, flag );
 
@@ -1179,13 +1199,19 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 	    break;
 	}
 	args[nargs].type = ntypes-1;
-	if (curtype && curtype->type_has_star)
-	    args[nargs].has_star++;
 	if (curtype) {
-/* added by BS */
+	    /* Propagate information about the type to the specific argument */
+	    if (curtype->type_has_star)
+		args[nargs].has_star++;
 	    if (curtype->implied_star)
 		args[nargs].implied_star++;
 	    args[nargs].is_native = curtype->is_native;
+	    args[nargs].is_char   = curtype->is_char;
+	    args[nargs].is_FILE   = curtype->is_FILE;
+	    if (args[nargs].is_char) {
+		DBG("Found a string (is_char)\n");
+		nstrings++;
+	    }
 	}
 	if (nargs >= MAX_ARGS) {
 	    ErrCnt++;
@@ -1213,6 +1239,13 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 		    else {
 			fprintf( fout, "%s%s ",
 				 (nargs > 0) ? ", " : "", errArgNameLocal );
+		    }
+		}
+		/* Add string length arguments */
+		if (nstrings && stringStyle == 1) {
+		    int i;
+		    for (i=0; i<nstrings; i++) {
+			fprintf(fout, ",%s%d", stringArgLenName, i);
 		    }
 		}
 		fputs( ")", fout ); 
@@ -1268,8 +1301,8 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
    
    Returns 1 if it saw the end of a macro, 0 otherwise (see OutputMacro)
  */
-int ProcessArgDefs( FILE *fin, FILE *fout, ARG_LIST *args, int nargs, 
-		    TYPE_LIST *types, int *Ntypes, int *Nstrings, int flag, 
+int ProcessArgDefs( FILE *fin, FILE *fout, ARG_LIST *args, int nargs,
+		    TYPE_LIST *types, int *Ntypes, int *Nstrings, int flag,
 		    char *name, int flag2 )
 {
     int      c;
@@ -1282,9 +1315,9 @@ int ProcessArgDefs( FILE *fin, FILE *fout, ARG_LIST *args, int nargs,
     TYPE_LIST *curtype;
     ARG_LIST  narg;
 
-    newline		  = 1;
-    newstmt		  = 1;
+    newline	  = 1;
     if (flag) newline = 0;
+    newstmt	  = 1;
     nstrings	  = 0;
 /* The default type is int */
     ntypes		  = 1;
@@ -1330,8 +1363,10 @@ int ProcessArgDefs( FILE *fin, FILE *fout, ARG_LIST *args, int nargs,
 	    args[i].is_native        = curtype->is_native;
 	    if (curtype->type_has_star)
 		args[i].has_star++;
-	    if (args[i].is_char)
+	    if (args[i].is_char) {
+		DBG("Found a string (is_char)\n");
 		nstrings++;
+	    }
 	    c = FindNextANToken( fin, token, &nsp );
 	    OutputToken( fout, token, nsp );
 	    if (c == ';') break;
@@ -1471,8 +1506,13 @@ void PrintBody( FILE *fout, int is_function, char *name, int nstrings,
 		   name */
 		fputs( "void", fout );
 	}
-	if (nstrings && !AnsiHeader) {
-	    for (i=1; i<nstrings; i++) fprintf( fout, ",d%d", i );
+	if (nstrings && stringStyle == 1/* && !AnsiHeader*/) {
+	    if (AnsiHeader) {
+		for (i=1; i<nstrings; i++) fprintf( fout, ",int d%d", i );
+	    }
+	    else {
+		for (i=1; i<nstrings; i++) fprintf( fout, ",d%d", i );
+	    }
 	    /* Undefined variables are int's by default */
 	    /* fprintf( fout, "int d0" );
 	       for (i=1; i<nstrings; i++) fprintf( fout, ",d%d", i );
@@ -1485,8 +1525,14 @@ void PrintBody( FILE *fout, int is_function, char *name, int nstrings,
 	    fputs( ");\n", fout );
 	    return;
 	}
-	else
+	else {
 	    fputs( "\n", fout );
+	    if (nstrings) {
+		fprintf( fout, "int d0" );
+		for (i=1; i<nstrings; i++) fprintf( fout, ",d%d", i );
+		fputs( ";\n", fout );
+	    }
+	}
     }
     fputs( "{\n", fout );
 /* Look for special-case translations (currently, "FILE") */
@@ -2144,8 +2190,14 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    ABORT( "Cannot append token to typename" );
 	}
 	/* Look for known names */
-	if (strcmp( token, "char" ) == 0) type->is_char = 1;
-	if (strcmp( token, "FILE" ) == 0) type->is_FILE = 1;
+	if (strcmp( token, "char" ) == 0) {
+	    DBG("Saw char\n");
+	    type->is_char = 1;
+	}
+	if (strcmp( token, "FILE" ) == 0) {
+	    DBG("Saw FILE\n");
+	    type->is_FILE = 1;
+	}
 	/* FIXME: We should put these names in an array, and provide
 	   a way to add to that array from a configuration file,
 	   to make it easier to customize and extend this code */
@@ -2297,14 +2349,15 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    */
 	    if (strcmp( token, "MPI_Comm" ) == 0       ||
 		strcmp( token, "MPI_Request" ) == 0    ||
-		strcmp( token, "MPI_Group" ) == 0      || 
-		strcmp( token, "MPI_Op" ) == 0         ||    
-		strcmp( token, "MPI_Uop" ) == 0        ||    
+		strcmp( token, "MPI_Group" ) == 0      ||
+		strcmp( token, "MPI_Op" ) == 0         ||
+		strcmp( token, "MPI_Uop" ) == 0        ||
 		strcmp( token, "MPI_File" ) == 0       ||
-		strcmp( token, "MPI_Win"  ) == 0       || 
+		strcmp( token, "MPI_Win"  ) == 0       ||
 		strcmp( token, "MPI_Datatype" ) == 0   ||
 		strcmp( token, "MPI_Errhandler" ) == 0 ||
 		strcmp( token, "MPI_Info" ) == 0       ||
+		strcmp( token, "MPI_Message" ) == 0    ||
 		0) {
 		type->is_mpi = 1;
 		type->type_has_star = 1;
@@ -2542,15 +2595,20 @@ fprintf( stderr, "\
 -ferr     - Fortran versions return the value of the routine as the last\n\
             argument (an integer).  This is used in MPI and is a not\n\
             uncommon approach for handling error returns.\n\
+-shortargname - Use short (single character) argument names instead of the\n\
+            name in the C definition.\n\
 -mpi      - Handle MPI types (some things are pointers by definition)\n\
             The macro used to determine whether the MPI profiling version\n\
             is being built can be changed with\n\
+\t-no_pmpi\tDo not generate PMPI names\n\
 \t-pmpi name\tReplace MPI_BUILD_PROFILING\n\
+\t-noprofile\tTurn off the generation of the profiling version\n\
 -mnative  - Multiple indirects are native datatypes (no coercion)\n\
 -voidisptr - Consider \"void *\" as a pointer to a structure.\n\
--ansi      - Input files use ANSI-C prototype form instead of K&R\n\
+-ansi      - Input files use ANSI-C prototype form instead of K&R (default)\n\
+-noansi    - C routines use K&R C form (no prototypes)\n\
 -ansiheader - Generate ANSI-C style headers instead of Fortran interfaces\n\
-This will be useful for creating ANSI prototypes without ANSI-fying the\n\
+This is useful for creating ANSI prototypes without ANSI-fying the\n\
 code.  The output is in <filename>.ansi .\n\
 " );
 }
