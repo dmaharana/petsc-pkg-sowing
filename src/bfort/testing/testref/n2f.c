@@ -111,22 +111,22 @@ extern void __RmPointer(int);
 #if defined(__cplusplus)
 extern "C" {
 #endif
-void foobar_(MPI_Fint * f,int *a,double *b, int *__ierr ){
+void foobar_(MPI_Fint * f,int *a,double *b, int *__ierr){
 *__ierr = foobar(
 	MPI_File_f2c(*(f)),*a,*b);
 }
-void barfoo_( int f[], int *a, int *b, int *__ierr ){
+void barfoo_( int f[], int *a, int *b, int *__ierr){
 *__ierr = barfoo(f,a,*b);
 }
 void barlong_( int aLongArrayName[], int *alongArgumentName,
-      double *anotherLongArgumentName,int *thisIsAnotherLongName, int *__ierr ){
+      double *anotherLongArgumentName,int *thisIsAnotherLongName, int *__ierr){
 *__ierr = barlong(aLongArrayName,alongArgumentName,anotherLongArgumentName,thisIsAnotherLongName);
 }
-double  mixedargs_( int *M, int *m,void*p,void* c, int *__ierr ){
+double  mixedargs_( int *M, int *m,void*p,void* c, int *__ierr){
 *__ierr = mixedargs(*M,*m,p,c);
 }
 double  mixedargs2_(int *Mlonger, int *M,float *m1, int *m,void*p,
-     void* c, int *__ierr ){
+     void* c, int *__ierr){
 *__ierr = mixedargs2(*Mlonger,*M,*m1,*m,p,c);
 }
 #if defined(__cplusplus)

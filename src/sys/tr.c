@@ -662,9 +662,9 @@ char *trstrdup( const char *str, int lineno, const char *fname )
   merging them.  
  */
 /* Forward refs for these local routines */
-TRSPACE *trImerge ANSI_ARGS(( TRSPACE *, TRSPACE * ));
-TRSPACE *trIsort  ANSI_ARGS(( TRSPACE *, int ));
-void trSortBlocks ANSI_ARGS(( void ));
+TRSPACE *trImerge(TRSPACE *, TRSPACE *);
+TRSPACE *trIsort(TRSPACE *, int);
+void trSortBlocks(void);
  
 /* Merge two lists, returning the head of the merged list */
 TRSPACE *trImerge( TRSPACE *l1, TRSPACE *l2 )

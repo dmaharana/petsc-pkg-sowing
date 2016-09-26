@@ -5,15 +5,6 @@
 /* #include <stdlib.h> */
 #include <ctype.h>
 
-#ifdef ANSI_ARGS
-#undef ANSI_ARGS
-#endif
-#ifdef __STDC__
-#define ANSI_ARGS(a) a
-#else
-#define ANSI_ARGS(a) ()
-#endif
-
 #define MAX_FILE_SIZE    1024
 #define MAX_ROUTINE_NAME 64
 #define MAX_LINE         512

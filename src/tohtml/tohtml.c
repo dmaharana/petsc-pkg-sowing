@@ -1047,6 +1047,12 @@ void WriteBeginPage( FILE *fpout )
     if (DebugOutput) printf( "Set InOutputBody and wrotebody to 1\n" );
 
     if (DebugOutput) fprintf( stdout, "WriteBeginPage\n" );
+    /* TODO:
+       Option to add additional information into the <head> element.
+       For example, this can be used to add something like
+       <link rel="stylesheet" href="/css/main.css">
+       or meta data.  This should be stored in the definitions.
+     */
     /* Should parameterize this - command in basedefs? */
     fprintf( fpout, "</head>%s<body style=\"background-color:#FFFFFF\">%s", 
 	     NewLineString, NewLineString );

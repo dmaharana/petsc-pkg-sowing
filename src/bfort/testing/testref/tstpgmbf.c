@@ -126,16 +126,16 @@ extern void PetscRmPointer(int);
 #if defined(__cplusplus)
 extern "C" {
 #endif
-void simple_(int *nrows,double *result, int *__ierr ){
+void simple_(int *nrows,double *result, int *__ierr){
 *__ierr = simple(*nrows,*result);
 }
-void  foo1_(int *nr,char *nc,void(*func)(), int *__ierr ){
+void  foo1_(int *nr,char *nc,void(*func)(), int *__ierr, cl0){
 foo1(*nr,*nc,func);
 }
-void  foo1a_(int *nr,char *nc,void(*func2)(int, char, MyType *a), int *__ierr ){
+void  foo1a_(int *nr,char *nc,void(*func2)(int, char, MyType *a), int *__ierr, cl0){
 foo1a(*nr,*nc,func2);
 }
-int foo2_(MyType *input_type,short *Cval, int *__ierr ){
+int foo2_(MyType *input_type,short *Cval, int *__ierr){
 *__ierr = foo2(
 	(MyType* )PetscToPointer( *(int*)(input_type) ),*Cval);
 }

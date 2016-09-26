@@ -28,7 +28,7 @@
 #if defined(__cplusplus)
 extern "C" {
 #endif
-void  foobar_(int *a,double *b, int *__ierr ){
+void  foobar_(int *a,double *b, int *__ierr){
 foobar(*a,*b);
 }
 #if defined(__cplusplus)

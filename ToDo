@@ -30,3 +30,12 @@ Tohtml changes needed for MPI-3 document:
        7. HTML paragraphs are now <p>....</p>, not a separator.  Need to
        change the generated HTML to match.
        
+
+Bug Fixes needed
+
+Mapnames SEGVs on non-ASCII hyphens (en-dashes?).  These could be in a
+comment.
+
+bfort: Does not handle routines with char arguments correctly.  The short fix
+is to not generate an incorrect interface in that case; the long fix is
+to generate one along the lines of the Fortran stub generator used in MPICH.
