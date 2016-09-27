@@ -2,7 +2,7 @@ ALL: all-redirect
 SHELL = /bin/sh
 BFORT = ../bfort
 
-TESTCOUTPUT = n1f.c n2f.c tstpgmaf.c tstpgma2f.c tstpgmbf.c
+TESTCOUTPUT = n1f.c n2f.c tstpgmaf.c tstpgma2f.c tstpgmbf.c tstcf.c
 TESTF90OUTPUT = tstpgmaf90.f90 tstpgmbf90.f90
 TESTOUTPUT = $(TESTCOUTPUT) $(TESTF90OUTPUT)
 
@@ -13,29 +13,33 @@ all-redirect: $(TESTOUTPUT)
 
 n1f.c: n1.c $(BFORT)
 	export BFORT_CONFIG_PATH=../../../share && \
-	$(BFORT) -ferr -mnative -anyname -ansi -I pubinc -mpi n1.c
+	$(BFORT) -ferr -mnative -anyname -I pubinc -mpi n1.c
 
 n2f.c: n2.c $(BFORT)
 	export BFORT_CONFIG_PATH=../../../share && \
-	$(BFORT) -ferr -mapptr -mnative -anyname -ansi -I pubinc -mpi n2.c
+	$(BFORT) -ferr -mapptr -mnative -anyname -I pubinc -mpi n2.c
+
+tstcf.c: tstc.c $(BFORT)
+	export BFORT_CONFIG_PATH=../../../share && \
+	$(BFORT) -ferr -anyname tstc.c
 
 tstpgmaf90.f90 tstpgmaf.c: tstpgma.c $(BFORT)
 	export BFORT_CONFIG_PATH=../../../share && \
-	$(BFORT) -mnative -ansi -nomsgs -anyname -mapptr -mpi -ferr \
+	$(BFORT) -mnative -nomsgs -anyname -mapptr -mpi -ferr \
 	         -ptrprefix Petsc -ptr64 HAVE_64BIGS -fcaps HAVE_FORTRAN_CAPS \
 		 -fuscore HAVE_FORTRAN_UNDERSCORE \
 		 -f90modfile tstpgmaf90.f90 tstpgma.c
 
 tstpgmbf90.f90 tstpgmbf.c: tstpgmb.c  $(BFORT)
 	export BFORT_CONFIG_PATH=../../../share && \
-	$(BFORT) -mnative -ansi -nomsgs -anyname -mapptr -mpi -ferr \
+	$(BFORT) -mnative -nomsgs -anyname -mapptr -mpi -ferr \
 	         -ptrprefix Petsc -ptr64 HAVE_64BIGS -fcaps HAVE_FORTRAN_CAPS \
 		 -fuscore HAVE_FORTRAN_UNDERSCORE -shortargname \
 		 -f90modfile tstpgmbf90.f90 tstpgmb.c
 
 tstpgma2f.c: tstpgma2.c $(BFORT)
 	export BFORT_CONFIG_PATH=../../../share && \
-	$(BFORT) -mnative -ansi -nomsgs -noprofile -anyname -mapptr -mpi \
+	$(BFORT) -mnative -nomsgs -noprofile -anyname -mapptr -mpi \
 		 -ferr -ptrprefix Petsc \
 		 -ptr64 PETSC_USE_POINTER_CONVERSION \
 		 -fcaps PETSC_HAVE_FORTRAN_CAPS \
