@@ -12,24 +12,24 @@
 #include <unistd.h>
 #endif
 
-/* 
-   This is designed to work with comments in C programs.  
+/*
+   This is designed to work with comments in C programs.
    It uses the standardized documentation to issue dummy routine
    definitions to allow the creation of a Fortran to C library.
 
-   This version of "header.c" is a modification of the file taken 
-   from "~gropp/tools.n/c2fort" on 10/7/93.  Modifications have been 
-   introduced so that elements of type void * in the files "nlfunc_v.h", 
-   and "nlspmat_v.h", and "nlsles_v.h" are translated as pointers to 
+   This version of "header.c" is a modification of the file taken
+   from "~gropp/tools.n/c2fort" on 10/7/93.  Modifications have been
+   introduced so that elements of type void * in the files "nlfunc_v.h",
+   and "nlspmat_v.h", and "nlsles_v.h" are translated as pointers to
    structures in the Fortran version (instead of the default, which is
-   no translation).  Note that pointers to void functions retain the 
-   usual translation.  
+   no translation).  Note that pointers to void functions retain the
+   usual translation.
 
-   An additional flag (flag2) is used in the calling sequence of 
-   ProcessArgDefs() to indicate the files which require the modified 
-   translation.   Also, an additional element, void_function, is added 
-   to the structure ARG_LIST to distinguish pointers to void functions 
-   from pointers to void structures.  
+   An additional flag (flag2) is used in the calling sequence of
+   ProcessArgDefs() to indicate the files which require the modified
+   translation.   Also, an additional element, void_function, is added
+   to the structure ARG_LIST to distinguish pointers to void functions
+   from pointers to void structures.
  */
 
 static int NoFortMsgs = 1;
@@ -94,14 +94,6 @@ static int DoProfileNames = 0;
 /* If 1, output header immediately; otherwise, defer until declarations
    processed */
 static int OutputImmed = 1;
-
-#if 0
-/* If 1, generate ANSI style headers instead */
-static int AnsiHeader = 0;
-
-/* If 1, declarations are in ANSI prototype form */
-static int AnsiForm = 1;
-#endif
 
 /* If 0, do not generate the ifndef DEBUG_ALL wrapper */
 static int AddDebugAll = 1;
@@ -179,10 +171,6 @@ void ProcessFunctionType ( FILE *, FILE *, char *, int *,
 void ProcessArgList ( FILE *, FILE *, char *, int *, char *,
 				ARG_LIST[MAX_ARGS], int *, RETURN_TYPE *,
 				int, TYPE_LIST *, int *, int );
-#if 0
-int ProcessArgDefs ( FILE *, FILE *, ARG_LIST *, int, TYPE_LIST *,
-			       int *, int *, int, char *, int );
-#endif
 void PrintBody ( FILE *, int, char *, int, int, ARG_LIST *,
 			   TYPE_LIST *, RETURN_TYPE * );
 void PrintDefinition ( FILE *, int, char *, int, int, ARG_LIST *,
@@ -218,7 +206,7 @@ void DoBfortHelp ( char * );
 . -ptrprefix - prefix for names of functions to convert to/from pointers
               (default is __).  The macro that selects the form based on the
               pointer size can be changed with -ptr64.
-. -anyname   - Generate a single Fortran wrapper that works for almost all 
+. -anyname   - Generate a single Fortran wrapper that works for almost all
                systems, by adding C preprocessor names (see below).  These
                names can be changed with -fcaps, -fuscore, and -fduscore.
 . -ferr     - Fortran versions return the value of the routine as the last
@@ -233,7 +221,7 @@ void DoBfortHelp ( char * );
 . -mnative  - Multiple indirects are native datatypes (no coercion)
 . -voidisptr - Consider "void *" as a pointer to a structure.
 
-. -nodebug  - Do not add 
+. -nodebug  - Do not add
 .vb
   #ifndef DEBUG_ALL
   #define DEBUG_ALL
@@ -242,14 +230,14 @@ void DoBfortHelp ( char * );
   to the wrapper file.
 . -anyname   - Generate a single wrapper that can handle the three most common
                cases: trailing underscore, no underscore, and all caps.  The
-               choice is based on whether 
+               choice is based on whether
 .vb
      FORTRANCAPS:       Names are uppercase, no trailing underscore
      FORTRANUNDERSCORE: Names are lowercase, trailing underscore
-              are defined.  
+              are defined.
      FORTRANDOUBLEUNDERSCORE: Names are lowercase, with TWO trailing
 .ve
-      underscores.  This is needed when some versions of "f2c" are 
+      underscores.  This is needed when some versions of "f2c" are
       used to generate C for Fortran routines.  Note that f2c uses two
       underscores ONLY when the name already contains an underscore
       (at least on the FreeBSD system that I use that uses f2c).
@@ -262,44 +250,23 @@ void DoBfortHelp ( char * );
 .ve
                will also be used to determine if pointers are to long to
                fit in a 32-bit Fortran integer.  Routines that destroy
-               a pointer will need to manually insert a call to 
-               __RmPointer.  The routines for managing the pointers are 
+               a pointer will need to manually insert a call to
+               __RmPointer.  The routines for managing the pointers are
 	       in ptrcvt.c
 
-	       In addition, if -mpi is used and -no_pmpi is not, the MPI 
-               profiling names are also generated, surrounded by 
+	       In addition, if -mpi is used and -no_pmpi is not, the MPI
+               profiling names are also generated, surrounded by
                MPI_BUILD_PROFILING.
 
   Note:
   We really need a way to specify a general type as a pointer, so that it
   will be handled as a pointer.  The -mpi option is a kludge for a pressing
-  need.  Eventually should provide a "-ptr name" option and keep in a 
+  need.  Eventually should provide a "-ptr name" option and keep in a
   search space when looking for known types.
 
-  Author: 
+  Author:
   Bill Gropp
 D*/
-
-#if 0
-. -ansi      - C routines use ANSI prototype form rather than K&R C form
-. -noansi    - C routines use K&R C form (no prototypes)
-. -ansiheader - Generate ANSI-C style headers instead of Fortran interfaces
-  This is useful for creating ANSI prototypes   without ANSI-fying the
-  code.  These use a trick to provide both ANSI and non-ANSI prototypes.
-  The declarations are wrapped in "ANSI_ARGS", the definition of which
-  should be
-.vb
-  #ifdef ANSI_ARG
-  #undef ANSI_ARG
-  #endif
-  #ifdef __STDC__
-  #define ANSI_ARGS(a) a
-  #else
-  #define ANSI_ARGS(a) ()
-  #endif
-.ve
-#endif
-
 int main( int argc, char **argv )
 {
     char routine[MAX_ROUTINE_NAME];
@@ -355,17 +322,7 @@ int main( int argc, char **argv )
     TranslateVoidStar	   = SYArgHasName( &argc, argv, 1, "-voidisptr" );
     MultipleIndirectsAreNative = SYArgHasName( &argc, argv, 1, "-mnative" );
 
-#if 0
-    /* ANSI by default; read and discard -ansi for backward compatibility */
-    AnsiForm = 1;
-    if (SYArgHasName( &argc, argv, 1, "-noansi" )) {
-	AnsiForm = 0;
-    }
-#endif
     (void) SYArgHasName( &argc, argv, 1, "-ansi" );
-#if 0
-    AnsiHeader		       = SYArgHasName( &argc, argv, 1, "-ansiheader" );
-#endif
     AddDebugAll                = SYArgHasName( &argc, argv, 1, "-nodebug" );
     IfdefFortranName           = SYArgHasName( &argc, argv, 1, "-anyname" );
     useShortNames              = SYArgHasName( &argc, argv, 1, "-shortargname");
@@ -385,10 +342,6 @@ int main( int argc, char **argv )
     SYArgGetString( &argc, argv, 1, "-ptr64", Pointer64Bits, 256 );
     SYArgGetString( &argc, argv, 1, "-pmpi", BuildProfiling, 256 );
     if (SYArgHasName( &argc, argv, 1, "-noprofile" )) DoProfileNames = 0;
-
-#if 0
-    if (AnsiHeader) OutputImmed = 0;
-#endif
 
     if (SYArgHasName( &argc, argv, 1, "-help" )) {
 	DoBfortHelp( argv[0] );
@@ -468,7 +421,7 @@ int main( int argc, char **argv )
     f90mod_skip_header = SYArgHasName( &argc, argv, 1, "-f90mod_skip_header" );
     if (!f90mod_skip_header) {
 	/* Check for the more appropriate spelling */
-	f90mod_skip_header = 
+	f90mod_skip_header =
 	    SYArgHasName( &argc, argv, 1, "-f90mod-skip-header" );
     }
     /* If an f90modfile argument is provided, then enable the f90module */
@@ -479,7 +432,7 @@ int main( int argc, char **argv )
     /* If there is a f90 module file, open it now */
     if (F90Module) {
 	char fmodfile[MAX_FILE_SIZE];
-	if (!SYArgGetString( &argc, argv, 1, "-f90modfile", 
+	if (!SYArgGetString( &argc, argv, 1, "-f90modfile",
 			     fmodfile, MAX_FILE_SIZE )) {
 	    if (MPIU_Strncpy( fmodfile, "f90module.f90", sizeof(fmodfile) )) {
 		ABORT( "Unable to set the name of the Fortran 90 module file" );
@@ -530,12 +483,7 @@ int main( int argc, char **argv )
 	    p[0] = 'h';
 	    p[1] = 0;
 	}
-#if 0
-	if (AnsiHeader) 
-	    sprintf( outfilename, "%s/%s.ansi", dirname, fname );
-	else
-#endif
-	    sprintf( outfilename, "%s/%sf.c", dirname, fname );
+	sprintf( outfilename, "%s/%sf.c", dirname, fname );
 	/* Don't open the filename yet (wait until we know that we'll have
 	   some output for it) */
 	fout = NULL;
@@ -558,7 +506,7 @@ int main( int argc, char **argv )
 	    }
 	    if (IfdefFortranName && fout && routine[0] &&
 		(kind == ROUTINE || kind == MACRO)) {
-		if (subclass != 'C') 
+		if (subclass != 'C')
 		    OutputUniversalName( fout, routine );
 		SkipText( fd, routine, infilename, kind );
 	    }
@@ -585,7 +533,7 @@ int main( int argc, char **argv )
 		/* fprintf( stderr, "include == |%s|\n", routine ); */
 		if (strncmp( routine, "xtools/", 7 ) == 0) {
 		    guard_x = 1;
-		    OutputBuf( &fout, infilename, outfilename, incfd, 
+		    OutputBuf( &fout, infilename, outfilename, incfd,
 			       "#ifndef TOOLSNOX11\n" );
 		}
 		if (MPIU_Strnapp( incbuffer, routine, sizeof(incbuffer) )) {
@@ -597,7 +545,7 @@ int main( int argc, char **argv )
 		}
 		OutputBuf( &fout, infilename, outfilename, incfd, incbuffer );
 		if (guard_x) {
-		    OutputBuf( &fout, infilename, outfilename, incfd, 
+		    OutputBuf( &fout, infilename, outfilename, incfd,
 			       "#endif\n" );
 		    if (!fout) break;
 		}
@@ -631,16 +579,16 @@ int main( int argc, char **argv )
 	       particularly for initf.c */
 	    if ((kind == ROUTINE || kind == MACRO) && subclass == 'C') {
 		if (!NoFortMsgs && !NoFortWarnings) {
-		    fprintf( stderr, 
+		    fprintf( stderr,
 			     "%s %s(%s) can not be translated into Fortran\n",
-			     (kind == ROUTINE) ? "Routine" : "Macro", 
+			     (kind == ROUTINE) ? "Routine" : "Macro",
 			     routine, CurrentFilename );
 		}
 		SkipText( fd, routine, infilename, kind );
 		continue;
 	    }
 	    if (GetIsX11Routine()) {
-		OutputBuf( &fout, infilename, outfilename, incfd, 
+		OutputBuf( &fout, infilename, outfilename, incfd,
 			   "#ifndef TOOLSNOX11\n" );
 	    }
 	    if ((kind == ROUTINE || kind == MACRO) && fout == NULL) {
@@ -648,7 +596,7 @@ int main( int argc, char **argv )
 		if (!fout) break;
 	    }
 #ifdef FOO
-	    if (IfdefFortranName && fout && routine[0] && 
+	    if (IfdefFortranName && fout && routine[0] &&
 		(kind == ROUTINE || kind == MACRO)) {
 		OutputUniversalName( fout, routine );
 	    }
@@ -665,7 +613,7 @@ int main( int argc, char **argv )
 	    }
 /* moved include up BS */
 	    if (GetIsX11Routine()) {
-		OutputBuf( &fout, infilename, outfilename, incfd, 
+		OutputBuf( &fout, infilename, outfilename, incfd,
 			   "#endif\n" );
 		if (!fout) break;
 	    }
@@ -699,7 +647,7 @@ int main( int argc, char **argv )
     return 0;
 }
 
-/* 
+/*
  * Output routines
  */
 void OutputToken( FILE *fout, char *p, int nsp )
@@ -745,20 +693,12 @@ void OutputRoutine( FILE *fin, FILE *fout, char *name, char *filename,
 
     /* Get the call to the routine, including finding the argument names */
     SkipWhite( fin );
-    ProcessArgList( fin, fout, filename, &is_function, name, 
+    ProcessArgList( fin, fout, filename, &is_function, name,
 		    args, &nargs, &rt, 0, types, &ntypes, flag2 );
-
-#if 0
-    if (!AnsiForm) {
-	SkipWhite( fin );
-	ProcessArgDefs( fin, fout, args, nargs, types, &ntypes, &nstrings, 0, 
-			name, flag2 );
-    }
-#endif
 
     PrintBody( fout, is_function, name, nstrings, nargs, args, types, &rt );
     if (F90Module) {
-	PrintDefinition( fmodout, is_function, name, nstrings, nargs, 
+	PrintDefinition( fmodout, is_function, name, nstrings, nargs,
 			 args, types, &rt );
     }
     /* Free the created space */
@@ -767,7 +707,7 @@ void OutputRoutine( FILE *fin, FILE *fout, char *name, char *filename,
 
 /*
     This routine skips the text part of a text page.
- */        
+ */
 void SkipText( FILE *fin, char *name, char *filename, char kind )
 {
     int  c;
@@ -785,10 +725,10 @@ void SkipText( FILE *fin, char *name, char *filename, char kind )
 	else {
 	    if (isspace(c) && c != '\n')
 		SkipWhite( fin );
-	    else 
+	    else
 		*lp++ = c;
 	    /* Copy to end of line; do NOT include the EOL */
-	    while ((c = getc( fin )) != EOF && c != '\n') 
+	    while ((c = getc( fin )) != EOF && c != '\n')
 		*lp++ = c;
 	    lp--;
 	    while (isspace(*lp)) lp--;
@@ -816,10 +756,10 @@ int SkipToSynopsis( FILE *fin, char kind )
 	else {
 	    if (isspace(c) && c != '\n')
 		SkipWhite( fin );
-	    else 
+	    else
 		*lp++ = c;
 	    /* Copy to end of line; do NOT include the EOL */
-	    while ((c = getc( fin )) != EOF && c != '\n') 
+	    while ((c = getc( fin )) != EOF && c != '\n')
 		*lp++ = c;
 	    lp--;
 	    while (isspace(*lp)) lp--;
@@ -830,7 +770,7 @@ int SkipToSynopsis( FILE *fin, char kind )
 		lp = lineBuffer + 1;
 		while (isspace(*lp)) lp++;
 		LowerCase( lp );
-		if (strcmp( lp, "synopsis:" ) == 0) 
+		if (strcmp( lp, "synopsis:" ) == 0)
 		    return 1;
 	    }
         }
@@ -863,7 +803,7 @@ int FindNextANToken( FILE *fd, char *token, int *nsp )
     return fc;
 }
 
-void OutputBuf( FILE **fout, char *infilename, char *outfilename, FILE *incfd, 
+void OutputBuf( FILE **fout, char *infilename, char *outfilename, FILE *incfd,
 		char *buffer )
 {
     char arch[20];
@@ -878,35 +818,30 @@ void OutputBuf( FILE **fout, char *infilename, char *outfilename, FILE *incfd,
 	}
 	fprintf( *fout, "/* %s */\n", infilename );
 #if 0
-	if (!AnsiHeader) {
 #endif
-	    if (!IfdefFortranName) {
-		SYGetArchType( arch, 20 );
-		fprintf( *fout, "/* Fortran interface file for %s */\n", arch );
-	    }
-	    else {
-		fprintf( *fout, "/* Fortran interface file */\n" );
-	    }
-	    fprintf( *fout, "\n/*\n\
+	if (!IfdefFortranName) {
+	    SYGetArchType( arch, 20 );
+	    fprintf( *fout, "/* Fortran interface file for %s */\n", arch );
+	}
+	else {
+	    fprintf( *fout, "/* Fortran interface file */\n" );
+	}
+	fprintf( *fout, "\n/*\n\
 * This file was generated automatically by bfort from the C source\n\
 * file.  \n */\n" );
-	    /* Turn on the base debugging */
-	    if (AddDebugAll)
-		fprintf( *fout, "#ifndef DEBUG_ALL\n#define DEBUG_ALL\n#endif\n" );
-	    if (incfd) {
-		int c;
-		fseek( incfd, 0L, 0 );
-		while ((c = getc( incfd )) != EOF) 
-		    putc( (char)c, *fout );
-	    }
-	    if (MapPointers) {
+	/* Turn on the base debugging */
+	if (AddDebugAll)
+	    fprintf( *fout, "#ifndef DEBUG_ALL\n#define DEBUG_ALL\n#endif\n" );
+	if (incfd) {
+	    int c;
+	    fseek( incfd, 0L, 0 );
+	    while ((c = getc( incfd )) != EOF)
+		putc( (char)c, *fout );
+	}
+	if (MapPointers) {
 /* BFS 3/5/96 code modified to support C++ on 64 bit machines */
-		if (IfdefFortranName) {
-#if 0
-		    if (AnsiHeader  || AnsiForm)
-#endif
-		    {
-			fprintf( *fout, "\n#ifdef %s\n\
+	    if (IfdefFortranName) {
+		fprintf( *fout, "\n#ifdef %s\n\
 #if defined(__cplusplus)\n\
 extern \"C\" { \n\
 #endif \n\
@@ -917,50 +852,27 @@ extern void %sRmPointer(int);\n\
 #endif \n\
 \n#else\n\
 \n#define %sToPointer(a) (a)\n#define %sFromPointer(a) (int)(a)\
-\n#define %sRmPointer(a)\n#endif\n\n", 
-				 Pointer64Bits, 
-				 ptrprefix, ptrprefix, ptrprefix, 
-				 ptrprefix, ptrprefix, ptrprefix );
-		    }
-#if 0
-		    else {
-			fprintf( *fout, "\n#ifdef %s\n\
-#if defined(__cplusplus)\n\
-extern \"C\" { \n\
-#endif \n\
-extern void *%sToPointer();\nextern int %sFromPointer();\n\
-extern void %sRmPointer();\n\
-#if defined(__cplusplus)\n\
-} \n\
-#endif \n\
-\n#else\n\
-\n#define %sToPointer(a) (a)\n#define %sFromPointer(a) (int)(a)\
-\n#define %sRmPointer(a)\n#endif\n\n", 
-				 Pointer64Bits, 
-				 ptrprefix, ptrprefix, ptrprefix, 
-				 ptrprefix, ptrprefix, ptrprefix );
-		    }
-#endif
-		}
-		else {
-		    fprintf( *fout, 
-			     "extern void *%sToPointer(); extern int %sFromPointer();\n",
-			     ptrprefix, ptrprefix );
-		}
+\n#define %sRmPointer(a)\n#endif\n\n",
+			 Pointer64Bits,
+			 ptrprefix, ptrprefix, ptrprefix,
+			 ptrprefix, ptrprefix, ptrprefix );
 	    }
-#if 0
+	    else {
+		fprintf( *fout,
+			 "extern void *%sToPointer(); extern int %sFromPointer();\n",
+			 ptrprefix, ptrprefix );
+	    }
 	}
-#endif
     }
-    if (buffer) 
+    if (buffer)
 	fputs( buffer, *fout );
 }
 
 
-/* 
+/*
    There are a number of things to watch for.  One is that leading blanks are
    considered significant; since the text is being formated, we usually dont
-   agree with that. 
+   agree with that.
  */
 void OutputMacro( FILE *fin, FILE *fout, char *routine_name, char *filename )
 {
@@ -991,31 +903,22 @@ void OutputMacro( FILE *fin, FILE *fout, char *routine_name, char *filename )
     if (has_synopsis) {
 	/* Get the call to the routine, including finding the argument names */
 	SkipWhite( fin );
-	/* Process elements of type void * in the following files differently 
+	/* Process elements of type void * in the following files differently
 	   from the default */
 	if ((strcmp( filename, "./nonlin/nlfunc_v.h") == 0) ||
 	    (strcmp( filename, "./nonlin/nlspmat_v.h") == 0) ||
 	    (strcmp( filename, "./nonlin/nlsles_v.h") == 0)  ||
 	    TranslateVoidStar)
 	    flag2 = 1;
-	ProcessArgList( fin, fout, filename, &is_function, routine_name, 
+	ProcessArgList( fin, fout, filename, &is_function, routine_name,
 			args, &nargs, &rt, 1, types, &ntypes, flag2 );
-#if 0
-	if (!AnsiForm) {
-	    SkipWhite( fin );
-	    done = 
-		ProcessArgDefs( fin, fout, args, nargs, types, &ntypes, &nstrings, 1, 
-				routine_name, flag2 );
-	}
-	else
-#endif
-	    done = 1;
-	PrintBody( fout, is_function, routine_name, nstrings, nargs, args, 
+	done = 1;
+	PrintBody( fout, is_function, routine_name, nstrings, nargs, args,
 		   types, &rt );
     }
     else {
 	ErrCnt++;
-	fprintf( stderr, "%s(%s) has no synopsis section\n", 
+	fprintf( stderr, "%s(%s) has no synopsis section\n",
 		 routine_name, CurrentFilename );
 	if (ErrCnt > MAX_ERR) ABORT( "" );
     }
@@ -1026,12 +929,12 @@ void OutputMacro( FILE *fin, FILE *fout, char *routine_name, char *filename )
 
 /* Read the arg list and function type */
 
-/* 
+/*
    This routine reads the function type and name; that is, it processes
    things like "void *foo" and "void (*foo)()"
  */
-void ProcessFunctionType( FILE *fin, FILE *fout, char *filename, 
-			  int *is_function, char *name, RETURN_TYPE *rt, 
+void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
+			  int *is_function, char *name, RETURN_TYPE *rt,
 			  int flag )
 {
     static char rcall[1024];
@@ -1046,13 +949,13 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
     in_args     = 0;
     p           = rcall;
     c           = FindNextANToken( fin, p, &nsp );
-/* 
+/*
    We check for routines that return (functions) versus ones that don't
-   by looking for "void".  A special case is functions that return 
+   by looking for "void".  A special case is functions that return
    pointers to void; we check for these by looking at the first character
    of the first token after the void.
 
-   We also want to defer generating the function type incase we need to 
+   We also want to defer generating the function type incase we need to
    replace a pointer ref with an integer.
    */
     if (MPIU_Strncpy( rt->name, p, sizeof(rt->name) )) {
@@ -1119,7 +1022,7 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
 			fputs( "int ", fout );
 		    }
 		}
-		if (OutputImmed) 
+		if (OutputImmed)
 		    OutputRoutineName( name, fout );
 	    }
 	    ungetc( '(', fin );
@@ -1142,11 +1045,11 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
 	    }
 	    /* This test should be postponed until the end (e.g.,
 	       struct tm *foo() */
-	    /* 
+	    /*
 	       else {
 	       if (p[0] != '*') {
 	       Errcnt++;
-	       fprintf( stderr, "%s:Did not find matching name: %s != %s\n", 
+	       fprintf( stderr, "%s:Did not find matching name: %s != %s\n",
 	       filename, p, name );
 	       if (ErrCnt > MAX_ERR) ABORT( "" );
 	       }
@@ -1156,13 +1059,13 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
     }
     if (!found_name) {
 	ErrCnt++;
-	fprintf( stderr, "%s:Did not find routine name (may be untyped): %s \n", 
+	fprintf( stderr, "%s:Did not find routine name (may be untyped): %s \n",
 		 filename, name );
 	if (ErrCnt > MAX_ERR) ABORT( "" );
     }
     else if (strcmp( name, actname ) != 0) {
 	ErrCnt++;
-	fprintf( stderr, "%s:Did not find matching name: %s != %s\n", 
+	fprintf( stderr, "%s:Did not find matching name: %s != %s\n",
 		 filename, actname, name );
 	if (ErrCnt > MAX_ERR) ABORT( "" );
     }
@@ -1171,9 +1074,9 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
 /* We are moving to being able to suppress generating the output until the
    argument definitions are read.
    flag is 1 for C routines, 0 for macros (I think)  */
-void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function, 
+void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 		     char *name, ARG_LIST args[MAX_ARGS], int *Nargs,
-		     RETURN_TYPE *rt, int flag, TYPE_LIST *types, int *Ntypes, 
+		     RETURN_TYPE *rt, int flag, TYPE_LIST *types, int *Ntypes,
 		     int flag2 )
 {
     int             c, ntypes;
@@ -1206,37 +1109,32 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
     OutputToken( fout, p, nsp );
     while (1) {
 	/* First, get the type name.  Note that there might not be one */
-#if 0
-	if (AnsiForm)
-#endif
-	{
-	    curtype = &types[ntypes];
-	    outparen = ntypes > 0;
-	    if ((c = GetTypeName( fin, fout, &types[ntypes], flag, flag2, 
-			     outparen ))) {
-		if (ntypes == 0 &&/* AnsiForm &&*/ c == ')') {
-		    fprintf( stderr, 
-		     "Empty argument list in -ansi mode (use (void))\n");
-		    /* For this to work, gettypename can't output the last
-		       closing paren */
-		    if ( useFerr ) {
-			fprintf( fout, "int *%s ", errArgNameLocal);
-		    }
+	curtype = &types[ntypes];
+	outparen = ntypes > 0;
+	if ((c = GetTypeName( fin, fout, &types[ntypes], flag, flag2,
+			      outparen ))) {
+	    if (ntypes == 0 && c == ')') {
+		fprintf( stderr,
+			 "Empty argument list in -ansi mode (use (void))\n");
+		/* For this to work, gettypename can't output the last
+		   closing paren */
+		if ( useFerr ) {
+		    fprintf( fout, "int *%s ", errArgNameLocal);
 		}
-		if (c != 1) {
-		    char cstring[2];
-		    cstring[0] = c; cstring[1] = 0;
-		    OutputToken( fout, cstring, 0 );
-		}
-		break;
 	    }
-	    ntypes++;
+	    if (c != 1) {
+		char cstring[2];
+		cstring[0] = c; cstring[1] = 0;
+		OutputToken( fout, cstring, 0 );
+	    }
+	    break;
 	}
+	ntypes++;
 
 	/* Now, get the variable names until the arg terminator.
 	   They are of the form [(\*]*name[(\*\[]*
 	   */
-	if (GetArgName( fin, fout, &args[nargs], curtype, /*AnsiForm*/1 )) {
+	if (GetArgName( fin, fout, &args[nargs], curtype, 1 )) {
 	    break;
 	}
 	args[nargs].type = ntypes-1;
@@ -1272,20 +1170,8 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 	if (c == ')') {
 	    if (OutputImmed) {
 		if (useFerr) {
-/* added AnsiForm BS Aug 20, 1995 */
-#if 0
-		    if (AnsiForm)
-#endif
-		    {
-			fprintf( fout, "%sint *%s",
-				 (nargs > 0) ? ", " : "", errArgNameLocal );
-		    }
-#if 0
-		    else {
-			fprintf( fout, "%s%s ",
-				 (nargs > 0) ? ", " : "", errArgNameLocal );
-		    }
-#endif
+		    fprintf( fout, "%sint *%s",
+			     (nargs > 0) ? ", " : "", errArgNameLocal );
 		}
 		/* Add string length arguments */
 		if (nstrings && stringStyle == 1) {
@@ -1294,7 +1180,7 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 			fprintf(fout, ", %s%d", stringArgLenName, i);
 		    }
 		}
-		fputs( ")", fout ); 
+		fputs( ")", fout );
 	    }
 	    break;
 	}
@@ -1308,160 +1194,28 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
     if (c == '(') {
 	SkipWhite( fin );
 	c = getc(fin);
-	if (c == ')') 
+	if (c == ')')
 	    fputs( "()", fout );
-	else 
+	else
 	    ungetc( (char)c, fin );
     }
-    else 
+    else
 	ungetc( (char)c, fin );
 
-#if 0
-    if (AnsiForm) {
-#endif
-	/* Handle declaration of form int foo(void) */
-	if (ntypes == 1 && nargs == 0 && strcmp("void",types[0].type) == 0) {
-	    ntypes = 0;
-	}
-#if 0
+    /* Handle declaration of form int foo(void) */
+    if (ntypes == 1 && nargs == 0 && strcmp("void",types[0].type) == 0) {
+	ntypes = 0;
     }
-#endif
     *Nargs  = nargs;
     *Ntypes = ntypes;
 /* If being called from Fortran, we need to append dummy ints for the strings
-   passed in.  This requires that we defer to the end of the argument 
+   passed in.  This requires that we defer to the end of the argument
    passing the printing of the function declaration line */
 /* for (i=0; i<nstrings; i++) fprintf( fout, ",d%d", i ); */
 
 }
 
 /* Read the arg list and function type */
-
-#if 0
-/* if flag == 1, stop on empty line rather than { */
-/* This needs to distinguish between pointers and values, since all
-   parameters are passed by reference in Fortran.  Just to keep things
-   lively, there are two ways to indicate a pointer in C:
-     type *foo;
-     type foo[];
-
-   Needed to add a change that definitions are terminated by ;, not by \n.
-
-   ANSI version has no args predefined, types separated by comma, and 
-   the same default type (int) as for K&R form.
-   
-   Returns 1 if it saw the end of a macro, 0 otherwise (see OutputMacro)
- */
-int ProcessArgDefs( FILE *fin, FILE *fout, ARG_LIST *args, int nargs,
-		    TYPE_LIST *types, int *Ntypes, int *Nstrings, int flag,
-		    char *name, int flag2 )
-{
-    int      c;
-    char     token[1024];
-    int      i, nsp, newline, newstmt;
-    int      in_function;
-    int      nstrings;
-    int      ntypes, set_void, void_function;
-    int      done = 0;         /* set to 1 if ate end-of-definition */
-    TYPE_LIST *curtype;
-    ARG_LIST  narg;
-
-    newline	  = 1;
-    if (flag) newline = 0;
-    newstmt	  = 1;
-    nstrings	  = 0;
-/* The default type is int */
-    ntypes		  = 1;
-    if (MPIU_Strncpy( types[0].type, "int", sizeof(types[0].type) )) {
-	ABORT( "Cannot set initial type to int" );
-    }
-    in_function	  = 0;
-    set_void	  = 0;
-    void_function = 0;
-
-/* This should really use a better parser. 
-   Types are
-   [register] [const] [struct] typename [ *( ]* [restrict] varname [(*\[]* 
-   separated by , (ANSI) or ; (K&R), and terminated by
-   ')' (ANSI) or '{' (K&R)
-
-   A modification is that in K&R form, after a ',', the 
-   [register] [struct] typename is carried forward until a ';'
-
-   The known typenames (and optional [register][const][struct]) are 
-   processed by GetTypeName;
- */
-    while (1) {
-	curtype = &types[ntypes];
-	if ((done = GetTypeName( fin, fout, &types[ntypes++], flag, flag2, 1 )))
-	    break;
-	while (1) {
-	    if (GetArgName( fin, fout, &narg, curtype, 1 )) break;
-	    /* match arg to input argument */
-	    for (i=0; i<nargs; i++) {
-		if (strcmp( narg.name, args[i].name ) == 0) break;
-	    }
-	    if (i >= nargs) {
-		ErrCnt++;
-		fprintf( stderr, "Could not find argument %s\n", narg.name );
-		if (ErrCnt > MAX_ERR) ABORT( "" );
-	    }
-	    args[i]		     = narg;
-	    args[i].type	     = ntypes-1;
-	    args[i].implied_star     = curtype->implied_star;
-	    args[i].is_char	     = curtype->is_char;
-	    args[i].is_FILE	     = curtype->is_FILE;
-	    args[i].is_native        = curtype->is_native;
-	    if (curtype->type_has_star)
-		args[i].has_star++;
-	    if (args[i].is_char) {
-		DBG("Found a string (is_char)\n");
-		nstrings++;
-	    }
-	    c = FindNextANToken( fin, token, &nsp );
-	    OutputToken( fout, token, nsp );
-	    if (c == ';') break;
-	}
-
-#ifdef FOO
-	/* Handle various argument features */
-	if (c == '*')                  has_star++;
-	else if (c == '(') {
-	    in_function = 1;
-	    /* If set_void is activated, set the void function indicator */
-	    if (set_void) {        
-		set_void = 0;
-		void_function = 1;
-            }
-	}
-	else if (c == ')' && in_function) {
-	    is_function = 1;
-	}
-	else if (c == '\n') {
-	    /* New lines have little meaning in declarations.
-	       However, they are necessary to handle blanks lines */
-	    newline = 1;
-	}
-	else if (newstmt) {
-#endif
-#ifdef FOO
-	    if (!has_star) {
-		/* This makes it look nicer */
-		nsp = 0;
-		OutputToken( fout, "*", nsp );
-	    }
-	    if (has_array) OutputToken( fout, "[]", 0 );
-#endif
-	}
-/* Add the final error return definition */
-	if (useFerr && OutputImmed) {
-	    fprintf(fout, "int *%s;\n", errArgNameLocal);
-	}
-	*Ntypes   = ntypes;
-	*Nstrings = nstrings;
-	return done == 2;
-    }
-#endif
 
 /*
     Pointer mashing.  There are two kinds of pointer mashing available.
@@ -1474,7 +1228,7 @@ int ProcessArgDefs( FILE *fin, FILE *fout, ARG_LIST *args, int nargs,
     That is, we convert the varname to an address of an int and deref it.
 
     On systems with pointers that are longer than ints, we have to do more.
-    
+
     The first step is to convert pointers to indices on input and output
     from the routines.
 
@@ -1506,80 +1260,31 @@ char *ToCPointer( char *type, char *name, int implied_star )
 /*
    A major question is whether "void *" should be considered the actual
    pointer or an address containing the value of the pointer (the usual "int"
-   trick). 
+   trick).
 
    Since "void *" is used heavily in the communications routines to refer
    to any one of the type double*, int*, ..., I'm going to add void * to
    the list of types that are not translated
  */
-void PrintBody( FILE *fout, int is_function, char *name, int nstrings, 
+void PrintBody( FILE *fout, int is_function, char *name, int nstrings,
 		int nargs, ARG_LIST *args, TYPE_LIST *types, RETURN_TYPE *rt )
 {
     int  i, j;
-#if 0
-/* Known bugs in ansiheader:
-   Definitions like     void (*fcn)() fail
-   Multiple indirection (char **argv) fail
-   */
-#endif
     if (!OutputImmed) {
 	/* Output the function definition */
-#if 0
-	if (AnsiHeader) fputs( "extern ", fout );
-#endif
 	fputs( rt->name, fout );
 	fputs( " ", fout );
 	OutputRoutineName( name, fout );
-#if 0
-	if (AnsiHeader) fputs( " ANSI_ARGS(", fout );
-#endif
 	fprintf( fout, "(" );
 	for (i=0; i<nargs-1; i++) {
-#if 0
-	    if (AnsiHeader) {
-		fprintf( fout, "%s", types[args[i].type].type );
-		if (args[i].has_star > 0) {
-		    for (j=0; j<args[i].has_star; j++) 
-			fputs( "*", fout );
-		}
-		fputs( ", ", fout );
-	    }
-	    else 
-#endif
-		fprintf( fout, "%s, ", args[i].name );
+	    fprintf( fout, "%s, ", args[i].name );
 	}
 	if (nargs > 0) {
 	    /* Do the last arg, if any */
-#if 0
-	    if (AnsiHeader) {
-		fprintf( fout, "%s ", types[args[nargs-1].type].type );
-		if (args[nargs-1].has_star > 0) {
-		    for (j=0; j<args[nargs-1].has_star; j++) 
-			fputs( "*", fout );
-		}
-	    }
-	    else 
-#endif
-		fprintf( fout, "%s ", args[nargs-1].name );
+	    fprintf( fout, "%s ", args[nargs-1].name );
 	}
-	else {
-#if 0
-	    if (AnsiHeader)
-		/* A routine with no arguments gets a 'void' as the argument 
-		   name */
-		fputs( "void", fout );
-#endif
-	}
-	if (nstrings && stringStyle == 1/* && !AnsiHeader*/) {
-#if 0
-	    if (AnsiHeader) {
-		for (i=1; i<nstrings; i++) fprintf( fout, ",int d%d", i );
-	    }
-	    else
-#endif
-	    {
-		for (i=1; i<nstrings; i++) fprintf( fout, ",d%d", i );
-	    }
+	if (nstrings && stringStyle == 1) {
+	    for (i=1; i<nstrings; i++) fprintf( fout, ",d%d", i );
 	    /* Undefined variables are int's by default */
 	    /* fprintf( fout, "int d0" );
 	       for (i=1; i<nstrings; i++) fprintf( fout, ",d%d", i );
@@ -1587,21 +1292,11 @@ void PrintBody( FILE *fout, int is_function, char *name, int nstrings,
 	       */
 	}
 	fprintf( fout, ")" );
-#if 0
-	if (AnsiHeader) {
-	    /* No more to do */
-	    fputs( ");\n", fout );
-	    return;
-	}
-	else
-#endif
-	{
-	    fputs( "\n", fout );
-	    if (nstrings) {
-		fprintf( fout, "int d0" );
-		for (i=1; i<nstrings; i++) fprintf( fout, ",d%d", i );
-		fputs( ";\n", fout );
-	    }
+	fputs( "\n", fout );
+	if (nstrings) {
+	    fprintf( fout, "int d0" );
+	    for (i=1; i<nstrings; i++) fprintf( fout, ",d%d", i );
+	    fputs( ";\n", fout );
 	}
     }
     fputs( "{\n", fout );
@@ -1629,12 +1324,12 @@ void PrintBody( FILE *fout, int is_function, char *name, int nstrings,
     fputs( name, fout );
     fputs( "(", fout );
     for (i=0; i<nargs; i++) {
-	if (args[i].is_FILE) 
+	if (args[i].is_FILE)
 	    fprintf( fout, "_fp%d", i );
-	else if (!args[i].is_native && args[i].has_star 
+	else if (!args[i].is_native && args[i].has_star
 		 && !args[i].void_function) {
-	    if (args[i].has_star == 1 || !MultipleIndirectAreInts) 
-		fprintf( fout, "%s", 
+	    if (args[i].has_star == 1 || !MultipleIndirectAreInts)
+		fprintf( fout, "%s",
 			 ToCPointer( types[args[i].type].type, args[i].name,
 				     args[i].implied_star ) );
 	    else {
@@ -1650,7 +1345,7 @@ void PrintBody( FILE *fout, int is_function, char *name, int nstrings,
 	    }
 	}
 	else {
-	    if (!args[i].has_star) 
+	    if (!args[i].has_star)
 		fputs( "*", fout );
 	    fputs( args[i].name, fout );
 	}
@@ -1672,11 +1367,9 @@ void PrintBody( FILE *fout, int is_function, char *name, int nstrings,
  * arg-decls
  * result-type name ! if function
  * end {SUBROUTINE|FUNCTION} name
- * 
- * These are within an interface - end interface block, which is itself 
- * within a module mod-name -- end module 
  *
- * Note that this routine only works with ansi-style definitions
+ * These are within an interface - end interface block, which is itself
+ * within a module mod-name -- end module
  */
 static int curCol = 0;
 static int maxOutputCol = 72;
@@ -1726,7 +1419,7 @@ void OutputFortranToken( FILE *fout, int nsp, const char *token )
 }
 
 /* This routine ensures that all arguments are distinct, even when case is
-   not considered.  Specifically, if both "m" and "M" are argument names, 
+   not considered.  Specifically, if both "m" and "M" are argument names,
    the "M" argument will be replaced with "M$1" */
 void FixupArgNames( int nargs, ARG_LIST *args )
 {
@@ -1747,7 +1440,7 @@ void FixupArgNames( int nargs, ARG_LIST *args )
 	}
 	*cout = 0;
 	if (hasUpper) {
-	    /* Compare with the other arguments.  tmpbuf has the 
+	    /* Compare with the other arguments.  tmpbuf has the
 	       lower-case version of the current name. */
 	    /* Q: can we just use j<i? */
 	    for (j=0; j<nargs; j++) {
@@ -1760,9 +1453,9 @@ void FixupArgNames( int nargs, ARG_LIST *args )
 		    c++; cout++;
 		}
 		if (!*c && !*cout) {
-		    /* Problem - matched lower case version.  Replace 
+		    /* Problem - matched lower case version.  Replace
 		       current name with name + Upper */
-		    /* printf( "Matched %s to %s\n", args[i].name, 
+		    /* printf( "Matched %s to %s\n", args[i].name,
 		       args[j].name ); */
 		    cout = tmpbuf;
 		    while (*cout) cout++;
@@ -1790,11 +1483,11 @@ void FixupArgNames( int nargs, ARG_LIST *args )
     }
 }
 
-/* 
+/*
  * Create a Fortran 90 definition (module) for a function
  */
-void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings, 
-		      int nargs, ARG_LIST *args, TYPE_LIST *types, 
+void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
+		      int nargs, ARG_LIST *args, TYPE_LIST *types,
 		      RETURN_TYPE *rt )
 {
     int  i;
@@ -1803,10 +1496,10 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 
     sname[1] = 0;       /* sname is a single character name */
 
-    /* 
+    /*
      * Initial setup.  Fortran is case-insensitive and C is case-sensitive
      * Check that the case-insensitive argument names are distinct, and
-     * if not, replace them with ones that are.  The rule is to 
+     * if not, replace them with ones that are.  The rule is to
      * take a lowercase name and add "$1" to it.  We warn if a variable name
      * includes $1 ($ is permitted in Fortran names (check))
      */
@@ -1830,12 +1523,6 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
     }
 
     curCol = 0;
-#if 0
-    /* Known bugs in ansiheader:
-       Definitions like     void (*fcn)() fail
-       Multiple indirection (char **argv) fail
-    */
-#endif
     /* Output the function definition */
     if (useFerr) {
 	token = "subroutine";
@@ -1899,7 +1586,7 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 	    OutputFortranToken( fout, 7, "external" );
 	}
 	else {
-	    OutputFortranToken( fout, 7, 
+	    OutputFortranToken( fout, 7,
 				ArgToFortran( types[args[i].type].type ) );
 	}
 	if (useShortNames) {
@@ -1933,10 +1620,10 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 	    OutputFortranToken( fout, 0, "integer" );
 	    OutputFortranToken( fout, 1, args[i].name );
 	}
-	else if (!args[i].is_native && args[i].has_star 
+	else if (!args[i].is_native && args[i].has_star
 		 && !args[i].void_function) {
-	    if (args[i].has_star == 1 || !MultipleIndirectAreInts) 
-		OutputFortranToken( fout, 0, 
+	    if (args[i].has_star == 1 || !MultipleIndirectAreInts)
+		OutputFortranToken( fout, 0,
 			 ToCPointer( types[args[i].type].type, args[i].name,
 				     args[i].implied_star ) );
 	    else {
@@ -1958,7 +1645,7 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 	    }
 	}
 	else {
-	    /* if args[i].has_star, the argument often has intent OUT 
+	    /* if args[i].has_star, the argument often has intent OUT
 	       or INOUT */
 	    OutputFortranToken( fout, 0, args[i].name );
 	}
@@ -1989,7 +1676,7 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 
 int NameHasUnderscore( char *p )
 {
-    while (*p) 
+    while (*p)
 	if (*p++ == '_') return 1;
     return 0;
 }
@@ -2003,42 +1690,36 @@ void OutputRoutineName( char *name, FILE *fout )
     if (MPIU_Strncpy( buf, name, sizeof(buf) )) {
 	ABORT( "Cannot copy name to buf" );
     }
-#if 0
-    if (!AnsiHeader) {
-#endif
-	if (IfdefFortranName) {
-	    LowerCase( p );
-	    ln = strlen( p );
-	    p[ln] = '_';
-	    p[ln+1] = 0;
+    if (IfdefFortranName) {
+	LowerCase( p );
+	ln = strlen( p );
+	p[ln] = '_';
+	p[ln+1] = 0;
+    }
+    else {
+#if defined(FORTRANCAPS)
+	UpperCase( p );
+#elif defined(FORTRANUNDERSCORE)
+	LowerCase( p );
+	ln	= strlen( p );
+	p[ln]	= '_';
+	p[ln+1]	= 0;
+#elif defined(FORTRANDOUBLEUNDERSCORE)
+	LowerCase( p );
+	ln	= strlen( p );
+	if (NameHasUnderscore( p )) {
+	    p[ln]	= '_';
+	    p[ln+1]	= '_';
+	    p[ln+2]	= 0;
 	}
 	else {
-#if defined(FORTRANCAPS)
-	    UpperCase( p );
-#elif defined(FORTRANUNDERSCORE)
-	    LowerCase( p );
-	    ln	= strlen( p );
 	    p[ln]	= '_';
 	    p[ln+1]	= 0;
-#elif defined(FORTRANDOUBLEUNDERSCORE)
-	    LowerCase( p );
-	    ln	= strlen( p );
-	    if (NameHasUnderscore( p )) {
-		p[ln]	= '_';
-		p[ln+1]	= '_';
-		p[ln+2]	= 0;
-	    }
-	    else {
-		p[ln]	= '_';
-		p[ln+1]	= 0;
-	    }
-#else
-	    LowerCase( p );
-#endif
 	}
-#if 0
-    }
+#else
+	LowerCase( p );
 #endif
+    }
     fputs( buf, fout );
 }
 
@@ -2083,13 +1764,13 @@ void OutputUniversalName( FILE *fout, char *routine )
 #define %s %s\n\
 #endif\n\
 #endif\n\n", BuildProfiling,
-	     FortranCaps, basename, capsname, 
-	     FortranDblUscore, basename, basename, 
-	     FortranUscore, basename, nouscorename, 
-	     basename, basename, 
-	    
-	     FortranCaps, basename, capsname, 
-	     FortranDblUscore, basename, basename, 
+	     FortranCaps, basename, capsname,
+	     FortranDblUscore, basename, basename,
+	     FortranUscore, basename, nouscorename,
+	     basename, basename,
+	
+	     FortranCaps, basename, capsname,
+	     FortranDblUscore, basename, basename,
 	     FortranUscore, basename, nouscorename );
 	}
     else {
@@ -2108,12 +1789,12 @@ void OutputUniversalName( FILE *fout, char *routine )
 #elif !defined(%s) && !defined(%s)\n\
 #define %s %s\n\
 #endif\n\
-#endif\n\n", BuildProfiling, 
-	     FortranCaps, basename, capsname, 
-	     FortranUscore, FortranDblUscore, basename, nouscorename, 
-	     basename, basename, 
-	    
-	     FortranCaps, basename, capsname, 
+#endif\n\n", BuildProfiling,
+	     FortranCaps, basename, capsname,
+	     FortranUscore, FortranDblUscore, basename, nouscorename,
+	     basename, basename,
+	
+	     FortranCaps, basename, capsname,
 	     FortranUscore, FortranDblUscore, basename, nouscorename );
 	}
     }
@@ -2126,8 +1807,8 @@ else {
 #define %s %s_\n\
 #elif !defined(%s)\n\
 #define %s %s\n\
-#endif\n",  FortranCaps, basename, capsname, 
-	    FortranDblUscore, basename, basename, 
+#endif\n",  FortranCaps, basename, capsname,
+	    FortranDblUscore, basename, basename,
 	    FortranUscore, basename, nouscorename );
 	}
     else {
@@ -2136,7 +1817,7 @@ else {
 #define %s %s\n\
 #elif !defined(%s) && !defined(%s)\n\
 #define %s %s\n\
-#endif\n",  FortranCaps, basename, capsname, 
+#endif\n",  FortranCaps, basename, capsname,
 	    FortranUscore, FortranDblUscore, basename, nouscorename );
 	}
     }
@@ -2147,16 +1828,14 @@ else {
 
    Special case (void) must not generate output IF useFerr is set.
 
-   Return non-zero if a non-type name is encountered.  
+   Return non-zero if a non-type name is encountered.
 
-   Activate set_void only for the files specified by flag2 
-   
+   Activate set_void only for the files specified by flag2
+
    The flag outparen is true if paren characters should be output;
    false otherwise.  If outparen is false, the character will be returned.
-   Effective only if AnsiForm is true.
-   
  */
-int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro, 
+int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 		 int flag2, int outparen )
 {
     int             c, nsp;
@@ -2186,16 +1865,16 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	c = FindNextANToken( fin, token, &nsp );
     }
     /* Now we check for end of type definitions.  This is either a
-       { in K&R, ) in ANSI, or M * / in a Macro defn */
+       ) in ANSI, or M * / in a Macro defn */
     if (c == EOF) return 1;
     if (c == '{') {
 	/* We don't output the initial brace here (see printbody) */
 	return 1;
     }
-    if (/*AnsiForm && */(c == '(' || c == ')')) {
+    if (c == '(' || c == ')') {
 	if (outparen)
 	    OutputToken( fout, token, nsp );
-	else 
+	else
 	    return c;
 	return 1;
     }
@@ -2224,17 +1903,17 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
     /* Ignore qualifiers register/volatile/const */
     if (strcmp( token, "register" ) == 0) {
 	c = FindNextANToken( fin, token, &nsp );
-	if (c == EOF || c == '{' || /*(AnsiForm && */c == '('/*)*/) return 1;
+	if (c == EOF || c == '{' || c == '(') return 1;
     }
 
     if (strcmp( token, "volatile" ) == 0) {
 	c = FindNextANToken( fin, token, &nsp );
-	if (c == EOF || c == '{' || /*(AnsiForm && */c == '('/*)*/) return 1;
+	if (c == EOF || c == '{' || c == '(') return 1;
     }
 
     if (strcmp( token, "const" ) == 0) {
 	c = FindNextANToken( fin, token, &nsp );
-	if (c == EOF || c == '{' || /*(AnsiForm && */c == '('/*)*/) return 1;
+	if (c == EOF || c == '{' || c == '(') return 1;
     }
 
     /* Read type declaration: struct name or [ unsigned ] type */
@@ -2323,7 +2002,7 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 #endif
 	/* PETSc types that are implicitly pointers are specified here */
 	/* This really needs to take the types from a file, so that
-	   it can be configured for each package.  See the search code in 
+	   it can be configured for each package.  See the search code in
 	   info2rtf (but do a better job of it) */
 #if 1
 	if (SYConfigDBLookup("nativeptr", token, NULL, nativePtrList) == 1) {
@@ -2416,11 +2095,11 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	if (isMPI) {
 	    /* Some things need to be considered ints in the declarations.
 	       That is, these are "implicit" pointer objects; often they
-	       are pointers to be returned from the calling routine. 
-	       These tests set these up as being pointer objects 
+	       are pointers to be returned from the calling routine.
+	       These tests set these up as being pointer objects
 	       In many recent implementations, they are now ints.
 	       There are also the MPI-2 functions for converting, which
-	       we should use (actually, we should have a table that 
+	       we should use (actually, we should have a table that
 	       we can read in).
 	    */
 	    if (strcmp( token, "MPI_Comm" ) == 0       ||
@@ -2457,11 +2136,11 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	if (strcmp( token, "void"   ) == 0) {
 	    /* Activate set_void only for the files specified by flag2 */
 	    if (!flag2) type->is_native = 1;
-	    else type->is_void = 1;    
+	    else type->is_void = 1;
 	}
     }
     DBG2("Found type %s\n",token);
-    if (/*AnsiForm && */useFerr && strcmp( token, "void") == 0) {
+    if (useFerr && strcmp( token, "void") == 0) {
 	/* Special case for (void) when we replace with an argument */
 	while ( (c = SYTxtGetChar( fin )) != EOF && isspace(c)) ;
 	ungetc( c, fin );
@@ -2476,27 +2155,26 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
     return 0;
 }
 
-/* 
+/*
    Read an argument.  If it is not a pointer type, add the "*" to the
    definition.
  */
-int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type, 
+int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type,
 		int has_extra_chars )
 {
     int c, nsp, nsp1, nparen, nbrack, nstar;
     char *p, token[1024];
 
     DBG("Looking for arg...\n")
-/* This should really use a better parser. 
+/* This should really use a better parser.
    Names are
-   [ *( ]* [restrict] varname [(*\[]* 
-   separated by , (ANSI) or ; (K&R), and terminated by
-   ')' (ANSI) or '{' (K&R)
+   [ *( ]* [restrict] varname [(*\[]*
+   separated by , and terminated by ')'
 
-   A modification is that in K&R form, after a ',', the 
+   A modification is that in K&R form, after a ',', the
    [register] [struct] typename is carried forward until a ';'
 
-   The known typenames (and optional [register][const][struct] are 
+   The known typenames (and optional [register][const][struct] are
    processed by GetTypeName;
 
    If the type is NOT a pointer, we must put a '*' in front of it (since
@@ -2522,21 +2200,10 @@ int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type,
 	c = FindNextANToken( fin, token, &nsp );
     }
     if (c == ')') {
-	/* No argument to get (while reading function declaration) 
+	/* No argument to get (while reading function declaration)
 	   (may be (void) or () in ANSI) */
 	if (useFerr) {
-#if 0
-	    if (AnsiForm) {
-#endif
-		fprintf( fout, "int *%s ", errArgNameLocal );
-#if 0
-	    }
-#endif
-#if 0
-	    else {
-		fprintf( fout, "%s ", errArgNameLocal );
-	    }
-#endif
+	    fprintf( fout, "int *%s ", errArgNameLocal );
 	}
 	OutputToken( fout, token, nsp );
 	return 1;
@@ -2548,7 +2215,7 @@ int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type,
 	    c = FindNextANToken( fin, p, &nsp );
 	    continue;
 	}
-	if (c == '(') 
+	if (c == '(')
 	    nparen++;
 	else if (c == '*')
 	    nstar++;
@@ -2569,29 +2236,29 @@ int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type,
 
     /* We can't output the name just yet, because if it is
        int foo[], we don't want to generate int *foo[].  As a short cut,
-       we could eliminate the first [] if we've already output a * 
+       we could eliminate the first [] if we've already output a *
      */
 /* if (type && (type->is_native && !type->is_char && !arg->has_star)) { */
-/* 
+/*
    We use "type" to determine if we should generate any special "*"s,
-   for example, in the declaration. 
+   for example, in the declaration.
  */
 
 /* Read rest of definition if necessary.  May need to read () or [] */
-/* In ANSI form, it needs to skip (....) where this is part of a 
+/* In ANSI form, it needs to skip (....) where this is part of a
    function declaration (ie., void (f)(int,char)).  Note that in this
    case, we need to peek at the next character to see if it is a (.
    Eventually, we'll want to use this information to generate automatic
    stubs for the Fortran versions of the routines.
 
    Note that the next token should be a single character except when scanning
-   tokens that we want to process (that is, any token to be pushed back 
+   tokens that we want to process (that is, any token to be pushed back
    should be a single character).
    */
     /* Peak at the next character */
     c = FindNextANToken( fin, p, &nsp1 );
 
-    if (type && !arg->has_star && !type->implied_star && 
+    if (type && !arg->has_star && !type->implied_star &&
 	!type->is_mpi && c != '[') {
 	if (nsp == 0) nsp++;
 	OutputToken( fout, "*", nsp );
@@ -2600,7 +2267,7 @@ int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type,
     if (nstar > 0) {
 	if (!NoFortMsgs && /* !is_function &&  */
 	    nstar > type->implied_star + 1) {
-	    fprintf( stderr, 
+	    fprintf( stderr,
 		     "%s(%s) has multiple indirection for %s\n",
 		     "routine"/*name*/, CurrentFilename, arg->name );
 	}
@@ -2651,7 +2318,7 @@ void OutputBalancedString( FILE *fin, FILE *fout, int cs, int ce )
 
 void DoBfortHelp( char *pgm )
 {
-fprintf( stderr, "%s - write a Fortran interface to C routines with\n", 
+fprintf( stderr, "%s - write a Fortran interface to C routines with\n",
 	 pgm );
 fprintf( stderr, "routines documented in the `doctext' format\n" );
 fprintf( stderr, "Optional arguments:\n" );
@@ -2687,14 +2354,6 @@ fprintf(stderr, "\
 \t-noprofile\tTurn off the generation of the profiling version\n\
 -mnative  - Multiple indirects are native datatypes (no coercion)\n\
 -voidisptr - Consider \"void *\" as a pointer to a structure." );
-#if 0
--ansi      - Input files use ANSI-C prototype form instead of K&R (default)\n\
--noansi    - C routines use K&R C form (no prototypes)\n\
--ansiheader - Generate ANSI-C style headers instead of Fortran interfaces\n\
-This is useful for creating ANSI prototypes without ANSI-fying the\n\
-code.  The output is in <filename>.ansi .\n\
-
-#endif
 }
 
 void Abort( const char *msg, const char *file, int line )
@@ -2707,17 +2366,17 @@ void Abort( const char *msg, const char *file, int line )
  * Mapping of types between C and Fortran.
  *
  * These routines implement a translation between C and Fortran types.
- * For each C type that may be used in the source code, we need to know 
+ * For each C type that may be used in the source code, we need to know
  * the following:
  *    What is the corresponding Fortran datatype?
  *    What is the C type corresponding to that Fortran datatype?
  *    Are special steps required in translating between the C and Fortran
  *       types?  Two cases are MPI handles and character strings
  *
- * 
+ *
  */
 
-/* 
+/*
  * This is a simple, temporary version of a routine to take a C type
  * (by name) and return the Fortran equivalent.
  */
@@ -2742,11 +2401,11 @@ const char *ArgToFortran( const char *typeName )
 }
 
 #if 0
-/* 
-   Define the mapping a C to Fortran types, along with properties of the 
+/*
+   Define the mapping a C to Fortran types, along with properties of the
    C types that are needed in generating the Fortran wrappers.
    Because the list is static (once created), we use a simple array, sorted
-   by type type name in C, to improve search performance 
+   by type type name in C, to improve search performance
 */
 /* Properties */
 #define CTYPE_IS_POINTER 0x1
@@ -2803,7 +2462,7 @@ void sortTypeArray( void )
 { "MPI_Op", "integer", CTYPE_IS_MPI_HANDLE },
 { "MPI_Datatype", "integer", CTYPE_IS_MPI_HANDLE },
 { "MPI_Win", "integer", CTYPE_IS_MPI_HANDLE },
-{ "MPI_File", "integer", CTYPE_IS_MPI_HANDLE }, 
+{ "MPI_File", "integer", CTYPE_IS_MPI_HANDLE },
 { "MPI_Info", "integer", CTYPE_IS_MPI_HANDLE },
 { "MPI_Errhandler", "integer", CTYPE_IS_MPI_HANDLE },
 /* MPI types */
@@ -2812,10 +2471,10 @@ void sortTypeArray( void )
 
 #endif
 
-/* 
-   This is a better version of strncpy that does not zero out the entire 
+/*
+   This is a better version of strncpy that does not zero out the entire
    array but does ensure that it is null-terminated, and returns a
-   failure indication (value not 0) if the string did not fit. 
+   failure indication (value not 0) if the string did not fit.
 */
 int MPIU_Strncpy( char *dest, const char *src, size_t n )
 {
@@ -2829,13 +2488,13 @@ int MPIU_Strncpy( char *dest, const char *src, size_t n )
     while (*s_ptr && i-- > 0) {
 	*d_ptr++ = *s_ptr++;
     }
-    
-    if (i > 0) { 
+
+    if (i > 0) {
 	*d_ptr = 0;
 	return 0;
     }
     else {
-	/* Force a null at the end of the string (gives better safety 
+	/* Force a null at the end of the string (gives better safety
 	   in case the user fails to check the error code) */
 	dest[n-1] = 0;
 	/* We may want to force an error message here, at least in the
@@ -2865,25 +2524,25 @@ int MPIU_Strnapp( char *dest, const char *src, size_t n )
 
     /* We allow i >= (not just >) here because the first while decrements
        i by one more than there are characters, leaving room for the null */
-    if (i >= 0) { 
+    if (i >= 0) {
 	*d_ptr = 0;
 	return 0;
     }
     else {
 	/* Force the null at the end */
 	*--d_ptr = 0;
-    
+
 	/* We may want to force an error message here, at least in the
 	   debugging version */
 	return 1;
     }
 }
 
-void FreeArgs( ARG_LIST *args, int nargs ) 
+void FreeArgs( ARG_LIST *args, int nargs )
 {
     int i;
     for (i=0; i<nargs; i++) {
-	if (args[i].name) { 
+	if (args[i].name) {
 	    FREE( args[i].name );
 	    args[i].name = 0;
 	}
