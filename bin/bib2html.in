@@ -70,7 +70,9 @@ $EntryEnd = "";
 # ignorefields gives the names of fields that should not be noted as
 # "not known".  These apply to every entry type.
 %ignorefields = ( 'area' => 1, 'areaseq' => 1, 'bibsource' => 1, 'ee' => 1,
-    'preprintof' => 1, 'doi' => 1, 'eprint' => 1, 'webloc' => 1  );
+    'preprintof' => 1, 'doi' => 1, 'eprint' => 1, 'webloc' => 1,
+    'acmid' => 1, 'isbn' => 1, 'biburl' => 1, 'language' => 1,
+  );
 # Default Formats for outlist
 # Book
     # title, author, publisher, year.
@@ -78,7 +80,9 @@ $EntryEnd = "";
 			 'endtitle' => '</I>' );
     @fieldlistBook = ('title', 'author', 'publisher', 'note', 'year');
     @fieldlistoptionalBook = ('address', 'pages', 'isbn', 'lccn', 'series',
-	'keywords', 'editor', 'annote', 'pubaddress', 'key', 'edition' );
+	'keywords', 'editor', 'annote', 'pubaddress', 'key', 'edition',
+        'source', 'location', 'month', 'url',
+     );
 #
 # Booklet
     # title, author, publisher, year.
@@ -87,7 +91,7 @@ $EntryEnd = "";
     @fieldlistBooklet = ('title', 'author', 'publisher', 'note', 'month',
 			 'year');
     @fieldlistoptionalBooklet = ('address', 'pages', 'isbn', 'lccn', 'series',
-	'keywords', 'editor', 'annote', 'pubaddress', 'key' );
+	'keywords', 'editor', 'annote', 'pubaddress', 'key', 'url' );
 #
 # Article
     # title, author, journal, volume, number, pages, year.
@@ -100,16 +104,21 @@ $EntryEnd = "";
 	'classification', 'conflocation', 'corpsource',
 	'conftitle', 'sponsororg', 'treatment', 'key',
 	'affiliation', 'thesaurus', 'key', 'journalabr',
-        'publisher' );
+        'publisher', 'address', 'officialurl', 'issue_date', 'numpages',
+        'articleno', 'timestamp', );
 # InBook
     # title, author, publisher, year.
     %htmlformatsInBook = ( 'starttitle' => '<I>',
-			   'endtitle' => '</I>' );
+			   'endtitle' => '</I>',
+			   'startbooktitle' => 'in <i>',
+			   'endbooktitle' => '</i>',
+    );
     # chapter is the chapter title.
     @fieldlistInBook = ('chapter', 'author', 'title', 'publisher', 'note',
-	'year' );
+	'year', 'booktitle' );
     @fieldlistoptionalInBook = ('address', 'pages', 'isbn', 'lccn', 'series',
-	'keywords', 'editor', 'annote', 'pubaddress', 'key', 'number' );
+	'keywords', 'editor', 'annote', 'pubaddress', 'key', 'number', 'url',
+        'keyword', 'organization', 'volume', 'editors', 'edition' );
 
 #
 # InProceedings
@@ -120,11 +129,13 @@ $EntryEnd = "";
 	'note', 'year');
     @fieldlistoptionalInProc = ('number', 'month', 'series', 'publisher',
 	'address', 'volume', 'keywords', 'acknowledgement', 'treatment',
+	'keyword', 'numpages', 'organizers', 'annoteps',
 	'corpsource', 'conftitle', 'classification',
 	'isbn', 'organization', 'confdate',
 	'meetingdate', 'meetingdate2', 'sponsor',
 	'sponsororg', 'thesaurus', 'affiliation', 'bibdate',
 	'annote', 'url', 'issn', 'confloc', 'eariler', 'owner',
+        'articleno',
 	'conflocation', 'crossref', 'editors',
 	'conference', 'meetingaddress', 'earlier',
 	'coden', 'key', 'pubaddress', 'category', 'place',
@@ -142,7 +153,7 @@ $EntryEnd = "";
 	'number', 'note', 'year');
     @fieldlistoptionalTech = ('month', 'keywords', 'url', 'language', 'notes',
 	'pages', 'bibdate', 'later', 'scope', 'type', 'abstract-url',
-  	'annote', 'address', 'key', 'location', 'category' );
+  	'annote', 'address', 'key', 'location', 'category', 'parallelissues' );
 #
 # Misc
     # title, author, institution, number, year
