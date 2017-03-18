@@ -12,6 +12,8 @@ DOCTEXT = ../doctext
 # FILES = all files
 # FILES_USING_QUOTE are all files that either have no quotes, or use the
 #   quote for formatting
+# There are a few files that are processed separately; this is to keep them
+# from that general output files like f.tex.
 FILES_QUOTEFMT    = allfmt.c # mesh.c
 FILES_NOQUOTEFMT  = test.nam tstpgm.c tstpgma.c tstpgmc.c tstpgm.h # estest.h
 FILES_QUOTE_NOFMT = tst1.c tststra.h # c.h
@@ -53,6 +55,7 @@ runtests: Makefile
 	$(DOCTEXT) -date "2/10/2000" estest.h
 	rm -f es.cit
 	$(DOCTEXT) -html -date "2/10/2000" -index es.cit estest.h
+	$(DOCTEXT) -html tdollar.h
 
 # This test is not part of the default tests, in part because it generates
 # large number of output files, and in part because the original reason

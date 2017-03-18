@@ -1,0 +1,29 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD>
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>UsingFortran</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+<A NAME="UsingFortran"><H1>UsingFortran</H1></A>
+To use PETSc with Fortran you must use both PETSc include files and modules. At the beginning of every function and module definition you need something like <BR>
+<BR>#include "petsc/finclude/petscXXX.h"
+<BR>         use petscXXXX
+<P>
+You can delcare PETSc variables using either
+<P>
+<BR>    XXX variablename
+<BR>    type(tXXX) variablename
+<P>
+for example
+<P>
+<BR>#include "petsc/finclude/petscvec.h"
+<BR>         use petscvec
+<BR>
+<BR>    Vec  A
+<BR>    type(tVec) A
+<P>
+Level: beginner
+<P>
+<P><B>Location:</B>tdollar.h<P>
+</BODY></HTML>
