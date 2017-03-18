@@ -45,7 +45,10 @@ extern char NewlineString[3];
 // Used for debugging
 extern int verbose;
 
-
+// Used for the rare case (especially in verbatim output) where we still need
+// to know the output format.
+typedef enum { FMT_UNKNOWN, FMT_NROFF, FMT_LATEX, FMT_HTML } outFormat_t;
+extern outFormat_t outFormat;
 
 // Many of these are KINDS returned by the tests
 #define ROUTINE     '@'

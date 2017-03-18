@@ -33,6 +33,8 @@ char NewlineString[3];
 // Set true for debugging
 int verbose = 0;
 
+outFormat_t outFormat = FMT_UNKNOWN;
+
 // Indicate if we're in an argument list or not
 int InArgList = 0;
 
@@ -101,19 +103,23 @@ int main( int argc, char ** argv )
 
     // I need to use exception handling to catch errors in the TextOutxxx
     // routines.
+    outFormat = FMT_UNKNOWN;
     if (!cmd->HasArg( "-html" )) {
+	outFormat = FMT_HTML;
 	textout    = new TextOutHTML( );
 	if (!extension) extension = "html";
 	incommands = new InStreamFile( 
 		      DOCTEXT_PATH, "DOCTEXT_PATH", "html.def", "r" );
 	}
     else if (!cmd->HasArg( "-latex" )) {
+	outFormat  = FMT_LATEX;
 	textout    = new TextOutTeX( );
 	if (!extension) extension = "tex";
 	incommands = new InStreamFile( 
 		      DOCTEXT_PATH, "DOCTEXT_PATH", "latex.def", "r" );
 	}
     else {
+	outFormat  = FMT_NROFF;
         cmd->HasArg( "-man" );    // allow -man as an option
 	textout = new TextOutNroff( );
 	if (!extension) extension = "3";

@@ -211,14 +211,25 @@ int ProcessVerbatimFmt( InStream *ins, TextOut *textout, int *lastWasNl )
 
     /* Raw mode output. */
     if (ins->GetChar( &ch )) return 1;
-    if (ch == ' ' || ch == '\t' || ch == '\n') {
-	if (*lastWasNl) 
+    /* FIXME: This is probably not exactly correct for NROFF output */
+    if (outFormat != FMT_NROFF) {
+	if (*lastWasNl)
 	    textout->PutOp( "s_doctext_verbatim" );
+	if (! (ch == ' ' || ch == '\t' || ch == '\n')) {
+	    textout->PutChar( ch );
 	}
+    }
     else {
-	textout->PutChar( '.' );
-	textout->PutChar( ch );
+	/* This is a special case for nroff output */
+	if (ch == ' ' || ch == '\t' || ch == '\n') {
+	    if (*lastWasNl)
+		textout->PutOp( "s_doctext_verbatim" );
 	}
+	else {
+	    textout->PutChar( '.' );
+	    textout->PutChar( ch );
+	}
+    }
     if (ch != '\n') {
 	/* Preserve spacing */
 	while (!ins->GetChar( &ch ) && isspace(ch)) {
