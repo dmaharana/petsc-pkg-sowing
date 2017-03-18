@@ -819,7 +819,7 @@ void TXref( TeXEntry *e )
 
     if (refname) {
 	if (refnumber >= 0) {
-	    if (fname)
+	    if (fname[0])
 		snprintf( lfname, sizeof(lfname), "%s#Node", fname );
 	    else
 		strncpy( lfname, "Node", sizeof(lfname) );
@@ -3891,7 +3891,8 @@ int TXConvertFigureToGIF( char *fname )
     /* find the dirctory separator, if any */
     while (p != fname && *p != DirSep) p--;
     if (*p == DirSep) p++;
-    if (!splitdir || *splitdir == 0) {
+    /* splitdir is statically allocated, so it is always a non-null pointer */
+    if (*splitdir == 0) {
 	snprintf( fname2, sizeof(fname2), "%s", p );
     }
     else {

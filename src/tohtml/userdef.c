@@ -301,9 +301,9 @@ void TXDoNewCommand( SRList *TeXlist, TeXEntry *e )
 	def->input_template = 0;
 	if (DebugDef) {
 	    printf( "Defining %s with newcommand or renewcommand\n", name );
-	    printf( "Definition text is %s\n", ldef ? ldef : "<null>" );
+	    printf( "Definition text is %s\n", ldef[0] ? ldef : "<null>" );
 	}
-	
+
 	TXInsertName( TeXlist, name+1, TXDoUser, nargs, (void *)def );
     }
 }
