@@ -1,13 +1,20 @@
 /*@
-getstr -  A routine with a string
+Getstr -  A routine with a string
 @*/
-int getstr(int nc, char *a)
+int Getstr(int nc, char *a)
 {
 }
 
 /*@
- getstr2 - Write as array instead of pointer
+ Getstr2 - Write as array instead of pointer
 @*/
-int getstr2(int nc, char a[])
+int Getstr2(int nc, char a[])
+{
+}
+
+/*@
+ Putstr - Put a string
+@*/
+int Putstr(int nc, const char *a)
 {
 }

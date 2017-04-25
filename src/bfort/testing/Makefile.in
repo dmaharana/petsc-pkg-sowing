@@ -2,7 +2,8 @@ ALL: all-redirect
 SHELL = /bin/sh
 BFORT = ../bfort
 
-TESTCOUTPUT = n1f.c n2f.c tstpgmaf.c tstpgma2f.c tstpgmbf.c tstcf.c
+TESTCOUTPUT = n1f.c n2f.c tstpgmaf.c tstpgma2f.c tstpgmbf.c \
+	tstcf.c tst2cf.c tst3cf.c
 TESTF90OUTPUT = tstpgmaf90.f90 tstpgmbf90.f90
 TESTOUTPUT = $(TESTCOUTPUT) $(TESTF90OUTPUT)
 
@@ -19,9 +20,21 @@ n2f.c: n2.c $(BFORT)
 	export BFORT_CONFIG_PATH=../../../share && \
 	$(BFORT) -ferr -mapptr -mnative -anyname -I pubinc -mpi n2.c
 
+# These are tests that include string handling
+tst2c.c: tstc.c
+	ln -s tstc.c tst2c.c
+tst3c.c: tstc.c
+	ln -s tstc.c tst3c.c
 tstcf.c: tstc.c $(BFORT)
 	export BFORT_CONFIG_PATH=../../../share && \
 	$(BFORT) -ferr -anyname tstc.c
+tst2cf.c: tst2c.c $(BFORT)
+	export BFORT_CONFIG_PATH=../../../share && \
+	$(BFORT) -ferr -fnostring -anyname tst2c.c
+tst3cf.c: tst3c.c $(BFORT)
+	export BFORT_CONFIG_PATH=../../../share && \
+	$(BFORT) -anyname tst3c.c
+
 
 tstpgmaf90.f90 tstpgmaf.c: tstpgma.c $(BFORT)
 	export BFORT_CONFIG_PATH=../../../share && \
@@ -73,5 +86,7 @@ Makefile: Makefile.in ../../../config.status
 	(export CONFIG_FILES=src/bfort/testing/Makefile && \
 	cd ../../.. && ./config.status)
 
+../bfort: ../bfort.c
+	(cd .. && $(MAKE) bfort)
 #
 # malform.c is used to check that bfort can handle a malformed comment
