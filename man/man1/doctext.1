@@ -1,4 +1,4 @@
-.TH doctext 1 "2/1/2000" " " ""
+.TH doctext 1 "6/17/2019" " " ""
 .SH NAME
 doctext \-  Generate documentation pages from source files 
 .SH SYNOPSIS
@@ -43,6 +43,11 @@ routines
 .TP
 .B -html       
 - Generate html (WWW) output rather than man format files
+.PD 1
+.PD 0
+.TP
+.B -man        
+- Generate man (nroff) output (default)
 .PD 1
 .PD 0
 .TP
@@ -95,10 +100,10 @@ may be used for Fortran or Shell sources
 .PD 0
 .TP
 .B -ignore string 
-- skip 'name' in a function synopsis.  This can be used 
+- skip 'name' in a function synopsis.  This can be used
 to remove special keywords needed to build the routine
 but not needed by the user (e.g., special export
-keywords when building DLLs)   
+keywords when building DLLs)
 .PD 1
 .PD 0
 .TP
