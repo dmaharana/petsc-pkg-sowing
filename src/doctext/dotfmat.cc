@@ -63,7 +63,7 @@
  * end with a - instead of a dot; this allows the argument list as a whole
  * to be formatted.
  */
-int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout, 
+int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 		   int *lastWasNl )
 {
     char ch;
@@ -80,7 +80,7 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
       /* No break; we fall through to the end */
     case ARGUMENT:
     case ARGUMENT_END:
-      if (InArgList) 
+      if (InArgList)
 	textout->PutOp( "s_arg_inlist" );
       else
 	textout->PutOp( "s_arg" );
@@ -90,7 +90,7 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
     /* Get the name */
     last_was_backslash = 0;
     while ( !ins->GetChar( &ch ) ) {
-	if (ch == '\n' || (ch == '-' && !at_first && !last_was_backslash)) { 
+	if (ch == '\n' || (ch == '-' && !at_first && !last_was_backslash)) {
 	  *lastWasNl = 1; break; }
 	if (last_was_backslash && ch != '-') {
 	  textout->PutChar( '\\' );
@@ -142,7 +142,7 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 	    // Note that since this is the first character in the reserved
 	    // position, we don't need to check for the full termination
 	    // string
-	    if (ch == ARGUMENT || ch == ARGUMENT_END || ch == VERBATIM || 
+	    if (ch == ARGUMENT || ch == ARGUMENT_END || ch == VERBATIM ||
 		ch == '\n' || ch == '@' || ch == 'M' || ch == 'D') {
 	      // We must also unget the leading string
 	      UngetLeadingString( ins );
@@ -159,7 +159,7 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 	      if (ch == '\n') {
 		*lastWasNl = 1; break;
 	      }
-	      // Really should check for <char> * / 
+	      // Really should check for <char> * /
 	      if (ch == '@' || ch == 'M' || ch == 'D') {
 		char pat[4];
 		pat[0] = ch;
@@ -173,7 +173,7 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 		    *lastWasNl = 1; break;
 		  }
 		}
-		else 
+		else
 		  ins->UngetChar( pat[1] );
 		}
 	      // Unget the first non-blank character.
@@ -276,7 +276,7 @@ int ProcessVerbatimBlockFmt( InStream *ins, TextOut *textout, int *lastWasNl )
   char buf[256];
   char *p;
   const char *savemode;
-  
+
   /* Check for .vb */
   if (!ins->GetChar( &ch ) && ch != 'b') {
     fprintf( stderr, "Invalid verbatim command '.v%c' in %s\n", ch,
@@ -304,7 +304,7 @@ int ProcessVerbatimBlockFmt( InStream *ins, TextOut *textout, int *lastWasNl )
 int ProcessCaption( InStream *ins, TextOut *textout, int *lastWasNl )
 {
     char ch;
- 
+
     /* Check next character */
     if (ins->GetChar( &ch )) return 1;
     if (ch == 'b')      textout->PutOp( "s_caption" );
@@ -341,14 +341,14 @@ int ProcessKeywords( InStream *ins, TextOut *textout, int *lastWasNl )
 
     /* Skip over 'eywords' if present */
     SkipOver( ins, "eywords:" );
-    
+
     /* Pass the keywords to the keyword routine */
     ins->GetLine( buf, 1024 );
-    
+
     textout->PutOp( "section", (char*)"Keywords" );
     textout->PutToken( 0, buf );
     textout->PutOp( "linebreak" ); // lastwasNL?
-    
+
     KeywordOut( buf );
     return 0;
 }
@@ -359,10 +359,10 @@ int ProcessSeeAlso( InStream *ins, TextOut *textout, int *lastWasNl )
 
     /* Skip over 'eealso' if present */
     SkipOver( ins, "eealso:" );
-    
+
     /* Pass the tokens to the seealso routine */
     ins->GetLine( buf, 1024 );
-    
+
     textout->PutOp( "section", (char *)"See Also" );
     textout->PutToken( 0, buf );
     textout->PutOp( "linebreak" ); // lastwasNL?
@@ -391,7 +391,7 @@ int ProcessUserCmd( InStream *ins, TextOut *textout, int *lastWasNl )
 int ProcessEnumerate( InStream *ins, TextOut *textout, int *lastWasNl )
 {
     char ch;
- 
+
     /* Check next character */
     if (ins->GetChar( &ch )) return 1;
     if (ch == 'b')      textout->PutOp( "s_enumerate" );
@@ -412,7 +412,7 @@ int ProcessItemize( InStream *ins, TextOut *textout, int *lastWasNl )
 #if 0
     /* Pass the tokens to the seealso routine */
     ins->GetLine( buf, 1024 );
-    
+
     textout->PutOp( "section", (char *)"See Also" );
     textout->PutToken( 0, buf );
     textout->PutOp( "linebreak" ); // lastwasNL?
@@ -424,7 +424,7 @@ int ProcessItemize( InStream *ins, TextOut *textout, int *lastWasNl )
 int ProcessBlockOp( InStream *ins, TextOut *textout, int *lastWasNl )
 {
     char ch;
- 
+
     /* Check next character */
     if (ins->GetChar( &ch )) return 1;
     if (ch != 'q') {
