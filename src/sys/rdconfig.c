@@ -53,7 +53,7 @@ int SYReadConfigFile(const char filename[], const char sepChar,
 	    *bufp++ = 0;
 	}
 	/* Skip empty commands */
-	if (*cmd == 0) continue;
+	if (*cmd == 0 || *cmd == '\n') continue;
 	/* Look for the key */
 	while (*bufp && isspace(*bufp) && *bufp != '\n') bufp++;
 	key = bufp;
@@ -223,6 +223,15 @@ int SYConfigDBInsert(const char *cmd, const char *key, const char *value,
     node->key   = STRDUP(key);
     node->value = value ? STRDUP(value) : 0;
 
+    return 1;
+}
+
+/*
+ Use this as the routine to call for commands to be ignored.
+ */
+int SYConfigDBIgnore(const char *cmd, const char *key, const char *value,
+		     void *extracmd)
+{
     return 1;
 }
 
