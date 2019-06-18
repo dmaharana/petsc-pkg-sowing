@@ -44,7 +44,7 @@ static int debugContents = 0;
    elseif (level == cur_level+1) set as last child, push as parent
    else   error (level > cur_level + 1)
 
-   One problem is that some documents start with chapters, others with 
+   One problem is that some documents start with chapters, others with
    sections.  If the FIRST node is a section, this is the base node.
  */
 typedef struct _Contents {
@@ -58,6 +58,7 @@ typedef struct _Contents {
 extern void PrintContents ( FILE *, Contents * );
 extern void WriteSubChildren ( FILE *, Contents *, int );
 static Contents *NewContents( int, const char * );
+void WriteSiblings( FILE *, Contents *, int );
 
 
 #define MAX_DEPTH 7
@@ -386,7 +387,7 @@ void WRfromauxfile( FILE *fout, int level )
 	if (level == ilevel) {
 	    if (buffer[strlen(buffer)-1] == '\n')
 		buffer[strlen(buffer)-1] = 0;
-	    if (lfname)
+	    if (lfname[0])
 		sprintf( fullname, "%s#Node", 
 			 (lfname[0] == '#') ? lfname + 1 : lfname );
 	    else {

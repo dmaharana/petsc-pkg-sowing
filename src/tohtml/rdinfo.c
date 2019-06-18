@@ -19,7 +19,7 @@ static SRList *infoctx = 0;
 int ProcessInfoFile( argc, argv, fpin, fpout )
 int  argc;
 char **argv;
-FILE *fpin, *fpout;    
+FILE *fpin, *fpout;
 {
 char buffer[MAX_LINE];
 int  maxlen=MAX_LINE-1, actlen, c;
@@ -65,7 +65,7 @@ while ((actlen = SYTxtGetLine( fpin, buffer, maxlen )) != EOF) {
     	    c = buffer[0];
             }
 	}
-    else {    
+    else {
         /* A regular line */
         OutputTextLine( buffer, fpout );
         }
@@ -78,7 +78,7 @@ SRDump( infoctx, fp );
 SRDumpAll( infoctx, fp );
 fclose( fp );
 }
-}    
+}
 
 /* An info menu is ALWAYS terminated by either a '\037' or an EOF */
 int RdInfoMenu( fpin, fpout, buffer, maxlen )
@@ -105,7 +105,7 @@ while ((actlen = SYTxtGetLine( fpin, buffer, maxlen )) != EOF) {
 fprintf( stderr, "Done with menu\n" ); fflush( stderr );
 return actlen;
 }
-    
+
 static int  seqnum = 0;
 int RdInfoTopic( fpin, fpout, buffer, maxlen )
 FILE *fpin, *fpout;
@@ -128,7 +128,7 @@ if (strncmp( buffer, "End tag table", 13 ) == 0) {
 actlen = SYTxtSkipBlankLines( fpin, buffer, maxlen );
 /* Check for a menu line */
 if (strncmp( buffer, "* Menu:", 7) == 0) {
-    GetContextAndEntry( "Contents", entrylevel, &number );    
+    GetContextAndEntry( "Contents", entrylevel, &number );
     WriteSectionHeader( fpout, "Contents", entrylevel, number, keywords );
     WriteTextHeader( fpout );
     RdInfoMenu( fpin, fpout, buffer, maxlen );
@@ -136,7 +136,7 @@ if (strncmp( buffer, "* Menu:", 7) == 0) {
     return 0;
     }
 WRtoauxfile( seqnum++, 0, buffer );
-GetContextAndEntry( buffer, entrylevel, &number );    
+GetContextAndEntry( buffer, entrylevel, &number );
 WriteSectionHeader( fpout, buffer, entrylevel, number, keywords );
 /* Skip the next line; it should contain some sort of underlining */
 SYTxtGetLine( fpin, buffer, maxlen );
@@ -147,7 +147,7 @@ WriteTextHeader( fpout );
 
 /*
    Info files start with some information that we want to discard
- */    
+ */
 int SkipInfoHeader( fpin, buffer, maxlen )
 FILE *fpin;
 char *buffer;
@@ -155,11 +155,11 @@ int  maxlen;
 {
 int  actlen;
 /* We read until we find a blank line */
-	
+
 while ( (actlen = SYTxtGetLine( fpin, buffer, maxlen )) != EOF ) {
     if (SYTxtLineIsBlank( buffer, actlen )) break;
     }
-}    
+}
 
 /* Given a name in buffer, get the entrylevel and number to use */
 /* MS C provides both lsearch and bsearch, but they do not correspond with the
@@ -174,7 +174,7 @@ p = buffer + strlen(buffer) - 1;
 if (*p == '\n') *p = '\0';
 /* We really need to try and look name up and if it isn't found, generate a
    unique name */
-*number = -1;   
+*number = -1;
 SRInsert( infoctx, buffer, entrylevel, number );
 }
 
@@ -188,7 +188,7 @@ SRInsert( infoctx, buffer, entrylevel, number );
 
   In the first case, name and entry are the same.
   In the second, name==searchname.
-*/    
+*/
 int GetNameFromMenuEntry( buffer, actlen, name, entry )
 char *buffer, *name, *entry;
 int  actlen;
@@ -214,7 +214,7 @@ else if (*p == '.') {
     *p = '\0';
     }
 else
-    fprintf( stderr, "Could not parse menu line %s\n", buffer );    
+    fprintf( stderr, "Could not parse menu line %s\n", buffer );
 }
 
 
@@ -234,7 +234,7 @@ char schar;
 
 /* A completely blank line needs to be turned into a \par */
 if (SYTxtLineIsBlank( buffer, strlen(buffer) )) {
-    if (!LastWasPar) 
+    if (!LastWasPar)
         WritePar( fpout );
     LastWasPar = 1;
     return 0;
@@ -250,7 +250,7 @@ else if (LastWasIndented) {
     WriteStartNewLine( fpout );
     LastWasIndented = 0;
     }
-    
+
 while (*p) {
     if (*p == '*' && strncmp( p, "*Note ", 6) == 0) {
 	starloc = p;
@@ -270,12 +270,12 @@ while (*p) {
 	    p[2] = schar;
 	    p += 2;
 	    WriteString( fpout, p );
-	    return 0; 
+	    return 0;
 	    }
         }
     else
         p++;
-    }        
+    }
 WriteString( fpout, buffer );
 return 0;
 }

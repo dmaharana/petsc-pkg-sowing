@@ -66,6 +66,8 @@ static int DebugTab = 0;
   */
 static int Ncell = 0;
 
+void TXmulticolumn(TeXEntry *);
+
 void TeXGetTabularDefn( void )
 {
     int         ncell, i;
@@ -349,14 +351,12 @@ void TeXEndHalignTable( void )
    where positioning is the ALIGN value: l, r, c.
 
    This isn't quite right, because we generate the <TD ALIGN=xxx> too early.
-   
  */
 void TXmulticolumn( TeXEntry *e )
 {
     HTabularRow *hrow;
     char buf[256], *align_str, *reqalign_p;
     int colcount;
-    char aligntype;
 
     if (lstack[lSp].env == TXTABULAR) {
 	hrow = (HTabularRow *)(lstack[lSp].extra_data);
@@ -386,7 +386,7 @@ void TXmulticolumn( TeXEntry *e )
 	  align_str = "\"CENTER\""; break;
 	}
 	POPCURTOK;
-	
+
 	sprintf( buf, "<TD ALIGN=%s COLSPAN=%d>", align_str, colcount );
 	TeXoutcmd( fpout, buf );
 	hrow->curcol += colcount;
@@ -395,7 +395,7 @@ void TXmulticolumn( TeXEntry *e )
 
 void InitTabular( void )
 {
-    /* Don't uncomment this until multicolumn works correctly with the 
+    /* Don't uncomment this until multicolumn works correctly with the
        other alignments */
-    TXInsertName( TeXlist, "multicolumn", TXmulticolumn, 3, (void *)0 ); 
+    TXInsertName( TeXlist, "multicolumn", TXmulticolumn, 3, (void *)0 );
 }

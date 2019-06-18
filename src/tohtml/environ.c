@@ -16,7 +16,6 @@ typedef struct _NewEnv {
     } NewEnv;
 
 static SRList *newenv = 0;
-static int DebugEnv = 0;
 static int LatexQuiet = 0;
 
 static int leave_tex_files = 0;
@@ -51,8 +50,8 @@ void TXDoNewenvironment( TeXEntry *e )
     TeXGetArg( fpin[curfile], nametok, MAX_TOKEN );
 
 /* Check for [nargs] */
-    nargs = TeXGetGenArg( fpin[curfile], args, 10, '[', ']', 1 );	
-    if (nargs == -1) 
+    nargs = TeXGetGenArg( fpin[curfile], args, 10, '[', ']', 1 );
+    if (nargs == -1)
 	TeXAbort( "TXDoNewenvironment", e->name );
     if (nargs) {
 	nargs = atoi( args );
@@ -84,9 +83,9 @@ void TXDoNewenvironment( TeXEntry *e )
     l->priv    = (void *)new;
 }
 
-/* Set an environment's begin and end text.  If btext or etext is null, 
+/* Set an environment's begin and end text.  If btext or etext is null,
    ignore it.  If name is not known, insert it.
-   Environments set with this function cannot be replaced by 
+   Environments set with this function cannot be replaced by
    newenvironment commands
  */
 void TXSetEnv( const char *name, char *btext, char *etext, int bnargs )
@@ -111,7 +110,7 @@ void TXSetEnv( const char *name, char *btext, char *etext, int bnargs )
       new->predef= 1;
       l->priv    = (void *)new;
     }
-    else 
+    else
       new = (NewEnv *)(l->priv);
 
     if (btext)       new->btext = btext;
@@ -125,7 +124,7 @@ void TXSetEnv( const char *name, char *btext, char *etext, int bnargs )
    as in
 
    \newtheorem{example}{Example}[chapter]
- 
+
    which should generate
    Example 3.14
    for the 14th example in chapter 3.
@@ -149,7 +148,7 @@ void TXDoNewtheorem( TeXEntry *e )
     TeXGetGenArg( fpin[curfile], tmpbuf, MAX_TOKEN, '{', '}', 0 );
     strcpy( btext, "\\par{\\bf " );
     strcat( btext, tmpbuf );
-/* really should do something here that allows us to process the counter */ 
+/* really should do something here that allows us to process the counter */
     strcat( btext, "}" );
 
 /* Get Counter name */
@@ -204,7 +203,7 @@ void PushBeginEnv( char *btext, int nargs )
 	if (p > btext && p[-1] == '#') {
 	    argn = p[0] - '1';
 	    if (argn >= 0 && argn < nargs) {
-		if (DebugDef) printf( "Pushing %s back in env eval(1)\n", 
+		if (DebugDef) printf( "Pushing %s back in env eval(1)\n",
 				      args[argn] );
 		SCPushToken( args[argn] );
 		p--;
@@ -228,21 +227,21 @@ void PushBeginEnv( char *btext, int nargs )
 
 /*
    The intent of this routine is to run LaTeX on the given LaTeX code
-   and include the output as an image in the file 
+   and include the output as an image in the file
 
    The code is drawn from that in latex2html; it requires the ability to
    display gif files.
 
-   This can handle either an environment (given by envname) or a short 
+   This can handle either an environment (given by envname) or a short
    command (given by string)
-   
+
    Name is the basename of the file to use.
 
    Only run latex if runagain is true.  If runagain is FALSE, DO EAT the
    source code that would have been comsumed if runagain was true.
  */
 /* kind is xbm or gif */
-void RunLatex( char *envname, char *string, char *name, char *mathmode, 
+void RunLatex( char *envname, char *string, char *name, char *mathmode,
 	       char *kind, int runagain )
 {
     TeXEntry E;
@@ -284,12 +283,12 @@ void RunLatex( char *envname, char *string, char *name, char *mathmode,
 \\pagestyle{empty}\n\
 \\thispagestyle{empty}\n\
 \\vsize=20in\\setlength{\\textheight}{20in}\n\
-%%tohtml-end%%\n", 
+%%tohtml-end%%\n",
 documentcmd, preamble ? preamble : "{article}" );
-	/* Add the definition of \code and \file, just in case.  
+	/* Add the definition of \code and \file, just in case.
 	   This really should
 	   be set if format is -slide, along with other slide items. */
-	if (0) 
+	if (0)
 	  AddCodeDefn( fp );
 
 	if (predoc && predoc[0]) {
@@ -322,6 +321,7 @@ documentcmd, preamble ? preamble : "{article}" );
     }
 
     if (!runagain) {
+	p = 0;
 	if (envname) {
 	    p = (char *) MALLOC( strlen(envname) + 1 );  CHKPTR(p);
 	    strcpy( p, envname );
@@ -332,7 +332,9 @@ documentcmd, preamble ? preamble : "{article}" );
 	    strcpy( p, mathmode );
 	    TeXskipMath( &E, p, 0 );
 	}
-	FREE( p );
+	if (p) {
+	    FREE( p );
+	}
     }
     else {
 	if (envname) {
@@ -422,10 +424,10 @@ documentcmd, preamble ? preamble : "{article}" );
 	GetBaseName( latex_errname );
 	strcat( latex_errname, ".ler" );
 #endif
-	/* An alternative is 
+	/* An alternative is
 	   strcpy( latex_errname, "/dev/null" ); */
 	if (LatexQuiet) {
-	    sprintf( pgm, "%s %s.tex >>%s 2>&1 </dev/null", 
+	    sprintf( pgm, "%s %s.tex >>%s 2>&1 </dev/null",
 		     latex_pgm, name, latex_errname );
 	}
 	else {
@@ -435,7 +437,7 @@ documentcmd, preamble ? preamble : "{article}" );
 	/* Should check return status */
 	if (system( pgm )) {
 	    /* Something went wrong */
-	    fprintf( ferr, "Latex command %s %s.tex returned nonzero\n", 
+	    fprintf( ferr, "Latex command %s %s.tex returned nonzero\n",
 		     latex_pgm, name );
 	    problem_with_file = 1;
 	}
@@ -448,7 +450,7 @@ documentcmd, preamble ? preamble : "{article}" );
 	strcat( fdviname, ".dvi" );
 	if (SYiFileExists( fdviname, 'r' )) {
 	    if (LatexQuiet) {
-		sprintf( pgm, "dvips %s -o %s.ps >>%s 2>&1", 
+		sprintf( pgm, "dvips %s -o %s.ps >>%s 2>&1",
 			 name, name, latex_errname );
 	    }
 	    else {
@@ -460,7 +462,7 @@ documentcmd, preamble ? preamble : "{article}" );
 	    strcat( fdviname, ".pdf" );
 	    if (SYiFileExists( fdviname, 'r' )) {
 		if (LatexQuiet) {
-		    sprintf( pgm, "pdftops %s.pdf %s.ps >>%s 2>&1", 
+		    sprintf( pgm, "pdftops %s.pdf %s.ps >>%s 2>&1",
 			     name, name, latex_errname );
 		}
 		else {
@@ -482,7 +484,7 @@ documentcmd, preamble ? preamble : "{article}" );
 	    /* Could use pstoxbm instead */
 	    if (strcmp( kind, "gif" ) == 0) {
 		if (LatexQuiet)
-		    sprintf( pgm, "%spstogif %s.ps %s.gif >>%s 2>&1", 
+		    sprintf( pgm, "%spstogif %s.ps %s.gif >>%s 2>&1",
 			     PSPATH, name, name, latex_errname );
 		else
 		    sprintf( pgm, "%spstogif %s.ps %s.gif", PSPATH, name, name );
@@ -490,15 +492,15 @@ documentcmd, preamble ? preamble : "{article}" );
 	    }
 	    else {
 		fprintf( stderr, "Warning: Output to XBM file for %s.ps found; browsers no longer support these files\n", name );
-		if (LatexQuiet) 
-		    sprintf( pgm, "%spstoxbm %s.ps %s.xbm >>%s 2>&1", 
+		if (LatexQuiet)
+		    sprintf( pgm, "%spstoxbm %s.ps %s.xbm >>%s 2>&1",
 			     PSPATH, name, name, latex_errname );
 		else
 		    sprintf( pgm, "%spstoxbm %s.ps %s.xbm", PSPATH, name, name );
 		strcpy( ext, "xbm" );
 	    }
 	    system( pgm );
-	    /* Note that the result of the run might be name%d.ext, 
+	    /* Note that the result of the run might be name%d.ext,
 	       for example img2101.xbm and img2102.xbm, instead of img201.xbm
 	    */
 	    if (splitlevel >= 0) {
@@ -508,7 +510,7 @@ documentcmd, preamble ? preamble : "{article}" );
 		system ( pgm );
 	    }
 	}
-	sprintf( pgm, "rm -f %s.dvi %s.ps %s.pdf %s.out %s.aux %s.log", 
+	sprintf( pgm, "rm -f %s.dvi %s.ps %s.pdf %s.out %s.aux %s.log",
 		 name, name, name, name, name, name );
 	system( pgm );
 	if (!problem_with_file && !leave_tex_files) {
@@ -534,14 +536,14 @@ documentcmd, preamble ? preamble : "{article}" );
 
 
 /*
-   When entering a numbered environment, set the type and number. 
+   When entering a numbered environment, set the type and number.
 
    These are in the global variable envJumpNum and in the returned string
    envname.
  */
 void TXStartNumberedEnv( char *envname )
 {
-    int  envnum;
+    int  envnum=0;
 
     envname[0] = 0;
     switch (NumberedEnvironmentType) {
@@ -578,7 +580,7 @@ void TXcaptionHandling( TeXEntry *e )
     envname[0] = 0;
     TXStartNumberedEnv( envname );
     if (InDocument && envname[0]) {
-	if (!envjumpname) 
+	if (!envjumpname)
 	    envjumpname = (char *)MALLOC( 1024 );
 	CHKPTR(envjumpname);
 	sprintf( envjumpname, "%s#%s%d", outfile, envname, envJumpNum );
@@ -586,7 +588,7 @@ void TXcaptionHandling( TeXEntry *e )
 }
 
 /* LaTeX appears to have changed the caption command to allow an optional
- argument in [] before the actual caption (some sort of short form?).  
+ argument in [] before the actual caption (some sort of short form?).
  We must skip over than optional argument */
 void TXcaption( TeXEntry *e )
 {
@@ -610,14 +612,14 @@ void TXcaption( TeXEntry *e )
 	    TXbf( e );
 	    TeXoutstr( fpout, buf );
 	    TXegroup( e );
-	    if (!envjumpname) 
+	    if (!envjumpname)
 		envjumpname = (char *)MALLOC( 1024 );
 	    CHKPTR(envjumpname);
 	    sprintf( envjumpname, "%s%d", envname, envJumpNum );
 	    WriteJumpDestination( fpout, envjumpname, caption );
 	    sprintf( envjumpname, "%s#%s%d", outfile, envname, envJumpNum );
 	}
-	else 
+	else
 	    TeXoutstr( fpout, caption );
     }
     TXWritePar( fpout );
@@ -629,7 +631,7 @@ void TXcaption( TeXEntry *e )
 void TeXSetEnvJump( char *envname )
 {
     if (envname[0]) {
-	if (!envjumpname) 
+	if (!envjumpname)
 	    envjumpname = (char *)MALLOC( 1024 );
 	CHKPTR(envjumpname);
 	sprintf( envjumpname, "%s#%s%d", outfile, envname, envJumpNum );

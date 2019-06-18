@@ -4,7 +4,7 @@
 /*
  * This handles the accent commands \", \`, etc.
  *
- * See http://www.hut.fi/~jkorpela/HTML3.2/latin1.html for the HTML 
+ * See http://www.hut.fi/~jkorpela/HTML3.2/latin1.html for the HTML
  * maps.
  *
  * We begin by defining a mapping of (accent command)letter to HTML.
@@ -27,15 +27,13 @@ static char *(tildes[128]);
 /* Circs \. TeX accent 95? */
 static char *(circs[128]);
 
-static int Debug_accents = 1;
-
 static void InitUmlauts( void );
 static void InitGraves( void );
 static void InitAcutes( void );
 static void InitTildes( void );
 static void InitCircs( void );
 
-#ifndef STRDUP 
+#ifndef STRDUP
 #define STRDUP strdup
 #endif
 
@@ -183,14 +181,14 @@ static void InitCircs( void )
 }
 
 /*
-  &Aring;  &#197;  capital A, ring  
-  &AElig;  &#198;  capital AE diphthong (ligature)  
-  &Ccedil;  &#199;  capital C, cedilla  
-  &ccedil;  &#231;  small c, cedilla  
-  &Oslash;  &#216;  capital O, slash  
-  &THORN;  &#222;  capital THORN, Icelandic  
-  &aring;  &#229;  small a, ring  
-  &aelig;  &#230;  small ae diphthong (ligature)  
-  &eth;  &#240;  small eth, Icelandic  
-  &oslash;  &#248;  small o, slash  
+  &Aring;  &#197;  capital A, ring
+  &AElig;  &#198;  capital AE diphthong (ligature)
+  &Ccedil;  &#199;  capital C, cedilla
+  &ccedil;  &#231;  small c, cedilla
+  &Oslash;  &#216;  capital O, slash
+  &THORN;  &#222;  capital THORN, Icelandic
+  &aring;  &#229;  small a, ring
+  &aelig;  &#230;  small ae diphthong (ligature)
+  &eth;  &#240;  small eth, Icelandic
+  &oslash;  &#248;  small o, slash
 */

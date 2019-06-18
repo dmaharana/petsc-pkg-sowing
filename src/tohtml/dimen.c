@@ -74,7 +74,7 @@ void TXdimen( TeXEntry *e )
 
     ch = SCTxtFindNextANToken( fpin[curfile], dimentoken, MAX_TOKEN, &nsp );
     if (ch == EOF) return;
-    if (!strcmp( dimentoken, "=" ) == 0) {
+    if (! (strcmp( dimentoken, "=" ) == 0) ) {
 	SCPushToken( dimentoken );
     }
     if (TXReadDimen( fpin[curfile] )) return;

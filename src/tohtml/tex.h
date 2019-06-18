@@ -441,6 +441,8 @@ extern void TXActiveCharSet( char, void (*)(char *) );
 extern void TXActiveCharClear(void);
 extern void TXActiveCharDo(char *);
 extern void TXDoObeylines(TeXEntry *);
+extern void TXObeylinesFlushLine(char *);
+extern void TXObeylinesClearActive(void);
 
 /* tex2html.c */
 extern void TXDoGaudy ( int );

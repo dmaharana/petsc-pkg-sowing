@@ -11,11 +11,13 @@
 #endif
 
 #include "tex.h"
-void ProcessFile ( int, char **, FILE *, FILE *, 
+void ProcessFile ( int, char **, FILE *, FILE *,
 			     void (*)( int, char **, FILE *, FILE * ) );
 char *SkipHTML ( char * );
 void CopyImgFiles ( char * );
 void PrintHelp ( char * );
+
+void DebugWriteString( FILE *fd, const char *str, int maxlen );
 
 /* void ProcessInfoFile ( int, char **, FILE *, FILE * ); */
 
@@ -40,7 +42,7 @@ char ImageExt[4];     /* Choose the image type.  Used as both the
 
 char endpagefilename[256];
 char beginpagefilename[256];
-/* NavNames are the buttons at the bottom, TopNames are the buttons at the 
+/* NavNames are the buttons at the bottom, TopNames are the buttons at the
    top.  BottomNav is all of the stuff at the bottom.  */
 int DoNavNames	= 1;
 int DoTopNames	= 1;
@@ -87,7 +89,7 @@ static int wrotebody=0;
 int main( int argc, char *argv[] )
 {
     FILE *fpin, *fpout;
-    void (*process)( int, char **, FILE *, FILE * ) = 
+    void (*process)( int, char **, FILE *, FILE * ) =
 	ProcessLatexFile;
     int  splitlevel = -1;
     char tmpstr[128];
@@ -105,8 +107,8 @@ int main( int argc, char *argv[] )
     /* outfilename[0] = 0; */
 
     if (SYArgHasName( &argc, argv, 1, "-version" )) {
-	printf( "tohtml from version %d.%d.%d %s of %s\n", 
-		PATCHLEVEL, PATCHLEVEL_MINOR, PATCHLEVEL_SUBMINOR, 
+	printf( "tohtml from version %d.%d.%d %s of %s\n",
+		PATCHLEVEL, PATCHLEVEL_MINOR, PATCHLEVEL_SUBMINOR,
 		PATCHLEVEL_RELEASE_KIND, PATCHLEVEL_RELEASE_DATE );
 	return 1;
     }
@@ -149,8 +151,8 @@ int main( int argc, char *argv[] )
       }
       else {
       will want to read order file here
-      }    
-    */    
+      }
+    */
 
     /* FIXME: Add support for debug environment variables */
 
@@ -245,12 +247,12 @@ int main( int argc, char *argv[] )
 	/* Use iftex instead of ifinfo branches */
 	TXSetUseIfTex( 1 );
     }
-    /* This indicates at what level the output should be split into multiple 
+    /* This indicates at what level the output should be split into multiple
        files
    if -split 0 is used, chapters are in separate files.
    -split 1        , chapters AND sections are in separate files.
 
-   Note that in this case, ALL files are written into the split directory 
+   Note that in this case, ALL files are written into the split directory
    */
     SYArgGetInt( &argc, argv, 1, "-split", &splitlevel );
 
@@ -338,7 +340,7 @@ int main( int argc, char *argv[] )
 	    CopyImgFiles( basefilename );
 	/* remove the "/" we added to basefilename */
 	basefilename[strlen(basefilename)-1] = 0;
-    }    
+    }
     else {
 	if (!NoBMCopy)
 	    CopyImgFiles( "." );
@@ -352,15 +354,15 @@ int main( int argc, char *argv[] )
 	exit(1);
     }
 
-    OpenAuxFile( auxfilename );    
+    OpenAuxFile( auxfilename );
 
 /* Generate the base dir line.  If multiple files are generated, this
    needs to be done for each file.  The name should look something
-   like "http://www.mcs.anl.gov/foo/index.html" 
+   like "http://www.mcs.anl.gov/foo/index.html"
    */
-    if (basedir[0]) 
+    if (basedir[0])
 	fprintf( fpout, "<base href=\"%s\">%s", basedir, NewLineString );
-    
+
 /* Process the input file */
     ProcessFile( argc, argv, fpin, fpout, process );
 
@@ -399,14 +401,14 @@ void WriteTrailer( FILE *fp )
     number     = number of section
     keywords (optional) = keywords for section
  */
-void WriteSectionHeader( FILE *fp, char *name, char *entrylevel, int number, 
+void WriteSectionHeader( FILE *fp, char *name, char *entrylevel, int number,
 			 char *keywords, int level )
 {
     if (DebugOutput) fprintf( stdout, "WriteSectionHeader\n" );
 /*
-  fprintf( fp, "<A NAME=\"...\"><IMG SRC=\"/icons/previous.xbm\"></A>" );  
-  fprintf( fp, "<A NAME=\"...\"><IMG SRC=\"/icons/up.xbm\"></A>" );  
-  fprintf( fp, "<A NAME=\"...\"><IMG SRC=\"/icons/next.xbm\"></A>" );  
+  fprintf( fp, "<A NAME=\"...\"><IMG SRC=\"/icons/previous.xbm\"></A>" );
+  fprintf( fp, "<A NAME=\"...\"><IMG SRC=\"/icons/up.xbm\"></A>" );
+  fprintf( fp, "<A NAME=\"...\"><IMG SRC=\"/icons/next.xbm\"></A>" );
   fprintf( fp, "<b>Previous:</b><A NAME=\"...\">...</a> " );
   fprintf( fp, "<b>Up:</b><A NAME=\"...\">...</a> " );
   fprintf( fp, "<b>Next:</b><A NAME=\"...\">...</a> " );
@@ -418,14 +420,14 @@ void WriteSectionHeader( FILE *fp, char *name, char *entrylevel, int number,
    level+1, name, level+1 ); */
 }
 
-/* 
+/*
    We can't put an anchor in without there being actual TEXT.  GRUMBLE.
  */
-void WriteSectionAnchor( FILE *fp, char *name, char *entrylevel, 
+void WriteSectionAnchor( FILE *fp, char *name, char *entrylevel,
 			 int number, int level )
 {
     char tmpname[256];
-/* FEATURE: font changes in headings don't work.  Rather than try and suppress 
+/* FEATURE: font changes in headings don't work.  Rather than try and suppress
    them in the translation phase, I'll remove them here... */
     RemoveFonts( name, tmpname );
 /* Level must be >= 1 */
@@ -467,7 +469,7 @@ void WriteTextHeader( FILE *fp )
 /*
     Write out popup text.  popup text refers to a topic (entryname/number)
  */
-void WritePopupTextReference( FILE *fp, char *text, char *reftopic, 
+void WritePopupTextReference( FILE *fp, char *text, char *reftopic,
 			      int refnumber )
 {
     if (DebugOutput) fprintf( stdout, "WritePopupTextReference\n" );
@@ -482,14 +484,14 @@ void WritePopupTextReference( FILE *fp, char *text, char *reftopic,
 void WritePointerText( FILE *fp, char *text, char *reftopic, int refnumber )
 {
     if (DebugOutput) fprintf( stdout, "WritePointerText\n" );
-    if (refnumber >= 0) 
+    if (refnumber >= 0)
 	fprintf( fp, "<a href=\"%s%d\">", reftopic, refnumber );
     else
 	fprintf( fp, "<a href=\"%s\">", reftopic );
     WriteString( fp, text );
     fprintf( fp, "</a>" );
-}    
-    
+}
+
 /*
     Write out the end of a topic
  */
@@ -499,11 +501,11 @@ void WriteEndofTopic( FILE *fp )
     if (DebugOutput) fprintf( stdout, "WriteEndofTopic\n" );
     fprintf( fp, "%s<P>%s", NewLineString, NewLineString );
     /* If there is text for the bottom, add a rule ... */
-    if (DoNavNames && DoBottomNav) 
+    if (DoNavNames && DoBottomNav)
 	fprintf( fp, "<hr>%s", NewLineString );
 }	
 
-/* This translation needs to happen on output in HTML, if it hasn't 
+/* This translation needs to happen on output in HTML, if it hasn't
    already been processed */
 int SCHTMLTranslate( char *token, int maxtoken )
 {
@@ -511,8 +513,8 @@ int SCHTMLTranslate( char *token, int maxtoken )
   if (token[0] == '<')      strcpy( token, "&lt;" );
   else if (token[0] == '>') strcpy( token, "&gt;" );
   else if (token[0] == '&') strcpy( token, "&amp;" );
-  else 
-  */ 
+  else
+  */
 /* Even this is wrong; it breaks on \~ or ~ in a code/verbatim environment */
     if (!UsingLatexinfo && token[0] == '~') strcpy( token, " " );
 
@@ -542,7 +544,7 @@ int SCHTMLTranslateTables( char *token, int maxtoken )
    Then (recursively)
        remember the current position
        read forward, looking for additional sections
-       
+
            Sections at the same level have
                WritePointerText
            Sections at a higher level terminate the search
@@ -550,9 +552,9 @@ int SCHTMLTranslateTables( char *token, int maxtoken )
        Finally, WriteEndofTopic
 
      In an info file, we don't need to do this because the file has already
-     been processed.  See ProcessInfoFile().       
+     been processed.  See ProcessInfoFile().
  */
-void ProcessFile( int argc, char **argv, FILE *fpin, FILE *fpout, 
+void ProcessFile( int argc, char **argv, FILE *fpin, FILE *fpout,
 		  void (*process)( int, char **, FILE *, FILE *) )
 {
     SCSetTranslate( SCHTMLTranslate );
@@ -576,12 +578,12 @@ void RemoveExtension( char *str )
 void WriteStartNewLine( FILE *fp )
 {
     fprintf( fp, "<br>%s", NewLineString );
-}	
+}
 
 void DebugWriteString( FILE *fd, const char *str, int maxlen )
 {
     const char *p = str;
-    
+
     while (*p && maxlen-- >= 0) {
 	if (*p == TOK_START) {
 	    fputs( "<tok_start>", fd );
@@ -600,7 +602,7 @@ void WriteString( FILE *fp, char *str )
     int  in_tok = 0;
     char thischar;
 
-    if (DebugOutput) { 
+    if (DebugOutput) {
 	fprintf( stdout, "WriteString (" );
 	DebugWriteString( stdout, str, 40 );
 	fprintf( stdout, ") to %d\n", fileno(fp) );
@@ -661,7 +663,7 @@ void WriteString( FILE *fp, char *str )
 		p++;
 	    }
         }
-	else 
+	else
 	    fputs( str, fp );
     }
 #endif
@@ -699,14 +701,14 @@ void WriteStringRaw( FILE *fp, char *str )
 	    fputs( "&amp;", fp );
 	    str = p + 1;
         }
-	p++;        
+	p++;
     }
     /* Flush the remaining text */
     if (p > str) {
 	fputs( str, fp );
     }
 }
-#endif 
+#endif
 
 #include "search.h"
 #define MAX_SECTION_TITLE 512
@@ -718,7 +720,7 @@ static char PrevTitle[MAX_SECTION_TITLE];
  * Sometime we want to write only one set of buttons per page, rather than
  * have the buttons move down the page.  However, to do this, the
  * prev/next/top links must point to PAGES, not to sections.
- * 
+ *
  * We'd also like to eliminate markers for empty sections.
  */
 void WriteSectionButtons( FILE *fout, char *name, LINK *l )
@@ -731,11 +733,11 @@ void WriteSectionButtons( FILE *fout, char *name, LINK *l )
 
     if (DebugOutput) fprintf( stdout, "WriteSectionButtons\n" );
     /* We really need to pass the length of the third arg to the routines... */
-    has_parent = GetParent( l, name, contextParent, ParentTitle, 
+    has_parent = GetParent( l, name, contextParent, ParentTitle,
 			    sizeof(ParentTitle) );
-    has_next   = GetNext( l, name, contextNext, NextTitle, 
+    has_next   = GetNext( l, name, contextNext, NextTitle,
 			  sizeof(NextTitle) );
-    has_prev   = GetPrevious( l, name, contextPrev, PrevTitle, 
+    has_prev   = GetPrevious( l, name, contextPrev, PrevTitle,
 			      sizeof(PrevTitle) );
 
 /* This is a horizontal rule for output */
@@ -809,22 +811,22 @@ void OutJump( FILE *fp, char *context, char *name, char *label )
 void SetUpButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetUpButton\n" );
-    fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%sup.%s\" alt=\"Up\"></a>", 
-	     context, NoBMCopy ? IMAGEURL : "", ImageExt );  
+    fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%sup.%s\" alt=\"Up\"></a>",
+	     context, NoBMCopy ? IMAGEURL : "", ImageExt );
 }
 
 void SetNextButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetNextButton\n" );
-    fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%snext.%s\" alt=\"Next\"></a>", 
-	     context, NoBMCopy ? IMAGEURL : "", ImageExt );  
+    fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%snext.%s\" alt=\"Next\"></a>",
+	     context, NoBMCopy ? IMAGEURL : "", ImageExt );
 }
 
 void SetPreviousButton( FILE *fp, char *context, char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetPreviousButton\n" );
-    fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%sprevious.%s\" alt=\"Previous\"></a>", 
-	     context, NoBMCopy ? IMAGEURL : "", ImageExt );  
+    fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%sprevious.%s\" alt=\"Previous\"></a>",
+	     context, NoBMCopy ? IMAGEURL : "", ImageExt );
 }
 
 /* THIS SHOULD NOT BE USED (see "InDocument check in tex2html" ) */
@@ -940,7 +942,7 @@ Input Parameters:
  each page
 - -o outname - Specify the name to be used as the output file name (instead
     of the basing the output file name on the input file name).  This
-    name should include the natural extension; e.g., for HTML output, 
+    name should include the natural extension; e.g., for HTML output,
     use something like tohtml -latex -o myout.htm myfile.tex .
 D*/
 void PrintHelp( char *pgm )
@@ -992,7 +994,7 @@ void PrintHelp( char *pgm )
 
 /*
  * These provide special begin/end of page information.  Note that
- * the page <TITLE> is part of the HEAD, not the BODY, so we need to 
+ * the page <TITLE> is part of the HEAD, not the BODY, so we need to
  * have two bop commands.
  */
 static FILE *eofpage = 0;
@@ -1006,7 +1008,7 @@ void WriteEndPage( FILE *fpout )
 	if (endpagefilename[0]) {
 	    eofpage = fopen( endpagefilename, "r" );
 	    if (!eofpage) {
-		fprintf( stderr, 
+		fprintf( stderr,
 			 "Could not open endpage %s\n", endpagefilename );
 		return;
 	    }
@@ -1019,7 +1021,7 @@ void WriteEndPage( FILE *fpout )
 	    abort();
 	}
 	rewind( eofpage );
-	while ((c = getc( eofpage )) != EOF) 
+	while ((c = getc( eofpage )) != EOF)
 	    putc( c, fpout );
     }
     if (wrotebody)
@@ -1029,7 +1031,7 @@ void WriteEndPage( FILE *fpout )
     wrotebody = 0;
     InOutputBody = 0;
     if (DebugOutput) printf( "Set InOutputBody and wrotebody to 0\n" );
-    
+
     wrotehead = 0;
 }
 
@@ -1039,7 +1041,7 @@ void WriteBeginPage( FILE *fpout )
 {
     int c;
 
-    if (DebugOutput && wrotebody) 
+    if (DebugOutput && wrotebody)
 	printf( "Skipping WriteBeginPage because writebody is true\n" );
     if (wrotebody) return;
     wrotebody    = 1;
@@ -1054,13 +1056,13 @@ void WriteBeginPage( FILE *fpout )
        or meta data.  This should be stored in the definitions.
      */
     /* Should parameterize this - command in basedefs? */
-    fprintf( fpout, "</head>%s<body style=\"background-color:#FFFFFF\">%s", 
+    fprintf( fpout, "</head>%s<body style=\"background-color:#FFFFFF\">%s",
 	     NewLineString, NewLineString );
     if (!bofpage) {
 	if (beginpagefilename[0]) {
 	    bofpage = fopen( beginpagefilename, "r" );
 	    if (!bofpage) {
-		fprintf( stderr, "Could not open beginpage %s\n", 
+		fprintf( stderr, "Could not open beginpage %s\n",
 			 beginpagefilename );
 		return;
 	    }
@@ -1069,7 +1071,7 @@ void WriteBeginPage( FILE *fpout )
 	    return;
     }
     rewind( bofpage );
-    while ((c = getc( bofpage )) != EOF) 
+    while ((c = getc( bofpage )) != EOF)
 	putc( c, fpout );
 }
 
@@ -1081,7 +1083,7 @@ void WriteHeadPage( FILE *fpout )
     fprintf( fpout, "<!DOCTYPE html>\n<html lang=en>%s<head>%s", NewLineString, NewLineString );
     fprintf( fpout, "<!-- This file was generated by tohtml from %s -->%s",
 	     InFName[curfile] ? InFName[curfile] : "unknown", NewLineString );
-    fprintf( fpout, "<!-- with the command%stohtml %s%s-->%s", 
+    fprintf( fpout, "<!-- with the command%stohtml %s%s-->%s",
 	     NewLineString, GetCommandLine(), NewLineString, NewLineString );
 }
 
@@ -1097,7 +1099,7 @@ void CopyImgFiles( char *basefilename )
 	basefilename[strlen(basefilename)-1] = 0;
     sprintf( pgm, "copy \"%s\\next.%s\" %s", IMAGEDIR, ImageExt, basefilename );
     system( pgm );
-    sprintf( pgm, "copy \"%s\\previous.%s\" %s", IMAGEDIR, ImageExt, 
+    sprintf( pgm, "copy \"%s\\previous.%s\" %s", IMAGEDIR, ImageExt,
 	     basefilename );
     system( pgm );
     sprintf( pgm, "copy \"%s\\up.%s\" %s", IMAGEDIR, ImageExt, basefilename );
@@ -1119,7 +1121,7 @@ void CopyImgFiles( char *basefilename )
 #else
     sprintf( pgm, "/bin/cp %s/next.%s %s", IMAGEDIR, ImageExt, basefilename );
     system( pgm );
-    sprintf( pgm, "/bin/cp %s/previous.%s %s", IMAGEDIR, ImageExt, 
+    sprintf( pgm, "/bin/cp %s/previous.%s %s", IMAGEDIR, ImageExt,
 	     basefilename );
     system( pgm );
     sprintf( pgm, "/bin/cp %s/up.%s %s", IMAGEDIR, ImageExt, basefilename );
@@ -1159,7 +1161,7 @@ void RemoveFonts( const char *instr, char *outstr )
     char *pout = outstr;
 
     while (pin && *pin) {
-	if (*pin == '<') 
+	if (*pin == '<')
 	    pin = SkipHTML( (char *)++pin );
 	else if (*pin == TOK_START || *pin == TOK_END)
 	    pin++;
@@ -1206,13 +1208,13 @@ int SafeStrncpy( char *dest, const char *src, size_t n )
     while (*s_ptr && i-- > 0) {
 	*d_ptr++ = *s_ptr++;
     }
-    
-    if (i > 0) { 
+
+    if (i > 0) {
 	*d_ptr = 0;
 	return 0;
     }
     else {
-	/* Force a null at the end of the string (gives better safety 
+	/* Force a null at the end of the string (gives better safety
 	   in case the user fails to check the error code) */
 	dest[n-1] = 0;
 	/* We may want to force an error message here, at least in the
