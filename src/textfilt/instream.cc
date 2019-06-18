@@ -97,6 +97,8 @@ int InStream::GetChar( char *c )
 	return 1;
 }
 
+// Return a token that is either an alphanumeric, a quoted string,
+// or a single character based on the break table.
 int InStream::GetANToken( int maxlen, char *token, int *nsp )
 {
     int char_class;
