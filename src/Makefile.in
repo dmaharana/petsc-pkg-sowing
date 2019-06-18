@@ -2,6 +2,19 @@ ALL: tohtml
 SHELL = @SHELL@
 SUBDIRS = sys bfort tohtml doctext textfilt mapnames bib2html
 
+DIST_COMMON = Makefile.in
+
+dist:
+	@echo "in src, make distdir=$(distdir)"
+	@if [ "X$(distdir)" == "X" ] ; then echo "Set distdir" ; exit 1 ; fi
+	@if [ ! -d $(distdir) ] ; then mkdir $(distdir) ; fi
+	if [ "X$(SOURCES)" != "X" ] ; then cp $(SOURCES) $(distdir) ; fi
+	if [ "X$(HEADER_FILES)" != "X" ] ; then cp $(HEADER_FILES) $(distdir) ; fi
+	if [ "X$(DIST_COMMON)" != "X" ] ; then cp $(DIST_COMMON) $(distdir) ; fi
+	for dir in $(SUBDIRS) ; do \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	if [ "X$(DOC_FILES)" != "X" ] ; then cp $(DOC_FILES) $(distdir) ; fi
+
 clean:
 	for dir in $(SUBDIRS) ; do ( cd $$dir ; $(MAKE) clean ) ; done
 distclean:

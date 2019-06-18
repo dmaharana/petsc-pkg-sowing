@@ -9,6 +9,9 @@ DOCNAME = doctext
 DOC_FILES = swap.man
 LATEX = latex
 
+SOURCES = $(DOCNAME).tex $(DOC_FILES) Swap.tex
+DIST_COMMON = Makefile.in
+
 all-redirect: $(DOCNAME).pdf $(DOCNAME)/$(DOCNAME).htm
 
 # Run the first latex into /dev/null to suppress message about missing
@@ -44,6 +47,19 @@ install: install-prefix install-web install-pdf
 
 install-prefix:
 	if [ ! -d $(wwwdir) ] ; then $(MKDIR) $(wwwdir) ; fi
+
+dist: $(DOCNAME).pdf
+	@if [ "X$(distdir)" == "X" ] ; then echo "Set distdir" ; exit 1 ; fi
+	@if [ ! -d $(distdir) ] ; then mkdir $(distdir) ; fi
+	if [ "X$(SOURCES)" != "X" ] ; then cp $(SOURCES) $(distdir) ; fi
+	if [ "X$(HEADER_FILES)" != "X" ] ; then cp $(HEADER_FILES) $(distdir) ; fi
+	if [ "X$(DIST_COMMON)" != "X" ] ; then cp $(DIST_COMMON) $(distdir) ; fi
+	for dir in $(SUBDIRS) ; do \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	for dir in $(DISTSUBDIRS) ; do \
+		cp -rp $$dir $(distdir) ; done
+	if [ "X$(DOC_FILES)" != "X" ] ; then cp $(DOC_FILES) $(distdir) ; fi
+	cp $(DOCNAME).pdf $(distdir)
 
 .PHONY: clean distclean \
 	install-prefix install-web install-pdf install all-redirect

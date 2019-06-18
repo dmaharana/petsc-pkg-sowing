@@ -11,20 +11,47 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA    = @INSTALL_DATA@
 SHELL = @SHELL@
 top_srcdir=@top_srcdir@
+abs_top_srcdir=@abs_top_srcdir@
+
+distdir = @PACKAGE_NAME@-@PACKAGE_VERSION@
 
 all-redirect: tohtml bfort doctext mapnames bin/bib2html
 
+DATA_FILES = $(DATA_FILES_TOHTML) $(DATA_FILES_DOCTEXT) $(DATA_FILES_BFORT)
+
+# share/* -> datadir/*
+DATA_FILES_TOHTML  = pstoppm.ps basedefs.txt blueball.gif greenball.gif \
+	purpleball.gif redball.gif yellowball.gif next.gif up.gif previous.gif \
+	html.def latex.def nroff.def refman.def refman.sty \
+	next.xbm up.xbm previous.xbm
+DATA_FILES_DOCTEXT = doctext/html.def doctext/htmlcolor.def \
+	doctext/htmltabl.def doctext/htmlargtbl.def doctext/latex.def \
+	doctext/latexargtbl.def doctext/nroff.def
+DATA_FILES_BFORT   = bfort-base.txt bfort-mpi.txt bfort-petsc.txt
+MAN1_FILES         = tohtml.1 doctext.1 bfort.1
+
+# disttargsubdirs are the subdirectories with a dist target that can be used
+# with the dist target in this directory.
+DISTTARGSUBDIRS = src docs
+DISTSUBDIRS      = confdb share
+DISTFILES = Makefile.in Makerules.in configure configure.in \
+		README autogen.sh aclocal.m4
+DISTINCFILES = daytime.h getopts.h patchlevel.h.in \
+		rdconfig.h sowing.h sowingconfig.h.in \
+		sowingfile.h sowingtxt.h trspace.h
+DISTBINFILES = bib2html.in pstogif.in pstoxbm.in checkforglobs
+
 lib/libsowing.a libs:
-	@if [ ! -d lib ] ; then mkdir lib ; fi
+	@if [ ! -d lib ] ; then @MKDIR@ lib ; fi
 	(cd src/sys && ${MAKE} )
 lib/libtfilter.a:
-	@if [ ! -d lib ] ; then mkdir lib ; fi
+	@if [ ! -d lib ] ; then @MKDIR@ lib ; fi
 	(cd src/textfilt && ${MAKE} )
 tohtml: libs
 	(cd src/tohtml && ${MAKE} )
 bfort: libs
 	(cd src/bfort && ${MAKE} )
-doctext:
+src/doctext/doctext doctext:
 	(cd src/textfilt && ${MAKE} )
 	(cd src/doctext && ${MAKE} )
 mapnames:
@@ -35,13 +62,18 @@ manpages: bin/doctext
 	(cd src && ${MAKE} manpages )
 wwwpages: bin/doctext
 	(cd src && ${MAKE} wwwpages )
+
+distpages: bin/doctext
+	(cd src && ${MAKE} mandir=$(abs_top_srcdir)/man manpages)
+	(cd src && ${MAKE} wwwdir=$(abs_top_srcdir)/www wwwpages)
+
 bin/doctext: src/doctext/doctext
-	@if [ ! -d bin ] ; then mkdir bin ; fi
+	@if [ ! -d bin ] ; then @MKDIR@ bin ; fi
 	ln -s ../src/doctext/doctext bin/doctext
 
 doc: bin/doctext
 	(cd docs && ${MAKE} )
-	(cd confdb && ${MAKE} htmldoc && ${MAKE} texdoc)
+#	(cd confdb && ${MAKE} htmldoc && ${MAKE} texdoc)
 
 install:
 	@if [ ! -d $(exec_prefix) ] ; then \
@@ -74,37 +106,17 @@ install:
 	fi
 	$(INSTALL_PROGRAM) src/bfort/bfort $(bindir)/bfort
 	$(INSTALL_PROGRAM) src/mapnames/mapnames $(bindir)/mapnames
-	if [ "`cd ${top_srcdir}/share && pwd`" != "`cd $(datadir) && pwd`" ] ; then \
-	    $(INSTALL_DATA)    ${top_srcdir}/share/pstoppm.ps $(datadir)/pstoppm.ps ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/basedefs.txt $(datadir)/basedefs.txt ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/blueball.gif $(datadir)/blueball.gif ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/greenball.gif $(datadir)/greenball.gif ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/purpleball.gif $(datadir)/purpleball.gif ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/redball.gif $(datadir)/redball.gif ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/yellowball.gif $(datadir)/yellowball.gif ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/next.xbm $(datadir)/next.xbm ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/up.xbm $(datadir)/up.xbm ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/previous.xbm $(datadir)/previous.xbm ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/next.gif $(datadir)/next.gif ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/up.gif $(datadir)/up.gif ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/previous.gif $(datadir)/previous.gif ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/html.def $(datadir)/html.def ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/latex.def $(datadir)/latex.def ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/nroff.def $(datadir)/nroff.def ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/refman.def $(datadir)/refman.def ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/refman.sty $(datadir)/refman.sty ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/doctext/html.def $(datadir)/doctext/html.def ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/doctext/htmlcolor.def $(datadir)/doctext/htmlcolor.def ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/doctext/htmltabl.def $(datadir)/doctext/htmltabl.def ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/doctext/htmlargtbl.def $(datadir)/doctext/htmlargtbl.def ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/doctext/latex.def $(datadir)/doctext/latex.def ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/doctext/latexargtbl.def $(datadir)/doctext/latexargtbl.def ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/share/doctext/nroff.def $(datadir)/doctext/nroff.def ;\
+	-@if [ "`cd ${top_srcdir}/share && pwd`" != "`cd $(datadir) && pwd`" ] ; then \
+	    for file in $(DATA_FILES) ; do \
+		echo "INSTALL_DATA ${top_srcdir}/share/$$file $(datadir)/$$file" ; \
+		$(INSTALL_DATA) ${top_srcdir}/share/$$file $(datadir)/$$file ; \
+	    done ; \
 	fi
-	-if [ "`cd ${top_srcdir}/man/man1 && pwd`" != "`cd $(man1dir) && pwd`" ] ; then \
-	    $(INSTALL_DATA)    ${top_srcdir}/man/man1/tohtml.1 $(man1dir)/tohtml.1 ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/man/man1/doctext.1 $(man1dir)/doctext.1 ;\
-	    $(INSTALL_DATA)    ${top_srcdir}/man/man1/bfort.1 $(man1dir)/bfort.1 ;\
+	-@if [ "`cd ${top_srcdir}/man/man1 && pwd`" != "`cd $(man1dir) && pwd`" ] ; then \
+	    for file in $(MAN1_FILES) ; do \
+		echo "INSTALL_DATA ${top_srcdir}/man/man1/$$file $(man1dir)/$$file" ;\
+		$(INSTALL_DATA) ${top_srcdir}/man/man1/$$file $(man1dir)/$$file ;\
+	    done ;\
 	fi
 
 uninstall:
@@ -117,32 +129,14 @@ uninstall:
 	    /bin/rm $(bindir)/pstogif ; \
 	fi
 	-if [ "`cd share && pwd`" != "`cd $(datadir) && pwd`" ] ; then \
-	     /bin/rm $(datadir)/basedefs.txt ;\
-	     /bin/rm $(datadir)/blueball.gif ;\
-	     /bin/rm $(datadir)/greenball.gif ;\
-	     /bin/rm $(datadir)/purpleball.gif ;\
-	     /bin/rm $(datadir)/redball.gif ;\
-	     /bin/rm $(datadir)/yellowball.gif ;\
-	     /bin/rm $(datadir)/next.xbm ;\
-	     /bin/rm $(datadir)/up.xbm ;\
-	     /bin/rm $(datadir)/previous.xbm ;\
-	     /bin/rm $(datadir)/next.gif ;\
-	     /bin/rm $(datadir)/up.gif ;\
-	     /bin/rm $(datadir)/previous.gif ;\
-	     /bin/rm $(datadir)/html.def ;\
-	     /bin/rm $(datadir)/latex.def ;\
-	     /bin/rm $(datadir)/nroff.def ;\
-	     /bin/rm $(datadir)/refman.sty ;\
-	     /bin/rm $(datadir)/doctext/html.def ;\
-	     /bin/rm $(datadir)/doctext/htmltabl.def ;\
-	     /bin/rm $(datadir)/doctext/htmlcolor.def ;\
-	     /bin/rm $(datadir)/doctext/latex.def ;\
-	     /bin/rm $(datadir)/doctext/nroff.def ;\
+	     for file in $(DATA_FILES) ; do \
+		/bin/rm $(datadir)/$$file ; \
+	     done ; \
 	fi
 	-if [ "`cd man/man1 && pwd`" != "`cd $(man1dir) && pwd`" ] ; then \
-	    /bin/rm $(man1dir)/tohtml.1 ;\
-	    /bin/rm $(man1dir)/doctext.1 ;\
-	    /bin/rm $(man1dir)/bfort.1 ;\
+	    for file in $(MAN1_FILES) ; do \
+		/bin/rm $(man1dir)/$$file ; \
+	    done ; \
 	fi
 
 testing:
@@ -168,10 +162,63 @@ distclean:
 	-rm -f src/doctext/docpath.h include/patchlevel.h include/textfilt/textpath.h
 
 VERSION       = @PACKAGE_VERSION@
+
+# On OSX, Consider running xattr -rc * before running this target
+# (c for clear - d <attr> to delete a specific attribute)
+# This will add the html documentation pages if they have been built
+# in directory www.  Use "make wwwpages" and "make manpages" first
+# Note two versions of rev-parse to get the git hash.  This is a todo to
+# fix.
+sowing-$(VERSION).tar.gz dist: distpages
+	@if [ ! -d $(distdir) ] ; then @MKDIR@ $(distdir) ; else \
+	    echo "$(distdir) found $(distdir) - delete it and rerun make dist" ; exit 1; fi
+	@if [ -d .git ] ; then\
+	    git rev-parse HEAD | \
+	    sed -e 's/\(.*\)/#define BASEENV_GITHASH "\1"/' > $(distdir)/sowinggit.h ; \
+	    git rev-parse --short HEAD > $(distdir)/githash ; \
+	fi
+	@MKDIR@ $(distdir)/include
+	@MKDIR@ $(distdir)/bin
+	for file in $(DISTINCFILES) ; do \
+		cp -p include/$$file $(distdir)/include/$$file ; done
+	dateval=`date` && sed -e "s/Date unknown/$$dateval/g" \
+		include/patchlevel.h.in > $(distdir)/include/patchlevel.h.in
+	for file in $(DISTBINFILES) ; do \
+		cp -p bin/$$file $(distdir)/bin/$$file ; done
+	for dir in $(DISTTARGSUBDIRS) ; do \
+		echo "make dist in $$dir" ; \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	for dir in $(DISTSUBDIRS) $(OTHERDIRS) ; do \
+		echo "copy $$dir to $(distdir)" ; \
+		cp -rp $$dir $(distdir) ; done
+	@echo "Copy $(DISTFILES) to $(distdir)"
+	for file in $(DISTFILES) ; do cp -p $$file $(distdir) ; done
+	if [ X$(FPMPI) != X ] ; then \
+	     if [ -d $(FPMPI) ] ; then \
+		(cd $(FPMPI) && make dist ) ; \
+	        (cd $(distdir) && tar zxf $(FPMPI)/fpmpi2-2.3.tar.gz ) ; \
+	     fi ; \
+	fi
+	if [ -d www ] ; then cp -rp www $(distdir) ; fi
+	if [ -d man ] ; then cp -rp man $(distdir) ; fi
+	(cd $(distdir) && autoreconf -if)
+	@for dir in $(DISTSUBDIRS) $(OTHERDIRS); do \
+		rm -f $(distdir)/$$dir/Makefile ; done
+	(cd $(distdir) && find . -name 'autom4te*' -print | xargs rm -rf)
+	(cd $(distdir) && find . -name '.svn' -print | xargs rm -rf)
+	(cd $(distdir) && find . -name '*~' -print | xargs rm -f)
+	(cd $(distdir) && find . -name '*.dSYM' -print | xargs rm -rf)
+	if [ "`uname -s`" = "Darwin" ] ; then \
+	    (cd $(distdir) && xattr -rc * ); fi
+	(cd $(distdir) && chmod -R -N *)
+	rm -f $(distdir)/Makefile $(distdir)/config.status
+	tar czf $(distdir).tgz $(distdir)
+	rm -rf $(distdir)
+
 # Note: The xattr and chmod commands are needed on Mac OSX to prevent the
 # tar file from containing extraneous and irrelevant files.
-sowing-$(VERSION).tar.gz dist:
-	@if [ ! -d tmpdir ] ; then mkdir tmpdir ; fi
+olddisttarget:
+	@if [ ! -d tmpdir ] ; then @MKDIR@ tmpdir ; fi
 	@rm -rf tmpdir/*
 	cd tmpdir && svn export https://svn.mcs.anl.gov/repos/sowing/trunk sowing
 	cd tmpdir/sowing && ./autogen.sh export

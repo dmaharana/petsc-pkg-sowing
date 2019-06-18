@@ -7,25 +7,80 @@ srcdir=@srcdir@
 datarootdir     = @datarootdir@
 @VPATH@
 
-INCLUDES = -I${top_srcdir}/include
-
 LIBS       =  ../../lib/libsowing.a
 INCLUDES   = -I${top_srcdir}/include -I../../include
 DEFS       = -DBASEDEF='"@datarootdir@/bfort-base.txt"' \
 	     -DBASEPATH='"@datarootdir@"'
-PROGRAMS   = bfort
+PROGRAMS   = bfort-old bfort
 
-bfort: bfort.o  doc.o
-	$(C_LINK) -o bfort bfort.o doc.o $(LIBS)
+bfortnew_SOURCES = bfort2.c doc.c bfortmod.c
+bfortnew_OBJECTS = $(bfort_SOURCES:.c=.o)
+bfortold_SOURCES = bfort.c doc.c
+bfortold_OBJECTS = $(bfortold_SOURCES:.c=.o)
 
-doc_SOURCES = bfort.c
+SOURCES = bfort.c doc.c bfort2.c bfortmod.c
+HEADER_FILES = doc.h bfort2.h
+DIST_COMMON = Makefile.in
+SUBDIRS = testing testing2
+
+# Currently developing a new version of bfort. This makes it relatively
+# easy to switch between the two.  Testing expects "bfort".
+
+ifeq "$(BFORTVERSION)" "new"
+bfort_SOURCES = $(bfortnew_SOURCES)
+bfort_OBJECTS = $(bfortnew_OBJECTS)
+else
+bfort_SOURCES = $(bfortold_SOURCES)
+bfort_OBJECTS = $(bfortold_OBJECTS)
+endif
+
+bfort-old: $(bfortold_OBJECTS)
+	$(C_LINK) -o bfort-old $(bfortold_OBJECTS) $(LIBS)
+bfort-new: $(bfortnew_OBJECTS)
+	$(C_LINK) -o bfort-new $(bfortnew_OBJECTS) $(LIBS)
+
+bfort: $(bfort_OBJECTS)
+	$(C_LINK) -o bfort $(bfort_OBJECTS) $(LIBS)
+
+coverage:
+	$(MAKE) clean
+	$(MAKE) CFLAGS="$(CFLAGS) -g --coverage" bfort
+
+coverageoutput:
+	for file in $(bfort_SOURCES) ; do \
+	    gcov $$file ; \
+	done
+
+bfort2.o: bfort2.c bfort2.h
+bfortmod.o: bfortmod.c bfort2.h
+
+ifeq "$(BFORTVERSION)" "new"
+doc_SOURCES = bfort2.c doc.c bfortmod.c
+else
+doc_SOURCES = bfort.c doc.c
+endif
+
+dist:
+	@if [ "X$(distdir)" == "X" ] ; then echo "Set distdir" ; exit 1 ; fi
+	@if [ ! -d $(distdir) ] ; then mkdir $(distdir) ; fi
+	if [ "X$(SOURCES)" != "X" ] ; then cp $(SOURCES) $(distdir) ; fi
+	if [ "X$(HEADER_FILES)" != "X" ] ; then cp $(HEADER_FILES) $(distdir) ; fi
+	if [ "X$(DIST_COMMON)" != "X" ] ; then cp $(DIST_COMMON) $(distdir) ; fi
+	for dir in $(SUBDIRS) ; do \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	if [ "X$(DOC_FILES)" != "X" ] ; then cp $(DOC_FILES) $(distdir) ; fi
 
 clean:
-	-/bin/rm -f *.o *~ $(PROGRAMS)
-	-/bin/rm -f bfort\ win32/debug/*
+	-rm -f *.o *~ $(PROGRAMS)
+	-rm -f bfort\ win32/debug/*
+	-rm -f *.gcda *.gcno *.gcov
+
 distclean: clean
 	rm -f Makefile
 
 install:
 	$(INSTALL_PROGRAM) bfort @bindir@/bfort
 
+Makefile: Makefile.in ../../config.status
+	(export CONFIG_FILES=src/bfort/Makefile && \
+	cd ../.. && ./config.status)

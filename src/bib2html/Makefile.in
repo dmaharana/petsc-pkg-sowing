@@ -1,7 +1,10 @@
 ALL: all-redirect
 SHELL = @SHELL@
 
-testing: 
+SOURCES = g.txt g.cfg tin.bib tout-base.htm tout-bib-base.htm
+DIST_COMMON = Makefile.in
+
+testing:
 	../../bin/bib2html -group g.txt -listfile tout.htm -listconfig g.cfg \
 		-nocreatetime tin.bib > tout-bib.htm
 	diff -b tout.htm tout-base.htm
@@ -11,6 +14,18 @@ testing:
 # TODO: Move bib2html.in into this directory, and put install target here
 all-redirect:
 	true
+
+dist:
+	@if [ "X$(distdir)" == "X" ] ; then echo "Set distdir" ; exit 1 ; fi
+	@if [ ! -d $(distdir) ] ; then mkdir $(distdir) ; fi
+	if [ "X$(SOURCES)" != "X" ] ; then cp $(SOURCES) $(distdir) ; fi
+	if [ "X$(HEADER_FILES)" != "X" ] ; then cp $(HEADER_FILES) $(distdir) ; fi
+	if [ "X$(DIST_COMMON)" != "X" ] ; then cp $(DIST_COMMON) $(distdir) ; fi
+	for dir in $(SUBDIRS) ; do \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	for dir in $(DISTSUBDIRS) ; do \
+		cp -rp $$dir $(distdir) ; done
+	if [ "X$(DOC_FILES)" != "X" ] ; then cp $(DOC_FILES) $(distdir) ; fi
 
 clean:
 	rm -f tout.htm tout-bib.htm

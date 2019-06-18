@@ -8,7 +8,10 @@ srcdir      = @srcdir@
 
 INCLUDES = -I${top_srcdir}/include -I../../include
 
-OBJS = arch.o txt.o daytime.o file.o tr.o getopts.o rdconfig.o
+SOURCES = arch.c txt.c daytime.c file.c tr.c getopts.c rdconfig.c
+OBJECTS = $(SOURCES:.c=.o)
+DIST_COMMON = Makefile.in
+SUBDIRS = testing
 
 LIBS      =
 LDIR      =
@@ -16,13 +19,23 @@ CLEANFILES =
 
 BASEOBJS =
 
+dist:
+	@if [ "X$(distdir)" == "X" ] ; then echo "Set distdir" ; exit 1 ; fi
+	@if [ ! -d $(distdir) ] ; then mkdir $(distdir) ; fi
+	if [ "X$(SOURCES)" != "X" ] ; then cp $(SOURCES) $(distdir) ; fi
+	if [ "X$(HEADER_FILES)" != "X" ] ; then cp $(HEADER_FILES) $(distdir) ; fi
+	if [ "X$(DIST_COMMON)" != "X" ] ; then cp $(DIST_COMMON) $(distdir) ; fi
+	for dir in $(SUBDIRS) ; do \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	if [ "X$(DOC_FILES)" != "X" ] ; then cp $(DOC_FILES) $(distdir) ; fi
+
 clean:
 	-rm -f *.o *~ $(CLEANFILES)
 distclean: clean
 	rm -f Makefile
 
-lib: $(OBJS)
-	$(AR) cr ../../lib/libsowing.a ${OBJS}
+lib: $(OBJECTS)
+	$(AR) cr ../../lib/libsowing.a ${OBJECTS}
 	$(RANLIB) ../../lib/libsowing.a
 
 doc_SOURCES =

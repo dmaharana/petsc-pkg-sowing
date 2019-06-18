@@ -12,7 +12,7 @@ srcdir=@srcdir@
 
 INCLUDES   = -I${top_srcdir}/include/textfilt -I${top_srcdir}/include
 
-LIBS = ../../lib/libtfilter.a 
+LIBS = ../../lib/libtfilter.a
 
 EXECS = mapnames
 
@@ -23,8 +23,25 @@ mapnames: mapnames.o
 TESTOUTPUT = test1.html test1.tex test1nc.tex test1nc.html test1.pmap
 
 doc_SOURCES =
+
+SOURCES = mapnames.cc test1 map1.cit
+DIST_COMMON = Makefile.in
+DISTSUBDIRS = test
+
 wwwpages:
 manpages:
+
+dist:
+	@if [ "X$(distdir)" == "X" ] ; then echo "Set distdir" ; exit 1 ; fi
+	@if [ ! -d $(distdir) ] ; then mkdir $(distdir) ; fi
+	if [ "X$(SOURCES)" != "X" ] ; then cp $(SOURCES) $(distdir) ; fi
+	if [ "X$(HEADER_FILES)" != "X" ] ; then cp $(HEADER_FILES) $(distdir) ; fi
+	if [ "X$(DIST_COMMON)" != "X" ] ; then cp $(DIST_COMMON) $(distdir) ; fi
+	for dir in $(SUBDIRS) ; do \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	for dir in $(DISTSUBDIRS) ; do \
+		cp -rp $$dir $(distdir) ; done
+	if [ "X$(DOC_FILES)" != "X" ] ; then cp $(DOC_FILES) $(distdir) ; fi
 
 clean:
 	/bin/rm -f *.o *~ $(EXECS) ccc $(TESTOUTPUT)

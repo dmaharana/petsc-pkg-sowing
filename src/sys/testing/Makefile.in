@@ -9,6 +9,9 @@ srcdir      = @srcdir@
 
 INCLUDES = -I${top_srcdir}/include -I../../../include
 
+SOURCES  = rdconftest.c
+DIST_COMMON = Makefile.in conf
+
 rdconftest: rdconftest.o
 	$(CC) -o rdconftest rdconftest.o ../../../lib/libsowing.a
 
@@ -16,6 +19,17 @@ all-redirect: testing
 
 testing: rdconftest
 	./rdconftest conf
+
+dist:
+	@if [ "X$(distdir)" == "X" ] ; then echo "Set distdir" ; exit 1 ; fi
+	@if [ ! -d $(distdir) ] ; then mkdir $(distdir) ; fi
+	if [ "X$(SOURCES)" != "X" ] ; then cp $(SOURCES) $(distdir) ; fi
+	if [ "X$(HEADER_FILES)" != "X" ] ; then cp $(HEADER_FILES) $(distdir) ; fi
+	if [ "X$(DIST_COMMON)" != "X" ] ; then cp $(DIST_COMMON) $(distdir) ; fi
+	for dir in $(SUBDIRS) ; do \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	if [ "X$(DOC_FILES)" != "X" ] ; then cp $(DOC_FILES) $(distdir) ; fi
+
 clean:
 	rm -f rdconftest *.o
 

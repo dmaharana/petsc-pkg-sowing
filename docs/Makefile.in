@@ -5,6 +5,10 @@ wwwdir  = @wwwdir@
 DOCDIRS = bfort doctext install tohtml
 MKDIR   = @MKDIR@
 
+DIST_COMMON = Makefile.in tools.bib
+SUBDIRS     = bfort doctext install tohtml
+DISTSUBDIRS = texlocal
+
 all-redirect:
 	@for dir in $(DOCDIRS) ; do echo "cd $$dir && make" ; \
 		(cd $$dir && make) ; done
@@ -12,6 +16,18 @@ all-redirect:
 install:
 	if [ ! -d $(wwwdir) ] ; then $(MKDIR) $(wwwdir) ; fi
 	@for dir in $(DOCDIRS) ; do (cd $$dir && make install) ; done
+
+dist:
+	@if [ "X$(distdir)" == "X" ] ; then echo "Set distdir" ; exit 1 ; fi
+	@if [ ! -d $(distdir) ] ; then mkdir $(distdir) ; fi
+	if [ "X$(SOURCES)" != "X" ] ; then cp $(SOURCES) $(distdir) ; fi
+	if [ "X$(HEADER_FILES)" != "X" ] ; then cp $(HEADER_FILES) $(distdir) ; fi
+	if [ "X$(DIST_COMMON)" != "X" ] ; then cp $(DIST_COMMON) $(distdir) ; fi
+	for dir in $(SUBDIRS) ; do \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	for dir in $(DISTSUBDIRS) ; do \
+		cp -rp $$dir $(distdir) ; done
+	if [ "X$(DOC_FILES)" != "X" ] ; then cp $(DOC_FILES) $(distdir) ; fi
 
 config.txt: ../configure
 	../configure --help >config.txt

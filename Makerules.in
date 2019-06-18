@@ -29,10 +29,15 @@ CXX_LINK    = ${CXX} ${CXXFLAGS} ${LDFLAGS}
 
 mandir=@mandir@
 wwwdir=@wwwdir@
-manpages:
+manpages: ${mandir}/man1
 	${DOCTEXT} -quotefmt -mpath ${mandir}/man1 -ext 1 ${doc_SOURCES}
-wwwpages:
+wwwpages: ${wwwdir}/www1
 	${DOCTEXT} -html -dosnl -quotefmt -mpath ${wwwdir}/www1 ${doc_SOURCES}
+
+${wwwdir}/www1:
+	mkdir -p ${wwwdir}/www1
+${mandir}/man1:
+	mkdir -p ${mandir}/www1
 
 
 .c.o:

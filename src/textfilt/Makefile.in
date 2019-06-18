@@ -12,7 +12,7 @@ srcdir=@srcdir@
 
 INCLUDES = -I${top_srcdir}/include/textfilt -I${top_srcdir}/include -I../../include -I../../include/textfilt
 
-LIBS = ../../lib/libtfilter.a 
+LIBS = ../../lib/libtfilter.a
 
 CSOURCES = cmdline.cc file.cc instream.cc outstream.cc search.cc maptok.cc \
 	   textout.cc texthtml.cc textnroff.cc texttex.cc \
@@ -22,9 +22,16 @@ COBJECTS = cmdline.o file.o instream.o outstream.o search.o maptok.o \
 	   inutil.o errhand.o
 INCLUDE  = ../include/tfilter.h
 
+SOURCES = $(CSOURCES)
+# Note handling of header files for textfilt is special - see the dist
+# target
+HEADER_FILES = cmdline.h errhand.h instream.h inutil.h maptok.h outstream.h \
+	srlist.h textout.h textpath.h.in tfile.h tfilter.h
+DIST_COMMON = Makefile.in
+
 default: $(LIBS)
 
-doc_SOURCES = 
+doc_SOURCES =
 
 manpages:
 
@@ -66,11 +73,25 @@ texttex.o: texttex.cc ../../include/textfilt/textout.h \
  ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
  ../../include/textfilt/textpath.h
 
-../../lib/libtfilter.a: $(COBJECTS) 
+../../lib/libtfilter.a: $(COBJECTS)
 	$(AR) cr $@ $?
 	$(RANLIB) $@
 
+dist:
+	@if [ "X$(distdir)" == "X" ] ; then echo "Set distdir" ; exit 1 ; fi
+	@if [ ! -d $(distdir) ] ; then mkdir $(distdir) ; fi
+	if [ "X$(SOURCES)" != "X" ] ; then cp $(SOURCES) $(distdir) ; fi
+	if [ "X$(HEADER_FILES)" != "X" ] ; then \
+	    if [ ! -d $(distdir)/../../include/textfilt ] ; then \
+		mkdir $(distdir)/../../include/textfilt ; fi ; \
+	    for file in $(HEADER_FILES) ; do \
+	    cp -p ../../include/textfilt/$$file $(distdir)/../../include/textfilt/$$file ; done ; fi
+	if [ "X$(DIST_COMMON)" != "X" ] ; then cp $(DIST_COMMON) $(distdir) ; fi
+	for dir in $(SUBDIRS) ; do \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	if [ "X$(DOC_FILES)" != "X" ] ; then cp $(DOC_FILES) $(distdir) ; fi
+
 clean:
-	/bin/rm -f *.o *~ 
+	/bin/rm -f *.o *~
 distclean: clean
 	rm -f Makefile

@@ -21,6 +21,13 @@ FILES_QUOTE_NOFMT = tst1.c tststra.h # c.h
 FILES            = $(FILES_QUOTEFMT) $(FILES_NOQUOTEFMT) $(FILES_QUOTE_NOFMT)
 FILES_USING_QUOTE = $(FILES_QUOTEFMT) $(FILES_NOQUOTEFMT)
 
+TESTFILES = tst.f tst2.c tdollar.h estest.h eopindex.def \
+	indent-html.def indent-latex.def indent-man.def tst.cit pubinc \
+	fhtml.def
+SOURCES = $(FILES) $(TESTFILES)
+DIST_COMMON = Makefile.in
+DISTSUBDIRS = testref defn
+
 runtests: Makefile
 	rm -f *.3 *.2 *.tex *.html
 	(DOCTEXT_HEADING=PETSc; export DOCTEXT_HEADING ; \
@@ -90,6 +97,18 @@ check-complete:
 
 testing: runtests compare
 check: runtests compare
+
+dist:
+	@if [ "X$(distdir)" == "X" ] ; then echo "Set distdir" ; exit 1 ; fi
+	@if [ ! -d $(distdir) ] ; then mkdir $(distdir) ; fi
+	if [ "X$(SOURCES)" != "X" ] ; then cp $(SOURCES) $(distdir) ; fi
+	if [ "X$(HEADER_FILES)" != "X" ] ; then cp $(HEADER_FILES) $(distdir) ; fi
+	if [ "X$(DIST_COMMON)" != "X" ] ; then cp $(DIST_COMMON) $(distdir) ; fi
+	for dir in $(SUBDIRS) ; do \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	for dir in $(DISTSUBDIRS) ; do \
+		cp -rp $$dir $(distdir) ; done
+	if [ "X$(DOC_FILES)" != "X" ] ; then cp $(DOC_FILES) $(distdir) ; fi
 
 clean:
 	rm -f *.o *~ *.3 *.2 *.html *.tex f1.cit

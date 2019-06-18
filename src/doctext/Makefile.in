@@ -12,7 +12,7 @@ top_srcdir=@top_srcdir@
 srcdir=@srcdir@
 @VPATH@
 
-LIBS = ../../lib/libtfilter.a 
+LIBS = ../../lib/libtfilter.a
 
 PROGRAMS = doctext doc2lt
 
@@ -24,13 +24,29 @@ doctext: doctext.o docutil.o keyword.o dotfmat.o incfiles.o quotefmt.o \
 doc2lt: doc2lt.o docutil.o docfields.o $(LIBS)
 	$(CXX_LINK) -o doc2lt doc2lt.o docutil.o docfields.o $(LIBS)
 
-bfort: bfort.o $(LIBS)
-	$(CXX_LINK) -o bfort bfort.o $(LIBS)
-
 doc_SOURCES = doctext.cc doc2lt.cc
 
+SOURCES = doc2lt.cc docfields.cc doctext.cc docutil.cc dotfmat.cc incfiles.cc \
+	keyword.cc quotefmt.cc textb.cc
+HEADER_FILES = doc.h docpath.h.in docutil.h dotfmt.h incfiles.h keyword.h \
+	quotefmt.h
+DIST_COMMON = Makefile.in
+SUBDIRS = test
+
+dist:
+	@if [ "X$(distdir)" == "X" ] ; then echo "Set distdir" ; exit 1 ; fi
+	@if [ ! -d $(distdir) ] ; then mkdir $(distdir) ; fi
+	if [ "X$(SOURCES)" != "X" ] ; then cp $(SOURCES) $(distdir) ; fi
+	if [ "X$(HEADER_FILES)" != "X" ] ; then cp $(HEADER_FILES) $(distdir) ; fi
+	if [ "X$(DIST_COMMON)" != "X" ] ; then cp $(DIST_COMMON) $(distdir) ; fi
+	for dir in $(SUBDIRS) ; do \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	for dir in $(DISTSUBDIRS) ; do \
+		cp -rp $$dir $(distdir) ; done
+	if [ "X$(DOC_FILES)" != "X" ] ; then cp $(DOC_FILES) $(distdir) ; fi
+
 clean:
-	/bin/rm -f *.o *~ $(PROGRAMS) 
+	/bin/rm -f *.o *~ $(PROGRAMS)
 	(cd test ; if [ -s Makefile ] ; then $(MAKE) clean ; fi )
 	-/bin/rm -f doctext\ win32/debug/*
 distclean: clean

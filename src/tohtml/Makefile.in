@@ -17,9 +17,17 @@ PROGRAMS = tohtml tortf
 BASEOBJS = search.o texactio.o rdaux.o rdindx.o label.o scan.o \
            refmap.o style.o dimen.o userdef.o tabular.o biblio.o environ.o \
 	   math.o rddefs.o latexinfo.o accent.o simpleif.o
-HEADERFILES = tex.h tohtmlpath.h search.h
+HEADER_FILES = tex.h tohtmlpath.h.in search.h
+BASESOURCES = search.c texactio.c rdaux.c rdindx.c label.c scan.c \
+	refmap.c style.c dimen.c userdef.c tabular.c biblio.c environ.c \
+	math.c rddefs.c latexinfo.c accent.c simpleif.c
+BASEOBJS = $(BASESOURCES:.c=.o)
 
-tohtml: Makefile $(HEADERFILES) tohtml.o tex2html.o $(BASEOBJS)
+SOURCES = $(BASESOURCES) tortf.c tohtml.c tex2html.c xwdsize.c
+SUBDIRS = testing
+DIST_COMMON = Makefile.in
+
+tohtml: Makefile $(HEADER_FILES) tohtml.o tex2html.o $(BASEOBJS)
 	$(C_LINK) -o tohtml tohtml.o tex2html.o $(BASEOBJS) $(LIBS)
 
 # This is an obsolete program and is no longer used
@@ -27,6 +35,16 @@ xwdsize: xwdsize.o
 	$(C_LINK) -o xwdsize xwdsize.o -lX11
 
 doc_SOURCES = tohtml.c
+
+dist:
+	@if [ "X$(distdir)" == "X" ] ; then echo "Set distdir" ; exit 1 ; fi
+	@if [ ! -d $(distdir) ] ; then mkdir $(distdir) ; fi
+	if [ "X$(SOURCES)" != "X" ] ; then cp $(SOURCES) $(distdir) ; fi
+	if [ "X$(HEADER_FILES)" != "X" ] ; then cp $(HEADER_FILES) $(distdir) ; fi
+	if [ "X$(DIST_COMMON)" != "X" ] ; then cp $(DIST_COMMON) $(distdir) ; fi
+	for dir in $(SUBDIRS) ; do \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	if [ "X$(DOC_FILES)" != "X" ] ; then cp $(DOC_FILES) $(distdir) ; fi
 
 testing:
 	cd testing && ${MAKE} testing

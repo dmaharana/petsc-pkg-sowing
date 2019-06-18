@@ -2,6 +2,14 @@ ALL: inplace subfiles
 
 TOHTML = ../tohtml
 
+SOURCES = test1.tex test2.tex test3.tex test4.tex test5.tex test6.tex \
+	test7.tex test8.tex test9.tex test10.tex test11.tex test12.tex \
+	test13.tex test14.tex test15.tex test16.tex test17.tex test18.tex \
+	test19.tex test20.tex test21.tex test22.tex test23.tex test24.tex \
+	test25.tex test26.tex test27.tex test28.tex test29.tex \
+	test5.cit test5m.cit testf1.pdf test10.dat test10.cit
+DIST_COMMON = Makefile.in README
+DISTSUBDIRS = testref
 
 inplace: $(inplace_files) ../tohtml
 subfiles: $(split_files)  ../tohtml
@@ -81,7 +89,7 @@ test25.html: test25.tex $(TOHTML)
 	-@rm -f test25.hux test25.aux test25.out test25.ler
 	rm -f testf1.gif testf1.ps
 	$(TOHTML) test25.tex
-	if [ ! -s testf1.gif ] ; then \
+	@if [ ! -s testf1.gif ] ; then \
 	    echo "Did not create gif file" ; \
 	fi
 	rm -f testf1.gif testf1.ps
@@ -204,9 +212,21 @@ compare: $(inplace_files) $(split_files)
 
 check-complete:
 	@for file in test*.html ; do \
-	if test ! -s "$$file" ; then echo "make runtests first" ; exit 1; fi ;\
-	if test ! -s testref/$$file ; then \
+	@if test ! -s "$$file" ; then echo "make runtests first" ; exit 1; fi ;\
+	@if test ! -s testref/$$file ; then \
 	    echo "testref/$$file is missing!" ; fi ; done
+
+dist:
+	@if [ "X$(distdir)" == "X" ] ; then echo "Set distdir" ; exit 1 ; fi
+	@if [ ! -d $(distdir) ] ; then mkdir $(distdir) ; fi
+	if [ "X$(SOURCES)" != "X" ] ; then cp $(SOURCES) $(distdir) ; fi
+	if [ "X$(HEADER_FILES)" != "X" ] ; then cp $(HEADER_FILES) $(distdir) ; fi
+	if [ "X$(DIST_COMMON)" != "X" ] ; then cp $(DIST_COMMON) $(distdir) ; fi
+	for dir in $(SUBDIRS) ; do \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	for dir in $(DISTSUBDIRS) ; do \
+		cp -rp $$dir $(distdir) ; done
+	if [ "X$(DOC_FILES)" != "X" ] ; then cp $(DOC_FILES) $(distdir) ; fi
 
 clean:
 	-rm -rf test[1-9] test1[0-9] test2[0-9]
