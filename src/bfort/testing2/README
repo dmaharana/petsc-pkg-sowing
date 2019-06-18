@@ -1,0 +1,14 @@
+This is a replacement set of tests for the bfort and bfort2 codes.
+
+ToDo
+
+Check that these from "testing" are covered:
+n1.c - tbase is better
+n2.c - MPI (in tmpi.c) and tbase and tref
+tstpgma.c - tbase now contains
+tstpgma2.c - almost the same as tstpgma.c
+tstpgmb.c -  mostly a dup of tstpgma (tstpgma was probably incorrectly updated
+from K&R C function declarations)
+tstc.c - tchar is better
+
+Note tstpgmaf90 and tstpgmbf90 nearly the same as wellq

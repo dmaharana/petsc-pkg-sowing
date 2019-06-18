@@ -1,0 +1,7 @@
+/* Function prototypes */
+int Getstr(int nc, char *a);
+int Getstr2(int nc, char a[]);
+int Putstr(int nc, const char *a);
+int Mstring(void *buf, int len, char *n1, const char *n2, int l3, char *n_4);
+
+

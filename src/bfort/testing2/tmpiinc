@@ -1,0 +1,8 @@
+#include <mpi.h>
+int Funcf_1(MPI_Comm c1, MPI_Comm *c_2, MPI_Request v1[], MPI_Op *ops);
+int FuncF_2(MPI_Datatype d1[], MPI_Errhandler ee);
+int Funcf3(MPI_File *f1, MPI_File f2, MPI_Info ii[], MPI_Win *win1);
+int Funcf4(MPI_Message *m1, MPI_Message m2);
+int Funcf5(MPI_Aint ar1, MPI_Count cr1, MPI_Aint *arptr, MPI_Count *crptr,
+       MPI_Offset of1, MPI_Offset *ofptr, MPI_Fint f1, MPI_Fint fv[]);
+int Funcf6(MPI_Status *s1, MPI_Status ar[], const MPI_Status *s2);
