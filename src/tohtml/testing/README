@@ -1,0 +1,31 @@
+Tests for tohtml
+
+This directory provides fairly extensive tests for the tohtml program.
+
+The test needs to run LaTeX to generate some of the images that are
+used for complex LaTeX and for figures. This raises several issues;
+
+1) There is a lot of irrelevant output.  To solve this, after "make testing"
+   run "make compare" .  That will simply compare the generated output from
+   a set of reference data.
+
+2) Some of the data may not compare. This can happen if the process that
+   creates some of the image files generates images that are slightly different
+   in size.  For example, a recent test produced this output:
+
+File test1/img2.gif differs from reference:
+Binary files test1/img2.gif and testref/test1/img2.gif differ
+File test1/img3.gif differs from reference:
+Binary files test1/img3.gif and testref/test1/img3.gif differ
+File test1/node1.html differs from reference:
+67c67
+< This is an inline <img width=23 height=6 src="img2.gif" alt="Image file">
+---
+> This is an inline <img width=22 height=6 src="img2.gif" alt="Image file">
+75c75
+< This is an inline <img width=23 height=6 src="img3.gif" alt="Image file">
+---
+> This is an inline <img width=22 height=6 src="img3.gif" alt="Image file">
+
+This is not an error - there is a one pixel difference in width of these two
+figures, and that can be ignored.
