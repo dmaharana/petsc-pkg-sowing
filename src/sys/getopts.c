@@ -1,6 +1,6 @@
-/* 
+/*
   This file contains routines for processoing options of the form
-  -name <value>.  In order to simplify processing by other handlers, 
+  -name <value>.  In order to simplify processing by other handlers,
   the routines eliminate the values from the argument string by compressing
   it.
  */
@@ -10,13 +10,13 @@
 #include "sowing.h"
 
 /*@C
-   SYArgSqueeze - Remove all null arguments from an arg vector; 
+   SYArgSqueeze - Remove all null arguments from an arg vector;
    update the number of arguments.
  @*/
 void SYArgSqueeze( int *Argc, char **argv )
 {
 int argc, i, j;
-    
+
 /* Compress out the eliminated args */
 argc = *Argc;
 j    = 0;
@@ -53,7 +53,7 @@ return -1;
 
 /*@C
   SYArgGetInt - Get the value (integer) of a named parameter.
-  
+
   Input Parameters:
 . Argc  - pointer to argument count
 . argv  - argument vector
@@ -102,7 +102,7 @@ return 1;
 
 /*@C
   SYArgGetDouble - Get the value (double) of a named parameter.
-  
+
   Input Parameters:
 . Argc  - pointer to argument count
 . argv  - argument vector
@@ -136,18 +136,18 @@ return 1;
 
 /*@C
   SYArgGetString - Get the value (string) of a named parameter.
-  
+
   Input Parameters:
 . Argc  - pointer to argument count
 . argv  - argument vector
 . rflag - if true, remove the argument and its value from argv
 . val   - pointer to buffer to hold value (will be set only if found).
 . vallen- length of val
- 
+
   Returns:
   1 on success
 @*/
-int SYArgGetString( int *Argc, char **argv, int rflag, char *name, 
+int SYArgGetString( int *Argc, char **argv, int rflag, char *name,
 		    char *val, int vallen )
 {
 int idx;
@@ -171,7 +171,7 @@ return 1;
 
 /*@C
   SYArgHasName - Return 1 if name is in argument list
-  
+
   Input Parameters:
 . Argc  - pointer to argument count
 . argv  - argument vector
@@ -197,7 +197,7 @@ return 1;
 
 /*@C
   SYArgGetIntVec - Get the value (integers) of a named parameter.
-  
+
   Input Parameters:
 . Argc  - pointer to argument count
 . argv  - argument vector
@@ -205,12 +205,12 @@ return 1;
 . n     - number of values to read
 . val   - pointer to value (will be set only if found)
 
-  Note: 
+  Note:
   The form of input is "-name n1 n2 n3 ..."
   Returns:
   1 on success
 @*/
-int SYArgGetIntVec( int *Argc, char **argv, int rflag, char *name, 
+int SYArgGetIntVec( int *Argc, char **argv, int rflag, char *name,
 		    int n, int *val )
 {
 int idx, i;
@@ -240,7 +240,7 @@ return 1;
 
 /*@C
   SYArgGetIntList - Get the value (integers) of a named parameter.
-  
+
   Input Parameters:
 . Argc  - pointer to argument count
 . argv  - argument vector
@@ -248,14 +248,14 @@ return 1;
 . n     - maximum number of values to read
 . val   - pointer to values (will be set only if found)
 
-  Note: 
+  Note:
   The form of input is "-name n1,n2,n3 ..."
 
   Returns:
-  Number of elements found.  0 if none or error (such as -name with 
+  Number of elements found.  0 if none or error (such as -name with
   no additional arguments)
 @*/
-int SYArgGetIntList( int *Argc, char **argv, int rflag, char *name, int n, 
+int SYArgGetIntList( int *Argc, char **argv, int rflag, char *name, int n,
 		     int *val )
 {
 int  idx, i;

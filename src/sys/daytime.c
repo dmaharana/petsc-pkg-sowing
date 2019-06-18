@@ -5,9 +5,9 @@
 #include <string.h>
 #endif
 /*
-   Here's an unpleasent fact.  On Intel systems, include-ipsc/sys/types.h 
+   Here's an unpleasent fact.  On Intel systems, include-ipsc/sys/types.h
    contains "typedef long time_t" and
-   include/time.h contains "typedef long int time_t".  We can fix this by 
+   include/time.h contains "typedef long int time_t".  We can fix this by
    defining __TIME_T after types.h is included.
  */
 #if defined(intelnx) && !defined(intelparagon) && !defined(__TIME_T)
@@ -39,7 +39,7 @@ time_t tval;
 tval        = time( (time_t *)0 );
 tp->tv_sec  = tval;
 tp->tv_usec = 0;
-#else 
+#else
 gettimeofday( tp, (struct timezone *)0 );
 #endif
 }

@@ -6,9 +6,9 @@
 #endif
 #include <ctype.h>
 /*
-   Here's an unpleasent fact.  On Intel systems, include-ipsc/sys/types.h 
+   Here's an unpleasent fact.  On Intel systems, include-ipsc/sys/types.h
    contains "typedef long time_t" and
-   include/time.h contains "typedef long int time_t".  We can fix this by 
+   include/time.h contains "typedef long int time_t".  We can fix this by
    defining __TIME_T after types.h is included.
  */
 #include <sys/types.h>
@@ -17,7 +17,7 @@
 #endif
 #include <sys/stat.h>
 /* Here's an unpleasent fact.  On Intel systems, unistd contains REDEFINITIONS
-   of SEEK_SET, SEEK_CUR, and SEEK_END that are not guarded (in fact, the 
+   of SEEK_SET, SEEK_CUR, and SEEK_END that are not guarded (in fact, the
    unistd.h file contains no guards against multiple inclusion!).  */
 #if defined(intelnx) && !defined(intelparagon)
 #undef SEEK_SET
@@ -54,14 +54,14 @@ typedef u_short gid_t;
 #endif
 
 /* Set to 1 to provide debugging output */
-static int dbg = 1;
+static int dbg = 0;
 
 /* Prototypes for internal routines */
 int SYiTestFile( const char *, char, uid_t, gid_t );
 
 #if defined(HAVE_PWD_H)
 /*@
-   SYGetFullPath - Given a filename, return the fully qualified 
+   SYGetFullPath - Given a filename, return the fully qualified
                  file name.
 
    Input parameters:
@@ -84,17 +84,17 @@ struct passwd *pwde;
 int           ln;
 
 if (path[0] == '/') {
-    if (strncmp( "/tmp_mnt/", path, 9 ) == 0) 
+    if (strncmp( "/tmp_mnt/", path, 9 ) == 0)
 	strncpy( fullpath, path + 8, flen );
-    else 
-	strncpy( fullpath, path, flen ); 
+    else
+	strncpy( fullpath, path, flen );
     return;
     }
 SYGetwd( fullpath, flen );
 strncat( fullpath,"/",flen - strlen(fullpath) );
-if ( path[0] == '.' && path[1] == '/' ) 
+if ( path[0] == '.' && path[1] == '/' )
 strncat( fullpath, path+2, flen - strlen(fullpath) - 1 );
-else 
+else
 strncat( fullpath, path, flen - strlen(fullpath) - 1 );
 
 /* Remove the various "special" forms (~username/ and ~/) */
@@ -182,7 +182,7 @@ void SYGetUserName( char *name, int nlen )
 struct passwd *pw;
 
 pw = getpwuid( getuid() );
-if (!pw) 
+if (!pw)
     strncpy( name, "Unknown",nlen );
 else
     strncpy( name, pw->pw_name,nlen );
@@ -243,7 +243,7 @@ void SYGetHostName( char *name, int nlen )
 	char *p_out = name;
 	char *p_in  = he->h_name;
 	int  i;
-	for (i=0; i<nlen-1 && *p_in; i++) 
+	for (i=0; i<nlen-1 && *p_in; i++)
 	    *p_out++ = *p_in++;
 	*p_out = 0;
     }
@@ -260,7 +260,7 @@ void SYGetHostName( char *name, int nlen )
 	char *p_out = name;
 	char *p_in  = utname.nodename;
 	int  i;
-	for (i=0; i<nlen-1 && *p_in; i++) 
+	for (i=0; i<nlen-1 && *p_in; i++)
 	    *p_out++ = *p_in++;
 	*p_out = 0;
     }
@@ -268,7 +268,7 @@ void SYGetHostName( char *name, int nlen )
     gethostname( name, nlen );
 #elif defined(HAVE_SYSINFO)
     sysinfo(SI_HOSTNAME, name, nlen);
-#else 
+#else
     strncpy( name, "Unknown!", nlen );
 #endif
 /* See if this name includes the domain */
@@ -319,7 +319,7 @@ strncpy( name, "IntelNX", nlen );
 strncpy( name, "Unknown", nlen );
 #endif
 }
-#endif 
+#endif
 
 #if !defined(__MSDOS__) && !defined(WIN32)
 int SYiTestFile( const char *, char, uid_t, gid_t );
@@ -862,7 +862,7 @@ char *SYGetRealpath( const char *path, char *rpath )
 .  path - path to be possibly modified
 
    Note:
-   Given a complete path (for instance by SYGetRealpath), if the path begins 
+   Given a complete path (for instance by SYGetRealpath), if the path begins
    with the users home directory, the user's home directory is removed.
 
    This is useful on systems where a users home directory may have
@@ -922,14 +922,14 @@ int SYIsMachineHost( const char *machinename )
 #endif
   }
 #if !defined(RELIABLEHOSTNAME)
-  /* Only test leading characters of the localname against the leading 
+  /* Only test leading characters of the localname against the leading
      characters of the host */
-  if ((tmp = strchr( machinename, '.' ))) 
+  if ((tmp = strchr( machinename, '.' )))
       namelen = strlen( machinename ) - strlen( tmp );
   else
       namelen = strlen( machinename );
   return (namelen == hostlength && !strncmp(machinename,localhost,hostlength));
-#else 
+#else
   return !strncmp(machinename,localhost,hostlength);
 #endif
 }
@@ -1028,8 +1028,8 @@ struct tm   *tim;
 if (stat( fname, &buf ) == 0) {
     tim = localtime( &(buf.st_mtime) );
     if (ltm) *ltm = *tim;
-    if (date) 
-        sprintf( date, "%d/%d/%d", 
+    if (date)
+        sprintf( date, "%d/%d/%d",
 	         tim->tm_mon+1, tim->tm_mday, tim->tm_year+1900 );
     }
 else {
@@ -1050,11 +1050,11 @@ int SYFileNewer( char *newfile, char *oldfile )
 
     if (stat( newfile, &new_st )) return 0;
     if (stat( oldfile, &old_st )) return 1;
-    
+
     return (new_st.st_mtime > old_st.st_mtime);
 }
 
-/* 
+/*
    These routines may be used to get exclusive access to a file; they
    replace fopen and fclose.
 
@@ -1095,11 +1095,11 @@ FL.l_len    = 0;
 /*
 fprintf( stdout, "About to lock file %s\n", name ); fflush( stdout );
  */
-/* 
-   This code attempts to avoid deadlock by not using blocking lock 
-   requests.  However, it requires correct behavior by the operating 
-   system.  AIX 3.2.4, as a counter-example, seems to block on these 
-   non-blocking lock requests (on the remote nodes).  Sigh... 
+/*
+   This code attempts to avoid deadlock by not using blocking lock
+   requests.  However, it requires correct behavior by the operating
+   system.  AIX 3.2.4, as a counter-example, seems to block on these
+   non-blocking lock requests (on the remote nodes).  Sigh...
  */
 if (fcntl( fd, F_SETLK, &FL ) == -1) {
     /*
@@ -1217,8 +1217,8 @@ struct tm   *tim;
 if (stat( fname, &buf ) == 0) {
     tim = localtime( &(buf.st_mtime) );
     if (ltm) *ltm = *tim;
-    if (date) 
-        sprintf( date, "%d/%d/%d", 
+    if (date)
+        sprintf( date, "%d/%d/%d",
 	         tim->tm_mon+1, tim->tm_mday, tim->tm_year+1900 );
     }
 else {
