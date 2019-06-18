@@ -1,19 +1,23 @@
 #! /bin/sh
 # Allow autogen.sh to be used within the dist target
-svnco=co
-if test "X$1" = "Xexport" ; then svnco=export ; fi
+#svnco=co
+#if test "X$1" = "Xexport" ; then svnco=export ; fi
 # runs autoheader and autoconf with local macros
 echo making configure in `pwd`
 # autoconf doesn't correctly determine when the cache values are not
 # correct, so we must always delete the cache file
-svn=svn
-if [ -n "$SVN" ] ; then svn=$SVN ; fi
+#
+# This old code to share the autoconf macros can no longer be used; note also
+# that some groups selfishly deleted some of the elements that they did not
+# use, ignoring the use of these by sowing and other projects (sigh).
+#svn=svn
+#if [ -n "$SVN" ] ; then svn=$SVN ; fi
 rm -rf autom4te.cache
-if [ ! -d confdb ] ; then
-   $svn $svnco https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk/confdb
-else
-   $svn update 
-fi
+#if [ ! -d confdb ] ; then
+#   $svn $svnco https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk/confdb
+#else
+#   $svn update
+#fi
 if autoconf -I config/confdb ; then
     echo "autoconf appears to be the new version"
     autoheader -I config/confdb
