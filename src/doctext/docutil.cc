@@ -15,6 +15,9 @@ static void skipBlanks(InStream *ins);
 static int outToken(int nsp, char *token, TextOut *outs);
 static void pushBreakchars(InStream *ins);
 static void popBreakchars(InStream *ins);
+int ReadAndOutputCalllist(InStream *ins, TextOut *outs);
+int GetANTokenSkipComments(InStream *ins, TextOut *outs,
+			   int maxlen, char *token, int *nsp);
 
 /*
    This file contains service routines to do things like read
@@ -378,6 +381,20 @@ int DocReadDefineDefinition( InStream *ins, TextOut *outs )
 // Must also output the text, and generate additional links
 // Note that enum names can be alphanumeric, so we need to allow
 // tokens that start with alpha but include numeric characters.
+//
+// Here is a grammar for the enum definitions. This addresses
+// the use of macros for either names or values, which we have seen
+// in use by PETSc.
+//
+// [typedef] enum { NAME [=VALUE] (,NAME [=VALUE])* } name [,name]*;
+//
+// where NAME and VALUE may either be a simple alpha-numeric token OR
+// a macro reference:
+//
+// NAME and VALUE:
+//    ANtoken [ ( TERM [,TERM]* ) ]
+// where TERM is a token that is not "," or a quoted string
+#if 1
 int DocReadEnumDefinition(InStream *ins, TextOut *outs)
 {
     char ch;
@@ -385,8 +402,141 @@ int DocReadEnumDefinition(InStream *ins, TextOut *outs)
     int  in_brace = 0;
     int  maxlen = MAX_TOKEN_SIZE, nsp;
     int  isEnum = 1;      // Used to check if recognized as enum or typedef enum
-    enum { nxt_val, has_name, has_val, nxt_comment, in_c_cmt, in_c_cmt_end }
-    state, oldstate;
+    enum { get_name,
+	   get_call,
+	   get_val
+    } state;
+
+    // Must handle newline as non-space
+    pushBreakchars(ins);
+
+    if (verbose) printf("Reading enum definition\n");
+    // Skip any initial newlines
+    while (!GetANTokenSkipComments(ins, outs, maxlen, token, &nsp)) {
+	if (token[0] != '\n') break;
+	if (verbose) printf("Read token :%s:\n",token);
+    }
+
+    // Look for a leading [typedef] enum.  Return the first token after
+    // enum, or first token that doesn't match
+    if (strcmp(token, "typedef") == 0) {
+	if (verbose) printf("Saw typedef in enum doc\n");
+	outs->PutToken(nsp, token);
+	if (GetANTokenSkipComments(ins, outs, maxlen, token, &nsp)) {
+	    isEnum = 0;
+	}
+    }
+    if (strcmp(token, "enum") != 0) isEnum = 0;
+    else {
+	if (verbose) printf("Saw enum in enum doc\n");
+	outs->PutToken(nsp, token);
+	GetANTokenSkipComments(ins, outs, maxlen, token, &nsp);
+    }
+
+    // Look for {, skipping any comments.
+    if (token[0] != '{') {
+	fprintf(stderr, "Expected { to start enum definition, saw %s\n",
+		token);
+	return 1;
+    }
+    else {
+	outs->PutToken(nsp, token);
+    }
+
+    // process an enum list:
+    //  NAME ( CALLLIST ) ( = EXPR )
+    state = get_name;
+    char *enumname = 0;
+    while (!GetANTokenSkipComments(ins, outs, maxlen, token, &nsp)) {
+	if (verbose) printf("processing token :%s:\n", token);
+	// Ignore newlines
+	if (token[0] == '\n') {
+	    outToken(nsp, token, outs);
+	    continue;
+	}
+	// Record the enumname if we've reached the end of the definition
+	if (enumname && (token[0] == ',' || token[0] == '}')) {
+	    IndexFileAdd(enumname, enumname, GetCurrentFileName(),
+			 GetCurrentRoutinename());
+	    delete(enumname);
+	    enumname = 0;
+	}
+
+	if (token[0] == '}') {
+	    outToken(nsp, token, outs);
+	    break;
+	}
+	switch (state) {
+	case get_name:
+	    outToken(nsp, token, outs);
+	    // Save a copy of the name
+	    enumname = strdup(token);
+	    state = get_call;
+	    break;
+	case get_call:
+	    outToken(nsp, token, outs);
+	    if (token[0] == ',') {
+		state = get_name;
+	    }
+	    else if (token[0] == '=') {
+		state = get_val;
+	    }
+	    else if (token[0] == '(') {
+		// A complex name - the enumname is not valid
+		if (enumname) { delete(enumname); enumname = 0; }
+		ReadAndOutputCalllist(ins, outs);
+		// stay in get call - look for , or =
+	    }
+	    else {
+		fprintf(stderr, "Unexpected token in processing enum: %s\n",
+			token);
+		// how to break out?
+	    }
+	    break;
+	case get_val:
+	    // allow general expressions, including a call
+	    outToken(nsp, token, outs);
+	    if (token[0] == ',') {
+		state = get_name;
+	    }
+	    else if (token[0] == '(') {
+		ReadAndOutputCalllist(ins, outs);
+	    }
+	    else {
+		// Allow almost anything - state unchanged
+	    }
+	    break;
+	}
+    }
+    if (enumname) delete(enumname);
+
+    // Still need to see if there is a name for the enum. Process
+    // until the terminating ;
+    while (!GetANTokenSkipComments(ins, outs, maxlen, token, &nsp)) {
+	outToken(nsp, token, outs);
+	if (token[0] == ';') break;
+    }
+
+
+    outs->PutToken(nsp, NewlineString);
+    popBreakchars(ins);
+    return 0;
+}
+#else
+int DocReadEnumDefinition(InStream *ins, TextOut *outs)
+{
+    char ch;
+    char token[MAX_TOKEN_SIZE+1];
+    int  in_brace = 0;
+    int  maxlen = MAX_TOKEN_SIZE, nsp;
+    int  isEnum = 1;      // Used to check if recognized as enum or typedef enum
+    enum { nxt_val,
+	   has_name,
+	   has_val,
+	   nxt_comment,
+	   in_c_cmt,
+	   in_c_cmt_end
+    } state, oldstate;
 
     // Must handle newline as non-space
     pushBreakchars(ins);
@@ -495,6 +645,7 @@ int DocReadEnumDefinition(InStream *ins, TextOut *outs)
     popBreakchars(ins);
     return 0;
 }
+#endif
 
 // Read C and/or X
 static int HasX = 0;
@@ -571,8 +722,201 @@ char *SkipOverLeadingString( char *buf )
 void UngetLeadingString( InStream *ins )
 {
   char *p = LeadingString + (strlen(LeadingString) - 1);
-  while (p >= LeadingString) 
+  while (p >= LeadingString)
     ins->UngetChar( *p-- );
+}
+
+// ---------------------------------------------------------------------------
+// Skip a C comment, given that the leading / has been read.
+// This routine reads the next character and either processes the comemnt
+// (if the character is either * (/*) or / (//)) or ungets the character
+// and returns.  The return values are:
+//   0: Success and comment read
+//   1: The leading / did not begin a comment
+//   <0: Error, such as EOF on input.
+// If outs is provided, output (not just skip) the comment.
+int SkipPossibleComment(InStream *ins, TextOut *outs)
+{
+    char c, nchar;
+    // Check next character
+    if (ins->GetChar(&nchar)) return -1;
+
+    if (nchar == '*') {
+	if (outs) outs->PutChar(nchar);
+	// delimited comment
+	while (!ins->GetChar(&c)) {
+	    if (outs) outs->PutChar(c);
+	    if (c == '*') {
+		if (ins->GetChar(&nchar)) return -11;
+		if (nchar == '/') {
+		    if (outs) outs->PutChar(nchar);
+		    break;
+		}
+		ins->UngetChar(nchar);
+	    }
+	}
+	return 0;
+    }
+
+    if (nchar == '/') {
+	// comment to eol
+	// NOTE: does not handle a \ followed by EOL.
+	if (outs) outs->PutChar(nchar);
+	while (!ins->GetChar(&c)) {
+	    if (c == '\n') {
+		ins->UngetChar(c);
+		break;
+	    }
+	    if (outs) outs->PutChar(c);
+	}
+	return 0;
+    }
+
+    ins->UngetChar(nchar);
+    return 1;  // Comment not found
+}
+
+// ---------------------------------------------------------------------------
+// Get an AN token, skipping any preceeding comments
+int GetANTokenSkipComments(InStream *ins, TextOut *outs,
+			   int maxlen, char *token, int *nsp)
+{
+    int rct, rc;
+    do {
+	rct = ins->GetANToken(maxlen, token, nsp);
+	if (rct) return rct;
+
+	if (token[0] == '/') {
+	    if (outs) {
+		outs->PutToken(*nsp, token);
+		*nsp = 0;
+	    }
+	    rc = SkipPossibleComment(ins, outs);
+	    if (rc == 1) return 0;
+	    if (rc < 0) return 1;  	    /* rc < 0 is error */
+	    /* If rc == 0 saw a comment; need to read again */
+	}
+	else return 0;;
+    } while(1);
+}
+
+
+
+// Read a quoted string.  The escape character (escchar) is used to
+// include the quote or the escape character in the string.  E.g.,
+//   "foo \"\"\\" is the string   foo""\ .
+int ReadAndOutputQuotedString(InStream *ins, TextOut *outs,
+			      char quotechar, char escchar)
+{
+    int inescape = 0;
+    char c;
+
+    while (!ins->GetChar(&c)) {
+	if (inescape) {
+	    inescape = 0;
+	    outs->PutChar(c);
+	}
+	else if (c == escchar) {
+	    inescape = 1;
+	}
+	else {
+	    outs->PutChar(c);
+	    if (c == quotechar) return 0;;
+	}
+    }
+    // EoF or other problem before seeing end of string
+    return 1;
+}
+
+int ReadAndOutputExpr(InStream *ins, TextOut *outs)
+{
+    int c;
+
+    return 1;
+}
+
+// Read just an integer.  nchar is set to the first char after the integer.
+// This is a "peeked" value - the character still needs to be read.
+int ReadAndOutputInteger(char fchar, InStream *ins, TextOut *outs,
+			 char *nchar)
+{
+    char c;
+
+    while (!ins->GetChar(&c)) {
+	if (ins->breaktable[c] == BREAK_DIGIT) {
+	    outs->PutChar(c);
+	}
+	else {
+	    *nchar = c;
+	    ins->UngetChar(c);
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+// Read and output a number.  Both integer and floating point.
+// The first digit has been read (in fchar).  This is used incase
+// a later version of this will determine the value of the number
+
+int ReadAndOutputNumber(char fchar, InStream *ins, TextOut *outs)
+{
+    int  err;
+    char c, nchar;
+
+    err = ReadAndOutputInteger(fchar, ins, outs, &nchar);
+    if (err) return err;
+    // Check for the case where nchar is . or e or E for the formats
+    // INTEGER (. INTEGER) ([eE]([+-])INTEGER)
+    if (nchar == '.') {
+	ins->GetChar(&c);
+	outs->PutChar(c);
+	ins->GetChar(&nchar);
+	if (ins->breaktable[nchar] == BREAK_DIGIT) {
+	    err = ReadAndOutputInteger(fchar, ins, outs, &nchar);
+	    if (err) return err;
+	}
+    }
+    if (nchar == 'e' || nchar == 'E') {
+	ins->GetChar(&c);
+	outs->PutChar(c);
+	ins->GetChar(&c);
+	if (c == '-' || c == '+') {
+	    outs->PutChar(c);
+	    ins->GetChar(&c);
+	}
+	if (ins->breaktable[c] == BREAK_DIGIT) {
+	    err = ReadAndOutputInteger(c, ins, outs, &nchar);
+	}
+	else err = 1;  // Require an exponent
+    }
+    return err;
+}
+
+// Read a function or macro invocation and output it.  The routine or macro
+// name has been read. The approximate grammar is
+//
+// CALLLIST = \( EXPR (, EXPR)* \)
+// EXPR = TERM ( OP EXPR )
+// TERM = NAME ( CALLLIST ) | QUOTEDSTRING | NUMBER
+// The opening "(" has been read
+int ReadAndOutputCalllist(InStream *ins, TextOut *outs)
+{
+    char c;
+    while (!ins->GetChar(&c)) {
+	if (c == '(') {
+	    outs->PutChar(c);
+	    ReadAndOutputCalllist(ins, outs);
+	}
+	else if (c == ')') {
+	    outs->PutChar(c);
+	    return 0;
+	}
+	else if (c == ',') {
+	    outs->PutChar(c);
+	}
+    }
+    return 0;
 }
 
 #ifdef FOO
@@ -619,7 +963,7 @@ void ReadEnumName( InStream *ins, OutStream *outs, EnumList *enumlist )
       else
 	break;
     }
-    
+
     // Read next token.  If not =, push back and return, else read an int.
     while (!ins->GetToken( maxlen, enumint, &nsp )) {
       // Convert newlines
