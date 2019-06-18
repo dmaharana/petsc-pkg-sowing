@@ -17,11 +17,15 @@ OutStreamBuf *includes = 0;
 
 int SetIncludeFile( const char *path )
 {
-    if (path)
+    if (path) {
 	incfd = fopen( path, "r" );
+	if (!incfd) {
+	    fprintf(stderr, "Could not open -I %s\n", path);
+	}
+    }
     else
 	incfd = 0;
-    includes = new OutStreamBuf( MAX_INCLUDE_BUF );    
+    includes = new OutStreamBuf( MAX_INCLUDE_BUF );
     return includes->status;
 }
 
@@ -30,7 +34,7 @@ int OutputIncludeInfo( TextOut *textout )
     int c;
     if (incfd) {
         fseek( incfd, 0L, 0 );
-        while ((c = getc( incfd )) != EOF) 
+        while ((c = getc( incfd )) != EOF)
 	    textout->PutChar( c );
 	}
 
