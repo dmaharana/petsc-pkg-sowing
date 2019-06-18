@@ -14,6 +14,8 @@ int SYReadConfigFile(const char filename[], const char sepChar,
 int SYConfigDBInit(const char *cmd, void *extra);
 int SYConfigDBInsert(const char *cmd, const char *key, const char *value,
 		     void *extracmd);
+int SYConfigDBIgnore(const char *cmd, const char *key, const char *value,
+		     void *extracmd);
 int SYConfigDBLookup(const char *cmd, const char *key, const char **value,
 		     void *extracmd);
 int SYConfigDBFree(void *extracmd);
