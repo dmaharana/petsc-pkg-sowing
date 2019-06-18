@@ -142,26 +142,33 @@ extern void PetscRmPointer(int);
 #if defined(__cplusplus)
 extern "C" {
 #endif
-void simple_(int *a,double *b, int *__ierr){
+void simple_(int *a,double *b, int *__ierr)
+{
 *__ierr = simple(*a,*b);
 }
-void  foo1_(int *a,char *b,void(*c)(), int *__ierr, cl0){
+void  foo1_(int *a,char *b,void(*c)(), int *__ierr, int cl0)
+{
 foo1(*a,*b,c);
 }
-void  foo1a_(int *a,char *b,void(*c)(int, char, MyType *a), int *__ierr, cl0){
+void  foo1a_(int *a,char *b,void(*c)(int, char, MyType *a), int *__ierr, int cl0)
+{
 foo1a(*a,*b,c);
 }
-int foo2_(MyType *a,short *b, int *__ierr){
+int foo2_(MyType *a,short *b, int *__ierr)
+{
 *__ierr = foo2(
 	(MyType* )PetscToPointer( *(int*)(a) ),*b);
 }
-void foo3_(int *__ierr ){
+void foo3_(int *__ierr)
+{
 *__ierr = foo3();
 }
-void foo3a_(int *__ierr ){
+void foo3a_(int *__ierr)
+{
 *__ierr = foo3a();
 }
-void foov_(void*buf,int *len, int *__ierr){
+void foov_(void*buf,int *len, int *__ierr)
+{
 *__ierr = foov(buf,*len);
 }
 #if defined(__cplusplus)

@@ -7,6 +7,10 @@ TESTCOUTPUT = n1f.c n2f.c tstpgmaf.c tstpgma2f.c tstpgmbf.c \
 TESTF90OUTPUT = tstpgmaf90.f90 tstpgmbf90.f90
 TESTOUTPUT = $(TESTCOUTPUT) $(TESTF90OUTPUT)
 
+SOURCES = n1.c n2.c tstpgma.c tstpgma2.c tstpgmb.c tstc.c pubinc malform.c
+DIST_COMMON = Makefile.in
+DISTSUBDIRS = testref
+
 all-redirect: $(TESTOUTPUT)
 
 # Note that we set the BFORT_CONFIG_PATH to permit running the tests before
@@ -78,6 +82,18 @@ testing: $(TESTOUTPUT)
 		diff -b $$file.f90 testref/$${file}.f90 ; \
 	    fi ; \
 	done
+
+dist:
+	@if [ "X$(distdir)" == "X" ] ; then echo "Set distdir" ; exit 1 ; fi
+	@if [ ! -d $(distdir) ] ; then mkdir $(distdir) ; fi
+	if [ "X$(SOURCES)" != "X" ] ; then cp $(SOURCES) $(distdir) ; fi
+	if [ "X$(HEADER_FILES)" != "X" ] ; then cp $(HEADER_FILES) $(distdir) ; fi
+	if [ "X$(DIST_COMMON)" != "X" ] ; then cp $(DIST_COMMON) $(distdir) ; fi
+	for dir in $(SUBDIRS) ; do \
+		(cd $$dir && $(MAKE) distdir=../$(distdir)/$$dir dist ) ; done
+	for dir in $(DISTSUBDIRS) ; do \
+		cp -rp $$dir $(distdir) ; done
+	if [ "X$(DOC_FILES)" != "X" ] ; then cp $(DOC_FILES) $(distdir) ; fi
 
 clean:
 	rm -f $(TESTOUTPUT) config.log

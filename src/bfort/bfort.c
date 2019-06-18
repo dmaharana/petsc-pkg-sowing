@@ -73,27 +73,27 @@ static const char *errArgNameLocal = 0;
    of the argument in the argument list, and append a value int with
    the length at the end of the argument list.
 
-   If stringStyle is 1, add an argument with the length of the string
-   at the end of the argument list with the length of the string,
-   as passed by Fortran.  This is the most common approach by Fortran
-   compilers.
+   If stringStyle is STRING_LENEND, add an argument with the length of
+   the string at the end of the argument list with the length of the
+   string, as passed by Fortran.  This is the most common approach by
+   Fortran compilers.
 
    Note that in addition to this, it may be necessary to copy the data
    either into or out of the Fortran storage (MPICH does this with its
    own Fortran interface generator).
+
+   The default for stringArgLenName is cl, and may be overridden in the
+   config file.
  */
-static const char *stringArgLenName = "cl";
-static int   stringStyle = 1;
+static const char *stringArgLenName = 0;
+static enum { STRING_UNKNOWN, STRING_ABORT, STRING_LENEND }
+    stringStyle = STRING_UNKNOWN;
 
 /* Enable the MPI definitions and conversion functions */
 static int isMPI = 0;
 
 /* Enable profiling name output */
 static int DoProfileNames = 0;
-
-/* If 1, output header immediately; otherwise, defer until declarations
-   processed */
-static int OutputImmed = 1;
 
 /* If 0, do not generate the ifndef DEBUG_ALL wrapper */
 static int AddDebugAll = 1;
@@ -112,7 +112,7 @@ static int useShortNames = 0;
 static int ErrCnt = 0;
 
 /* Debugging for development */
-static int Debug = 1;
+static int Debug = 0;
 #define DBG(a) {if (Debug) printf(a);}
 #define DBG2(a,b) {if (Debug)printf(a,b);}
 
@@ -128,7 +128,7 @@ static void *nativeList;
 static void *nativePtrList;
 static void *toptrList;
 static void *parmList;
-static SYConfigCmds configcmds[5];
+static SYConfigCmds configcmds[7];
 
 /* We also need to make some edits to the types occasionally.  First, note
    that double indirections are often bugs */
@@ -142,13 +142,14 @@ static SYConfigCmds configcmds[5];
 
 typedef struct {
     char *name;
-    int  has_star, is_char, is_native, has_array,
+    int  is_const, has_star, is_char, is_native, has_array,
 	type,              /* Index into TYPE_LIST array */
 	is_FILE, void_function;
     int  implied_star;
 } ARG_LIST;
 typedef struct {
-    int is_char, is_native, implied_star, is_FILE, type_has_star, is_void;
+    int is_const, is_char, is_native, implied_star, is_FILE, type_has_star,
+	is_void;
     int is_mpi;
     char type[MAX_TYPE_NAME];
 } TYPE_LIST;
@@ -189,6 +190,11 @@ int MPIU_Strncpy( char *, const char *, size_t );
 int MPIU_Strnapp( char *, const char *, size_t );
 void Abort( const char *, const char *, int );
 void DoBfortHelp ( char * );
+
+int stringDecl(FILE *fout, int nargs, ARG_LIST args[]);
+int stringFtoC(FILE *fout, int nargs, ARG_LIST args[]);
+int stringCtoF(FILE *fout, int nargs, ARG_LIST args[]);
+
 #define ABORT(msg) Abort(msg,__FILE__,__LINE__)
 
 /*D
@@ -214,13 +220,21 @@ void DoBfortHelp ( char * );
 	      uncommon approach for handling error returns.
 . -shortargname - Use short (single character) argument names instead of the
               name in the C definition.
+. -fstring  - Enable handling of Fortran character parameters, using the most
+              common call interface.  This is the default unless the
+	      environment variable BFORT_STRINGHANDLING is set to IGNORE.
+. -fnostring - Disable handling of Fortran character parameters.  Routines
+               with 'char' arguments in C will not have interface routines
+               generated for them.
+. -fstring-asis - No special processing for string arguments.  Provided
+               for backward compatiblity to older versions of bfort that
+               did not handle strings
 . -mpi      - Handle MPI types (some things are pointers by definition)
 . -no_pmpi  - Do not generate PMPI names
 . -pmpi name - Change macro used to select MPI profiling version
 . -noprofile - Turn off the generation of the profiling version
 . -mnative  - Multiple indirects are native datatypes (no coercion)
 . -voidisptr - Consider "void *" as a pointer to a structure.
-
 . -nodebug  - Do not add
 .vb
   #ifndef DEBUG_ALL
@@ -272,6 +286,7 @@ int main( int argc, char **argv )
     char routine[MAX_ROUTINE_NAME];
     char *infilename;
     char outfilename[MAX_PATH_NAME];
+    char defoutfilename[MAX_PATH_NAME];
     char dirname[MAX_PATH_NAME];
     char fname[MAX_PATH_NAME], *p;
     FILE *fd, *fout, *incfd;
@@ -280,6 +295,7 @@ int main( int argc, char **argv )
     char incbuffer[MAX_PATH_NAME];
     int  n_in_file;
     int  f90mod_skip_header = 1;
+
 
     /* Initialize setup for config files */
     SYConfigDBInit("native", &nativeList);
@@ -298,15 +314,41 @@ int main( int argc, char **argv )
     configcmds[3].name     = "parm";
     configcmds[3].docmd    = SYConfigDBInsert;
     configcmds[3].cmdextra = parmList;
-    configcmds[4].name     = 0;
+    /* These next two are used by bfort2 but ignore by bfort */
+    configcmds[4].name     = "fromptr";
+    configcmds[4].docmd    = SYConfigDBIgnore;
+    configcmds[4].cmdextra = 0;
+    configcmds[5].name     = "declptr";
+    configcmds[5].docmd    = SYConfigDBIgnore;
+    configcmds[5].cmdextra = 0;
 
-/* process all of the files */
+    configcmds[6].name     = 0;
+
+    /* Some more defaults */
+    defoutfilename[0] = 0;
+
+    /* Special handling of defaults.
+       The default handling of strings changed in this version of bfort
+       from version 1.1.25.  The environment variable BFORT_STRINGHANDLING
+       can be set to IGNORE to use the old (oblivious) approach.
+    */
+    {
+	char *ep;
+	ep = getenv("BFORT_STRINGHANDLING");
+	if (ep && (strcmp(ep, "IGNORE") == 0 || strcmp(ep, "ignore") == 0))
+	    stringStyle = STRING_UNKNOWN;
+    }
+
+    /* process all of the files */
+    /* Set a default for the directory name */
     if (MPIU_Strncpy( dirname, ".", sizeof(dirname) )) {
 	ABORT( "Unable to set dirname to \".\"" );
     }
     incfile[0]  = 0;
     SYArgGetString( &argc, argv, 1, "-dir", dirname, MAX_PATH_NAME );
     SYArgGetString( &argc, argv, 1, "-I",   incfile, MAX_PATH_NAME );
+    SYArgGetString( &argc, argv, 1, "-o", defoutfilename, MAX_PATH_NAME);
+
     NoFortMsgs		   = SYArgHasName( &argc, argv, 1, "-nomsgs" );
     MapPointers		   = SYArgHasName( &argc, argv, 1, "-mapptr" );
     if (MapPointers) {
@@ -335,13 +377,19 @@ int main( int argc, char **argv )
 	ABORT("-noansi no longer supported\n");
     }
 
-/* Get replacement names for ifdef items in generated code */
+    /* Get replacement names for ifdef items in generated code */
     SYArgGetString( &argc, argv, 1, "-fcaps", FortranCaps, 256 );
     SYArgGetString( &argc, argv, 1, "-fuscore", FortranUscore, 256 );
     SYArgGetString( &argc, argv, 1, "-fduscore", FortranDblUscore, 256 );
     SYArgGetString( &argc, argv, 1, "-ptr64", Pointer64Bits, 256 );
     SYArgGetString( &argc, argv, 1, "-pmpi", BuildProfiling, 256 );
     if (SYArgHasName( &argc, argv, 1, "-noprofile" )) DoProfileNames = 0;
+
+    /* String support */
+    if (SYArgHasName(&argc, argv, 1, "-fstring"))   stringStyle = STRING_LENEND;
+    if (SYArgHasName(&argc, argv, 1, "-fnostring")) stringStyle = STRING_ABORT;
+    if (SYArgHasName(&argc, argv, 1, "-fstring-asis"))
+	stringStyle = STRING_UNKNOWN;
 
     if (SYArgHasName( &argc, argv, 1, "-help" )) {
 	DoBfortHelp( argv[0] );
@@ -357,7 +405,7 @@ int main( int argc, char **argv )
     /* Read the basics, such as predefined C types */
     if (SYGetFileFromPathEnv(BASEPATH, "BFORT_CONFIG_PATH", NULL,
 			     "bfort-base.txt", fname, 'r')) {
-	if (!SYReadConfigFile(fname, ' ', '#', configcmds, 4)) {
+	if (!SYReadConfigFile(fname, ' ', '#', configcmds, 6)) {
 	    fprintf(stderr, "Unable to read configure file bfort-base.txt");
 	    exit(1);
 	}
@@ -372,24 +420,23 @@ int main( int argc, char **argv )
     if (isMPI) {
 	if (SYGetFileFromPathEnv(BASEPATH, "BFORT_CONFIG_PATH", NULL,
 				 "bfort-mpi.txt", fname, 'r')) {
-	    if (!SYReadConfigFile(fname, ' ', '#', configcmds, 4)) {
+	    if (!SYReadConfigFile(fname, ' ', '#', configcmds, 6)) {
 		fprintf(stderr, "Unable to read configure file bfort-mpi.txt");
 		exit(1);
 	    }
 	}
 	else {
-	    fprintf(stderr, "Uable to read MPI config file bfort-mpi.txt in %s\n",
+	    fprintf(stderr, "Unable to read MPI config file bfort-mpi.txt in %s\n",
 		    BASEPATH);
 	    exit(1);
 	}
     }
-/*    if (isPETSc) {
-      }*/
+
     /* Allow the user to override the variable name used for the error
        parameter. */
     if (useFerr) {
 	/* -shortargname overrides config file for the err arg name */
-	if (! errArgNameParm && useShortNames)
+	if ((! errArgNameParm) && useShortNames)
 	    errArgNameParm = "z";
 	if (!errArgNameParm) {
 	    if (SYConfigDBLookup("parm", "errparm",
@@ -403,6 +450,12 @@ int main( int argc, char **argv )
 		errArgNameLocal = "__ierr";
 	    }
 	}
+    }
+
+    /* Get the name to use for the length of the string argument */
+    if (SYConfigDBLookup("parm", "stringargname",
+			 &stringArgLenName, parmList) != 1) {
+	stringArgLenName = "cl";
     }
 
     /* Open up the file of public includes */
@@ -472,18 +525,25 @@ int main( int argc, char **argv )
 	/* Remember file name */
 	CurrentFilename = infilename;
 
-	/* Set the output filename */
-	SYGetRelativePath( infilename, fname, MAX_PATH_NAME );
-	/* Strip the trailer */
-	p = fname + strlen(fname) - 1;
-	while (p > fname && *p != '.') p--;
-	*p = 0;
-	/* Add an extra h to include files */
-	if (p[1] == 'h') {
-	    p[0] = 'h';
-	    p[1] = 0;
+	if (defoutfilename[0] == 0) {
+	    /* Set the output filename */
+	    SYGetRelativePath( infilename, fname, MAX_PATH_NAME );
+	    /* Strip the trailer */
+	    p = fname + strlen(fname) - 1;
+	    while (p > fname && *p != '.') p--;
+	    *p = 0;
+	    /* Add an extra h to include files */
+	    if (p[1] == 'h') {
+		p[0] = 'h';
+		p[1] = 0;
+	    }
+	    snprintf( outfilename, MAX_PATH_NAME, "%s/%sf.c", dirname, fname );
 	}
-	sprintf( outfilename, "%s/%sf.c", dirname, fname );
+	else {
+	    snprintf( outfilename, MAX_PATH_NAME, "%s/%s",
+		      dirname, defoutfilename);
+	}
+
 	/* Don't open the filename yet (wait until we know that we'll have
 	   some output for it) */
 	fout = NULL;
@@ -555,6 +615,11 @@ int main( int argc, char **argv )
 	}
 	rewind( fd );
 	ResetLineNo();
+
+	/* if generating code for Fortran character arguments, add stdlib */
+	if (stringStyle == STRING_LENEND && fout) {
+	    fprintf(fout, "/* Provide declarations for malloc/free if needed for strings */\n#include <stdlib.h>\n");
+	}
 	if (fout) {
 	    fprintf( fout, "\n\n/* Definitions of Fortran Wrapper routines */\n" );
 /* BFS - next lines are to allow C++ code to be called from fortran */
@@ -595,12 +660,6 @@ int main( int argc, char **argv )
 		OutputBuf( &fout, infilename, outfilename, incfd, (char *)0 );
 		if (!fout) break;
 	    }
-#ifdef FOO
-	    if (IfdefFortranName && fout && routine[0] &&
-		(kind == ROUTINE || kind == MACRO)) {
-		OutputUniversalName( fout, routine );
-	    }
-#endif
 	    if (kind == ROUTINE) {
 		n_in_file++;
 		OutputRoutine( fd, fout, routine, infilename, kind );
@@ -611,7 +670,7 @@ int main( int argc, char **argv )
 		n_in_file ++;
 		OutputMacro( fd, fout, routine, infilename );
 	    }
-/* moved include up BS */
+	    /* moved include up BS */
 	    if (GetIsX11Routine()) {
 		OutputBuf( &fout, infilename, outfilename, incfd,
 			   "#endif\n" );
@@ -621,11 +680,13 @@ int main( int argc, char **argv )
 	fclose( fd );
 
 	if (fout) {
-/* BFS added support for calling C++ from fortran */
+	    /* BFS added support for calling C++ from fortran */
 	    fprintf(fout,"#if defined(__cplusplus)\n");
 	    fprintf(fout,"}\n");
 	    fprintf(fout,"#endif\n");
-	    fclose( fout );
+	    /* FIXME: For a default output file, need to more this eof
+	       handling to end - along with not duplicating bof handling */
+	    fclose(fout);
 	    if (n_in_file == 0) {
 		/* If all we put into the interface file was an include, we delete
 		   it */
@@ -638,6 +699,7 @@ int main( int argc, char **argv )
 	    OutputFortranToken( fmodout, 0, "end interface" );
 	    OutputFortranToken( fmodout, 0, "\n" );
 	    OutputFortranToken( fmodout, 0, "end module" );
+	    OutputFortranToken( fmodout, 1, f90headerName );
 	    OutputFortranToken( fmodout, 0, "\n" );
         }
 	fclose( fmodout );
@@ -655,14 +717,12 @@ void OutputToken( FILE *fout, char *p, int nsp )
     int i;
     static int outcnt = 0;
 
-    if (OutputImmed) {
-	for (i=0; i<nsp; i++) putc( ' ', fout );
-	fputs( p, fout );
-	if (Debug) {
-	    outcnt += nsp + strlen(p);
-	    if (outcnt > 10000) {
-		ABORT( "Exceeded output count limit!" );
-	    }
+    for (i=0; i<nsp; i++) putc( ' ', fout );
+    fputs( p, fout );
+    if (Debug) {
+	outcnt += nsp + strlen(p);
+	if (outcnt > 10000) {
+	    ABORT( "Exceeded output count limit!" );
 	}
     }
 }
@@ -674,14 +734,14 @@ void OutputRoutine( FILE *fin, FILE *fout, char *name, char *filename,
     ARG_LIST    args[MAX_ARGS];
     TYPE_LIST   types[MAX_TYPES];
     RETURN_TYPE rt;
-    int         nargs, nstrings;
+    int         nargs, nstrings = 0;
     int         ntypes;
     int         flag2 = 0, cerr;
 
     /* Check to see if this is a C-only routine */
     if (GetSubClass(&cerr) == 'C' && cerr == 0) {
 	if (!NoFortMsgs && !NoFortWarnings) {
-	    fprintf( stderr, "Routine %s(%s) can not be translated into Fortran\n",
+	    fprintf( stderr, "Routine %s(%s) cannot be translated into Fortran\n",
 		     name, CurrentFilename );
 	}
 	SkipText( fin, name, filename, kind );
@@ -695,6 +755,24 @@ void OutputRoutine( FILE *fin, FILE *fout, char *name, char *filename,
     SkipWhite( fin );
     ProcessArgList( fin, fout, filename, &is_function, name,
 		    args, &nargs, &rt, 0, types, &ntypes, flag2 );
+
+    /* Check for the case that there are strings in argument list and
+       strings are not handled */
+    if (stringStyle == STRING_ABORT) {
+	int i;
+	for (i=0; i<nargs; i++) {
+	    if (args[i].is_char) {
+		printf("Routine %s(%s) contains a char argument and cannot be translated into Fortran\n",
+		       name, CurrentFilename);
+		SkipText(fin, name, filename, kind);
+		/* At this point, we've output the routine argument lists
+		   (in ProcessArgList) but not the body. We add an
+		   empty body here. */
+		fputs("{}\n", fout);
+		return;
+	    }
+	}
+    }
 
     PrintBody( fout, is_function, name, nstrings, nargs, args, types, &rt );
     if (F90Module) {
@@ -712,7 +790,7 @@ void SkipText( FILE *fin, char *name, char *filename, char kind )
 {
     int  c;
     char lineBuffer[MAX_LINE], *lp;
-	
+
     lineBuffer[0] = '+';   /* Sentinal on lineBuffer */
     while (1) {
 	lp = lineBuffer + 1;
@@ -743,7 +821,7 @@ int SkipToSynopsis( FILE *fin, char kind )
 {
     int  c;
     char lineBuffer[MAX_LINE], *lp;
-	
+
     lineBuffer[0] = '+';   /* Sentinal on lineBuffer */
     while (1) {
 	lp = lineBuffer + 1;
@@ -880,7 +958,7 @@ void OutputMacro( FILE *fin, FILE *fout, char *routine_name, char *filename )
     ARG_LIST    args[MAX_ARGS];
     TYPE_LIST   types[MAX_TYPES];
     RETURN_TYPE rt;
-    int         nargs, nstrings;
+    int         nargs, nstrings = 0;
     int         ntypes;
     int         has_synopsis;
     int         done;
@@ -955,7 +1033,7 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
    pointers to void; we check for these by looking at the first character
    of the first token after the void.
 
-   We also want to defer generating the function type incase we need to
+   We also want to defer generating the function type in case we need to
    replace a pointer ref with an integer.
    */
     if (MPIU_Strncpy( rt->name, p, sizeof(rt->name) )) {
@@ -964,10 +1042,8 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
     rt->num_stars = 0;
     *is_function          = strcmp( p, "void" );
 
-    if (OutputImmed) {
-	for (i=0; i<nsp; i++) putc( ' ', fout );
-    }
-/* fputs( p, fout ); */
+    for (i=0; i<nsp; i++) putc( ' ', fout );
+
     p += strlen( p );
     *p++ = ' ';
     leadingm = 0;    /* If a newline is encountered before this is one, AND
@@ -997,8 +1073,7 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
 	    rt->num_stars++;
 	}
 	if (flag && c == '\n' && leadingm == 0) {
-	    if (OutputImmed)
-		fputs( "())", fout );
+	    fputs( "())", fout );
 	    break;
 	}
 	if (c == '\n') leadingm = 1;
@@ -1007,23 +1082,17 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
 		/* Output function type and name */
 		if (rt->num_stars == 0 || !MapPointers) {
 		    if (useFerr && strncmp( rt->name, "int", 3 ) == 0 ) {
-			if (OutputImmed)
-			    fputs( "void ", fout );
+			fputs( "void ", fout );
 		    }
 		    else {
-			if (OutputImmed) {
-			    fputs( rt->name, fout );
-			    fputs( " ", fout );
-			}
+			fputs( rt->name, fout );
+			fputs( " ", fout );
 		    }
 		}
 		else {
-		    if (OutputImmed) {
-			fputs( "int ", fout );
-		    }
+		    fputs( "int ", fout );
 		}
-		if (OutputImmed)
-		    OutputRoutineName( name, fout );
+		OutputRoutineName( name, fout );
 	    }
 	    ungetc( '(', fin );
 	    break;
@@ -1073,7 +1142,7 @@ void ProcessFunctionType( FILE *fin, FILE *fout, char *filename,
 
 /* We are moving to being able to suppress generating the output until the
    argument definitions are read.
-   flag is 1 for C routines, 0 for macros (I think)  */
+   flag is 1 for C routines, 0 for macros */
 void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 		     char *name, ARG_LIST args[MAX_ARGS], int *Nargs,
 		     RETURN_TYPE *rt, int flag, TYPE_LIST *types, int *Ntypes,
@@ -1098,7 +1167,154 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 			this is a macro, insert one and exit */
     curtype = (TYPE_LIST *)0;
     ntypes  = 0;
-/* Get the opening ( */
+
+    /* Get the opening ( */
+    c = FindNextANToken( fin, p, &nsp );
+    if (c != '(') {
+	ErrCnt++;
+	fprintf( stderr, "Expected a (, found %s\n", p );
+	if (ErrCnt > MAX_ERR) ABORT( "" );
+	return;
+    }
+    OutputToken( fout, p, nsp );
+    while (1) {
+	/* First, get the type name.  Note that there might not be one */
+	curtype = &types[ntypes];
+	outparen = ntypes > 0;
+	if ((c = GetTypeName( fin, fout, &types[ntypes], flag, flag2,
+			      outparen ))) {
+	    if (ntypes == 0 && c == ')') {
+		fprintf(stderr,
+			 "Empty argument list in -ansi mode (use (void))\n");
+		/* For this to work, gettypename can't output the last
+		   closing paren */
+		if ( useFerr ) {
+		    fprintf( fout, "int *%s)\n", errArgNameLocal);
+		}
+		else {
+		    fputs(")\n", fout);
+		}
+	    }
+	    else if (c != 1) {
+		char cstring[2];
+		cstring[0] = c; cstring[1] = 0;
+		OutputToken( fout, cstring, 0 );
+	    }
+	    break;
+	}
+	ntypes++;
+
+	/* Now, get the variable names until the arg terminator.
+	   They are of the form [(\*]*name[(\*\[]*
+	   */
+	if (GetArgName( fin, fout, &args[nargs], curtype, 1 )) {
+	    break;
+	}
+	args[nargs].type = ntypes-1;
+	if (curtype) {
+	    /* Propagate information about the type to the specific argument */
+	    if (curtype->type_has_star)
+		args[nargs].has_star++;
+	    if (curtype->implied_star)
+		args[nargs].implied_star++;
+	    args[nargs].is_native = curtype->is_native;
+	    args[nargs].is_char   = curtype->is_char;
+	    args[nargs].is_const  = curtype->is_const;
+	    args[nargs].is_FILE   = curtype->is_FILE;
+	    if (args[nargs].is_char) {
+		DBG("Found a string (is_char)\n");
+		nstrings++;
+	    }
+	}
+	if (nargs >= MAX_ARGS) {
+	    ErrCnt++;
+	    fprintf( stderr, "Too many arguments to function %s; only %d supported and function has %d\n",
+		     name, MAX_ARGS, nargs );
+	    ABORT( "Aborting: Too many arguments to function" );
+	}
+	nargs++;
+	/* Get between-arg character */
+	c = FindNextANToken( fin, p, &nsp );
+	if (c == '(') {
+	    /* Need to skip to corresponding ')' */
+	    OutputBalancedString( fin, fout, '(', ')' );
+	    c = FindNextANToken( fin, p, &nsp );
+	    /* This is a function */
+	    args[nargs-1].void_function = 1;
+	}
+	if (c == ')') {
+	    if (useFerr) {
+		fprintf( fout, "%sint *%s",
+			 (nargs > 0) ? ", " : "", errArgNameLocal );
+	    }
+	    /* Add string length arguments */
+	    if (nstrings && (stringStyle == STRING_LENEND ||
+			     stringStyle == STRING_UNKNOWN)) {
+		int i;
+		for (i=0; i<nstrings; i++) {
+		    fprintf(fout, ", int %s%d", stringArgLenName, i);
+		}
+	    }
+	    fputs( ")\n", fout );
+	    break;
+	}
+	OutputToken( fout, p, nsp );
+    }
+
+    /* Handle definitions of the form "type (*Name( args, ... ))()" (this is
+       function returns pointer to function returning type). */
+    SkipWhite( fin );
+    c = getc( fin );
+    if (c == '(') {
+	SkipWhite( fin );
+	c = getc(fin);
+	if (c == ')')
+	    fputs( "()", fout );
+	else
+	    ungetc( (char)c, fin );
+    }
+    else
+	ungetc( (char)c, fin );
+
+    /* Handle declaration of form int foo(void) */
+    if (ntypes == 1 && nargs == 0 && strcmp("void",types[0].type) == 0) {
+	ntypes = 0;
+    }
+    *Nargs  = nargs;
+    *Ntypes = ntypes;
+}
+
+#ifdef FOO
+/* This is a replacement version for ProcessArgList that only reads
+   the args and creates the necessary data structures.  Output is
+   handled separately (Question: Can we do it just from the data structures?)
+*/
+void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
+		     char *name, ARG_LIST args[MAX_ARGS], int *Nargs,
+		     RETURN_TYPE *rt, int flag, TYPE_LIST *types, int *Ntypes,
+		     int flag2 )
+{
+    int             c, ntypes;
+    char            *p;
+    int             nsp, leadingm;
+    static char     rcall[1024];
+    int             nargs, in_args;
+    TYPE_LIST       *curtype;
+    int             outparen;
+    int             nstrings = 0;
+
+    ProcessFunctionType( fin, fout, filename, is_function, name, rt, flag );
+
+    nargs       = 0;
+    in_args     = 0;
+    p           = rcall;
+
+    leadingm = 0;    /* If a newline is encountered before this is one, AND
+			this is a macro, insert one and exit */
+    curtype = (TYPE_LIST *)0;
+    ntypes  = 0;
+
+    /* Get the opening ( */
     c = FindNextANToken( fin, p, &nsp );
     if (c != '(') {
 	ErrCnt++;
@@ -1146,6 +1362,7 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 		args[nargs].implied_star++;
 	    args[nargs].is_native = curtype->is_native;
 	    args[nargs].is_char   = curtype->is_char;
+	    args[nargs].is_const  = curtype->is_const;
 	    args[nargs].is_FILE   = curtype->is_FILE;
 	    if (args[nargs].is_char) {
 		DBG("Found a string (is_char)\n");
@@ -1154,8 +1371,9 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 	}
 	if (nargs >= MAX_ARGS) {
 	    ErrCnt++;
-	    fprintf( stderr, "Too many arguments to function %s\n", name );
-	    ABORT( "" );
+	    fprintf( stderr, "Too many arguments to function %s; only %d supported and function has %d\n",
+		     name, MAX_ARGS, nargs );
+	    ABORT( "Aborting: Too many arguments to function" );
 	}
 	nargs++;
 	/* Get between-arg character */
@@ -1168,27 +1386,26 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
 	    args[nargs-1].void_function = 1;
 	}
 	if (c == ')') {
-	    if (OutputImmed) {
-		if (useFerr) {
-		    fprintf( fout, "%sint *%s",
-			     (nargs > 0) ? ", " : "", errArgNameLocal );
-		}
-		/* Add string length arguments */
-		if (nstrings && stringStyle == 1) {
-		    int i;
-		    for (i=0; i<nstrings; i++) {
-			fprintf(fout, ", %s%d", stringArgLenName, i);
-		    }
-		}
-		fputs( ")", fout );
+	    if (useFerr) {
+		fprintf( fout, "%sint *%s",
+			 (nargs > 0) ? ", " : "", errArgNameLocal );
 	    }
+	    /* Add string length arguments */
+	    if (nstrings && (stringStyle == STRING_LENEND ||
+			     stringStyle == STRING_UNKNOWN)) {
+		int i;
+		for (i=0; i<nstrings; i++) {
+		    fprintf(fout, ", int %s%d", stringArgLenName, i);
+		}
+	    }
+	    fputs( ")\n", fout );
 	    break;
 	}
 	OutputToken( fout, p, nsp );
     }
 
-/* Handle definitions of the form "type (*Name( args, ... ))()" (this is
-   function returns pointer to function returning type). */
+    /* Handle definitions of the form "type (*Name( args, ... ))()" (this is
+       function returns pointer to function returning type). */
     SkipWhite( fin );
     c = getc( fin );
     if (c == '(') {
@@ -1208,13 +1425,9 @@ void ProcessArgList( FILE *fin, FILE *fout, char *filename, int *is_function,
     }
     *Nargs  = nargs;
     *Ntypes = ntypes;
-/* If being called from Fortran, we need to append dummy ints for the strings
-   passed in.  This requires that we defer to the end of the argument
-   passing the printing of the function declaration line */
-/* for (i=0; i<nstrings; i++) fprintf( fout, ",d%d", i ); */
-
 }
 
+#endif
 /* Read the arg list and function type */
 
 /*
@@ -1244,15 +1457,15 @@ char *ToCPointer( char *type, char *name, int implied_star )
     const char *outstr = 0;
     if (SYConfigDBLookup("toptr", type, &outstr, toptrList) == 1 && outstr) {
 	buf[0] = '\n'; buf[1] = '\t';
-	sprintf(&buf[2], outstr, name);
+	snprintf(&buf[2], 300-2, outstr, name);
 	return buf;
     }
     if (MapPointers)
-	sprintf( buf, "\n\t(%s%s)%sToPointer( *(int*)(%s) )",
-		 type, !implied_star ? "* " : "", ptrprefix, name );
+	snprintf( buf, 300, "\n\t(%s%s)%sToPointer( *(int*)(%s) )",
+		  type, !implied_star ? "* " : "", ptrprefix, name );
     else
-	sprintf( buf, "\n\t(%s%s)*((int*)%s)", type, !implied_star ? "* " : "",
-		 name );
+	snprintf( buf, 300, "\n\t(%s%s)*((int*)%s)",
+		  type, !implied_star ? "* " : "", name );
 
     return buf;
 }
@@ -1269,46 +1482,24 @@ char *ToCPointer( char *type, char *name, int implied_star )
 void PrintBody( FILE *fout, int is_function, char *name, int nstrings,
 		int nargs, ARG_LIST *args, TYPE_LIST *types, RETURN_TYPE *rt )
 {
-    int  i, j;
-    if (!OutputImmed) {
-	/* Output the function definition */
-	fputs( rt->name, fout );
-	fputs( " ", fout );
-	OutputRoutineName( name, fout );
-	fprintf( fout, "(" );
-	for (i=0; i<nargs-1; i++) {
-	    fprintf( fout, "%s, ", args[i].name );
-	}
-	if (nargs > 0) {
-	    /* Do the last arg, if any */
-	    fprintf( fout, "%s ", args[nargs-1].name );
-	}
-	if (nstrings && stringStyle == 1) {
-	    for (i=1; i<nstrings; i++) fprintf( fout, ",d%d", i );
-	    /* Undefined variables are int's by default */
-	    /* fprintf( fout, "int d0" );
-	       for (i=1; i<nstrings; i++) fprintf( fout, ",d%d", i );
-	       fputs( ";\n", fout );
-	       */
-	}
-	fprintf( fout, ")" );
-	fputs( "\n", fout );
-	if (nstrings) {
-	    fprintf( fout, "int d0" );
-	    for (i=1; i<nstrings; i++) fprintf( fout, ",d%d", i );
-	    fputs( ";\n", fout );
-	}
-    }
+    int  i, j, nstr;
+
     fputs( "{\n", fout );
-/* Look for special-case translations (currently, "FILE") */
+    /* Look for special-cases (FILE and declarations for string processing) */
     for (i=0; i<nargs; i++) {
 	if (args[i].is_FILE) {
 	    fprintf( fout, "FILE *_fp%d = stdout;\n", i );
 	}
     }
+    stringDecl(fout, nargs, args);
 
-/* Generate the routine call with the return */
+    /* Add code for the string processing */
+    stringFtoC(fout, nargs, args);
+
+    /* Generate the routine call with the return */
     if (is_function) {
+	/* FIXME: Must also use a local variable if there is any
+	   post processing of arguments, e.g., free string storage */
 	if (useFerr) {
 	    fprintf(fout, "*%s = ", errArgNameLocal);
 	}
@@ -1321,11 +1512,17 @@ void PrintBody( FILE *fout, int is_function, char *name, int nstrings,
 	    }
 	}
     }
+
+    nstr = 0;
     fputs( name, fout );
     fputs( "(", fout );
     for (i=0; i<nargs; i++) {
 	if (args[i].is_FILE)
 	    fprintf( fout, "_fp%d", i );
+	else if (args[i].is_char && stringStyle == STRING_LENEND) {
+	    fprintf(fout, "_%stmp%d", stringArgLenName, nstr);
+	    nstr++;
+	}
 	else if (!args[i].is_native && args[i].has_star
 		 && !args[i].void_function) {
 	    if (args[i].has_star == 1 || !MultipleIndirectAreInts)
@@ -1351,12 +1548,14 @@ void PrintBody( FILE *fout, int is_function, char *name, int nstrings,
 	}
 	if (i < nargs-1) fputs( ",", fout );
     }
-/* fputs( rcall, fout ); */
 
     if (is_function && MapPointers && rt->num_stars > 0 && !useFerr) {
 	fprintf( fout, ") )" );
     }
-    fputs( ");\n}\n", fout );
+    fputs( ");\n", fout);
+    /* May need to process strings on exit if argument was not const */
+    stringCtoF(fout, nargs, args);
+    fputs("}\n", fout );
 }
 
 /*
@@ -1671,6 +1870,7 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 	token = is_function ? "function" : "subroutine";
     }
     OutputFortranToken( fout, 1, token );
+    OutputFortranToken( fout, 1, name );
     OutputFortranToken( fout, 0, "\n" );
 }
 
@@ -1834,6 +2034,9 @@ else {
 
    The flag outparen is true if paren characters should be output;
    false otherwise.  If outparen is false, the character will be returned.
+
+   If useFerr is true and the list is (void), return 0.
+
  */
 int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 		 int flag2, int outparen )
@@ -1845,6 +2048,7 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
     int             typenamelen = sizeof(type->type);
 
     typename[0]	        = 0;
+    type->is_const      = 0;
     type->is_char       = 0;
     type->is_native     = 0;
     type->is_FILE       = 0;
@@ -1911,9 +2115,14 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	if (c == EOF || c == '{' || c == '(') return 1;
     }
 
+    /* const is special, as it provides semantic information useful to
+       bfort.  In particular, if the argument is const, then it will
+       be unchanged by the call to the routine, and any transformation
+       need only be made before input. */
     if (strcmp( token, "const" ) == 0) {
 	c = FindNextANToken( fin, token, &nsp );
 	if (c == EOF || c == '{' || c == '(') return 1;
+	type->is_const = 1;
     }
 
     /* Read type declaration: struct name or [ unsigned ] type */
@@ -2090,7 +2299,7 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    type->implied_star  = 1;
 	}
 #endif
-	
+
 	/* This should be an "mpi defs file" rather than just -mpi */
 	if (isMPI) {
 	    /* Some things need to be considered ints in the declarations.
@@ -2133,14 +2342,14 @@ int GetTypeName( FILE *fin, FILE *fout, TYPE_LIST *type, int is_macro,
 	    }
 #endif
 	}
-	if (strcmp( token, "void"   ) == 0) {
+	if (strcmp( token, "void" ) == 0) {
 	    /* Activate set_void only for the files specified by flag2 */
 	    if (!flag2) type->is_native = 1;
 	    else type->is_void = 1;
 	}
     }
     DBG2("Found type %s\n",token);
-    if (useFerr && strcmp( token, "void") == 0) {
+    if (useFerr && strcmp(token, "void") == 0) {
 	/* Special case for (void) when we replace with an argument */
 	while ( (c = SYTxtGetChar( fin )) != EOF && isspace(c)) ;
 	ungetc( c, fin );
@@ -2185,6 +2394,7 @@ int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type,
     nstar  = 0;
 /* Many of these fields are set from the base type */
     arg->has_star      = 0;
+    arg->is_const      = 0;
     arg->is_char       = 0;
     arg->is_native     = 0;
     arg->has_array     = 0;
@@ -2203,9 +2413,10 @@ int GetArgName( FILE *fin, FILE *fout, ARG_LIST *arg, TYPE_LIST *type,
 	/* No argument to get (while reading function declaration)
 	   (may be (void) or () in ANSI) */
 	if (useFerr) {
-	    fprintf( fout, "int *%s ", errArgNameLocal );
+	    fprintf( fout, "int *%s", errArgNameLocal );
 	}
 	OutputToken( fout, token, nsp );
+	fputs("\n", fout);
 	return 1;
     }
 /* We don't want to output the token when we reach the name incase
@@ -2330,6 +2541,8 @@ filenames - Names the files from which lint definitions are to be extracted\n\
             counterpart.\n\
 -dir name - Directory for output file\n\
 -I name   - file that contains common includes\n\
+-o filename - file to use for output.  The default is to create the output\n\
+            filename from the input filename.\n\
 -mapptr   - translate pointers to integer indices\n\
             The macro used to determine whether pointers are 64 bits can be\n\
             changed with\n\
@@ -2547,4 +2760,104 @@ void FreeArgs( ARG_LIST *args, int nargs )
 	    args[i].name = 0;
 	}
     }
+}
+
+/* Character string handling.  Converting to/from Fortran strings may involve
+   making a copy of the data, in particular because Fortran strings are not
+   NULL-terminated; instead, the length of the string storage is passed with
+   the pointer to the storage (and there is no standard for this, though
+   there is an approach used by most compilers now), and strings are
+   blank-padded to the declared length of the string.
+
+   These routines implement the most common approach.  In addition, if the
+   string is declared const, then the string is only copied on input.  They
+   process all of the arguments in a group; this allows them to handle
+   any operations or declarations needed only once for all strings.
+*/
+int stringDecl(FILE *fout, int nargs, ARG_LIST args[])
+{
+    int i, nstring;
+
+    /* For now, only implement the most common string style */
+    if (stringStyle != STRING_LENEND) return 0;
+
+    nstring        = 0;
+    for (i=0; i<nargs; i++) {
+	if (args[i].is_char) {
+	    fprintf(fout,"  char *_%stmp%d=0;\n", stringArgLenName, nstring);
+	    nstring++;
+	}
+    }
+    return 0;
+}
+
+int stringFtoC(FILE *fout, int nargs, ARG_LIST args[])
+{
+    int i, nstring;
+
+    /* For now, only implement the most common string style */
+    if (stringStyle != STRING_LENEND) return 0;
+
+    nstring = 0;     /* reset the string counter */
+    for (i=0; i<nargs; i++) {
+	if (args[i].is_char) {
+	    /* For each character string, copy to a C string.
+	       Note that we could define the end-of-string as the
+	       point where the string is blank padded (this is what
+	       MPICH does).  But in the general case, those trailing
+	       blanks may be meaningful, so we copy the entire string */
+	    fprintf(fout,"/* insert Fortran-to-C conversion for %s */\n",
+		    args[i].name);
+	    fprintf(fout,"\
+  _%stmp%d = (char*)malloc(%s%d+1);\n\
+  if (_%stmp%d) {\n\
+     int _i;\n\
+     for(_i=0; _i<%s%d; _i++) _%stmp%d[_i]=%s[_i];\n\
+     _%stmp%d[_i] = 0;\n\
+  }\n",
+		    stringArgLenName, nstring, stringArgLenName, nstring,
+		    stringArgLenName, nstring,
+		    stringArgLenName, nstring, stringArgLenName, nstring, args[i].name,
+		    stringArgLenName, nstring);
+	    nstring++;
+	}
+    }
+    return 0;
+}
+
+int stringCtoF(FILE *fout, int nargs, ARG_LIST args[])
+{
+    int i, nstring;
+
+    /* For now, only implement the most common string style */
+    if (stringStyle != STRING_LENEND) return 0;
+
+    nstring = 0;
+    for (i=0; i<nargs; i++) {
+	if (args[i].is_char) {
+	    if (!args[i].is_const) {
+		/* This is more complex than the Fortran-to-C copy,
+		   since a null must be replaced with blank pads */
+		fprintf(fout,"/* insert C-to-Fortran conversion for %s */\n",
+			args[i].name);
+		fprintf(fout,"\
+  if (_%stmp%d) {\n\
+    int _i;\n\
+    for(_i=0; _i<%s%d && _%stmp%d[_i]; _i++) %s[_i]=_%stmp%d[_i];\n\
+    while (_i<%s%d) %s[_i++] = ' ';\n\
+    free(_%stmp%d);\n\
+  }\n",
+			stringArgLenName, nstring,
+			stringArgLenName, nstring, stringArgLenName, nstring, args[i].name, stringArgLenName, nstring,
+			stringArgLenName, nstring, args[i].name,
+			stringArgLenName, nstring);
+	    }
+	    else {
+		fprintf(fout, "  if (_%stmp%d) { free(_%stmp%d); }\n",
+			stringArgLenName, nstring, stringArgLenName, nstring);
+	    }
+	    nstring++;
+	}
+    }
+    return 0;
 }

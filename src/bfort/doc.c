@@ -16,8 +16,8 @@ static int LineNo = 1;
 /* This is a getc that keeps track of line numbers */
 /* It gives TOTAL lines read, not per file */
 
-/* 
-   altbuf allows us to provide a simple, one-level redirection of 
+/*
+   altbuf allows us to provide a simple, one-level redirection of
    input for processing .N commands
  */
 static char *altbuf = 0;
@@ -107,7 +107,7 @@ void FindToken( FILE *fd, char *token )
     while ((c = DocGetChar( fd )) != EOF)
 	if (isalpha(c)) break;
     *token++ = c;
-    while ((c = DocGetChar( fd )) != EOF) 
+    while ((c = DocGetChar( fd )) != EOF)
 	if (!isspace(c)) *token++ = c;
 	else break;
     *token++ = '\0';
@@ -126,10 +126,10 @@ int FoundLeader( FILE *fd, char *routine, char *kind )
 	    if (MatchLeader( fd, MATCH_CHARS, kind )) {
 		FindToken( fd, routine );
 		return 1;
-	    }    
-        }    
+	    }
+        }
 	else if (c == '\n') LineNo++;
-    }    
+    }
     return 0;
 }
 
@@ -137,7 +137,7 @@ int FoundLeader( FILE *fd, char *routine, char *kind )
    characters.  Discards characters that don't match.  If we have
    entered this routine, we have already seen the first character (/) */
 int MatchLeader( FILE *fd, char *Poss, char *kind )
-{ 
+{
     int c;
     c = DocGetChar( fd );
     if (c == '*') {
@@ -150,10 +150,10 @@ int MatchLeader( FILE *fd, char *Poss, char *kind )
         }
     }
     return 0;
-} 
+}
 
-/* 
-  Copy an "include" to a buffer.  The form is / *I include-file-spec I* / 
+/*
+  Copy an "include" to a buffer.  The form is / *I include-file-spec I* /
   Only one per line.
  */
 void CopyIncludeName( FILE *fin, char *buffer )
