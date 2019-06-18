@@ -20,7 +20,7 @@ int GiveLocation = 1;
 int DoQuoteFormat = 0;
 char *SaveFileName = 0;
 char *SaveRoutineName = 0;
-// InComment is used to make sure that we don't hit EOF before finishing 
+// InComment is used to make sure that we don't hit EOF before finishing
 // a structured comment
 int InComment = 0;
 
@@ -33,26 +33,27 @@ char NewlineString[3];
 // Set true for debugging
 int verbose = 0;
 
+// Keep track of the output format that we're using
 outFormat_t outFormat = FMT_UNKNOWN;
 
 // Indicate if we're in an argument list or not
 int InArgList = 0;
 
 // Forward references
-int OutputManPage( InStream *ins, TextOut *outs, char *name, char *level, 
-		   const char *filename, char kind, char *date,  
-		   const char *heading, const char *locdir, 
+int OutputManPage( InStream *ins, TextOut *outs, char *name, char *level,
+		   const char *filename, char kind, char *date,
+		   const char *heading, const char *locdir,
 		   char *matchhstring, int one_per_file );
-int OutputText( InStream *ins, char *matchstring, 
-		TextOut *textout, char *name, char *level, 
-	        const char *filename, char kind, char *date, 
+int OutputText( InStream *ins, char *matchstring,
+		TextOut *textout, char *name, char *level,
+	        const char *filename, char kind, char *date,
 	        const char *heading );
 void MakeFileName( const char *path, char *routine, char *lextension,
 	           char *outfilename );
 int HandleArgs( CmdLine *cmd, const char **path, const char **extension,
-                const char **incfile, const char **indexfile, 
-		const char **idxdir, const char **jumpfile, 
-	        const char **basedir, const char **baseoutfile, 
+                const char **incfile, const char **indexfile,
+		const char **idxdir, const char **jumpfile,
+	        const char **basedir, const char **baseoutfile,
 		const char **heading, const char **locdir );
 void PrintHelp( void );
 
@@ -90,9 +91,9 @@ int main( int argc, char ** argv )
     SaveRoutineName = routine;
 
     /* Get the many string arguments.  Set to null if not present. */
-    HandleArgs( cmd, &path, &extension, &incfile, &indexfile, 
-	        &idxdir, &jumpfile, &basedir, &baseoutfile, &heading, 
-	        &locdir ); 
+    HandleArgs( cmd, &path, &extension, &incfile, &indexfile,
+	        &idxdir, &jumpfile, &basedir, &baseoutfile, &heading,
+	        &locdir );
     // if (!path) path = "./";
     if (!idxdir) idxdir = ".";
     masterdate = !cmd->GetArg( "-date", date, MAX_DATE_LEN );
@@ -108,14 +109,14 @@ int main( int argc, char ** argv )
 	outFormat = FMT_HTML;
 	textout    = new TextOutHTML( );
 	if (!extension) extension = "html";
-	incommands = new InStreamFile( 
+	incommands = new InStreamFile(
 		      DOCTEXT_PATH, "DOCTEXT_PATH", "html.def", "r" );
 	}
     else if (!cmd->HasArg( "-latex" )) {
 	outFormat  = FMT_LATEX;
 	textout    = new TextOutTeX( );
 	if (!extension) extension = "tex";
-	incommands = new InStreamFile( 
+	incommands = new InStreamFile(
 		      DOCTEXT_PATH, "DOCTEXT_PATH", "latex.def", "r" );
 	}
     else {
@@ -123,7 +124,7 @@ int main( int argc, char ** argv )
         cmd->HasArg( "-man" );    // allow -man as an option
 	textout = new TextOutNroff( );
 	if (!extension) extension = "3";
-	incommands = new InStreamFile( 
+	incommands = new InStreamFile(
 		      DOCTEXT_PATH, "DOCTEXT_PATH", "nroff.def", "r" );
 	}
     if (incommands->status) {
@@ -146,14 +147,14 @@ in the distribution, where ... is the path to the sowing directory\n\
 	incommands = new InStreamFile( defnpath, "r" );
 	if (incommands->status) {
 	  // Try to open with the DOCTEXT_PATH (for alternative files)
-	  incommands = new InStreamFile( DOCTEXT_PATH, "DOCTEXT_PATH", 
+	  incommands = new InStreamFile( DOCTEXT_PATH, "DOCTEXT_PATH",
 					 defnpath, "r" );
 	}
 	if (incommands->status) {
 	    fprintf( stderr, "Could not open definition file %s\n", defnpath );
 	    perror( "Reason:");
 	    }
-	else 
+	else
 	    textout->ReadCommands( incommands );
 	delete incommands;
 	}
@@ -165,7 +166,7 @@ in the distribution, where ... is the path to the sowing directory\n\
     // So .vb/.ve could be defined as
     // .vb s_verbatim nop
     // .ve e_verbatim nop
-    // Eventually, we'll need to add the kind of processing for the text 
+    // Eventually, we'll need to add the kind of processing for the text
 #ifdef FOO
     while (!cmd->GetArgPtr( "-usercmds", &cmdpath )) {
     	incommands = new InStreamFile( cmdpath, "r" );
@@ -173,7 +174,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 	    fprintf( stderr, "Could not open user command file %s\n", cmdpath );
 	    perror( "Reason:");
 	    }
-	//else 
+	//else
 	// Read command strings
 	  //textout->ReadCommands( incommands );
 	incommands->Close();
@@ -192,7 +193,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 	    fprintf( stderr, "Could not read map file %s\n", mappath );
 	    perror( "Reason:" );
 	    }
-	else 
+	else
 	    map->ReadMap( mapins, 0 );
 	delete mapins;
 	}
@@ -206,16 +207,16 @@ in the distribution, where ... is the path to the sowing directory\n\
     cmd->GetArg( "-skipprefix", LeadingString, 10 );
 
     // Insert quote handler if requested.
-    if (!cmd->HasArg( "-quotefmt" )) 
+    if (!cmd->HasArg( "-quotefmt" ))
 	textout = new TextOutQFmt( textout );
 
-    /* Open up the file of public includes */    
+    /* Open up the file of public includes */
     SetIncludeFile( incfile );
-    
+
     /* Open up the index file */
     IndexFileInit(indexfile, idxdir);
 
-    /* Open up the jump file */    
+    /* Open up the jump file */
     if (jumpfile) JumpFileInit(jumpfile);
 
     /* Open user-selected output file */
@@ -238,13 +239,13 @@ in the distribution, where ... is the path to the sowing directory\n\
 	// Note that bof doesn't include all that is required for
 	// an html head, since in the one-file-per-page form, we
 	// want to include the man page name in the <TITLE> element.
-	// 
+	//
 	if (textout->HasOp( "bofmanyend" ) == 0) {
 	    textout->PutOp( "bofmanyend" );
 	}
 	//textout->PutOp( "bop" );
 	}
-    
+
     /* process all of the files */
     while (!cmd->NextArg( &infilename )) {
 	if (DebugDoc) printf( "About to open %s\n", infilename );
@@ -254,7 +255,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 	    perror( "Reason:" );
 	    continue;
 	    }
-	if (DeTabFile) 
+	if (DeTabFile)
 	    insin->SetExpandTab( 1 );
 
 	// In case we have a large pushback
@@ -273,7 +274,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 	// else already copied masterdate to date.
 
 	ClearIncludeFile( );
-	/* At this point, we can trim the filename of any leading trash, 
+	/* At this point, we can trim the filename of any leading trash,
 	   such as "./".  Later.... */
 	while (!FindPattern( ins, MATCH_STRING, matchstring )) {
 	    // First, need to remove any sub-options (C,X)
@@ -301,7 +302,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 		MakeFileName( path, routine, lextension, outfilename );
 		outs = new OutStreamFile( outfilename, "w" );
 		if (outs->status) {
-		    fprintf( stderr, 
+		    fprintf( stderr,
 			    "Could not open output file %s\n", outfilename );
 		    perror( "Reason" );
 		    break;
@@ -330,8 +331,8 @@ in the distribution, where ... is the path to the sowing directory\n\
 	      else
 		textout->PutOp( "bof", NULL );
 	    }
-	    OutputManPage( ins, textout, routine, lextension, infilename, 
-			   kind, date, heading, locdir, matchstring, 
+	    OutputManPage( ins, textout, routine, lextension, infilename,
+			   kind, date, heading, locdir, matchstring,
 			   one_per_file );
 	    if (!baseoutfile) {
 	        textout->PutOp( "eof" );
@@ -358,21 +359,21 @@ in the distribution, where ... is the path to the sowing directory\n\
     return 0;
 }
 
-/* 
+/*
    There are a number of things to watch for.  One is that leading blanks are
    considered significant; since the text is being formated, we usually don't
-   agree with that. 
+   agree with that.
  */
-int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level, 
-		   const char *filename, char kind, char *date, 
-		   const char *heading, const char *locdir, 
-		   char *matchstring, int one_per_file ) 
+int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
+		   const char *filename, char kind, char *date,
+		   const char *heading, const char *locdir,
+		   char *matchstring, int one_per_file )
 {
     int  at_end;
 
     // Output the initial information
     textout->PutOp( "bop" );
-    // In the single document per page version, particularly for 
+    // In the single document per page version, particularly for
     // html, mantitle must complete the header for the file (e.g.,
     // it has some bof features).  In the multiple entries per page,
     // it must not.  We handle this by having different commands for
@@ -382,7 +383,7 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
     }
     else {
 	if (textout->HasOp( "mantitlemany" ) == 0) {
-	    textout->PutOp( "mantitlemany", 
+	    textout->PutOp( "mantitlemany",
 			    name, level, date, (char *)heading );
 	}
 	else {
@@ -416,7 +417,7 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
     }
     else if (kind == DEFINE) {
 	// This is a simple way to get a define
-	// definition into a doctext block. 
+	// definition into a doctext block.
 	long position;
 	ins->GetLoc( &position );
 	// Skip to func synopsis simply skips to the end of the comment
@@ -476,8 +477,8 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
     }
 
     // Finally, output the rest of the text
-    if (!at_end) 
-      OutputText( ins, matchstring, 
+    if (!at_end)
+      OutputText( ins, matchstring,
 		  textout, name, level, filename, kind, date, heading );
 
     /* Now add the filename where the routine or description is located */
@@ -519,9 +520,9 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
     In some source formats, all comments have a leading character string.
     This is the "LeadingString" value, it may be null.
  */
-int OutputText( InStream *ins, char *matchstring, 
-		TextOut *textout, char *name, char *level, 
-	        const char *filename, char kind, char *date, 
+int OutputText( InStream *ins, char *matchstring,
+		TextOut *textout, char *name, char *level,
+	        const char *filename, char kind, char *date,
 	        const char *heading )
 {
     char ch;
@@ -536,7 +537,7 @@ int OutputText( InStream *ins, char *matchstring,
     while (!at_end) {
 	lp = lineBuffer + 1; ln = 1;
 	if (SkipLeadingString( ins, &ch )) break;
-	if (doing_synopsis && 
+	if (doing_synopsis &&
 	    (ch == VERBATIM || ch == ARGUMENT || ch == ARGUMENT_BEGIN ||
 	     ch == ARGUMENT_END || ch == '\n')) {
 	    textout->PutOp( "e_synopsis" );
@@ -546,11 +547,11 @@ int OutputText( InStream *ins, char *matchstring,
 	    /* Raw mode output. */
 	    ProcessVerbatimFmt( ins, textout, &lastWasNl );
 	    }
-	else if (ch == ARGUMENT || ch == ARGUMENT_BEGIN || 
+	else if (ch == ARGUMENT || ch == ARGUMENT_BEGIN ||
 		 ch == ARGUMENT_END) {
 	    ProcessDotFmt( ch, ins, textout, &lastWasNl );
 	    }
-	else if (ch == '\n') { 
+	else if (ch == '\n') {
 	    if (lastWasNl) textout->PutOp( "end_par" );
 	    else           textout->PutNewline();
 	    lastWasNl = 1;
@@ -570,13 +571,13 @@ int OutputText( InStream *ins, char *matchstring,
  	    *lp++ = ch; ln++;
 
 	    /* Copy to end of line; do NOT include the EOL */
-	    while (!ins->GetChar( &ch ) && ch != '\n' && ++ln < MAX_LINE) 
+	    while (!ins->GetChar( &ch ) && ch != '\n' && ++ln < MAX_LINE)
 		*lp++ = ch;
 	    if (ch != '\n') {
 	      fprintf( stderr, "Input line too long\n" );
 	      return 1;
 	    }
-	    lp--; 
+	    lp--;
 	    while (isspace(*lp)) lp--;  // Note sentinal always stops us
 	    lp[1] = '\0';    /* Add the trailing null */
 	    // This should really look at the matchstring.
@@ -601,14 +602,14 @@ int OutputText( InStream *ins, char *matchstring,
 		    doing_synopsis= 1;
 		    textout->PutOp( "s_synopsis" );
 		    if (kind == MACRO) {
-			DocReadMacroSynopsis( ins, matchstring, textout/*->out*/, 
+			DocReadMacroSynopsis( ins, matchstring, textout/*->out*/,
 					    &at_end );
 		      doing_synopsis = 0;
 		      textout->PutOp( "e_synopsis" );
 		      if (at_end) InComment = 0;
 		    }
 		    }
-		else 
+		else
 		  textout->PutOp( "section", lineBuffer + 1, 2 );
 		}
 	    else {
@@ -617,7 +618,7 @@ int OutputText( InStream *ins, char *matchstring,
 		}
 	    }
 	}
-    if (doing_synopsis) 
+    if (doing_synopsis)
 	textout->PutOp( "e_synopsis" );
     return 0;
 }
@@ -645,7 +646,7 @@ void MakeFileName( const char *path, char *routine, char *lextension,
     	char *p;
     	int  i;
     	p = outfilename + strlen(outfilename);
-    	for (i=0; i<4; i++) 
+    	for (i=0; i<4; i++)
     	    *p++ = routine[i];
     	routine += strlen(routine) - 4;
     	for (i=0; i<4; i++)
@@ -655,9 +656,9 @@ void MakeFileName( const char *path, char *routine, char *lextension,
     else {
     	strcpy( outfilename, routine );
         }
-#else        
+#else
     strcat( outfilename, routine );
-#endif    
+#endif
     strcat( outfilename, "." );
     strcat( outfilename, lextension );
 }
@@ -694,12 +695,12 @@ int GetArgPtr( CmdLine *cmd, const char *name, const char **val )
 
 /* Routine to process the arguments.  Returns the number read */
 int HandleArgs( CmdLine *cmd, const char **path, const char **extension,
-                const char **incfile, const char **indexfile, 
-		const char **idxdir, const char **jumpfile, 
-	        const char **basedir, const char **baseoutfile, 
+                const char **incfile, const char **indexfile,
+		const char **idxdir, const char **jumpfile,
+	        const char **basedir, const char **baseoutfile,
 		const char **heading, const char **locdir )
 {
-  if (!cmd->HasArg( "-help" ) || !cmd->HasArg( "-h" ) || 
+  if (!cmd->HasArg( "-help" ) || !cmd->HasArg( "-h" ) ||
       !cmd->HasArg("-usage")) {
     PrintHelp( );
     exit( 0 );
@@ -752,10 +753,10 @@ int HandleArgs( CmdLine *cmd, const char **path, const char **extension,
 Synopsis:
   doctext [ -mpath path ] [ -ext n ] [ -I filename ] [ -latex ]
           [ -html ] [ -index filename ] [ -indexdir filename ]
-          [ -jumpfile filename ] [ -outfile filename ] 
+          [ -jumpfile filename ] [ -outfile filename ]
           [ -mapref filename ] [ -nolocation ] [ -location ]
-          [ -defn defnfile ] [ -dosnl ] [ -skipprefix name ] 
-          [ -ignore string ] 
+          [ -defn defnfile ] [ -dosnl ] [ -skipprefix name ]
+          [ -ignore string ]
           [ -heading string ] [ -basedir dirname ] filenames
 
 Input Parameters:
@@ -782,10 +783,10 @@ $          -index foo.cit -indexdir \"http://www.mcs.anl.gov/foo/man\"
 .    -quotefmt      -  support ''\\tt'' and ``\\em``
 .    -skipprefix name - skip ''name'' at the beginning of each line.  This
                         may be used for Fortran or Shell sources
-.    -ignore string - skip ''name'' in a function synopsis.  This can be used 
+.    -ignore string - skip ''name'' in a function synopsis.  This can be used
                       to remove special keywords needed to build the routine
                       but not needed by the user (e.g., special export
-                      keywords when building DLLs)   
+                      keywords when building DLLs)
 .    -keyword filename -
                    Place keyword entries at the end of the specified file
 .    -locdir directory -
