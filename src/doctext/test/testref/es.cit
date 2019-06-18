@@ -12,6 +12,9 @@ man:+NORM2++NORM2++++man+./Norm_t.html#Norm_t
 man:+NORM_1_OR_2++NORM_1_OR_2++++man+./Norm_t.html#Norm_t
 man:+NORM_I++NORM_I++++man+./Norm_t.html#Norm_t
 man:+NORM_Inf++NORM_Inf++++man+./Norm_t.html#Norm_t
+man:+messy_enum1++messy_enum1++++man+./messy_enum1.html#messy_enum1
+man:+ilu++ilu++++man+./messy_enum1.html#messy_enum1
+man:+ssor++ssor++++man+./messy_enum1.html#messy_enum1
 man:+File_t++File_t++++man+./File_t.html#File_t
 man:+foo1++foo1++++man+./File_t.html#foo1
 man:+buf1++buf1++++man+./File_t.html#buf1

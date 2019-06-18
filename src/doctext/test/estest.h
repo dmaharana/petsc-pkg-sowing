@@ -19,6 +19,15 @@ typedef enum {
     NORM_Inf,
 } Norm_t;
 
+/*E
+  messy_enum1 - An enum that uses macro expansion within the definition
+E*/
+typedef enum {
+     ilu = 1,
+     MACRO_FOR_DEPRECATED("message") = 2,
+     ssor = MACRO_VALUE(Norm_t),
+} messy_enum1;
+
 /*S
   File_t - Structure describing files
 
