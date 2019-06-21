@@ -16,7 +16,7 @@ static int useUserTypes = 1;
 /* If 0, do not generate Fortran 9x interface module */
 static int F90Module = 0;
 static FILE *fmodout = 0;
-static char *f90headerName = "f90header";
+static const char *f90headerName = "f90header";
 /* Use this for a module name to include in every interface spec */
 static char *f90usemodule = 0;
 static char modnamestr[256];
@@ -175,7 +175,7 @@ int F90FuncCheck(func_t *fp)
 int f90ModuleOutput(FILE *fout, func_t *fp)
 {
     arg_t *ap;
-    char *token;
+    const char *token;
     char sname[2];
     int  argnum;
 
@@ -288,7 +288,7 @@ int f90ModuleOutput(FILE *fout, func_t *fp)
 static int inComment = 0;
 static void OutputFortranToken(FILE *fout, int nsp, const char *token)
 {
-    int tokenLen = strlen(token);
+    int tokenLen = (int)strlen(token);
     int i;
 
     if (curCol + nsp > maxOutputCol) nsp = 0;

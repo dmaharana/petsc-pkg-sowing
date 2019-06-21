@@ -26,6 +26,7 @@
  * output them,
  */
 #include "bfort2.h"
+#include <strings.h>  /* For rindex */
 
 func_t *functions = 0;
 func_t *functionsTail = 0;
@@ -37,7 +38,7 @@ static char *CurrentFilename = 0;
 static int mapPointers = 0;
 static char ptrPrefix[32] = "__";
 static char ptr64Bits[256] = "POINTER_64_BITS";
-static char *ptrNameLocal = "_ptmp";
+static const char *ptrNameLocal = "_ptmp";
 
 /* Catch serious problems */
 #define MAX_ERR 100
@@ -188,6 +189,10 @@ void defaultFtoCcall(FILE *, arg_t *);
 int substTypeinDecl(const char *orig, const char *oldtype, const char *newtype,
 		    char **updated);
 
+/* Save the commandline in a normalized format */
+void appendCmdLine(const char *str);
+char *getCmdLine(void);
+void freeCmdLine(void);
 
 /*
  * Algorithm for processing data:
@@ -226,9 +231,6 @@ int main(int argc, char *argv[])
 		         universal name */
 
     /* Process commandline arguments */
-    outfile[0] = 0;
-    outdir[0]  = 0;
-    incfile[0] = 0;
     if (SYArgHasName(&argc, argv, 1, "-help")) {
 	DoBfortHelp(argv[0]);
 	exit( 1 );
@@ -240,6 +242,9 @@ int main(int argc, char *argv[])
 	exit(1);
     }
 
+    outfile[0]  = 0;
+    outdir[0]   = 0;
+    incfile[0]  = 0;
     /* Special handling of defaults.
        The default handling of strings changed in this version of bfort
        from version 1.1.25.  The environment variable BFORT_STRINGHANDLING
@@ -252,8 +257,6 @@ int main(int argc, char *argv[])
 	    stringStyle = STRING_UNKNOWN;
     }
 
-
-
     if (SYArgHasName(&argc, argv, 1, "-debug")) {
 	Debug = 1;
     }
@@ -262,25 +265,39 @@ int main(int argc, char *argv[])
     SYArgGetString(&argc, argv, 1, "-dir", outdir, MAX_PATH_NAME);
     SYArgGetString(&argc, argv, 1, "-I",   incfile, MAX_PATH_NAME);
     NoFortMsgs		   = SYArgHasName(&argc, argv, 1, "-nomsgs");
+    if (NoFortMsgs) appendCmdLine("-nomsgs");
     useFerr		   = SYArgHasName(&argc, argv, 1, "-ferr");
     if (useFerr) {
+	appendCmdLine("-ferr");
 	ferrFuncReturn = (const char *)malloc(128);
 	if (!ferrFuncReturn) {
 	    ABORT("Unable to allocate 128 bytes for ferrFuncReturn");
 	}
 	strncpy((char *)ferrFuncReturn, "void", 128);
-	SYArgGetString(&argc, argv, 1, "-ferrfuncret",
-		       (char *)ferrFuncReturn, 128);
+	if (SYArgGetString(&argc, argv, 1, "-ferrfuncret",
+			   (char *)ferrFuncReturn, 128)) {
+	    appendCmdLine("-ferrfuncret");
+	    appendCmdLine(ferrFuncReturn);
+	}
     }
     MultipleIndirectsAreNative = SYArgHasName(&argc, argv, 1, "-mnative");
-    mapPointers		   = SYArgHasName(&argc, argv, 1, "-mapptr");
+    if (MultipleIndirectsAreNative) appendCmdLine("-mnative");
+    mapPointers		       = SYArgHasName(&argc, argv, 1, "-mapptr");
     if (mapPointers) {
-	SYArgGetString(&argc, argv, 1, "-ptrprefix", ptrPrefix,
-		       sizeof(ptrPrefix));
-	SYArgGetString(&argc, argv, 1, "-ptr64", ptr64Bits,
-		       sizeof(ptr64Bits));
+	appendCmdLine("-mapptr");
+	if (SYArgGetString(&argc, argv, 1, "-ptrprefix", ptrPrefix,
+			   sizeof(ptrPrefix))) {
+	    appendCmdLine("-ptrptrfix");
+	    appendCmdLine(ptrPrefix);
+	}
+	if (SYArgGetString(&argc, argv, 1, "-ptr64", ptr64Bits,
+			   sizeof(ptr64Bits))) {
+	    appendCmdLine("-ptr64");
+	    appendCmdLine(ptr64Bits);
+	}
     }
     isMPI		   = SYArgHasName(&argc, argv, 1, "-mpi");
+    if (isMPI) appendCmdLine("-mpi");
 
     /* Permit changing the ifdef names for the -anyname option */
     if (SYArgHasName(&argc, argv, 1, "-anyname")) nameMap = -1;
@@ -319,7 +336,7 @@ int main(int argc, char *argv[])
 
     if (outfile[0]) {
 	char *p, *p1;
-	int ln = strlen(outfile)+strlen(outdir)+2;
+	int ln = (int)strlen(outfile)+(int)strlen(outdir)+2;
 	outfilep = (char *)malloc(ln);
 	if (!outfilep) {
 	    ABORT("Could not allocate space for outfile filename");
@@ -428,8 +445,9 @@ int main(int argc, char *argv[])
 	fprintf(fout, "/* %s */\n", infilename);
 	fprintf(fout, "/* Fortran interface file */\n");
 	fprintf(fout, "/*\n\
- * This file was generated automatically by bfort from the C source\n\
- * file.\n */\n");
+ * This file was generated automatically by bfort from the C source file\n\
+ * Major args:%s\n\
+ */\n", getCmdLine());
 
 	if (incfd) copyFileFD(incfd, fout);
 	if (includeString) fprintf(fout, "%s", includeString);
@@ -601,11 +619,11 @@ int AppendInclude(FILE *fin, const char *routine, const char *infilename)
     }
 
     /* Append #include firstChar/routine to includeString */
-    rlen = strlen(routine);
+    rlen = (int)strlen(routine);
     /* #include firstChar routine \n null */
     ln = 9 + 1 + rlen + 1 + 1;
     if (includeString) {
-	int l1 = strlen(includeString);
+	int l1 = (int)strlen(includeString);
 	includeString = (char *)realloc(includeString, l1+ln);
     }
     else {
@@ -1167,7 +1185,7 @@ char *dupToken(const char *token, int nsp)
     int  i, ln;
     char *pout;
 
-    if (token) ln = strlen(token);
+    if (token) ln = (int)strlen(token);
     else return (char *)0;
 
     pout = (char *)malloc(ln + 1 + nsp);
@@ -1236,7 +1254,7 @@ int routineNameMap(FILE *fout, func_t *fp, void *extra)
 {
     const char *routine = fp->origName;
     int   nameChoice = *(int*)extra;
-    int   ln = strlen(routine)+1;
+    int   ln = (int)strlen(routine)+1;
     char  *basename, *outname;
 
     basename = (char *)malloc(ln);
@@ -1323,7 +1341,7 @@ int outputIfaceRoutine(FILE *fout, func_t *fp, void *extra)
        routine name.
     */
 
-    ln = strlen(fp->origName)+1;
+    ln = (int)strlen(fp->origName)+1;
     basename = (char *)malloc(ln);
     if (!basename) {
 	ABORT("Unable to allocate memory for basename");
@@ -1589,7 +1607,7 @@ char *getOutputFilename(const char *infilename, const char *outdir)
 	p[1] = 0;
     }
 
-    outlen = strlen(outdir) + 1 + strlen(fname) + 4;
+    outlen = (int)strlen(outdir) + 1 + (int)strlen(fname) + 4;
     outfilename = (char *)malloc(outlen);
     if (!outfilename) {
 	fprintf(stderr, "Unable to allocate %d bytes for output file name\n",
@@ -1614,7 +1632,7 @@ int stringIfaceInit(void)
 void stringFtoCdecl(FILE *fout, arg_t *ap)
 {
     int ln;
-    ln = 1 + strlen(stringArgLenName) + 4 + 1;  /* Allows 9999+1 args */
+    ln = 1 + (int)strlen(stringArgLenName) + 4 + 1;  /* Allows 9999+1 args */
     ap->actualarg = (char *)malloc(ln);
     if (!ap->actualarg) {
 	ABORT("Unable to allocate memory for actualarg");
@@ -1850,7 +1868,7 @@ int substTypeinDecl(const char *orig, const char *oldtype, const char *newtype,
     p = strstr(orig, oldtype);
     if (!p) {
     }
-    len = strlen(orig) - strlen(oldtype) + strlen(newtype);
+    len = (int)strlen(orig) - (int)strlen(oldtype) + (int)strlen(newtype);
     newp = (char *)malloc(len + 1);
     if (!newp) {
 	ABORT("Unable to allocate memory for new type name");
@@ -1984,7 +2002,7 @@ void pointerCtoF(FILE *fout, arg_t *ap)
     char       *largname=0;
 
     if (ap->isAddress) {
-	int ln = strlen(ptrNameLocal)+10;
+	int ln = (int)strlen(ptrNameLocal)+10;
 	largname = (char *)malloc(ln+1);
 	if (!largname) {
 	    ABORT("Unable to allocate memory for CtoF");
@@ -2114,3 +2132,48 @@ void defaultFtoCcall(FILE *fout, arg_t *ap)
 	ap->next ? ", " : "");
 }
 
+static char *normalizedCmdLine = 0;
+static int   nCmdLineLen = 0;
+static char *curptr = 0;
+
+void appendCmdLine(const char *str)
+{
+    int len = (int)strlen(str) + 1;  /* Include the preceeding space */
+
+    if (nCmdLineLen == 0) {
+	/* Initial allocation */
+	nCmdLineLen = 1024;
+	normalizedCmdLine = (char *)malloc(nCmdLineLen);
+	if (!normalizedCmdLine) {
+	    fprintf(stderr, "Unable to allocated %d bytes for ncmdline\n",
+		    nCmdLineLen);
+	    return;
+	}
+	curptr = normalizedCmdLine;
+    }
+
+    while (len + (curptr-normalizedCmdLine) + 1 >= nCmdLineLen) {
+	int nlen= 2 * nCmdLineLen;
+	int offset = (int)(curptr - normalizedCmdLine);
+	normalizedCmdLine = realloc(normalizedCmdLine, nlen);
+	curptr = normalizedCmdLine + offset;
+	nCmdLineLen = nlen;
+    }
+
+    strncpy(curptr, " ", 2);
+    curptr++;
+    strncpy(curptr, str, len+1);
+    curptr += len;
+}
+
+char *getCmdLine(void)
+{
+    return normalizedCmdLine;
+}
+
+void freeCmdLine(void)
+{
+    if (normalizedCmdLine) {
+	free(normalizedCmdLine);
+    }
+}
