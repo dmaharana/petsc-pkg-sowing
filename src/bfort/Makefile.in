@@ -74,6 +74,8 @@ clean:
 	-rm -f *.o *~ $(PROGRAMS)
 	-rm -f bfort\ win32/debug/*
 	-rm -f *.gcda *.gcno *.gcov
+	(cd testing && ${MAKE} clean )
+	(cd testing2 && ${MAKE} clean )
 
 distclean: clean
 	rm -f Makefile
