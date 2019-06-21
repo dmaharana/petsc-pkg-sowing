@@ -112,7 +112,7 @@ extern char GetSubClass ( int * );
 extern int GetIsX11Routine ( void );
 extern void FindToken ( FILE *, char * );
 extern int FoundLeader ( FILE *, char *, char * );
-extern int MatchLeader ( FILE *, char *, char * );
+extern int MatchLeader ( FILE *, const char *, char * );
 extern void CopyIncludeName ( FILE *, char * );
 extern void ExpandFileName ( char *, int );
 extern int GetToolsDirLength ( void );

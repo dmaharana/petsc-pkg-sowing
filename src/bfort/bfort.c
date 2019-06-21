@@ -101,7 +101,7 @@ static int AddDebugAll = 1;
 /* If 0, do not generate Fortran 9x interface module */
 static int F90Module = 0;
 static FILE *fmodout = 0;
-static char *f90headerName = "f90header";
+static const char *f90headerName = "f90header";
 
 /* if 0, use original argument name. If 1, use a single character name
    instead*/
@@ -128,7 +128,8 @@ static void *nativeList;
 static void *nativePtrList;
 static void *toptrList;
 static void *parmList;
-static SYConfigCmds configcmds[7];
+#define NUM_CONFIG_CMDS 6
+static SYConfigCmds configcmds[NUM_CONFIG_CMDS+1];
 
 /* We also need to make some edits to the types occasionally.  First, note
    that double indirections are often bugs */
@@ -159,13 +160,13 @@ typedef struct {
 } RETURN_TYPE;
 
 /* Forward defs */
-void OutputToken ( FILE *, char *, int );
+void OutputToken ( FILE *, const char *, int );
 void OutputRoutine ( FILE *, FILE *, char *, char *, char );
 void OutputFortranToken( FILE *, int, const char *);
 void SkipText ( FILE *, char *, char *, char );
 int SkipToSynopsis ( FILE *, char );
 int FindNextANToken ( FILE *, char *, int * );
-void OutputBuf ( FILE **, char *, char *, FILE *, char * );
+void OutputBuf ( FILE **, const char *, const char *, FILE *, const char * );
 void OutputMacro ( FILE *, FILE *, char *, char * );
 void ProcessFunctionType ( FILE *, FILE *, char *, int *,
 				    char *, RETURN_TYPE *, int );
@@ -322,7 +323,7 @@ int main( int argc, char **argv )
     configcmds[5].docmd    = SYConfigDBIgnore;
     configcmds[5].cmdextra = 0;
 
-    configcmds[6].name     = 0;
+    configcmds[NUM_CONFIG_CMDS].name     = 0;
 
     /* Some more defaults */
     defoutfilename[0] = 0;
@@ -405,7 +406,7 @@ int main( int argc, char **argv )
     /* Read the basics, such as predefined C types */
     if (SYGetFileFromPathEnv(BASEPATH, "BFORT_CONFIG_PATH", NULL,
 			     "bfort-base.txt", fname, 'r')) {
-	if (!SYReadConfigFile(fname, ' ', '#', configcmds, 6)) {
+	if (!SYReadConfigFile(fname, ' ', '#', configcmds, NUM_CONFIG_CMDS)) {
 	    fprintf(stderr, "Unable to read configure file bfort-base.txt");
 	    exit(1);
 	}
@@ -420,7 +421,8 @@ int main( int argc, char **argv )
     if (isMPI) {
 	if (SYGetFileFromPathEnv(BASEPATH, "BFORT_CONFIG_PATH", NULL,
 				 "bfort-mpi.txt", fname, 'r')) {
-	    if (!SYReadConfigFile(fname, ' ', '#', configcmds, 6)) {
+	    if (!SYReadConfigFile(fname, ' ', '#',
+				  configcmds, NUM_CONFIG_CMDS)) {
 		fprintf(stderr, "Unable to read configure file bfort-mpi.txt");
 		exit(1);
 	    }
@@ -712,7 +714,7 @@ int main( int argc, char **argv )
 /*
  * Output routines
  */
-void OutputToken( FILE *fout, char *p, int nsp )
+void OutputToken( FILE *fout, const char *p, int nsp )
 {
     int i;
     static int outcnt = 0;
@@ -720,7 +722,7 @@ void OutputToken( FILE *fout, char *p, int nsp )
     for (i=0; i<nsp; i++) putc( ' ', fout );
     fputs( p, fout );
     if (Debug) {
-	outcnt += nsp + strlen(p);
+	outcnt += nsp + (int)strlen(p);
 	if (outcnt > 10000) {
 	    ABORT( "Exceeded output count limit!" );
 	}
@@ -881,8 +883,8 @@ int FindNextANToken( FILE *fd, char *token, int *nsp )
     return fc;
 }
 
-void OutputBuf( FILE **fout, char *infilename, char *outfilename, FILE *incfd,
-		char *buffer )
+void OutputBuf( FILE **fout, const char *infilename, const char *outfilename,
+		FILE *incfd, const char *buffer )
 {
     char arch[20];
 
@@ -895,8 +897,6 @@ void OutputBuf( FILE **fout, char *infilename, char *outfilename, FILE *incfd,
 	    return;
 	}
 	fprintf( *fout, "/* %s */\n", infilename );
-#if 0
-#endif
 	if (!IfdefFortranName) {
 	    SYGetArchType( arch, 20 );
 	    fprintf( *fout, "/* Fortran interface file for %s */\n", arch );
@@ -1575,7 +1575,7 @@ static int maxOutputCol = 72;
 static int inComment = 0;
 void OutputFortranToken( FILE *fout, int nsp, const char *token )
 {
-    int tokenLen = strlen( token );
+    int tokenLen = (int)strlen( token );
     int i;
 
     if (curCol + nsp > maxOutputCol) nsp = 0;
@@ -1690,7 +1690,7 @@ void PrintDefinition( FILE *fout, int is_function, char *name, int nstrings,
 		      RETURN_TYPE *rt )
 {
     int  i;
-    char *token = 0;
+    const char *token = 0;
     char sname[2];      /* Use for short argnames, if enabled */
 
     sname[1] = 0;       /* sname is a single character name */
@@ -1892,7 +1892,7 @@ void OutputRoutineName( char *name, FILE *fout )
     }
     if (IfdefFortranName) {
 	LowerCase( p );
-	ln = strlen( p );
+	ln = (int)strlen( p );
 	p[ln] = '_';
 	p[ln+1] = 0;
     }
@@ -1901,12 +1901,12 @@ void OutputRoutineName( char *name, FILE *fout )
 	UpperCase( p );
 #elif defined(FORTRANUNDERSCORE)
 	LowerCase( p );
-	ln	= strlen( p );
+	ln	= (int)strlen( p );
 	p[ln]	= '_';
 	p[ln+1]	= 0;
 #elif defined(FORTRANDOUBLEUNDERSCORE)
 	LowerCase( p );
-	ln	= strlen( p );
+	ln	= (int)strlen( p );
 	if (NameHasUnderscore( p )) {
 	    p[ln]	= '_';
 	    p[ln+1]	= '_';

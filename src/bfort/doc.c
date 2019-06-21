@@ -136,7 +136,7 @@ int FoundLeader( FILE *fd, char *routine, char *kind )
 /* Match a leader that starts with / * and then any of the selected
    characters.  Discards characters that don't match.  If we have
    entered this routine, we have already seen the first character (/) */
-int MatchLeader( FILE *fd, char *Poss, char *kind )
+int MatchLeader( FILE *fd, const char *Poss, char *kind )
 {
     int c;
     c = DocGetChar( fd );
@@ -217,7 +217,7 @@ int GetToolsDirLength(void)
     if (!toolsdir) return 0;
     else {
 	SYGetRealpath(toolsdir,truepath);
-	rlen = strlen(truepath);
+	rlen = (int)strlen(truepath);
     }
     return rlen;
 }
