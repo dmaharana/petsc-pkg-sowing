@@ -4,6 +4,7 @@
  */
 
 #include "textout.h"
+#include "docutil.h"
 #include <string.h>
  
 #define MAX_TEXT_BLOCK 16380

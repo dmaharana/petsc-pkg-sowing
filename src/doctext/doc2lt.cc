@@ -223,6 +223,11 @@ const char *GetCurrentRoutinename( void )
     return "";
 }
 
+const char *GetCurrentInputFileName(void)
+{
+    return "";
+}
+
 const char *GetCurrentFileName( void )
 {
     return "";

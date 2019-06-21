@@ -20,6 +20,7 @@ int IncludeNameBlock( InStream *, char * );
 int SaveName( InStream *, char * );
 const char *GetCurrentRoutinename( void );
 const char *GetCurrentFileName( void );
+const char *GetCurrentInputFileName( void );
 int SkipLeadingString( InStream *, char * );
 char *SkipOverLeadingString( char * );
 void UngetLeadingString( InStream * );
@@ -34,5 +35,18 @@ void JumpFileEnd(void);
 
 void indexArgsSet(int val);
 int indexArgsPut(const char *argname);
+
+// textb.cc
+int CheckForEndOfBlock(InStream *);
+int SaveName(InStream *, char *);
+int IncludeNameBlock(InStream *, char *);
+
+// docfields.cc
+void *DocNewField(void *, char *, char *);
+void DocFreeFields(void *);
+
+// keyword.cc
+int KeywordOpen(const char *);
+int KeywordOut(char *);
 
 #endif

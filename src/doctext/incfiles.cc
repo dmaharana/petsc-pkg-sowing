@@ -70,7 +70,7 @@ int SaveIncludeFile( InStream *ins, char *matchstring )
     char ch;
     int  rc = 0, state, base_state, i;
 
-    state = strlen( matchstring ) - 1;
+    state = (int)strlen( matchstring ) - 1;
     base_state = state;
     while (state >= 0 && !ins->GetChar( &ch )) {
     	// Check for end of definition

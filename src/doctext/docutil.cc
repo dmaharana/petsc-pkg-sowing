@@ -6,6 +6,7 @@
 #include <string.h>
 
 char LeadingString[10] = "";
+int debugBreakStack = 0;
 
 #define MAX_TOKEN_SIZE 255
 
@@ -16,8 +17,13 @@ static int outToken(int nsp, char *token, TextOut *outs);
 static void pushBreakchars(InStream *ins);
 static void popBreakchars(InStream *ins);
 int ReadAndOutputCalllist(InStream *ins, TextOut *outs);
+int ReadAndOutputInteger(char fchar, InStream *ins, TextOut *outs,
+			 char *nchar);
+int ReadAndOutputQuotedString(InStream *ins, TextOut *outs,
+			      char quotechar, char escchar);
 int GetANTokenSkipComments(InStream *ins, TextOut *outs,
 			   int maxlen, char *token, int *nsp);
+int SkipPossibleComment(InStream *ins, TextOut *outs);
 
 /*
    This file contains service routines to do things like read
@@ -64,7 +70,7 @@ int DocReadDescription( InStream *ins, char *matchstring,
     char ch;
     int  newline_cnt;
     int  state, i;
-    int  b_state = strlen(matchstring) - 1;
+    int  b_state = (int)strlen(matchstring) - 1;
 
     // [space]*
     while (!ins->GetChar( &ch ) && isspace(ch)) {
@@ -136,7 +142,7 @@ int DocSkipToFuncSynopsis( InStream *ins, char *matchstring )
 {
     char ch;
     int state;
-    int b_state = strlen(matchstring) - 1;
+    int b_state = (int)strlen(matchstring) - 1;
 
     state = b_state;
     while (state >= 0 && !ins->GetChar( &ch )) {
@@ -161,7 +167,6 @@ int DocSkipToFuncSynopsis( InStream *ins, char *matchstring )
 //
 int DocReadFuncSynopsis( InStream *ins, TextOut /*OutStream */ *outs)
 {
-    char ch;
     char token[MAX_TOKEN_SIZE+1];
     int  maxlen = MAX_TOKEN_SIZE, nsp;
     int  findingForm = 1;
@@ -170,12 +175,15 @@ int DocReadFuncSynopsis( InStream *ins, TextOut /*OutStream */ *outs)
 
     // Must handle newline as non-space
     pushBreakchars(ins);
-    // Stop when we find *either* a { or a ; 
+    if (debugBreakStack) {
+	fprintf(stderr, "Push in DocReadFuncSynopsis\n");
+    }
+    // Stop when we find *either* a { or a ;
     // The semicolon test lets us handle prototype definitions
-    // Note that a semicolon should stop the scanning ONLY 
+    // Note that a semicolon should stop the scanning ONLY
     // when in pre-ansi, non-prototype form.
     while (!ins->GetToken( maxlen, token, &nsp ) && token[0] != '{') {
-      //	   && ( !inProtoForm || token[0] != ';' ) { 
+      //	   && ( !inProtoForm || token[0] != ';' ) {
       // Eventually we need to combine these into a single lookup list.
       // Handle the special case of int foo (...);
       if (exitOnSemicolon) {
@@ -204,6 +212,10 @@ int DocReadFuncSynopsis( InStream *ins, TextOut /*OutStream */ *outs)
       }
     }
     popBreakchars(ins);
+    if (debugBreakStack) {
+	fprintf(stderr, "Pop in DocReadFuncSynopsis\n");
+    }
+
     return 0;
 }
 
@@ -218,7 +230,7 @@ int DocSkipToMacroSynopsis( InStream *ins, char *matchstring )
     int state, sy_state;
     char ch;
     static char synopsis[10] = "Synopsis:";
-    int b_state = strlen(matchstring) - 1;
+    int b_state = (int)strlen(matchstring) - 1;
 
     state    = b_state;
     sy_state = 1;
@@ -264,7 +276,7 @@ int DocReadMacroSynopsis( InStream *ins, char *matchstring,
 {
     char ch;
     int  newline_cnt, i;
-    int  state, b_state = strlen(matchstring) - 1;
+    int  state, b_state = (int)strlen(matchstring) - 1;
 
     // Text, until two consequtive newlines OR end of comment
     newline_cnt = 1;
@@ -319,52 +331,62 @@ int DocReadMacroSynopsis( InStream *ins, char *matchstring,
 // and
 //   typedef struct { int foo; char bar; } name;
 //
-// Eventually, we'll want to include information on the contents of the 
-// definition.  At the very least, we'd like a list of the names (enum) or 
+// Eventually, we'll want to include information on the contents of the
+// definition.  At the very least, we'd like a list of the names (enum) or
 // fields (struct).
 // Enums aren't too hard, but struct definitions can contain things like
 // int (*foo)( char *(name)([][]), double (*name2)( int (*)(int,int) ) );
 // See bfort for some examples.
 int DocReadTypeDefinition( InStream *ins, TextOut /*OutStream*/ *outs )
 {
-    char ch;
     char token[MAX_TOKEN_SIZE+1];
     int in_brace = 0;
     int maxlen = MAX_TOKEN_SIZE, nsp;
+#if 0
     void *fieldlist=0;       // Fieldlist records the entries in the
                              // name.  NOT FULLY IMPLEMENTED
+#endif
 
     // Must handle newline as non-space
     pushBreakchars(ins);
+    if (debugBreakStack) {
+	fprintf(stderr, "Push in DocReadTypeDefinition\n");
+    }
     while (!ins->GetToken( maxlen, token, &nsp )) {
 	// Eventually we need to combine these into a single lookup list.
 	if (!skipIgnore(token, ins))
 	    outToken(nsp, token, outs);
 
-      // If that was the last character, exit
-      if (in_brace == 0 && token[0] == ';') {
-	break;
-      }
-      if (token[0] == '{') in_brace++;
-      else if (token[0] == '}') in_brace--;
+	// If that was the last character, exit
+	if (in_brace == 0 && token[0] == ';') {
+	    break;
+	}
+	if (token[0] == '{') in_brace++;
+	else if (token[0] == '}') in_brace--;
     }
     outs->PutToken( nsp, NewlineString );
     popBreakchars(ins);
+    if (debugBreakStack) {
+	fprintf(stderr, "Pop in DocReadTypeDefinition\n");
+    }
     return 0;
 }
 
 int DocReadDefineDefinition( InStream *ins, TextOut *outs )
 {
-    char ch;
     char token[MAX_TOKEN_SIZE+1];
-    int in_brace = 0;
     int maxlen = MAX_TOKEN_SIZE, nsp;
     int prevnewline = 0;
+#if 0
     void *fieldlist=0;       // Fieldlist records the entries in the
                              // name.  NOT FULLY IMPLEMENTED
+#endif
 
     // Must handle newline as non-space
     pushBreakchars(ins);
+    if (debugBreakStack) {
+	fprintf(stderr, "Push in DocReadDefineDefinition\n");
+    }
     while (!ins->GetToken( maxlen, token, &nsp )) {
 	// Check for \n and do PutNewline instead.
 	int sawNewline = outToken(nsp, token, outs);
@@ -372,6 +394,9 @@ int DocReadDefineDefinition( InStream *ins, TextOut *outs )
 	prevnewline = sawNewline;
     }
     popBreakchars(ins);
+    if (debugBreakStack) {
+	fprintf(stderr, "Pop in DocReadDefineDefinition\n");
+    }
     return 0;
 }
 
@@ -397,9 +422,7 @@ int DocReadDefineDefinition( InStream *ins, TextOut *outs )
 #if 1
 int DocReadEnumDefinition(InStream *ins, TextOut *outs)
 {
-    char ch;
     char token[MAX_TOKEN_SIZE+1];
-    int  in_brace = 0;
     int  maxlen = MAX_TOKEN_SIZE, nsp;
     int  isEnum = 1;      // Used to check if recognized as enum or typedef enum
     enum { get_name,
@@ -409,6 +432,9 @@ int DocReadEnumDefinition(InStream *ins, TextOut *outs)
 
     // Must handle newline as non-space
     pushBreakchars(ins);
+    if (debugBreakStack) {
+	fprintf(stderr, "Push in DocReadEnumDefinition\n");
+    }
 
     if (verbose) printf("Reading enum definition\n");
     // Skip any initial newlines
@@ -437,6 +463,7 @@ int DocReadEnumDefinition(InStream *ins, TextOut *outs)
     if (token[0] != '{') {
 	fprintf(stderr, "Expected { to start enum definition, saw %s\n",
 		token);
+	popBreakchars(ins);   // Restore break table
 	return 1;
     }
     else {
@@ -520,6 +547,9 @@ int DocReadEnumDefinition(InStream *ins, TextOut *outs)
 
     outs->PutToken(nsp, NewlineString);
     popBreakchars(ins);
+    if (debugBreakStack) {
+	fprintf(stderr, "Pop in DocReadEnumDefinition\n");
+    }
     return 0;
 }
 #else
@@ -674,12 +704,14 @@ int DocGetSubOptions( InStream *ins )
 	}
     return 0;
 }
+#if 0
 int DocSubOption( int *hasx, int *hasc )
 {
     if (hasx) *hasx = HasX;
     if (hasc) *hasc = HasC;
     return 0;
 }
+#endif
 
 /*
    Match str1 to str2, ignoring case of str1 (str2 is uppercase)
@@ -828,12 +860,14 @@ int ReadAndOutputQuotedString(InStream *ins, TextOut *outs,
     return 1;
 }
 
+#if 0
 int ReadAndOutputExpr(InStream *ins, TextOut *outs)
 {
     int c;
 
     return 1;
 }
+#endif
 
 // Read just an integer.  nchar is set to the first char after the integer.
 // This is a "peeked" value - the character still needs to be read.
@@ -843,7 +877,7 @@ int ReadAndOutputInteger(char fchar, InStream *ins, TextOut *outs,
     char c;
 
     while (!ins->GetChar(&c)) {
-	if (ins->breaktable[c] == BREAK_DIGIT) {
+	if (ins->breaktable[(unsigned char)c] == BREAK_DIGIT) {
 	    outs->PutChar(c);
 	}
 	else {
@@ -855,6 +889,7 @@ int ReadAndOutputInteger(char fchar, InStream *ins, TextOut *outs,
     return 1;
 }
 
+#if 0
 // Read and output a number.  Both integer and floating point.
 // The first digit has been read (in fchar).  This is used incase
 // a later version of this will determine the value of the number
@@ -872,7 +907,7 @@ int ReadAndOutputNumber(char fchar, InStream *ins, TextOut *outs)
 	ins->GetChar(&c);
 	outs->PutChar(c);
 	ins->GetChar(&nchar);
-	if (ins->breaktable[nchar] == BREAK_DIGIT) {
+	if (ins->breaktable[(unsigned char)nchar] == BREAK_DIGIT) {
 	    err = ReadAndOutputInteger(fchar, ins, outs, &nchar);
 	    if (err) return err;
 	}
@@ -885,13 +920,14 @@ int ReadAndOutputNumber(char fchar, InStream *ins, TextOut *outs)
 	    outs->PutChar(c);
 	    ins->GetChar(&c);
 	}
-	if (ins->breaktable[c] == BREAK_DIGIT) {
+	if (ins->breaktable[(unsigned char)c] == BREAK_DIGIT) {
 	    err = ReadAndOutputInteger(c, ins, outs, &nchar);
 	}
 	else err = 1;  // Require an exponent
     }
     return err;
 }
+#endif
 
 // Read a function or macro invocation and output it.  The routine or macro
 // name has been read. The approximate grammar is
@@ -1012,7 +1048,8 @@ int IndexFileAdd(const char *name, const char *outname,
     if (!idxfd) return 0;  // Skip if no index file
     // Check for valid input
     if (!name || name[0] == 0 || !outname || outname[0] == 0) {
-	fprintf(stderr, "Internal error: Empty index entry or name\n");
+	fprintf(stderr, "Internal error (%s): Empty index entry or name\n",
+		GetCurrentInputFileName());
 	return -1;
     }
     pp = outfilename + strlen(outfilename) - 1;
@@ -1061,7 +1098,6 @@ void JumpFileEnd(void)
 // Skips any blanks after ignore string if found.
 static int skipIgnore(char *token, InStream *ins)
 {
-    char ch;
     if (IgnoreString && strcmp(token, IgnoreString) == 0) {
 	skipBlanks(ins);
 	return 1;
@@ -1097,11 +1133,12 @@ static void pushBreakchars(InStream *ins)
 {
     breaklevel++;
     if (breaklevel != 1) {
-	fprintf(stderr, "Internal error: Nested call to pushBreakchars\n");
+	fprintf(stderr, "Internal error (%s): Nested call to pushBreakchars\n",
+		GetCurrentInputFileName());
 	return;
     }
-    nl_break = ins->breaktable['\n'];
-    us_break = ins->breaktable['_'];
+    nl_break = ins->breaktable[(unsigned char)'\n'];
+    us_break = ins->breaktable[(unsigned char)'_'];
     ins->SetBreakChar( '\n', BREAK_OTHER );
     ins->SetBreakChar( '_', BREAK_ALPHA );
 }
@@ -1109,7 +1146,8 @@ static void popBreakchars(InStream *ins)
 {
     breaklevel--;
     if (breaklevel != 0) {
-	fprintf(stderr, "Internal error: Nested call to popBreakchars\n");
+	fprintf(stderr, "Internal error (%s): Nested call to popBreakchars\n",
+		GetCurrentInputFileName());
 	return;
     }
     ins->SetBreakChar( '\n', nl_break );

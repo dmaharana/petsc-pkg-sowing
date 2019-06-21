@@ -15,8 +15,8 @@ N*/
   fancy - Shows all fancy formatting
 
   Input Parameters:
-. x, y - Coords
-. a - the `really` important value
++ x, y - Coords
+- a - the `really` important value
 
   Output Parameters:
 . p1 - pointer `to a`. Is this here?

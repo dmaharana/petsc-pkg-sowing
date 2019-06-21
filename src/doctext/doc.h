@@ -1,7 +1,7 @@
 #ifndef DOCTEXT
 #define DOCTEXT
 
-#include "sowingconfig.h" 
+#include "sowingconfig.h"
 #define MAX_ROUTINE_NAME 64
 #define MAX_LINE         512
 // The next is for MAXPATHLEN; MSDOS does not have param.h
@@ -16,7 +16,7 @@
 #endif
 #define MAX_PATH_LEN     1024
 
-// Match characters should be changeable.  These are the defaults 
+// Match characters should be changeable.  These are the defaults
 // @ routine
 // M Macro
 // D Documentation (Text)
@@ -35,6 +35,12 @@ extern char LeadingString[10];
 
 // Indicate if we're in an argument list or not
 extern int InArgList;
+
+// Use to enable the old-style argument processing (allowing multiple ". "
+// commands
+extern int OldArgList;
+
+extern int LastCmdArg;
 
 //
 extern const char *IgnoreString;
@@ -70,7 +76,11 @@ extern outFormat_t outFormat;
 #define ARGUMENT_END '-'
 #define VERBATIM    '$'
 
-// Don't forget to update these
-#define DOCTEXT_VERSION "1.1.7"
-#define DOCTEXT_DATE    "September 12, 2003"
+// Don't forget to update these.  Use sowing package version if available
+#ifdef PACKAGE_VERSION
+#define DOCTEXT_VERSION PACKAGE_VERSION
+#else
+#define DOCTEXT_VERSION "1.1.8"
 #endif
+#define DOCTEXT_DATE    "June 19, 2019"
+#endif /* DOCTEXT */

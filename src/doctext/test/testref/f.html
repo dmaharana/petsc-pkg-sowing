@@ -5,7 +5,7 @@
 <TITLE>Manual Pages</TITLE>
 </HEAD>
 <BODY BGCOLOR="FFFFFF">
-<A NAME="fancy"><H1>fancy</H1></A>
+<H1 id="fancy">fancy</H1>
 Shows all fancy formatting 
 <H2>Synopsis</H2>
 <PRE>
@@ -16,13 +16,15 @@ Shows all fancy formatting
 void f1( int a, char *b )
 </PRE>
 <H2>Input Parameters</H2>
-<DL><DT><B>x, y </B> <DD> Coords
-</DL>
-<DL><DT><B>a </B> <DD> the <em>really</em> important value
+<DL>
+<DT><B>x, y </B> <DD> Coords
+
+<DT><B>a </B> <DD> the <em>really</em> important value
 </DL>
 <P>
 <H2>Output Parameters</H2>
-<DL><DT><B>p1 </B> <DD> pointer <em>to a</em>. Is this here?
+<DL>
+<DT><B>p1 </B> <DD> pointer <em>to a</em>. Is this here?
 </DL>
 <P>
 <H2>Notes</H2>
@@ -54,7 +56,35 @@ This is a sample that includes
 <H2>Keywords</H2>
 break, pointers
 <br><P><B>Location:</B>allfmt.c<P>
-<A NAME="Routine"><H1>Routine</H1></A>
+<H1 id="argtest1">argtest1</H1>
+some examples of different argument list processing 
+<H2>Synopsis</H2>
+<PRE>
+#include "tools.h"
+#include "system/system.h"
+void argtest1(int arg1, int arg2, int arg3, int arga, int argz)
+</PRE>
+<H2>List1</H2>
+<DL>
+<DT><B>arg1 </B> <DD> first
+
+<DT><B>arg2 </B> <DD> second
+
+<DT><B>arg3 </B> <DD> third
+</DL>
+<P>
+<H2>List2</H2>
+<DL>
+<DT><B>arga </B> <DD> initial
+</DL>
+<P>
+<H2>List3</H2>
+<DL>
+<DT><B>argz </B> <DD> last
+</DL>
+<P>
+<P><B>Location:</B>tst3.c<P>
+<H1 id="Routine">Routine</H1>
 foo is a routine  
 <H2>Synopsis</H2>
 <PRE>
@@ -65,13 +95,14 @@ double *bar;
 int another;
 </PRE>
 <H2>Input Parameter</H2>
-<DL><DT><B>bar </B> <DD> drinks
-</DL>
-<DL><DT><B>another </B> <DD> foo
+<DL>
+<DT><B>bar </B> <DD> drinks
+
+<DT><B>another </B> <DD> foo
 </DL>
 <P>
 <P><B>Location:</B>test.nam<P>
-<A NAME="Name"><H1>Name</H1></A>
+<H1 id="Name">Name</H1>
 is a macro for something 
 <H2>Synopsis</H2>
 <PRE>
@@ -80,7 +111,7 @@ int bar;
 char foo;
 </PRE>
 <P><B>Location:</B>test.nam<P>
-<A NAME="Name2"><H1>Name2</H1></A>
+<H1 id="Name2">Name2</H1>
 is a macro for something else 
 <H2>Synopsis</H2>
 <PRE>
@@ -90,7 +121,7 @@ char foo;
 </PRE>
 More stuff
 <P><B>Location:</B>test.nam<P>
-<A NAME="foo1"><H1>foo1</H1></A>
+<H1 id="foo1">foo1</H1>
 test  
 <H2>Synopsis</H2>
 <PRE>
@@ -103,7 +134,7 @@ char b;
 void (*c)();
 </PRE>
 <P><B>Location:</B>tstpgm.c<P>
-<A NAME="foo2"><H1>foo2</H1></A>
+<H1 id="foo2">foo2</H1>
 test  
 <H2>Synopsis</H2>
 <PRE>
@@ -115,7 +146,7 @@ MyType *a;
 short b;
 </PRE>
 <P><B>Location:</B>tstpgm.c<P>
-<A NAME="foo3"><H1>foo3</H1></A>
+<H1 id="foo3">foo3</H1>
 test 
 <H2>Synopsis</H2>
 <PRE>
@@ -125,7 +156,7 @@ test
 int foo3()
 </PRE>
 <P><B>Location:</B>tstpgm.c<P>
-<A NAME="SYGetArchType"><H1>SYGetArchType</H1></A>
+<H1 id="SYGetArchType">SYGetArchType</H1>
 Return a standardized architecture type for the machine that is executing this routine.  This uses uname where possible, but may modify the name (for example, <A HREF="http://www.sun.com">sun4</A> is returned for all <A HREF="http://www.sun.com">sun4</A> types). 
 <H2>Synopsis</H2>
 <PRE>
@@ -138,7 +169,8 @@ int  slen;
 <H2>Input Parameter</H2>
 slen - length of string buffer
 <H2>Output Parameter</H2>
-<DL><DT><B>str </B> <DD> string area to contain architecture name.  Should be at least 
+<DL>
+<DT><B>str </B> <DD> string area to contain architecture name.  Should be at least 
 10 characters long.
 </DL>
 <P>
@@ -149,7 +181,7 @@ second of many.  Well, maybe not many.  Maybe four or
 five sentances?
 <P>
 <P><B>Location:</B>tstpgm.c<P>
-<A NAME="foobar"><H1>foobar</H1></A>
+<H1 id="foobar">foobar</H1>
 test program C only 
 <H2>Synopsis</H2>
 <PRE>
@@ -160,7 +192,7 @@ void **a;
 </PRE>
 This is used as an example of C - only (should be ignored)
 <P><B>Location:</B>tstpgm.c<P>
-<A NAME="simple"><H1>simple</H1></A>
+<H1 id="simple">simple</H1>
 test 
 <H2>Synopsis</H2>
 <PRE>
@@ -170,7 +202,7 @@ test
 int simple(int a, double b)
 </PRE>
 <P><B>Location:</B>tstpgma.c<P>
-<A NAME="foo1"><H1>foo1</H1></A>
+<H1 id="foo1">foo1</H1>
 test  
 <H2>Synopsis</H2>
 <PRE>
@@ -180,7 +212,7 @@ test
 void foo1( int a, char b, void (*c)() )
 </PRE>
 <P><B>Location:</B>tstpgma.c<P>
-<A NAME="foo1a"><H1>foo1a</H1></A>
+<H1 id="foo1a">foo1a</H1>
 test  
 <H2>Synopsis</H2>
 <PRE>
@@ -190,7 +222,7 @@ test
 void foo1a( int a, char b, void (*c)(int, char, MyType *a) )
 </PRE>
 <P><B>Location:</B>tstpgma.c<P>
-<A NAME="foo2"><H1>foo2</H1></A>
+<H1 id="foo2">foo2</H1>
 test  
 <H2>Synopsis</H2>
 <PRE>
@@ -200,7 +232,7 @@ test
 struct tm *foo2( MyType *a, short b )
 </PRE>
 <P><B>Location:</B>tstpgma.c<P>
-<A NAME="foo3"><H1>foo3</H1></A>
+<H1 id="foo3">foo3</H1>
 test 
 <H2>Synopsis</H2>
 <PRE>
@@ -210,7 +242,7 @@ test
 int foo3()
 </PRE>
 <P><B>Location:</B>tstpgma.c<P>
-<A NAME="foo3a"><H1>foo3a</H1></A>
+<H1 id="foo3a">foo3a</H1>
 test ANSI should use this for empty arg 
 <H2>Synopsis</H2>
 <PRE>
@@ -220,7 +252,7 @@ test ANSI should use this for empty arg
 int foo3a(void)
 </PRE>
 <P><B>Location:</B>tstpgma.c<P>
-<A NAME="Tst2_start"><H1>Tst2_start</H1></A>
+<H1 id="Tst2_start">Tst2_start</H1>
 Sample C only routine 
 <H2>Synopsis</H2>
 <PRE>
@@ -241,7 +273,7 @@ Caption for figure
 <P>
 <P>
 <P><B>Location:</B>tstpgmc.c<P>
-<A NAME="foo1"><H1>foo1</H1></A>
+<H1 id="foo1">foo1</H1>
 test  
 <H2>Synopsis</H2>
 <PRE>
@@ -251,7 +283,7 @@ char b;
 void (*c)();
 </PRE>
 <P><B>Location:</B>tstpgm.h<P>
-<A NAME="foo2"><H1>foo2</H1></A>
+<H1 id="foo2">foo2</H1>
 test  
 <H2>Synopsis</H2>
 <PRE>
@@ -260,7 +292,7 @@ MyType *a;
 short b;
 </PRE>
 <P><B>Location:</B>tstpgm.h<P>
-<A NAME="foo3"><H1>foo3</H1></A>
+<H1 id="foo3">foo3</H1>
 test 
 <H2>Synopsis</H2>
 <PRE>

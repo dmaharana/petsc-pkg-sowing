@@ -9,21 +9,21 @@ section    %n<H2>%1</H2>%n
 s_synopsis %n<H2>Synopsis</H2>%n<PRE><CODE>%n
 e_synopsis %n</CODE></PRE>%n
 em_dash    
-eop        %n<br><A HREF="http://www.mcs.anl.gov/myindex">Index</A></BODY></HTML>%n
-bop        <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">%n<HTML>%n
-bof
-eof
+eop        %n<br><A HREF="http://www.mcs.anl.gov/myindex">Index</A>%n
+bop        <!-- New manual page -->
+bof	   <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">%n<HTML>%n<HEAD>%n
+eof	   %n</BODY></HTML>%n
 # Arglist form
 s_arg_list %n<DL>%n
 s_arg_inlist %n<DT><B>
 e_arg_inlist </B>
-s_defn_inlist -
+s_defn_inlist - 
 e_defn_inlist %n
 e_arg_list </DL>%n
 s_arg      %n<DL><DT><B>
 s_defn     - 
 e_defn     %n</DL>%n
-e_arg      </B> 
+e_arg      </B>
 s_doctext_verbatim <BR>
 e_doctext_verbatim %n
 s_caption  <CENTER><B>
@@ -31,5 +31,8 @@ e_caption  </B></CENTER>
 picture    <A IMG="%1"></A>
 location   <P><B>Location:</B>%1<P>
 # Only do the actual title
-mantitle   <TITLE>%1</TITLE>%n<BODY>%n<A NAME="%1"><H1>%1</H1></A>%n
+mantitle   <TITLE>%1</TITLE>%n<BODY>%n<H1 id="%1">%1</H1>%n
+mantitlemany   %n<H1 id="%1">%1</H1>%n
+# bofmanyend is needed for mantitlemany
+bofmanyend  <TITLE>Manual Pages</TITLE>%n</HEAD>%n<BODY>%n
 

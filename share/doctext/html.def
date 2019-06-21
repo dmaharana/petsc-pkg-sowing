@@ -25,8 +25,8 @@ eop
 # Arglist form
 s_arg_list %n<DL>%n
 s_arg_inlist %n<DT><B>
-e_arg_inlist </B>
-s_defn_inlist <DD>
+e_arg_inlist </B> 
+s_defn_inlist <DD> 
 e_defn_inlist %n
 e_arg_list </DL>%n
 # Here's an alternative
@@ -50,9 +50,9 @@ picture    <A IMG="%1"></A>
 location   <P><B>Location:</B>%1<P>
 # Only do the actual title
 # Without a title, the page will be broken.
-mantitle   <TITLE>%1</TITLE>%n</HEAD>%n<BODY BGCOLOR="FFFFFF">%n<A NAME="%1"><H1>%1</H1></A>%n
+mantitle   <TITLE>%1</TITLE>%n</HEAD>%n<BODY BGCOLOR="FFFFFF">%n<H1 id="%1">%1</H1>%n
 # mantitlemany is used for files containing multiple manual pages
-mantitlemany   %n<A NAME="%1"><H1>%1</H1></A>%n
+mantitlemany   %n<H1 id="%1">%1</H1>%n
 # bofmanyend is needed for mantitlemany
 bofmanyend  <TITLE>Manual Pages</TITLE>%n</HEAD>%n<BODY BGCOLOR="FFFFFF">%n
 anchor	    <a name="%1"></a>

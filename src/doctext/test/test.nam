@@ -2,8 +2,8 @@
   Routine - foo is a routine 
 
   Input Parameter:
-.  bar - drinks
-.  another - foo
++  bar - drinks
+-  another - foo
 
 @*/
 Routine( bar, another )

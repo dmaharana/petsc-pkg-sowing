@@ -27,9 +27,9 @@
     .Bqs          Begin block quote
     .Bqe          End block quote
 
-    Soon to be added:
-    .c citeref    Citation reference (eventually, we will be able to
-                  convert this into a hot reference)
+    To be added:
+    .c citeref    Citation reference (the goal is to convert this into a
+                  link to the reference)
  */
 
 #include "instream.h"
@@ -62,6 +62,26 @@
  * In addition, an argument list can start with a + instead of a . and
  * end with a - instead of a dot; this allows the argument list as a whole
  * to be formatted.
+ *
+ * This routine processes the entire entry - the name and the description
+ *
+ * ToDo: consider this option for simplifying the use of +...- in argument
+ * lists. The variable OldArgList allows "." for multiple args, giving the
+ * older behavior (though with some improved error checks)
+ * LastCmdArg is a shorthand for LastCmdSeen==ARGUMENT
+ *
+ *  command    InArgList    Operations
+ *  +          false        s_arg_list; s_arg_inlist; InArgList:=true
+ *  +          true         s_arg_inlist; warning message
+ *  space      false        if (OldArgList) s_arg
+ *                          else
+ *                             s_arg_list; s_arg_inlist; e_arg_list;
+ *                             if (LastCmdArg) warning message
+ *  space      true         s_arg_inlist
+ *  -          false        s_arg_list ; s_arg_inlist; e_arg_list;
+ *                            if (OldArgList) warning message
+ *  -          true         s_arg_inlist; e_arg_list; InArgList:=false
+ *
  */
 int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 		   int *lastWasNl )
@@ -73,6 +93,7 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 
     SkipWhite( ins );
 
+#if 0
     switch (arg_kind) {
     case ARGUMENT_BEGIN:
       InArgList = 1;
@@ -86,8 +107,49 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 	textout->PutOp( "s_arg" );
       break;
     }
+#else
+    // Generate the initial commands before the argument name
+    if (arg_kind == ARGUMENT_BEGIN) {
+	if (InArgList) {
+	    fprintf(stderr,
+		    "WARNING (%s): '+' command seen within list of arguments\n",
+		    GetCurrentInputFileName());
+	}
+	else {
+	    textout->PutOp( "s_arg_list" );
+	    InArgList =1 ;
+	}
+	textout->PutOp("s_arg_inlist");
+    }
+    else if (arg_kind == ARGUMENT_END) {
+	if (!InArgList) {
+	    textout->PutOp( "s_arg_list" );
+	    InArgList = 1;
+	}
+	textout->PutOp( "s_arg_inlist" );
+    }
+    else if (arg_kind == ARGUMENT) {
+	if (!InArgList && !OldArgList) {
+	    if (LastCmdArg == ARGUMENT) {
+		fprintf(stderr,
+		"WARNING (%s): multiple '. ' commands without '+' to start list\n",
+			GetCurrentInputFileName());
+	    }
+	    textout->PutOp( "s_arg_list" );
+	    arg_kind = ARGUMENT_END;     // act as if this is a lone end-arg
+	    InArgList = 1;
+	}
+	if (InArgList) {
+	    textout->PutOp( "s_arg_inlist" );
+	}
+	else {
+	    textout->PutOp( "s_arg" );
+	}
+    }
 
-    /* Get the name */
+#endif
+
+    // Get the name
     last_was_backslash = 0;
     while ( !ins->GetChar( &ch ) ) {
 	if (ch == '\n' || (ch == '-' && !at_first && !last_was_backslash)) {
@@ -207,7 +269,6 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 int ProcessVerbatimFmt( InStream *ins, TextOut *textout, int *lastWasNl )
 {
     char ch;
-    int quote_flag;
 
     /* Raw mode output. */
     if (ins->GetChar( &ch )) return 1;
@@ -262,7 +323,7 @@ int ProcessNameFmt( InStream *ins, TextOut *textout, int *lastWasNl )
 
     if (!IncludeNameBlock( ins, name )) {
 	fprintf( stderr, "Could not find include name (%s) in %s\n", name,
-		 GetCurrentFileName() );
+		 GetCurrentInputFileName() );
 	return 1;
 	}
     return 0;
@@ -280,7 +341,7 @@ int ProcessVerbatimBlockFmt( InStream *ins, TextOut *textout, int *lastWasNl )
   /* Check for .vb */
   if (!ins->GetChar( &ch ) && ch != 'b') {
     fprintf( stderr, "Invalid verbatim command '.v%c' in %s\n", ch,
-	     GetCurrentFileName() );
+	     GetCurrentInputFileName() );
     return 1;
   }
   SkipLine( ins );
@@ -311,7 +372,7 @@ int ProcessCaption( InStream *ins, TextOut *textout, int *lastWasNl )
     else if (ch == 'e') textout->PutOp( "e_caption" );
     else {
 	fprintf( stderr, "Invalid caption command '.c%c' in %s\n", ch,
-		 GetCurrentFileName() );
+		 GetCurrentInputFileName() );
 	return 1;
 	}
     return 0;
@@ -327,7 +388,7 @@ int ProcessPicture( InStream *ins, TextOut *textout, int *lastWasNl )
 
     if (ins->GetLine( buf, 256 )) {
 	fprintf( stderr, "Could not read picture filename in %s\n",
-		 GetCurrentFileName() );
+		 GetCurrentInputFileName() );
 	return 1;
 	}
     /* Remove newline from end of buffer (should have a Chop function) */
@@ -379,7 +440,7 @@ int ProcessUserCmd( InStream *ins, TextOut *textout, int *lastWasNl )
 
     if (ins->GetLine( buf, 256 )) {
 	fprintf( stderr, "Could not read user command %s\n",
-		 GetCurrentFileName() );
+		 GetCurrentInputFileName() );
 	return 1;
 	}
     /* Remove newline from end of buffer (should have a Chop function) */
@@ -398,7 +459,7 @@ int ProcessEnumerate( InStream *ins, TextOut *textout, int *lastWasNl )
     else if (ch == 'e') textout->PutOp( "e_enumerate" );
     else {
 	fprintf( stderr, "Invalid enumerate command '.E%c' in %s\n", ch,
-		 GetCurrentFileName() );
+		 GetCurrentInputFileName() );
 	return 1;
 	}
     return 0;
@@ -406,17 +467,7 @@ int ProcessEnumerate( InStream *ins, TextOut *textout, int *lastWasNl )
 
 int ProcessItemize( InStream *ins, TextOut *textout, int *lastWasNl )
 {
-    char buf[1024];
-
     textout->PutOp( "itemize_enum" );
-#if 0
-    /* Pass the tokens to the seealso routine */
-    ins->GetLine( buf, 1024 );
-
-    textout->PutOp( "section", (char *)"See Also" );
-    textout->PutToken( 0, buf );
-    textout->PutOp( "linebreak" ); // lastwasNL?
-#endif
     return 0;
 }
 
@@ -429,7 +480,7 @@ int ProcessBlockOp( InStream *ins, TextOut *textout, int *lastWasNl )
     if (ins->GetChar( &ch )) return 1;
     if (ch != 'q') {
       fprintf( stderr, "Expected 'q' but saw %c in .B command in %s\n", ch,
-	       GetCurrentFileName() );
+	       GetCurrentInputFileName() );
       return 1;
     }
     if (ins->GetChar( &ch )) return 1;
@@ -437,7 +488,7 @@ int ProcessBlockOp( InStream *ins, TextOut *textout, int *lastWasNl )
     else if (ch == 'e') textout->PutOp( "e_blockquote" );
     else {
 	fprintf( stderr, "Invalid block command '.Bq%c' in %s\n", ch,
-		 GetCurrentFileName() );
+		 GetCurrentInputFileName() );
 	return 1;
 	}
     return 0;
@@ -448,8 +499,6 @@ int ProcessDotFmt( char arg_kind, InStream *ins, TextOut *textout,
 		   int *lastWasNl )
 {
     char ch;
-    extern const char *GetCurrentRoutinename( void );
-    extern const char *GetCurrentFileName( void );
 
     if (ins->GetChar( &ch )) return 1;
     switch (ch) {
@@ -474,7 +523,7 @@ int ProcessDotFmt( char arg_kind, InStream *ins, TextOut *textout,
 
         default:
     	      fprintf( stderr, "Unknown dot command `%c' in file %s(%s)\n",
-		       ch, GetCurrentFileName(), GetCurrentRoutinename() );
+		       ch, GetCurrentInputFileName(), GetCurrentRoutinename() );
     }
     return 0;
 }

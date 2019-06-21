@@ -55,6 +55,36 @@ break, pointers
 \location{allfmt.c}
 \endmanpage
 \startmanpage
+\mantitle{argtest1}{tex}{2/10/2000}
+\manname{argtest1}
+--- some examples of different argument list processing 
+\subhead{Synopsis}
+\startvb\begin{verbatim}
+#include "tools.h"
+#include "system/system.h"
+void argtest1(int arg1, int arg2, int arg3, int arga, int argz)
+\end{verbatim}
+\endvb
+
+\subhead{List1}
+\startarg{arg1 }{first
+}
+\startarg{arg2 }{second
+}
+\startarg{arg3 }{third
+}
+\par
+\subhead{List2}
+\startarg{arga }{initial
+}
+\par
+\subhead{List3}
+\startarg{argz }{last
+}
+\par
+\location{tst3.c}
+\endmanpage
+\startmanpage
 \mantitle{Routine}{tex}{2/10/2000}
 \manname{Routine}
 --- foo is a routine  

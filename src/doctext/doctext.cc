@@ -19,6 +19,7 @@ int DebugDoc = 0;
 int GiveLocation = 1;
 int DoQuoteFormat = 0;
 char *SaveFileName = 0;
+char *SaveInputFileName = 0;
 char *SaveRoutineName = 0;
 // InComment is used to make sure that we don't hit EOF before finishing
 // a structured comment
@@ -38,6 +39,11 @@ outFormat_t outFormat = FMT_UNKNOWN;
 
 // Indicate if we're in an argument list or not
 int InArgList = 0;
+// Indicate if we want the old style argument processing
+int OldArgList = 0;
+// Remember the last command that was seen.  0 for no command (newline,
+// regular text, etc.)
+int LastCmdArg = 0;
 
 // Forward references
 int OutputManPage( InStream *ins, TextOut *outs, char *name, char *level,
@@ -56,6 +62,7 @@ int HandleArgs( CmdLine *cmd, const char **path, const char **extension,
 	        const char **basedir, const char **baseoutfile,
 		const char **heading, const char **locdir );
 void PrintHelp( void );
+int GetArgPtr( CmdLine *cmd, const char *name, const char **val );
 
 #define MAX_DATE_LEN 50
 int main( int argc, char ** argv )
@@ -64,7 +71,7 @@ int main( int argc, char ** argv )
     char *routine;
     const char *path=0;
     const char *extension;
-    const char *keypath, *mappath, *defnpath, *cmdpath;
+    const char *keypath, *mappath, *defnpath;
     char matchstring[20];
     char lextension[10];
     char date[MAX_DATE_LEN];
@@ -89,6 +96,8 @@ int main( int argc, char ** argv )
     SaveFileName = outfilename;
     routine     = new char[MAX_ROUTINE_NAME];
     SaveRoutineName = routine;
+    SaveInputFileName = new char[MAXPATHLEN];
+    SaveInputFileName[0] = 0;
 
     /* Get the many string arguments.  Set to null if not present. */
     HandleArgs( cmd, &path, &extension, &incfile, &indexfile,
@@ -159,6 +168,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 	delete incommands;
 	}
 
+#ifdef FOO
     // Allow the user to define new formatting commands.  Commands are of the
     // form (prefix)character[optional b or e].  These will invoke the commands
     // defined in the definition file.  The general actions are
@@ -167,7 +177,7 @@ in the distribution, where ... is the path to the sowing directory\n\
     // .vb s_verbatim nop
     // .ve e_verbatim nop
     // Eventually, we'll need to add the kind of processing for the text
-#ifdef FOO
+    char *cmdpath;
     while (!cmd->GetArgPtr( "-usercmds", &cmdpath )) {
     	incommands = new InStreamFile( cmdpath, "r" );
 	if (incommands->status) {
@@ -254,9 +264,12 @@ in the distribution, where ... is the path to the sowing directory\n\
 	    fprintf( stderr, "Could not open file %s\n", infilename );
 	    perror( "Reason:" );
 	    continue;
-	    }
+	}
 	if (DeTabFile)
 	    insin->SetExpandTab( 1 );
+
+	// Save the filename
+	strncpy(SaveInputFileName, infilename, MAXPATHLEN);
 
 	// In case we have a large pushback
         ins = new InStreamBuf( 16000, insin );
@@ -345,6 +358,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 	    }
 	}
 	delete ins;
+	SaveInputFileName[0] = 0;
     }
     if (baseoutfile) {
       // This was commented out.  Why?
@@ -370,6 +384,8 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
 		   char *matchstring, int one_per_file )
 {
     int  at_end;
+
+    LastCmdArg = 0;
 
     // Output the initial information
     textout->PutOp( "bop" );
@@ -542,31 +558,35 @@ int OutputText( InStream *ins, char *matchstring,
 	     ch == ARGUMENT_END || ch == '\n')) {
 	    textout->PutOp( "e_synopsis" );
 	    doing_synopsis = 0;
-	    }
+	}
 	if (ch == VERBATIM) {
 	    /* Raw mode output. */
 	    ProcessVerbatimFmt( ins, textout, &lastWasNl );
-	    }
+	    LastCmdArg = ch;
+	}
 	else if (ch == ARGUMENT || ch == ARGUMENT_BEGIN ||
 		 ch == ARGUMENT_END) {
 	    ProcessDotFmt( ch, ins, textout, &lastWasNl );
-	    }
+	    LastCmdArg = ch;
+	}
 	else if (ch == '\n') {
 	    if (lastWasNl) textout->PutOp( "end_par" );
 	    else           textout->PutNewline();
 	    lastWasNl = 1;
-	    }
+	    LastCmdArg = 0;
+	}
 	/* We should allow new commands here */
 	else {
+	    LastCmdArg = 0;
 	    if (isspace(ch) && ch != '\n') {
 		while (!ins->GetChar( &ch ) && isspace(ch) && ch != '\n') ;
-		}
+	    }
 	    // Handle an all blank line differently
 	    if (ch == '\n') {
-	      if (lastWasNl) textout->PutOp( "end_par" );
-	      else           textout->PutNewline();
-	      lastWasNl = 1;
-	      continue;
+		if (lastWasNl) textout->PutOp( "end_par" );
+		else           textout->PutNewline();
+		lastWasNl = 1;
+		continue;
 	    }
  	    *lp++ = ch; ln++;
 
@@ -635,14 +655,14 @@ void MakeFileName( const char *path, char *routine, char *lextension,
     int ln;
     if (path) {
 	strcat( outfilename, path );
-	ln = strlen(outfilename);
+	ln = (int)strlen(outfilename);
 	if (outfilename[ln-1] != DIR_SEP)
 	    outfilename[ln] = DIR_SEP;
 	    outfilename[ln+1] = 0;
         }
 #if defined(__MSDOS__) || defined(WIN32)
     /* Need to use no more than 8 characters of routine (!) */
-    if (strlen( routine ) > 8) {
+    if ((int)strlen( routine ) > 8) {
     	char *p;
     	int  i;
     	p = outfilename + strlen(outfilename);
@@ -665,12 +685,18 @@ void MakeFileName( const char *path, char *routine, char *lextension,
 
 const char *GetCurrentRoutinename( void )
 {
-	return SaveRoutineName ? (const char *)SaveRoutineName : "";
+    return SaveRoutineName ? (const char *)SaveRoutineName : "";
+}
+
+const char *GetCurrentInputFileName(void)
+{
+    // This is always allocated
+    return SaveInputFileName[0] ? SaveInputFileName : "";
 }
 
 const char *GetCurrentFileName( void )
 {
-	return SaveFileName ? (const char *)SaveFileName : "";
+    return SaveFileName ? (const char *)SaveFileName : "";
 }
 
 int GetArgPtr( CmdLine *cmd, const char *name, const char **val )
@@ -700,6 +726,22 @@ int HandleArgs( CmdLine *cmd, const char **path, const char **extension,
 	        const char **basedir, const char **baseoutfile,
 		const char **heading, const char **locdir )
 {
+
+  // for some defaults, its often most convenient to set an environment variable
+  {
+      char *c;
+      c = getenv("DOCTEXT_VERBOSE");
+      if (c && (strcmp(c,"yes") == 0 || strcmp(c,"YES") == 0 ||
+		strcmp(c,"true") == 0 || strcmp(c,"TRUE") == 0)) {
+	  verbose = 1;
+      }
+      c = getenv("DOCTEXT_OLDSTYLEARG");
+      if (c && (strcmp(c,"yes") == 0 || strcmp(c,"YES") == 0 ||
+		strcmp(c,"true") == 0 || strcmp(c,"TRUE") == 0)) {
+	  OldArgList = 1;
+      }
+  }
+
   if (!cmd->HasArg( "-help" ) || !cmd->HasArg( "-h" ) ||
       !cmd->HasArg("-usage")) {
     PrintHelp( );
@@ -732,16 +774,8 @@ int HandleArgs( CmdLine *cmd, const char **path, const char **extension,
   }
   else
     strcpy( NewlineString, "\n" );
-
-  // for verbose, its often most convenient to set an environment variable
-  {
-      char *c = getenv("DOCTEXT_VERBOSE");
-      if (c && (strcmp(c,"yes") == 0 || strcmp(c,"YES") == 0 ||
-		strcmp(c,"true") == 0 || strcmp(c,"TRUE") == 0)) {
-	  verbose = 1;
-	  //printf("Setting verbose to true\n");
-      }
-  }
+  if (!cmd->HasArg( "-oldargstyle" )) OldArgList = 1;
+  if (!cmd->HasArg( "-verbose" )) verbose = 1;
 
   return 0;
 }
@@ -756,7 +790,7 @@ Synopsis:
           [ -jumpfile filename ] [ -outfile filename ]
           [ -mapref filename ] [ -nolocation ] [ -location ]
           [ -defn defnfile ] [ -dosnl ] [ -skipprefix name ]
-          [ -ignore string ]
+          [ -ignore string ] [ -oldargstyle ]
           [ -heading string ] [ -basedir dirname ] filenames
 
 Input Parameters:
@@ -781,6 +815,9 @@ $          -index foo.cit -indexdir \"http://www.mcs.anl.gov/foo/man\"
                    Put the manpages in the indicated file
 .    -heading name  - Name for the heading (middle of top line)
 .    -quotefmt      -  support ''\\tt'' and ``\\em``
+.    -oldargstyle    - Allow multiple ''. '' for an argument list, instead of
+                       using ''+  .... -'' for argument lists with multiple
+                       entries.
 .    -skipprefix name - skip ''name'' at the beginning of each line.  This
                         may be used for Fortran or Shell sources
 .    -ignore string - skip ''name'' in a function synopsis.  This can be used
@@ -804,6 +841,7 @@ doctext [ -mpath path ] [ -ext n ] [ -I filename ] [ -latex ]\n\
         [ -mapref filename ] [ -nolocation ] [ -location ]\n\
         [ -defn defnfile ] [ -dosnl ] [ -skipprefix name ]\n\
         [ -debug_paths ]\n\
+        [ -ignore string ] [ -oldargstyle ]\n\
         [ -heading string ] [ -basedir dirname ] filenames\n\
 \n\
     -mpath path    Sets the path where the man pages will be written\n\
@@ -828,8 +866,15 @@ fprintf( stderr, "\
                    Put the manpages in the indicated file. \n\
     -heading name  Name for the heading (middle of top line)\n\
     -quotefmt      support '\\tt' and `\\em`\n\
+    -oldargstyle    - Allow multiple '. ' for an argument list, instead of\n\
+                       using '+  .... -' for argument lists with multiple\n\
+                       entries.\n\
     -skipprefix name - skip ''name'' at the beginning of each line.  This\n\
                         may be used for Fortran or Shell sources\n\
+    -ignore string - skip 'name' in a function synopsis.  This can be used\n\
+                      to remove special keywords needed to build the routine\n\
+                      but not needed by the user (e.g., special export\n\
+                      keywords when building DLLs)\n\
     -keyword filename\n\
                    Place keyword entries at the end of the specified file\n" );
 fprintf( stderr, "\

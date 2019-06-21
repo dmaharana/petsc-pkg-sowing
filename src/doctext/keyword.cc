@@ -1,6 +1,7 @@
 #include "textout.h"
 #include "instream.h"
 #include "doc.h"
+#include "docutil.h"
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>

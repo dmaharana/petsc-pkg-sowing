@@ -5,7 +5,7 @@
 <TITLE>SYGetArchType</TITLE>
 </HEAD>
 <BODY BGCOLOR="FFFFFF">
-<A NAME="SYGetArchType"><H1>SYGetArchType</H1></A>
+<H1 id="SYGetArchType">SYGetArchType</H1>
 Return a standardized architecture type for the machine that is executing this routine.  This uses uname where possible, but may modify the name (for example, sun4 is returned for all sun4 types). 
 <H2>Synopsis</H2>
 <PRE>
@@ -16,7 +16,8 @@ int  slen;
 <H2>Input Parameter</H2>
 slen - length of string buffer
 <H2>Output Parameter</H2>
-<DL><DT><B>str </B> <DD> string area to contain architecture name.  Should be at least 
+<DL>
+<DT><B>str </B> <DD> string area to contain architecture name.  Should be at least 
 10 characters long.
 </DL>
 <P>
