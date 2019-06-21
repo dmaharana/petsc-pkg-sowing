@@ -307,7 +307,7 @@ void TXSetFiles( char *fin, char *fout )
     strcpy( InFName[0], fin );
 }
 
-void TeXAbort( char *routine, char *msg )
+void TeXAbort( const char *routine, const char *msg )
 {
     fprintf( stdout, "%s:%s\n", routine, msg ? msg : "No message" );
     fprintf( stdout, "File %s line %d\n",
@@ -322,7 +322,7 @@ void TXPrintLocation( FILE *fp )
 }
 
 /* Output a command */
-void TeXoutcmd( FILE *fout, char *str )
+void TeXoutcmd( FILE *fout, const char *str )
 {
     char buf[102];
     if (strlen(str) >= 100) {
@@ -351,7 +351,7 @@ void TeXoutcmd( FILE *fout, char *str )
 }
 
 /* Output text (may be pushed back for rescanning) */
-void TeXoutstr( FILE *fout, char *str )
+void TeXoutstr( FILE *fout, const char *str )
 {
     if (InArg) {
 	if (!ArgBuffer) {
@@ -646,7 +646,7 @@ int TeXGetArg( FILE *fin, char *token, int maxtoken )
 
 /* This is a version of TeXGetArg that aborts on failure */
 void TeXMustGetArg( FILE *fin, char *token, int maxtoken,
-		    char *caller, char *texcmd )
+		    const char *caller, char *texcmd )
 {
     if (TeXGetGenArg( fin, token, maxtoken, LbraceChar, RbraceChar, 1 ) < 0) {
 	TeXAbort( caller, texcmd );
@@ -672,7 +672,7 @@ void TXnop( TeXEntry *e )
 }
 
 /* Copy a string and return it in newly allocated memory */
-char *TXCopy( char *s )
+char *TXCopy( const char *s )
 {
     char *n;
     n = MALLOC( strlen( s ) + 1 );
@@ -1405,12 +1405,12 @@ void TXsection( TeXEntry *e )
 		   "TXsection(arg)", e->name );
     /* Remove any leading blanks */
     if (curtok[0] == ' ') {
-	char *p = curtok;
+	char *p0 = curtok;
 	char *p1 = curtok;
 	/* Find the first nonblank */
-	while (*p == ' ') p++;
+	while (*p0 == ' ') p0++;
 	/* Move the first nonblank over, and then copy the rest of the string */
-	while (*p != 0) *p1++ = *p++;
+	while (*p0 != 0) *p1++ = *p0++;
 	*p1 = 0;
     }
     /* Remove any trailing blanks */
@@ -1474,15 +1474,15 @@ void TXsection( TeXEntry *e )
 
 /* Output section headers */
     if (IncludeSectionNumbers && !isUnnumbered) {
-	char tmptok[MAX_TOKEN], *p;
+	char tmptok[MAX_TOKEN], *p0;
 	int i;
-	p = tmptok;
+	p0 = tmptok;
 	for (i=0; i<=SSp; i++) {
-	    sprintf( p, "%d.", sstack[i].count );
-	    p += strlen(p);
+	    sprintf( p0, "%d.", sstack[i].count );
+	    p0 += strlen(p0);
 	}
-	strcat( p, " " );
-	strcat( p, curtok );
+	strcat( p0, " " );
+	strcat( p0, curtok );
 	WriteSectionAnchor( fpout, tmptok, "Node", CurSeqnum-1,
 			    (int)(PTRINT)(e->ctx) );
     }
@@ -1641,7 +1641,7 @@ void TXdetails( TeXEntry *e )
 
 /* Skip over an environment.  If flag, write out text and process TeX command,
    otherwise, just skip */
-void TeXskipEnv( TeXEntry *e, char *name, int flag )
+void TeXskipEnv( TeXEntry *e, const char *name, int flag )
 {
     int  nsp, ch;
     FILE *fout = fpout;
@@ -2040,7 +2040,7 @@ void TXmathmode( TeXEntry *e )
 int itemizelevel = -1;
 
 /* Copy this envrionment without doing anything */
-void TeXBenign( TeXEntry *e, char *name )
+void TeXBenign( TeXEntry *e, const char *name )
 {
     TXbgroup( e );
     TeXskipEnv( e, name, 1 );
@@ -3003,7 +3003,7 @@ void TXinitbreaktable( void )
     breakchar['_'] = 1;
 }
 
-void TXoutactiveToken( char *token )
+void TXoutactiveToken( const char *token )
 {
     int    urltype;
     char   *url, *text;
@@ -3759,14 +3759,14 @@ void ProcessLatexFile( int argc, char **argv, FILE *fin, FILE *fout )
 }
 
 /* Manage the citation characters */
-void TXSetCitePrefix( char *s )
+void TXSetCitePrefix( const char *s )
 {
     if (CitePrefix) FREE( CitePrefix );
     CitePrefix = STRDUP( s );
     CHKPTR(s);
 }
 
-void TXSetCiteSuffix( char *s )
+void TXSetCiteSuffix( const char *s )
 {
     if (CiteSuffix) FREE( CiteSuffix );
     CiteSuffix = STRDUP( s );

@@ -543,7 +543,7 @@ int TextOut::ReadCommands( InStream *ins ){
 	    prepend = 1;
 	    namep++;
 	    }
-	ln = strlen( nametoken );
+	ln = (int)strlen( nametoken );
 	if (ln > 0 && nametoken[ln-1] == '+') {
 	    postpend = 1;
 	    nametoken[ln-1] = 0;

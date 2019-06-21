@@ -207,7 +207,7 @@ void InitAccents( void );
 /* biblio.c */
 extern void TXbibitem ( TeXEntry * );
 extern void InsertBib ( int, char * );
-extern int BibLookup ( char *, char **, char ** );
+extern int BibLookup ( const char *, char **, char ** );
 extern void TXDoBibliography ( TeXEntry * );
 
 /* dimen.c */
@@ -221,13 +221,14 @@ extern void TXadvance ( TeXEntry * );
 extern void TXSetLatexQuiet ( int );
 extern void TXDoNewenvironment ( TeXEntry * );
 extern void TXDoNewtheorem ( TeXEntry * );
-extern int LookupEnv ( char *, char **, char **, int * );
-extern void PushBeginEnv ( char *, int );
-extern void RunLatex ( char *, char *, char *, char *, char *, int );
+extern int LookupEnv ( const char *, char **, char **, int * );
+extern void PushBeginEnv ( const char *, int );
+extern void RunLatex ( const char *, const char *, const char *, const char *,
+		       const char *, int );
 extern void TXStartNumberedEnv ( char * );
 extern void TXcaptionHandling ( TeXEntry * );
 extern void TXcaption ( TeXEntry * );
-extern void TeXSetEnvJump ( char * );
+extern void TeXSetEnvJump ( const char * );
 extern void TXSetEnv( const char *, char *, char *, int );
 
 /* label.c */
@@ -240,7 +241,7 @@ extern void TeXskipMath ( TeXEntry *, char *, int );
 extern void TXProcessDollar ( TeXEntry *, int, int );
 
 /* rdaux.c */
-extern void OpenAuxFile ( char * );
+extern void OpenAuxFile ( const char * );
 extern void OpenWRAuxFile ( void );
 extern void RewindAuxFile ( void );
 extern void RdAuxFile ( SRList * );
@@ -250,16 +251,16 @@ extern void WriteBibtoauxfile ( int, char *, char * );
 extern void WRfromauxfile ( FILE *, int );
 extern int NumChildren ( LINK * );
 extern void WriteChildren ( FILE *, LINK *, int );
-extern int GetParent ( LINK *, char *, char *, char *, int );
-extern int GetNext ( LINK *, char *, char *, char *, int );
+extern int GetParent ( LINK *, const char *, char *, char *, int );
+extern int GetNext ( LINK *, const char *, char *, char *, int );
 extern LINK *GetNextLink ( LINK * );
-extern int GetPrevious ( LINK *, char *, char *, char *, int );
+extern int GetPrevious ( LINK *, const char *, char *, char *, int );
 extern char *TopicFilename ( LINK * );
 extern void PrintAllContents(FILE *);
 
 /* rddefs.c */
-extern void RdBaseDef ( char * );
-extern char *TXConvertQuotes( char *, char  );
+extern void RdBaseDef ( const char * );
+extern char *TXConvertQuotes( const char *, char  );
 extern void TXInitialCommands( void );
 
 /* rdindx.c */
@@ -268,7 +269,7 @@ extern void WriteIndex ( FILE *, int );
 
 /* refmap */
 extern void RdRefMap ( char * );
-extern int RefMapLookup ( char *, char *, char **, int *, char ** );
+extern int RefMapLookup ( const char *, const char *, char **, int *, char ** );
 
 /* scan.c */
 extern int (*SCSetTranslate ( int (*)(char *,int) )) 
@@ -279,8 +280,8 @@ extern void SCInitChartype ( void );
 extern int SCTxtFindNextANToken ( FILE *, char *, int, int * );
 extern int SCTxtGetChar ( FILE * );
 extern void SCAppendToken ( char * );
-extern void SCPushToken ( char * );
-extern void SCPushCommand ( char * );
+extern void SCPushToken ( const char * );
+extern void SCPushCommand ( const char * );
 extern void SCPushChar ( char );
 extern void SCSetCommentChar ( char );
 extern void SCSkipNewlines ( FILE * );
@@ -328,18 +329,18 @@ extern void TXSetLatexMath ( int );
 extern void TXSetSimpleMath ( int );
 extern void TXSetLatexAgain ( int );
 extern void TXSetFiles ( char *, char * );
-extern void TeXAbort ( char *, char * );
+extern void TeXAbort ( const char *, const char * );
 extern void TXPrintLocation( FILE * );
-extern void TeXoutcmd ( FILE *, char * );
-extern void TeXoutstr ( FILE *, char * );
+extern void TeXoutcmd ( FILE *, const char * );
+extern void TeXoutstr ( FILE *, const char * );
 extern void TeXoutsp ( FILE *, int );
 extern int TeXReadToken ( char *, int * );
 extern void TeXReadMacroName ( char * );
 extern int TeXGetGenArg ( FILE *, char *, int, char, char, int );
 extern int TeXGetArg ( FILE *, char *, int );
-extern void TeXMustGetArg( FILE *, char *, int, char *, char * );
+extern void TeXMustGetArg( FILE *, char *, int, const char *, char * );
 extern void TXnop ( TeXEntry * );
-extern char *TXCopy ( char * );
+extern char *TXCopy ( const char * );
 extern void TXsavearg ( TeXEntry * );
 extern void TXname ( TeXEntry * );
 extern void TXraw ( TeXEntry * );
@@ -380,10 +381,10 @@ extern void TXparagraph ( TeXEntry * );
 extern void TXvtt ( TeXEntry * );
 extern void TXvt ( TeXEntry * );
 extern void TXdetails ( TeXEntry * );
-extern void TeXskipEnv ( TeXEntry *, char *, int );
+extern void TeXskipEnv ( TeXEntry *, const char *, int );
 extern void TeXskipRaw ( TeXEntry *, char *, int );
 extern void TXmathmode ( TeXEntry * );
-extern void TeXBenign ( TeXEntry *, char * );
+extern void TeXBenign ( TeXEntry *, const char * );
 extern void TeXitemize ( TeXEntry * );
 extern void TeXenumerate ( TeXEntry * );
 extern void TeXdescription ( TeXEntry * );
@@ -419,7 +420,7 @@ extern void TXAURL ( TeXEntry * );
 extern void TXcite ( TeXEntry * );
 extern void TXcatcode ( TeXEntry * );
 extern void TXinitbreaktable ( void );
-extern void TXoutactiveToken ( char * );
+extern void TXoutactiveToken ( const char * );
 extern void TXepsfbox ( TeXEntry * );
 extern void TXpsfig ( TeXEntry * );
 extern void TXanimation ( TeXEntry * );
@@ -431,8 +432,8 @@ extern void TeXNoContents ( void );
 extern char *ContentsLoc ( void );
 extern void TeXWriteContents ( FILE * );
 extern void ProcessLatexFile ( int, char **, FILE *, FILE * );
-extern void TXSetCitePrefix ( char * );
-extern void TXSetCiteSuffix ( char * );
+extern void TXSetCitePrefix ( const char * );
+extern void TXSetCiteSuffix ( const char * );
 extern void TXPrintToken ( FILE *, const char * );
 extern int FileExists ( char * );
 extern void TXincludegraphics( TeXEntry * );
@@ -498,10 +499,11 @@ extern void GetBaseName ( char * );
 extern int SCHTMLTranslate ( char *, int );
 extern void WriteHeader ( FILE * );
 extern void WriteTrailer ( FILE * );
-extern void WriteSectionHeader ( FILE *, char *, char *, int, char *, int );
-extern void WriteSectionAnchor ( FILE *, char *, char *, int, int );
-extern void WriteFileTitle ( FILE *, char * );
-extern void WriteJumpDestination ( FILE *, char *, char * );
+extern void WriteSectionHeader ( FILE *, const char *, const char *, int,
+				 const char *, int );
+extern void WriteSectionAnchor ( FILE *, const char *, const char *, int, int );
+extern void WriteFileTitle ( FILE *, const char * );
+extern void WriteJumpDestination ( FILE *, const char *, const char * );
 extern void WriteTextHeader ( FILE * );
 extern void WritePopupTextReference ( FILE *, char *, char *, int );
 extern void WritePointerText ( FILE *, char *, char *, int );
@@ -509,14 +511,14 @@ extern void WriteEndofTopic ( FILE * );
 extern int SCHMTLTranslate ( char *, int );
 extern int SCHTMLTranslateTables ( char *, int );
 extern void WriteStartNewLine ( FILE * );
-extern void WriteString ( FILE *, char * );
+extern void WriteString ( FILE *, const char * );
 extern void WriteStringRaw ( FILE *, char * );
-extern void WriteSectionButtons ( FILE *, char *, LINK * );
-extern void WriteSectionButtonsBottom ( FILE *, char *, LINK * );
-extern void OutJump ( FILE *, char *, char *, char * );
-extern void SetUpButton ( FILE *, char *, char * );
-extern void SetNextButton ( FILE *, char *, char * );
-extern void SetPreviousButton ( FILE *, char *, char * );
+extern void WriteSectionButtons ( FILE *, const char *, LINK * );
+extern void WriteSectionButtonsBottom ( FILE *, const char *, LINK * );
+extern void OutJump ( FILE *, const char *, const char *, const char * );
+extern void SetUpButton ( FILE *, const char *, const char * );
+extern void SetNextButton ( FILE *, const char *, const char * );
+extern void SetPreviousButton ( FILE *, const char *, const char * );
 extern void WritePar ( FILE * );
 extern void WriteBeginPointerMenu ( FILE * );
 extern void WriteEndOfPointer ( FILE * );

@@ -73,7 +73,7 @@ static Contents *lastnode = 0;
 static int FirstNode = 0;   /* 0 For Chapter, 1 for Section */
 static int FirstNodeSeen = 0;
 
-void OpenAuxFile( char *name )
+void OpenAuxFile( const char *name )
 {
     int i;
     if (debugContents) {
@@ -344,19 +344,19 @@ void RdAuxFile( SRList *topicctx )
     }    
 }
 
-void WRtoauxfile( int seqnum, char *fname, int level, char *text )
+void WRtoauxfile( int seqnum, char *lfname, int level, char *text )
 {
     if (!fpaux) return;
-    fprintf( fpaux, "%d#%s %d %s", seqnum, fname, level, text );
+    fprintf( fpaux, "%d#%s %d %s", seqnum, lfname, level, text );
     if (text[strlen(text)-1] != '\n') fputs( "\n", fpaux );
 }
 
 /* Write a label to the aux file */
-void WriteLabeltoauxfile( int seqnum, char *fname, char *labelname, 
+void WriteLabeltoauxfile( int seqnum, char *lfname, char *labelname, 
 			  char *nodename )
 {
     if (!fpaux) return;
-    fprintf( fpaux, "-1#%s %d %s %s\n", fname, seqnum, labelname, nodename );
+    fprintf( fpaux, "-1#%s %d %s %s\n", lfname, seqnum, labelname, nodename );
 }
 
 /* Write a bib entry to the aux file */
@@ -569,7 +569,8 @@ void WriteChildren( FILE *fout, LINK *l, int depth )
 }
 
 /* Look up name; if found, return the name in context-ref of the PARENT.  */
- int GetParent( LINK *l, char *name, char *context, char *title, int titlelen )
+ int GetParent( LINK *l, const char *name, char *context, char *title,
+		int titlelen )
 {
     Contents *c = (Contents *)(l->priv);
     Contents *parent;
@@ -596,7 +597,8 @@ void WriteChildren( FILE *fout, LINK *l, int depth )
     return 1;
 }
 
- int GetNext( LINK *l, char *name, char *context, char *title, int titlelen )
+ int GetNext( LINK *l, const char *name, char *context, char *title,
+	      int titlelen )
 {
     Contents *c = (Contents *)(l->priv);
     Contents *nbr;
@@ -645,7 +647,8 @@ LINK *GetNextLink( LINK *l )
     return 0;
 }
 
-int GetPrevious( LINK *l, char *name, char *context, char *title, int titlelen )
+int GetPrevious( LINK *l, const char *name, char *context, char *title,
+		 int titlelen )
 {
     Contents *c = (Contents *)(l->priv);
     Contents *nbr;

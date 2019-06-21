@@ -7,7 +7,7 @@
 
 static int debug = 0;
 static int debugStream = 0;
-static int debugMap = 0;
+
 /*
    This is a simple program that uses the in and out streams to
    copy one file to another, with remapping.

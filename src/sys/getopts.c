@@ -41,7 +41,7 @@ if (!argv[i-1]) i--;
    Returns:
    index in argv of name; -1 if name is not in argv
  @*/
-int SYArgFindName( int argc, char **argv, char *name )
+int SYArgFindName( int argc, char **argv, const char *name )
 {
 int  i;
 
@@ -66,7 +66,7 @@ return -1;
   Note:
   This routine handles both decimal and hexidecimal integers.
 @*/
-int SYArgGetInt( int *Argc, char **argv, int rflag, char *name, int *val )
+int SYArgGetInt( int *Argc, char **argv, int rflag, const char *name, int *val )
 {
 int idx;
 char *p;
@@ -112,7 +112,8 @@ return 1;
   Returns:
   1 on success
 @*/
-int SYArgGetDouble( int *Argc, char **argv, int rflag, char *name, double *val )
+int SYArgGetDouble( int *Argc, char **argv, int rflag, const char *name,
+		    double *val )
 {
 int idx;
 extern double atof(const char*);
@@ -147,7 +148,7 @@ return 1;
   Returns:
   1 on success
 @*/
-int SYArgGetString( int *Argc, char **argv, int rflag, char *name,
+int SYArgGetString( int *Argc, char **argv, int rflag, const char *name,
 		    char *val, int vallen )
 {
 int idx;
@@ -181,7 +182,7 @@ return 1;
   Returns:
   1 on success
 @*/
-int SYArgHasName( int *Argc, char **argv, int rflag, char *name )
+int SYArgHasName( int *Argc, char **argv, int rflag, const char *name )
 {
 int idx;
 
@@ -210,7 +211,7 @@ return 1;
   Returns:
   1 on success
 @*/
-int SYArgGetIntVec( int *Argc, char **argv, int rflag, char *name,
+int SYArgGetIntVec( int *Argc, char **argv, int rflag, const char *name,
 		    int n, int *val )
 {
 int idx, i;
@@ -255,7 +256,7 @@ return 1;
   Number of elements found.  0 if none or error (such as -name with
   no additional arguments)
 @*/
-int SYArgGetIntList( int *Argc, char **argv, int rflag, char *name, int n,
+int SYArgGetIntList( int *Argc, char **argv, int rflag, const char *name, int n,
 		     int *val )
 {
 int  idx, i;

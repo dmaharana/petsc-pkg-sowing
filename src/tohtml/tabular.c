@@ -174,7 +174,7 @@ void TeXtabular( TeXEntry *e )
 	    row->cell[ncell] = (char *)MALLOC( strlen(curcell) + 1 );
 	    strcpy( row->cell[ncell], curcell );
 	    if ((int)strlen(curcell) > Table.colwid[ncell]) 
-		Table.colwid[ncell] = strlen(curcell);
+		Table.colwid[ncell] = (int)strlen(curcell);
 	    ncell++;
 	    curcell[0] = 0;
 	    p          = curcell;
@@ -216,7 +216,7 @@ void TeXtabular( TeXEntry *e )
 		*p = 0;
 		strcpy( row->cell[ncell], curcell );
 		if ((int)strlen(curcell) > Table.colwid[ncell]) 
-		    Table.colwid[ncell] = strlen(curcell);
+		    Table.colwid[ncell] = (int)strlen(curcell);
 		ncell = 0;
 		p     = curcell;
 		curcell[0] = 0;
@@ -262,7 +262,8 @@ void TeXtabular( TeXEntry *e )
 	    if (row->cell[i]) 
 		WriteString( fout, row->cell[i] );
 	    /* By using = in the length test, we get an extra space */
-	    for (j=row->cell[i]?strlen(row->cell[i]):0; j<=Table.colwid[i]; j++) 
+	    for (j=row->cell[i]?(int)strlen(row->cell[i]):0;
+		 j<=Table.colwid[i]; j++) 
 		fputc( ' ', fout );
 	    if (row->cell[i]) {
 		FREE( row->cell[i] );
@@ -286,7 +287,8 @@ void TeXtabular( TeXEntry *e )
 void TeXNewAlignCol( void )
 {
     HTabularRow *hrow;
-    char buf[256], *align_str;
+    char buf[256];
+    const char *align_str;
 
     if (lstack[lSp].env == TXTABULAR) {
 	hrow = (HTabularRow *)(lstack[lSp].extra_data);
@@ -355,7 +357,8 @@ void TeXEndHalignTable( void )
 void TXmulticolumn( TeXEntry *e )
 {
     HTabularRow *hrow;
-    char buf[256], *align_str, *reqalign_p;
+    char buf[256], *reqalign_p;
+    const char *align_str;
     int colcount;
 
     if (lstack[lSp].env == TXTABULAR) {

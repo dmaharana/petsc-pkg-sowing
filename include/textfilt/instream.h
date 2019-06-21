@@ -75,6 +75,7 @@ class InStreamFile : public InStream {
 class InStreamBuf : public InStream {
     char *buffer, *position;
     int  curlen, maxlen;
+    int  linecnt;      /* Current input line */
 
     public:
     ~InStreamBuf();
@@ -83,6 +84,7 @@ class InStreamBuf : public InStream {
     int UngetChar( char );
 /*    int GetLoc( long * );
     int SetLoc( long ); */
+    int GetLineNum( void );
     int Close( );
     };
 

@@ -25,7 +25,8 @@ int InStream::getSpaces(void)
     int nsp = 0, err;
     char c;
 
-    while (!(err = GetChar(&c)) && breaktable[c] == BREAK_SPACE) nsp++;
+    while (!(err = GetChar(&c)) &&
+	   breaktable[(unsigned char)c] == BREAK_SPACE) nsp++;
     if (!err) UngetChar(c);
     return nsp;
 }
@@ -102,7 +103,6 @@ int InStream::GetChar( char *c )
 int InStream::GetANToken( int maxlen, char *token, int *nsp )
 {
     int char_class;
-    int quote_cnt;
     int err;
     char c;
 
@@ -115,7 +115,7 @@ int InStream::GetANToken( int maxlen, char *token, int *nsp )
 	return err;
     }
 
-    char_class = breaktable[c];
+    char_class = breaktable[(unsigned char)c];
     *token++ = c; maxlen--;
     if (char_class == BREAK_OTHER) {
 	*token = 0;
@@ -124,7 +124,8 @@ int InStream::GetANToken( int maxlen, char *token, int *nsp )
     if (char_class == BREAK_ALPHA) {
 	while (maxlen) {
 	    if (GetChar( &c )) break;
-	    if (breaktable[c] != BREAK_ALPHA && breaktable[c] != BREAK_DIGIT) {
+	    if (breaktable[(unsigned char)c] != BREAK_ALPHA &&
+		breaktable[(unsigned char)c] != BREAK_DIGIT) {
 		UngetChar( c );
 		break;
 	    }
@@ -134,7 +135,7 @@ int InStream::GetANToken( int maxlen, char *token, int *nsp )
     else {
 	while (maxlen) {
 	    if (GetChar( &c )) break;
-	    if (breaktable[c] != char_class) {
+	    if (breaktable[(unsigned char)c] != char_class) {
 		UngetChar( c );
 		break;
 	    }
@@ -155,7 +156,6 @@ int InStream::GetANToken( int maxlen, char *token, int *nsp )
 int InStream::GetToken( int maxlen, char *token, int *nsp )
 {
     int char_class;
-    int quote_cnt;
     int err;
     char c;
 
@@ -168,7 +168,7 @@ int InStream::GetToken( int maxlen, char *token, int *nsp )
 	return err;
     }
 
-    char_class = breaktable[c];
+    char_class = breaktable[(unsigned char)c];
     *token++ = c; maxlen--;
     if (char_class == BREAK_OTHER) {
 	*token = 0;
@@ -176,7 +176,7 @@ int InStream::GetToken( int maxlen, char *token, int *nsp )
     }
     while (maxlen) {
 	if (GetChar( &c )) break;
-	if (breaktable[c] != char_class) {
+	if (breaktable[(unsigned char)c] != char_class) {
 	    UngetChar( c );
 	    break;
 	}
@@ -212,7 +212,7 @@ int InStream::UngetChar( char c )
 int InStream::UngetToken( char *token )
 {
     int i;
-    for (i=strlen(token)-1; i>=0; i--) 
+    for (i=(int)strlen(token)-1; i>=0; i--) 
       UngetChar( token[i] );
     return 0;
 }
@@ -235,15 +235,15 @@ int InStream::SetLoc( long position )
 
 int InStream::SetBreakChar( char c, int kind )
 {
-    breaktable[c] = kind;
-	return 0;
+    breaktable[(unsigned char)c] = kind;
+    return 0;
 }
 
 int InStream::SetBreakChars( char *str, int kind )
 {
-    while (*str) 
-	breaktable[*str++] = kind;
-	return 0;
+    while (*str)
+	breaktable[(unsigned char)(*str++)] = kind;
+    return 0;
 }
 
 int InStream::SetQuoteChars( char schar, char echar )
@@ -319,6 +319,7 @@ InStreamFile::InStreamFile( const char *pathlist, const char *envpath,
     char fullpath[1024], *fptr;
     int  i;
 
+    fname     = 0;
     plists[0] = 0;
     plists[1] = (char *)pathlist;
     if (envpath) 
@@ -386,7 +387,8 @@ for %s with mode %s\n",
 
 InStreamFile::InStreamFile( const char *path, const char *mode )
 {
-    fp	 = fopen( path, mode );
+    fname = 0;
+    fp	  = fopen( path, mode );
     if (!fp) 
 	// Should be errno
 	status = -1;
@@ -517,18 +519,22 @@ int InStreamFile::GetSourceName( char *filename, int maxlen, int *linenum )
 }
 int InStreamFile::GetLineNum( void )
 {
-	return linecnt;
+    return linecnt;
 }
 
-/* 
+/*
  * Buffered stream.  When the stream is empty it tries to use the next
  * instream to get input.
+ *
+ * Maintain our own linecnt so that we can approximate where we are in
+ * the input.
  */
 InStreamBuf::InStreamBuf( int in_maxlen, InStream *p )
 {
+    linecnt  = 0;
     maxlen   = in_maxlen;
     buffer   = new char[maxlen];
-    if (buffer) status = 0; 
+    if (buffer) status = 0;
     else        status = -1;   // ENOMEM?
     position = buffer;
     curlen   = 0;
@@ -541,17 +547,14 @@ int InStreamBuf::GetChar( char *ch )
     if (curlen > 0) {
 	*ch = *position--;
 	curlen--;
+	if (*ch == '\n') { linecnt++; }
 	return 0;
 	}
-    else 
-#if 0
-{      int rc = next->GetChar( ch );
-    fprintf( stderr, "Get char %c\n", *ch ); fflush( stderr );
-    return rc;
-}
-#else
-	return next->GetChar( ch );
-#endif
+    else {
+	int rc = next->GetChar( ch );
+	if (rc == 0 && *ch == '\n') { linecnt++; }
+	return rc;
+    }
 }
 
 int InStreamBuf::UngetChar( char ch )
@@ -559,12 +562,20 @@ int InStreamBuf::UngetChar( char ch )
     if (curlen < maxlen) {
 	*++position = ch;
 	curlen++;
+	if (ch == '\n') { linecnt--; }
 	return 0;
-	}
+    }
     else {
-      // fprintf( stderr, "exceeded pushback buffer\n" );
+	fprintf(stderr, "Internal error: Exceeded pushback buffer of size %d\n",
+		maxlen);
+	fflush(stderr);
 	return 1;
-	}
+    }
+}
+
+int InStreamBuf::GetLineNum( void )
+{
+    return linecnt;
 }
 
 /* The gettoken base should just use getchar */

@@ -13,9 +13,9 @@
 #include "tex.h"
 void ProcessFile ( int, char **, FILE *, FILE *,
 			     void (*)( int, char **, FILE *, FILE * ) );
-char *SkipHTML ( char * );
-void CopyImgFiles ( char * );
-void PrintHelp ( char * );
+const char *SkipHTML ( const char * );
+void CopyImgFiles ( const char * );
+void PrintHelp ( const char * );
 
 void DebugWriteString( FILE *fd, const char *str, int maxlen );
 
@@ -88,10 +88,10 @@ static int wrotebody=0;
  */
 int main( int argc, char *argv[] )
 {
-    FILE *fpin, *fpout;
+    FILE *myfpin, *myfpout;
     void (*process)( int, char **, FILE *, FILE * ) =
 	ProcessLatexFile;
-    int  splitlevel = -1;
+    int  mysplitlevel = -1;
     char tmpstr[128];
     int DebugDef = 0;
 
@@ -161,7 +161,7 @@ int main( int argc, char *argv[] )
 	TXSetLatexTables( 1 );
 	TXSetLatexMath( 1 );
 	TXSetUseIfTex( 1 );
-	splitlevel = 2;
+	mysplitlevel = 2;
 	TXSetLatexAgain( 0 );
     }
     if (SYArgHasName( &argc, argv, 1, "-quietlatex")) {
@@ -254,7 +254,7 @@ int main( int argc, char *argv[] )
 
    Note that in this case, ALL files are written into the split directory
    */
-    SYArgGetInt( &argc, argv, 1, "-split", &splitlevel );
+    SYArgGetInt( &argc, argv, 1, "-split", &mysplitlevel );
 
     SYArgGetInt( &argc, argv, 1, "-headeroffset", &level_offset );
 
@@ -327,13 +327,13 @@ int main( int argc, char *argv[] )
 
     TXSetFiles( infilename, outfilename );
 
-    if (splitlevel >= 0)  {
+    if (mysplitlevel >= 0)  {
 	strcpy( outfilename, basefilename );
 	strcat( outfilename, DirSepString );
 	strcat( outfilename, basefilename );
 	strcat( outfilename, "." );
 	strcat( outfilename, HTML_Suffix );
-	TXSetSplitLevel( splitlevel, basefilename );
+	TXSetSplitLevel( mysplitlevel, basefilename );
 	strcat( basefilename, DirSepString );
 	SYMakeAllDirs( basefilename, 0666 );
 	if (!NoBMCopy)
@@ -346,9 +346,9 @@ int main( int argc, char *argv[] )
 	    CopyImgFiles( "." );
     }
 
-    fpin  = fopen( infilename, "r" );
-    fpout = fopen( outfilename, "w" );
-    if (!fpin || !fpout) {
+    myfpin  = fopen( infilename, "r" );
+    myfpout = fopen( outfilename, "w" );
+    if (!myfpin || !myfpout) {
 	fprintf( stderr, "Could not open file %s and/or %s\n",
 		 infilename, outfilename );
 	exit(1);
@@ -361,15 +361,15 @@ int main( int argc, char *argv[] )
    like "http://www.mcs.anl.gov/foo/index.html"
    */
     if (basedir[0])
-	fprintf( fpout, "<base href=\"%s\">%s", basedir, NewLineString );
+	fprintf( myfpout, "<base href=\"%s\">%s", basedir, NewLineString );
 
 /* Process the input file */
-    ProcessFile( argc, argv, fpin, fpout, process );
+    ProcessFile( argc, argv, myfpin, myfpout, process );
 
 /* Close the files and write the project file */
-    fclose( fpin );
-    WriteEndPage( fpout );
-    fclose( fpout );
+    fclose( myfpin );
+    WriteEndPage( myfpout );
+    fclose( myfpout );
 
     if (DebugDef) {
 	fprintf( stdout, "User definitions in TeX format are:\n" );
@@ -401,8 +401,8 @@ void WriteTrailer( FILE *fp )
     number     = number of section
     keywords (optional) = keywords for section
  */
-void WriteSectionHeader( FILE *fp, char *name, char *entrylevel, int number,
-			 char *keywords, int level )
+void WriteSectionHeader( FILE *fp, const char *name, const char *entrylevel,
+			 int number, const char *keywords, int level )
 {
     if (DebugOutput) fprintf( stdout, "WriteSectionHeader\n" );
 /*
@@ -423,7 +423,7 @@ void WriteSectionHeader( FILE *fp, char *name, char *entrylevel, int number,
 /*
    We can't put an anchor in without there being actual TEXT.  GRUMBLE.
  */
-void WriteSectionAnchor( FILE *fp, char *name, char *entrylevel,
+void WriteSectionAnchor( FILE *fp, const char *name, const char *entrylevel,
 			 int number, int level )
 {
     char tmpname[256];
@@ -439,7 +439,7 @@ void WriteSectionAnchor( FILE *fp, char *name, char *entrylevel,
 }
 
 /* Write out the name of the section; this will be the title for the file */
-void WriteFileTitle( FILE *fp, char *name )
+void WriteFileTitle( FILE *fp, const char *name )
 {
     /* Too late if we've written the body statement */
     if (DebugOutput) fprintf( stdout, "WriteFileTitle\n" );
@@ -450,7 +450,7 @@ void WriteFileTitle( FILE *fp, char *name )
     fprintf( fp, "</title>%s", NewLineString );
 }
 
-void WriteJumpDestination( FILE *fp, char *name, char *title )
+void WriteJumpDestination( FILE *fp, const char *name, const char *title )
 {
     if (DebugOutput) fprintf( stdout, "WriteJumpDestination\n" );
     fprintf(fp, "<span id=\"%s\">", name);
@@ -554,13 +554,13 @@ int SCHTMLTranslateTables( char *token, int maxtoken )
      In an info file, we don't need to do this because the file has already
      been processed.  See ProcessInfoFile().
  */
-void ProcessFile( int argc, char **argv, FILE *fpin, FILE *fpout,
+void ProcessFile( int argc, char **argv, FILE *myfpin, FILE *myfpout,
 		  void (*process)( int, char **, FILE *, FILE *) )
 {
     SCSetTranslate( SCHTMLTranslate );
-    WriteHeader( fpout );
-    (*process)( argc, argv, fpin, fpout );
-    WriteTrailer( fpout );
+    WriteHeader( myfpout );
+    (*process)( argc, argv, myfpin, myfpout );
+    WriteTrailer( myfpout );
 }
 
 void RemoveExtension( char *str )
@@ -597,7 +597,7 @@ void DebugWriteString( FILE *fd, const char *str, int maxlen )
 	p++;
     }
 }
-void WriteString( FILE *fp, char *str )
+void WriteString( FILE *fp, const char *str )
 {
     int  in_tok = 0;
     char thischar;
@@ -723,7 +723,7 @@ static char PrevTitle[MAX_SECTION_TITLE];
  *
  * We'd also like to eliminate markers for empty sections.
  */
-void WriteSectionButtons( FILE *fout, char *name, LINK *l )
+void WriteSectionButtons( FILE *fout, const char *name, LINK *l )
 {
     char contextParent[125], contextNext[125], contextPrev[125];
     int  did_output = 0;
@@ -791,14 +791,15 @@ void WriteSectionButtons( FILE *fout, char *name, LINK *l )
 	fprintf( fout, "<p>%s", NewLineString );
 }
 
-void WriteSectionButtonsBottom( FILE *fout, char *name, LINK *l )
+void WriteSectionButtonsBottom( FILE *fout, const char *name, LINK *l )
 {
     if (DoBottomNav)
 	WriteSectionButtons( fout, name, l );
 }
 
 
-void OutJump( FILE *fp, char *context, char *name, char *label )
+void OutJump( FILE *fp, const char *context, const char *name,
+	      const char *label )
 {
     if (DebugOutput) fprintf( stdout, "OutJump\n" );
     fprintf( fp, "<b>%s: </b><a href=\"%s\">", label, context );
@@ -808,21 +809,21 @@ void OutJump( FILE *fp, char *context, char *name, char *label )
 /*
    This changes the binding of the UP button to the given context
  */
-void SetUpButton( FILE *fp, char *context, char *name )
+void SetUpButton( FILE *fp, const char *context, const char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetUpButton\n" );
     fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%sup.%s\" alt=\"Up\"></a>",
 	     context, NoBMCopy ? IMAGEURL : "", ImageExt );
 }
 
-void SetNextButton( FILE *fp, char *context, char *name )
+void SetNextButton( FILE *fp, const char *context, const char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetNextButton\n" );
     fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%snext.%s\" alt=\"Next\"></a>",
 	     context, NoBMCopy ? IMAGEURL : "", ImageExt );
 }
 
-void SetPreviousButton( FILE *fp, char *context, char *name )
+void SetPreviousButton( FILE *fp, const char *context, const char *name )
 {
     if (DebugOutput) fprintf( stdout, "SetPreviousButton\n" );
     fprintf( fp, "<a href=\"%s\"><img width=16 height=16 src=\"%sprevious.%s\" alt=\"Previous\"></a>",
@@ -945,7 +946,7 @@ Input Parameters:
     name should include the natural extension; e.g., for HTML output,
     use something like tohtml -latex -o myout.htm myfile.tex .
 D*/
-void PrintHelp( char *pgm )
+void PrintHelp( const char *pgm )
 {
     fprintf( stderr,
 	     "%s [-latex] [-info] [-mapref filename] [-basedir dirname]\n\
@@ -999,7 +1000,7 @@ void PrintHelp( char *pgm )
  */
 static FILE *eofpage = 0;
 static FILE *eofpagecopy = 0;
-void WriteEndPage( FILE *fpout )
+void WriteEndPage( FILE *fp )
 {
     int c;
 
@@ -1017,17 +1018,18 @@ void WriteEndPage( FILE *fpout )
     }
     if (eofpage) {
 	if (eofpage != eofpagecopy) {
-	    fprintf( stderr, "PANIC: eofpage %p != copy %p\n", eofpage, eofpagecopy );
+	    fprintf( stderr, "PANIC: eofpage %p != copy %p\n",
+		     eofpage, eofpagecopy );
 	    abort();
 	}
 	rewind( eofpage );
 	while ((c = getc( eofpage )) != EOF)
-	    putc( c, fpout );
+	    putc( c, fp );
     }
     if (wrotebody)
-	fprintf( fpout, "</body>%s", NewLineString );
+	fprintf( fp, "</body>%s", NewLineString );
     if (wrotehead)
-	fprintf( fpout, "</html>%s", NewLineString );
+	fprintf( fp, "</html>%s", NewLineString );
     wrotebody = 0;
     InOutputBody = 0;
     if (DebugOutput) printf( "Set InOutputBody and wrotebody to 0\n" );
@@ -1037,7 +1039,7 @@ void WriteEndPage( FILE *fpout )
 
 static FILE *bofpage = 0;
 
-void WriteBeginPage( FILE *fpout )
+void WriteBeginPage( FILE *fp )
 {
     int c;
 
@@ -1056,7 +1058,7 @@ void WriteBeginPage( FILE *fpout )
        or meta data.  This should be stored in the definitions.
      */
     /* Should parameterize this - command in basedefs? */
-    fprintf( fpout, "</head>%s<body style=\"background-color:#FFFFFF\">%s",
+    fprintf( fp, "</head>%s<body style=\"background-color:#FFFFFF\">%s",
 	     NewLineString, NewLineString );
     if (!bofpage) {
 	if (beginpagefilename[0]) {
@@ -1072,70 +1074,71 @@ void WriteBeginPage( FILE *fpout )
     }
     rewind( bofpage );
     while ((c = getc( bofpage )) != EOF)
-	putc( c, fpout );
+	putc( c, fp );
 }
 
-void WriteHeadPage( FILE *fpout )
+void WriteHeadPage( FILE *fp )
 {
     if (wrotehead) return;
     wrotehead = 1;
     if (DebugOutput) fprintf( stdout, "WriteHeadPage\n" );
-    fprintf( fpout, "<!DOCTYPE html>\n<html lang=en>%s<head>%s", NewLineString, NewLineString );
-    fprintf( fpout, "<!-- This file was generated by tohtml from %s -->%s",
+    fprintf( fp, "<!DOCTYPE html>\n<html lang=en>%s<head>%s",
+	     NewLineString, NewLineString );
+    fprintf( fp, "<!-- This file was generated by tohtml from %s -->%s",
 	     InFName[curfile] ? InFName[curfile] : "unknown", NewLineString );
-    fprintf( fpout, "<!-- with the command%stohtml %s%s-->%s",
+    fprintf( fp, "<!-- with the command%stohtml %s%s-->%s",
 	     NewLineString, GetCommandLine(), NewLineString, NewLineString );
 }
 
 /* This routine copies the bitmap and gif files that might be used */
-void CopyImgFiles( char *basefilename )
+void CopyImgFiles( const char *destfilename )
 {
     char pgm[256];
 
 #ifdef __MSDOS__
-    char c1 = basefilename[strlen(basefilename)-1];
+    char c1 = destfilename[strlen(destfilename)-1];
 
     if (c1 == '\\')
-	basefilename[strlen(basefilename)-1] = 0;
-    sprintf( pgm, "copy \"%s\\next.%s\" %s", IMAGEDIR, ImageExt, basefilename );
+	destfilename[strlen(destfilename)-1] = 0;
+    sprintf( pgm, "copy \"%s\\next.%s\" %s", IMAGEDIR, ImageExt, destfilename );
     system( pgm );
     sprintf( pgm, "copy \"%s\\previous.%s\" %s", IMAGEDIR, ImageExt,
-	     basefilename );
+	     destfilename );
     system( pgm );
-    sprintf( pgm, "copy \"%s\\up.%s\" %s", IMAGEDIR, ImageExt, basefilename );
+    sprintf( pgm, "copy \"%s\\up.%s\" %s", IMAGEDIR, ImageExt, destfilename );
     system( pgm );
     if (IsGaudy) {
-	sprintf( pgm, "copy \"%s\\purpleball.gif\" %s", IMAGEDIR, basefilename );
+	sprintf( pgm, "copy \"%s\\purpleball.gif\" %s", IMAGEDIR, destfilename );
 	system( pgm );
-	sprintf( pgm, "copy \"%s\\redball.gif\" %s", IMAGEDIR, basefilename );
+	sprintf( pgm, "copy \"%s\\redball.gif\" %s", IMAGEDIR, destfilename );
 	system( pgm );
-	sprintf( pgm, "copy \"%s\\blueball.gif\" %s", IMAGEDIR, basefilename );
+	sprintf( pgm, "copy \"%s\\blueball.gif\" %s", IMAGEDIR, destfilename );
 	system( pgm );
-	sprintf( pgm, "copy \"%s\\greenball.gif\" %s", IMAGEDIR, basefilename );
+	sprintf( pgm, "copy \"%s\\greenball.gif\" %s", IMAGEDIR, destfilename );
 	system( pgm );
-	sprintf( pgm, "copy \"%s\\yellowball.gif\" %s", IMAGEDIR, basefilename );
+	sprintf( pgm, "copy \"%s\\yellowball.gif\" %s", IMAGEDIR, destfilename );
 	system( pgm );
     }
     if (c1 == '\\')
-	basefilename[strlen(basefilename)] = c1;
+	destfilename[strlen(destfilename)] = c1;
 #else
-    sprintf( pgm, "/bin/cp %s/next.%s %s", IMAGEDIR, ImageExt, basefilename );
+    sprintf( pgm, "/bin/cp %s/next.%s %s", IMAGEDIR, ImageExt, destfilename );
     system( pgm );
     sprintf( pgm, "/bin/cp %s/previous.%s %s", IMAGEDIR, ImageExt,
-	     basefilename );
+	     destfilename );
     system( pgm );
-    sprintf( pgm, "/bin/cp %s/up.%s %s", IMAGEDIR, ImageExt, basefilename );
+    sprintf( pgm, "/bin/cp %s/up.%s %s", IMAGEDIR, ImageExt, destfilename );
     system( pgm );
     if (IsGaudy) {
-	sprintf( pgm, "/bin/cp %s/purpleball.gif %s", IMAGEDIR, basefilename );
+	sprintf( pgm, "/bin/cp %s/purpleball.gif %s", IMAGEDIR, destfilename );
 	system( pgm );
-	sprintf( pgm, "/bin/cp %s/redball.gif %s", IMAGEDIR, basefilename );
+	sprintf( pgm, "/bin/cp %s/redball.gif %s", IMAGEDIR, destfilename );
 	system( pgm );
-	sprintf( pgm, "/bin/cp %s/blueball.gif %s", IMAGEDIR, basefilename );
+	sprintf( pgm, "/bin/cp %s/blueball.gif %s", IMAGEDIR, destfilename );
 	system( pgm );
-	sprintf( pgm, "/bin/cp %s/greenball.gif %s", IMAGEDIR, basefilename );
+	sprintf( pgm, "/bin/cp %s/greenball.gif %s", IMAGEDIR, destfilename );
 	system( pgm );
-	sprintf( pgm, "/bin/cp %s/yellowball.gif %s", IMAGEDIR, basefilename );
+	sprintf( pgm, "/bin/cp %s/yellowball.gif %s", IMAGEDIR, destfilename );
 	system( pgm );
     }
 #endif
@@ -1143,7 +1146,7 @@ void CopyImgFiles( char *basefilename )
 
 /* Skip to the end of an HTML expression; return pointer to first char
    after expression */
-char *SkipHTML( char *str )
+const char *SkipHTML( const char *str )
 {
     while (str && *str) {
 	if (*str == '<')
@@ -1162,7 +1165,7 @@ void RemoveFonts( const char *instr, char *outstr )
 
     while (pin && *pin) {
 	if (*pin == '<')
-	    pin = SkipHTML( (char *)++pin );
+	    pin = SkipHTML( ++pin );
 	else if (*pin == TOK_START || *pin == TOK_END)
 	    pin++;
 	else {

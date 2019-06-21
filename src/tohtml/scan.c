@@ -230,7 +230,7 @@ int SCTxtGetChar( FILE *fp )
 /* This does a move of s by n to the right */
 void OverlapCopy( char *s, int n )
 {
-    int len = strlen(s), i;
+    int len = (int)strlen(s), i;
 
     for (i=1; i<=len; i++) 
 	s[len+n-i] = s[len-i];
@@ -248,7 +248,7 @@ void SCAppendToken( char *token )
     if (DebugScan)
 	fprintf( OUTFILE, "Appending %s [pos=%d]\n", token, lp ); 
 
-    len = strlen(token);
+    len = (int)strlen(token);
     if (lp + len >= MAX_LBUFFER) {
         fprintf( OUTFILE, "Push-back buffer limit of %d characters exceeded!\n",
 	       MAX_LBUFFER );
@@ -264,14 +264,14 @@ void SCAppendToken( char *token )
 
 /* 
  */
-void SCPushToken( char *token )
+void SCPushToken( const char *token )
 {
     int len, i;
 
     if (DebugScan)
 	fprintf( OUTFILE, "Pushing back %s [pos=%d]\n", token, lp ); 
 
-    len = strlen(token);
+    len = (int)strlen(token);
     for (i=len-1; i>=0 && lp < MAX_LBUFFER; i--)
 	lbuffer[++lp] = token[i];
     if (i >= 0) {
@@ -282,14 +282,14 @@ void SCPushToken( char *token )
 }    
 
 /* This pushes a token, surrounded by TOK_START ... TOK_END */
-void SCPushCommand( char *token )
+void SCPushCommand( const char *token )
 {
     int len, i;
 
     if (DebugScan)
 	fprintf( OUTFILE, "Pushing back %s [pos=%d]\n", token, lp ); 
 
-    len = strlen(token);
+    len = (int)strlen(token);
     lbuffer[++lp] = TOK_END;
     for (i=len-1; i>=0 && lp < MAX_LBUFFER; i--)
 	lbuffer[++lp] = token[i];

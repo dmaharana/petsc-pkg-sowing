@@ -15,13 +15,14 @@
  */
 
 int DoGaudy = 0;       /* If true, generate more colorful output */
-static char *(itemgifs[5]) = { "purple", "red", "blue", "green", "yellow" } ;
-static int  itemlevel = -1;
-static int IsPreformatted = 0;
+static const char *(itemgifs[5]) = {
+    "purple", "red", "blue", "green", "yellow" } ;
+static int itemlevel = -1;
+ int IsPreformatted = 0;
 
 static int Debug_image_size = 0;
-void TX_XBM_size( char *, int *, int * );
-void TX_GIF_size( char *, int *, int * );
+void TX_XBM_size( const char *, int *, int * );
+void TX_GIF_size( const char *, int *, int * );
 
 /* 
    I'd like to push a token in every routine, but the PC version seems to
@@ -82,9 +83,9 @@ typedef struct _action_t {
 
 #define MAX_GROUP_STACK 50
 static int   Esp     = 0;
-static char *(EndName[MAX_GROUP_STACK]);
+static const char *(EndName[MAX_GROUP_STACK]);
 static action_t *(endActions[MAX_GROUP_STACK]);
-static char *LastFont = 0;
+static const char *LastFont = 0;
 
 void TeXoutNewline( FILE *fout )
 {
@@ -746,16 +747,16 @@ void TXWriteHyperLink( FILE *fout, char *token, char *url, int urltype )
 }	
 
 /* The <center> element has been deprecated.  Use this instead. */
-void TXbcenter( FILE *fpout )
+void TXbcenter( FILE *fp )
 {
-    TeXoutcmd( fpout, "<div style=\"text-align:center\">" );
+    TeXoutcmd( fp, "<div style=\"text-align:center\">" );
 }
-void TXecenter( FILE *fpout )
+void TXecenter( FILE *fp )
 {
-    TeXoutcmd( fpout, "</div>" );
+    TeXoutcmd( fp, "</div>" );
 }
 
-void TX_XBM_size( char *fname, int *width, int *height )
+void TX_XBM_size( const char *fname, int *width, int *height )
 {
     FILE *f;
     char lbuf[257];
@@ -780,7 +781,7 @@ void TX_XBM_size( char *fname, int *width, int *height )
     fclose( f );
 }
 
-void TX_GIF_size( char *fname, int *width, int *height )
+void TX_GIF_size( const char *fname, int *width, int *height )
 {
     FILE *f;
     int  w;

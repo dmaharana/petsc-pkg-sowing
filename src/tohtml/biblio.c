@@ -83,7 +83,7 @@ void InsertBib( int level, char *buffer )
     while (*namep && *namep != ' ') namep++;
     while (*namep && *namep == ' ') namep++;
 /* Remove the trailing newline */
-    d = strlen(namep);
+    d = (int)strlen(namep);
     if (namep[d-1] == '\n') namep[d-1] = 0;
 
     l       = SRInsert( biblist, namep, 0, &d );
@@ -99,7 +99,7 @@ void InsertBib( int level, char *buffer )
     strncpy( e->number, p, 4 );
 }
 
-int BibLookup( char *name, char **url, char **text )
+int BibLookup( const char *name, char **url, char **text )
 {
     LINK     *l;
     Bibentry *e;

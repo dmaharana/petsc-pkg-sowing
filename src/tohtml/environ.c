@@ -165,7 +165,7 @@ void TXDoNewtheorem( TeXEntry *e )
     l->priv    = (void *)new;
 }
 
-int LookupEnv( char *name, char **btext, char **etext, int *nargs )
+int LookupEnv( const char *name, char **btext, char **etext, int *nargs )
 {
     int    dummy;
     LINK   *l;
@@ -182,11 +182,11 @@ int LookupEnv( char *name, char **btext, char **etext, int *nargs )
 }
 
 static int DebugDef  = 0;
-void PushBeginEnv( char *btext, int nargs )
+void PushBeginEnv( const char *btext, int nargs )
 {
     char *(args[10]);
     int  i, argn;
-    char *p;
+    const char *p;
 
     if (nargs > 0) {
 	for (i=0; i<nargs; i++) {
@@ -241,8 +241,8 @@ void PushBeginEnv( char *btext, int nargs )
    source code that would have been comsumed if runagain was true.
  */
 /* kind is xbm or gif */
-void RunLatex( char *envname, char *string, char *name, char *mathmode,
-	       char *kind, int runagain )
+void RunLatex( const char *envname, const char *string, const char *name,
+	       const char *mathmode, const char *kind, int runagain )
 {
     TeXEntry E;
     char *p;
@@ -251,13 +251,13 @@ void RunLatex( char *envname, char *string, char *name, char *mathmode,
     char fname[100];
     char fdviname[256];
     char ext[10];
-    char *latex_pgm;
+    const char *latex_pgm;
     FILE  *fp, *foutsave;
     int  problem_with_file = 0;
 #endif
 
 /* Set dummy values for E */
-    E.name	 = envname;
+    E.name	 = (char *)envname;
     E.action     = 0;
     E.ctx	 = 0;
     E.nargs	 = 0;
@@ -628,7 +628,7 @@ void TXcaption( TeXEntry *e )
 /* End the anchor */
 }
 
-void TeXSetEnvJump( char *envname )
+void TeXSetEnvJump( const char *envname )
 {
     if (envname[0]) {
 	if (!envjumpname)

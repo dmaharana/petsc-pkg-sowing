@@ -160,7 +160,8 @@ void *trmalloc( unsigned int a, int lineno, char *fname )
     head->size     = nsize;
     head->id       = TRid;
     head->lineno   = lineno;
-    if ((l = strlen( fname )) > TR_FNAME_LEN-1 ) fname += (l - (TR_FNAME_LEN-1));
+    if ((l = (int)strlen( fname )) > TR_FNAME_LEN-1 )
+	fname += (l - (TR_FNAME_LEN-1));
     strncpy( head->fname, fname, (TR_FNAME_LEN-1) );
     head->fname[TR_FNAME_LEN-1]= 0;
     head->cookie   = COOKIE_VALUE;
@@ -252,7 +253,8 @@ called in %s at line %d\n", world_rank, (long)a + sizeof(TrSPACE),
 /* Mark the location freed */
     *nend		   = ALREADY_FREED;
     head->freed_lineno = line;
-    if ((l = strlen( file )) > TR_FNAME_LEN-1 ) file += (l - (TR_FNAME_LEN-1));
+    if ((l = (int)strlen( file )) > TR_FNAME_LEN-1 )
+	file += (l - (TR_FNAME_LEN-1));
     strncpy( head->freed_fname, file, (TR_FNAME_LEN-1) );
 
     allocated -= head->size;
@@ -306,7 +308,7 @@ $   Block at address %lx is corrupted
 
    No output is generated if there are no problems detected.
 +*/
-int trvalid( char *str )
+int trvalid( const char *str )
 {
     TRSPACE *head;
     char    *a;
@@ -631,7 +633,7 @@ may be block not allocated with trmalloc or MALLOC\n",
 char *trstrdup( const char *str, int lineno, const char *fname )
 {
     char *p;
-    unsigned len = strlen( str ) + 1;
+    unsigned len = (unsigned)strlen( str ) + 1;
 
     p = (char *)trmalloc( len, lineno, (char *)fname );
     if (p) {

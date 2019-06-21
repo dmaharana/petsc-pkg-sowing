@@ -32,9 +32,10 @@ static void stripquote( char *p )
 /* 
    Convert a string that contains literal output quotes to the internal form
  */
-char *TXConvertQuotes( char *value, char cmdchar )
+char *TXConvertQuotes( const char *value, char cmdchar )
 {
-  char *def, *p, *def_p;
+  char *def, *def_p;
+  const char *p;
   int  in_cmd = 0;
 
   def = (char *)MALLOC( strlen(value) + 1 );   CHKPTRN(def);
@@ -71,7 +72,7 @@ char *TXConvertQuotes( char *value, char cmdchar )
 /*
     Read a file name containing definitions
  */
-void RdBaseDef( char *infilename )
+void RdBaseDef( const char *infilename )
 {
     FILE *fp;
     char buf[200], *bufp, *name, *cmd, *value, *p;

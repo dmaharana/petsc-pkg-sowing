@@ -128,61 +128,61 @@ void TXDoUser( TeXEntry *e )
 /* Add "name" as a user-defined command.  We've read the \def only */
 static char name[128];
 
-void TXAddUserDef( SRList *TeXlist, TeXEntry *e )
+void TXAddUserDef( SRList *lTeXlist, TeXEntry *e )
 {
     int        nargs, ch, nsp, nbrace, j, i;
     char       *p;
     Definition *def;
-    char       *ltoken;
-    char       *ldef;
+    char       *mytoken;
+    char       *mydef;
     char       lname[40];
     char       template_buf[100];
 
-    ltoken    = (char *)MALLOC( MAX_TOKEN ); CHKPTR(ltoken);
-    ldef      = (char *)MALLOC( MAX_TOKEN ); CHKPTR(ldef);
+    mytoken    = (char *)MALLOC( MAX_TOKEN ); CHKPTR(mytoken);
+    mydef      = (char *)MALLOC( MAX_TOKEN ); CHKPTR(mydef);
 
     ch = TeXReadToken( name, &nsp );
     if (ch != CommandChar) {
 	fprintf( ferr, "Expected a %c (TeX command char)\n", CommandChar );
 	SCPushToken( name );
-	FREE( ltoken );
-	FREE( ldef );
+	FREE( mytoken );
+	FREE( mydef );
 	return;
     }
 
     if (DebugDef) {
 	printf( "Defining %s\n", name );
     }
-/* Get the arguments by looking for #n upto brace */
+    /* Get the arguments by looking for #n upto brace */
 
     nargs = 0;
 
     template_buf[0] = 0;
-    while ( (ch = SCTxtFindNextANToken( fpin[curfile], ltoken, MAX_TOKEN, &nsp ))
+    while ( (ch = SCTxtFindNextANToken( fpin[curfile], mytoken, MAX_TOKEN, &nsp ))
 	    != EOF ) {
 	if (ch == LbraceChar) break;
 	if (ch == ArgChar) nargs++;
 	for (i=0; i<nsp; i++) 
 	    strncat( template_buf, " ", 100 );
-	strncat( template_buf, ltoken, 100 );
+	strncat( template_buf, mytoken, 100 );
     }
     nbrace = 1;
-    p      = ldef;
+    p      = mydef;
     while (nbrace > 0) {
-	ch = SCTxtFindNextANToken( fpin[curfile], ltoken, MAX_TOKEN, &nsp );
+	ch = SCTxtFindNextANToken( fpin[curfile], mytoken, MAX_TOKEN, &nsp );
 	if (ch == EOF) break;
 	for (j=0; j<nsp; j++) *p++ = ' ';
 	if (ch == CommentChar) continue;
-	if (ch == '\n') { ch = ' '; ltoken[0] = ' '; }
+	if (ch == '\n') { ch = ' '; mytoken[0] = ' '; }
 	if (ch == LbraceChar) nbrace++;
 	else if (ch == RbraceChar) nbrace--;
 	j = 0;
-	while (ltoken[j]) *p++ = ltoken[j++];
+	while (mytoken[j]) *p++ = mytoken[j++];
     }
-/* The last (p-1) should have been a closing right-brace */
-    if (p > ldef && p[-1] == RbraceChar)
+    /* The last (p-1) should have been a closing right-brace */
+    if (p > mydef && p[-1] == RbraceChar)
 	p[-1] = 0;
-    if (SRLookup( TeXlist, name+1, lname, &j )) {
+    if (SRLookup( lTeXlist, name+1, lname, &j )) {
 	if (warnRedefinition)  {
 	    fprintf( ferr, "Attempt to redefine %s; new definition discarded\n", name );
 	    fprintf( ferr, "  (Redefinitions may cause problems with the translator)\n" );
@@ -195,18 +195,18 @@ void TXAddUserDef( SRList *TeXlist, TeXEntry *e )
 	if (DebugDef) {
 	    printf( "User provided defintion of %s is:\n\ttemplate = %s\n\tdef = %s\n", 
 		    name+1, *template_buf ? template_buf : "<null>", 
-		    *ldef ? ldef : "<null>" );
+		    *mydef ? mydef : "<null>" );
         }
-	def->replacement_text = STRDUP( ldef );
+	def->replacement_text = STRDUP( mydef );
 	CHKPTR(def->replacement_text);
 
 	def->input_template = STRDUP( template_buf );
 	CHKPTR(def->input_template);
 
-	TXInsertName( TeXlist, name+1, TXDoUser, nargs, (void *)def );
+	TXInsertName( lTeXlist, name+1, TXDoUser, nargs, (void *)def );
     }
-    FREE( ltoken );
-    FREE( ldef );
+    FREE( mytoken );
+    FREE( mydef );
 }
 
 /* 
@@ -217,7 +217,7 @@ void TXAddUserDef( SRList *TeXlist, TeXEntry *e )
 
    if [nargs] is missing, it means [0].
  */
-void TXDoNewCommand( SRList *TeXlist, TeXEntry *e )
+void TXDoNewCommand( SRList *lTeXlist, TeXEntry *e )
 {
     int        nargs, ch, nsp, nbrace, j;
     char       *p;
@@ -286,7 +286,7 @@ void TXDoNewCommand( SRList *TeXlist, TeXEntry *e )
 	p[-1] = 0;
 /* Add to known commands */
 
-    if (SRLookup( TeXlist, name+1, lname, &j )) {
+    if (SRLookup( lTeXlist, name+1, lname, &j )) {
 	if (warnRedefinition)  {
 	    fprintf( ferr, "Attempt to redefine %s; new definition discarded\n", name );
 	    fprintf( ferr, "  (Redefinitions may cause problems with the translator)\n" );
@@ -304,25 +304,25 @@ void TXDoNewCommand( SRList *TeXlist, TeXEntry *e )
 	    printf( "Definition text is %s\n", ldef[0] ? ldef : "<null>" );
 	}
 
-	TXInsertName( TeXlist, name+1, TXDoUser, nargs, (void *)def );
+	TXInsertName( lTeXlist, name+1, TXDoUser, nargs, (void *)def );
     }
 }
 
 /* Create a definition context suitable for TXInsertName */
-void *TXCreateDefn( int nargs, char *ldef, int is_html )
+void *TXCreateDefn( int nargs, char *mydef, int is_html )
 {
     Definition *def;
     /* Add to known commands */
     def = NEW(Definition);  CHKPTRN(def);
     def->nargs = nargs;
-    def->replacement_text = ldef;
+    def->replacement_text = mydef;
     def->input_template = 0;
     def->kind = is_html ? TX_HTMLCMD : TX_TEXCMD;
 
     return (void *)def;
 }
 
-void TXDoNewLength( SRList *TeXlist, TeXEntry *e )
+void TXDoNewLength( SRList *lTeXlist, TeXEntry *e )
 {
     int        ch, nsp, nbrace, j;
     char       *p;
@@ -356,7 +356,7 @@ void TXDoNewLength( SRList *TeXlist, TeXEntry *e )
     /* We need a pointer to null */
     def->replacement_text = null_string;
     def->input_template   = 0;
-    TXInsertName( TeXlist, name+1, TXDoUser, 0, (void *)def );
+    TXInsertName( lTeXlist, name+1, TXDoUser, 0, (void *)def );
 }
 
 /*
@@ -365,29 +365,29 @@ void TXDoNewLength( SRList *TeXlist, TeXEntry *e )
  */
 void TXlet( TeXEntry *e )
 {
-    char       *ltoken;
+    char       *mytoken;
     int        nsp, i, ch;
     TeXEntry   *old;
     LINK       *l;
     
-    ltoken    = (char *)MALLOC( MAX_TOKEN ); CHKPTR(ltoken);
+    mytoken    = (char *)MALLOC( MAX_TOKEN ); CHKPTR(mytoken);
 
     /* Read command */
     ch = TeXReadToken( name, &nsp );
     if (ch != CommandChar) {
 	fprintf( ferr, "Expected a %c (TeX command char)\n", CommandChar );
 	SCPushToken( name );
-	FREE( ltoken );
+	FREE( mytoken );
 	return;
     }
     
     /* Read oldvalue */
-    ch = TeXReadToken( ltoken, &nsp );
+    ch = TeXReadToken( mytoken, &nsp );
     if (ch == '=') 
-	ch = TeXReadToken( ltoken, &nsp );
+	ch = TeXReadToken( mytoken, &nsp );
 
     /* Insert newcommand into list with old meaning */
-    l = SRLookup( TeXlist, ltoken+1, ltoken+1, &i );
+    l = SRLookup( TeXlist, mytoken+1, mytoken+1, &i );
     if (l) {
 	old = (TeXEntry *)(l->priv);
 	TXInsertName( TeXlist, name + 1, old->action, old->nargs, old->ctx );
@@ -396,7 +396,7 @@ void TXlet( TeXEntry *e )
 	/* Insert as nop */
 	TXInsertName( TeXlist, name + 1, TXnop, 0, (void *)0 );
     }
-    FREE( ltoken );
+    FREE( mytoken );
     
     return;
 }
@@ -482,12 +482,12 @@ void TXAddReplaceFile( const char *value, const char *newname )
     }
 }
 
-int TXIsSkipFile( const char *name )
+int TXIsSkipFile( const char *fname )
 {
     int n, rc = 0;
     LINK *elm;
     if (!skipFileList) return 0;
-    elm = SRLookup( skipFileList, name, (char *)0, &n );
+    elm = SRLookup( skipFileList, fname, (char *)0, &n );
     if (elm) {
 	if (elm->entryname && elm->entryname[0]) rc = 0;
 	else rc = 1;
@@ -495,13 +495,13 @@ int TXIsSkipFile( const char *name )
     return rc;
 }
 
-int TXIsReplaceFile( const char *name, char *newname )
+int TXIsReplaceFile( const char *fname, char *newname )
 {
     int n, rc = 0;
     LINK *elm;
     if (!skipFileList) return 0;
     newname[0] = 0;
-    elm = SRLookup( skipFileList, name, (char *)0, &n );
+    elm = SRLookup( skipFileList, fname, (char *)0, &n );
     if (elm) {
 	strcpy( newname, elm->entryname );
 	rc = 1;

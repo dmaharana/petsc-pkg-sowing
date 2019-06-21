@@ -19,7 +19,7 @@ extern void *trmalloc (unsigned int, int, char *),
             *trcalloc (unsigned int, unsigned int, int, char * ),
             *trrealloc (void *, int, int, char * );
 extern char *trstrdup( const char *, int, const char * );
-extern int  trvalid (char *);
+extern int  trvalid (const char *);
 extern void trDebugLevel ( int );
 
 #ifdef MEMORY_TRACING

@@ -22,7 +22,7 @@
 #define MATH_BUF_SIZE 4*4096
 /* Forward refs */
 void TXStripCmds ( char *, char * );
-void TXAddToken ( char *, char **, int * );
+void TXAddToken ( const char *, char **, int * );
 void TXConvertMathString ( char **, char **, int *, int );
 
 static int Debug_math_mode = 0;
@@ -37,7 +37,7 @@ void TXStripCmds( char *str, char *strout )
     *strout = 0;
 }
 
-void TXAddToken( char *tok, char **outstrp, int *maxstrp )
+void TXAddToken( const char *tok, char **outstrp, int *maxstrp )
 {
     int maxstr = *maxstrp;
     char *outstr = *outstrp;
@@ -463,13 +463,13 @@ void TXProcessDollar( TeXEntry *e, int latexmath, int checkdollar )
     }
     else {
 	/* Need to remove and \{  or \} that we let through... */
-	char *strout;
-	int  maxstr;
+	char   *strout;
+	int     maxstr;
 
 	if (Debug_math_mode) {
 	    printf( "Processing |%s| for math inline\n", mathbuf );
 	}
-	maxstr = strlen(mathbuf + 2) + 1;
+	maxstr = (int)strlen(mathbuf + 2) + 1;
 
 	/* add enough from a number of sub/super scripts */
 	maxstr += (1+num_subs)*15;

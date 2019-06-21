@@ -81,7 +81,7 @@ int SYiTestFile( const char *, char, uid_t, gid_t );
 void SYGetFullPath( const char *path, char *fullpath, int flen )
 {
 struct passwd *pwde;
-int           ln;
+size_t         ln;
 
 if (path[0] == '/') {
     if (strncmp( "/tmp_mnt/", path, 9 ) == 0)
@@ -273,7 +273,7 @@ void SYGetHostName( char *name, int nlen )
 #endif
 /* See if this name includes the domain */
     if (!strchr(name,'.')) {
-    int  l;
+    size_t l;
     l = strlen(name);
     name[l++] = '.';
     name[l] = 0;  /* In case we have neither SYSINFO or GETDOMAINNAME */
@@ -509,7 +509,7 @@ int SYGetFileFromPath( const char *path, const char *defname,
 		       const char *name, char *fname, char mode )
 {
     char   *p, *cdir;
-    int    ln;
+    size_t ln;
     uid_t  uid;
     gid_t  gid;
     char   trial[MAX_FILE_NAME];
@@ -696,7 +696,7 @@ FILE *SYOpenWritableFile( const char *dirpath, const char *defname,
 			  const char *name, char *fname, int istmp )
 {
     const char *cdir, *p;
-    int    ln;
+    size_t ln;
     FILE   *fp;
 
     while (dirpath && *dirpath) {
@@ -873,7 +873,7 @@ void SYRemoveHomeDir( char *path )
 {
   struct passwd *pw = 0;
   char          tmp1[MAXPATHLEN], tmp2[MAXPATHLEN], *d1, *d2;
-  int           len;
+  size_t        len;
 
   pw = getpwuid( getuid() );
   if (!pw)  return;
@@ -914,10 +914,10 @@ int SYIsMachineHost( const char *machinename )
 
   if (!hostlength) {
     SYGetHostName(localhost,MAXHOSTNAMELEN);
-    hostlength = strlen(localhost);
+    hostlength = (int)strlen(localhost);
 #if !defined(RELIABLEHOSTNAME)
     if ((tmp = strchr(localhost,'.'))) {
-      hostlength = strlen(localhost) - strlen(tmp);
+	hostlength = (int)strlen(localhost) - (int)strlen(tmp);
     }
 #endif
   }
@@ -925,9 +925,9 @@ int SYIsMachineHost( const char *machinename )
   /* Only test leading characters of the localname against the leading
      characters of the host */
   if ((tmp = strchr( machinename, '.' )))
-      namelen = strlen( machinename ) - strlen( tmp );
+      namelen = (int)strlen( machinename ) - (int)strlen( tmp );
   else
-      namelen = strlen( machinename );
+      namelen = (int)strlen( machinename );
   return (namelen == hostlength && !strncmp(machinename,localhost,hostlength));
 #else
   return !strncmp(machinename,localhost,hostlength);

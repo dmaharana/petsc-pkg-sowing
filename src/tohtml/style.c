@@ -16,44 +16,40 @@ extern void TXcode(), TXdfn(), TXroutine(), TXfile(), TXcomment(),
 extern void *TXcopy();
 */
             
-void TXStyleLatexInfo( TeXlist, fin, fout )
-SRList *TeXlist;
-FILE *fin, *fout;
+void TXStyleLatexInfo( SRList *myTeXlist, FILE *fin, FILE *fout )
 {            
     SCSetCommentChar( 0 );
 
     UsingLatexinfo = 1;
     /* printf ("Using Latexinfo Style\n" );  */
-    TXInsertName( TeXlist, "dfn", TXdfn, 0, (void *)0 );
-    TXInsertName( TeXlist, "var", TXdfn, 0, (void *)0 );
-    TXInsertName( TeXlist, "routine", TXroutine, 1, (void *)0 );
-    TXInsertName( TeXlist, "c",  TXcomment, 0, (void *)0 );
-    TXInsertName( TeXlist, "node", TXcomment, 0, (void *)0 );
-    TXInsertName( TeXlist, "xref",  TXxref, 1, (void *)0 );
-    TXInsertName( TeXlist, "pxref",  TXpxref, 1, (void *)0 );
-    TXInsertName( TeXlist, "cindex", TXcindex, 1, (void *)0 );
-    TXInsertName( TeXlist, "findex", TXfindex, 1, (void *)0 );
-    TXInsertName( TeXlist, "printindex", TXprintindex, 1, (void *)0 );
-    TXInsertName( TeXlist, "newindex", TXnop, 1, (void *)0 );
-    TXInsertName( TeXlist, "$", TXname, 0, TXCopy("$") );
+    TXInsertName( myTeXlist, "dfn", TXdfn, 0, (void *)0 );
+    TXInsertName( myTeXlist, "var", TXdfn, 0, (void *)0 );
+    TXInsertName( myTeXlist, "routine", TXroutine, 1, (void *)0 );
+    TXInsertName( myTeXlist, "c",  TXcomment, 0, (void *)0 );
+    TXInsertName( myTeXlist, "node", TXcomment, 0, (void *)0 );
+    TXInsertName( myTeXlist, "xref",  TXxref, 1, (void *)0 );
+    TXInsertName( myTeXlist, "pxref",  TXpxref, 1, (void *)0 );
+    TXInsertName( myTeXlist, "cindex", TXcindex, 1, (void *)0 );
+    TXInsertName( myTeXlist, "findex", TXfindex, 1, (void *)0 );
+    TXInsertName( myTeXlist, "printindex", TXprintindex, 1, (void *)0 );
+    TXInsertName( myTeXlist, "newindex", TXnop, 1, (void *)0 );
+    TXInsertName( myTeXlist, "$", TXname, 0, TXCopy("$") );
     /* No comment character in TeXinfo style */
     SCSetCommentChar( (char) 0 );
     CommentChar = (char) 0;
 }    
 
-void TXStyleFunclist( TeXlist, fin, fout )
-SRList *TeXlist;
-FILE *fin, *fout;
+void TXStyleFunclist( SRList *myTeXlist, FILE *fin, FILE *fout )
 {            
-    TXInsertName( TeXlist, "CDfont", TXnop, 1, (void *)0 );
-    TXInsertName( TeXlist, "CDw", TXnop, 1, (void *)0 );
-    TXInsertName( TeXlist, "CDl", TXnop, 1, (void *)0 );
-    TXInsertName( TeXlist, "CDr", TXnop, 1, (void *)0 );
+    TXInsertName( myTeXlist, "CDfont", TXnop, 1, (void *)0 );
+    TXInsertName( myTeXlist, "CDw", TXnop, 1, (void *)0 );
+    TXInsertName( myTeXlist, "CDl", TXnop, 1, (void *)0 );
+    TXInsertName( myTeXlist, "CDr", TXnop, 1, (void *)0 );
 
-    TXInsertName( TeXlist, "k", TXnop, 3, (void *)0 );
+    TXInsertName( myTeXlist, "k", TXnop, 3, (void *)0 );
 
-    TXInsertName( TeXlist, "CoDe", TXasisGrouped, 1, (void *)0 );
-    TXInsertName( TeXlist, "DeFn", TXasisGrouped, 1, (void *)0 );
+    TXInsertName( myTeXlist, "CoDe", TXasisGrouped, 1, (void *)0 );
+    TXInsertName( myTeXlist, "DeFn", TXasisGrouped, 1, (void *)0 );
 
 /* \def\StartFunclist{\catcode`\_=13\def_{{\tt \char`\_}}} */
 }
@@ -62,8 +58,7 @@ FILE *fin, *fout;
 #define MAX_TITLE 1000
 #define MAX_AUTHOR 1000
 static char TitleString[MAX_TITLE], AuthorString[MAX_AUTHOR];
-void TXANLTitle( e )
-TeXEntry *e;
+void TXANLTitle( TeXEntry *e )
 {
     char ReportNumber[128];
     int  InBody = InOutputBody;
@@ -79,70 +74,64 @@ TeXEntry *e;
     TXmaketitle( e, TitleString, AuthorString );
 }
 
-void TXStyleTpage( SRList *TeXlist, FILE *fin, FILE *fout )
+void TXStyleTpage( SRList *myTeXlist, FILE *fin, FILE *fout )
 {
-    TXInsertName( TeXlist, "anltmfalse", TXnop, 0, (void *)0 );
-    TXInsertName( TeXlist, "anltmtrue", TXnop, 0, (void *)0 );
-/*     TXInsertName( TeXlist, "newif", TXnop, 0, (void *)0 ); */
-    TXInsertName( TeXlist, "ifanltm", TXnop, 0, (void *)0 );
-    TXInsertName( TeXlist, "ANLG", TXnop, 1, (void *)0 );
-    TXInsertName( TeXlist, "ANLEDITED", TXnop, 1, (void *)0 );
-    TXInsertName( TeXlist, "ANLTitle", TXANLTitle, 4, (void *)0 );
-    TXInsertName( TeXlist, "ANLTMTitle", TXANLTitle, 4, (void *)0 );
-    TXInsertName( TeXlist, "ANLPreprintTitle", TXANLTitle, 4, (void *)0 );
-    TXInsertName( TeXlist, "tpagetopskip", TXdimen, 0, (void *) 0 );
+    TXInsertName( myTeXlist, "anltmfalse", TXnop, 0, (void *)0 );
+    TXInsertName( myTeXlist, "anltmtrue", TXnop, 0, (void *)0 );
+/*     TXInsertName( myTeXlist, "newif", TXnop, 0, (void *)0 ); */
+    TXInsertName( myTeXlist, "ifanltm", TXnop, 0, (void *)0 );
+    TXInsertName( myTeXlist, "ANLG", TXnop, 1, (void *)0 );
+    TXInsertName( myTeXlist, "ANLEDITED", TXnop, 1, (void *)0 );
+    TXInsertName( myTeXlist, "ANLTitle", TXANLTitle, 4, (void *)0 );
+    TXInsertName( myTeXlist, "ANLTMTitle", TXANLTitle, 4, (void *)0 );
+    TXInsertName( myTeXlist, "ANLPreprintTitle", TXANLTitle, 4, (void *)0 );
+    TXInsertName( myTeXlist, "tpagetopskip", TXdimen, 0, (void *) 0 );
 }
 
-void TXStyleTools( TeXlist, fin, fout )
-SRList *TeXlist;
-FILE *fin, *fout;
+void TXStyleTools( SRList *myTeXlist, FILE *fin, FILE *fout )
 {            
-    TXInsertName( TeXlist, "Iter", TXname, 0, TXCopy("KSP") );
-    TXInsertName( TeXlist, "SMEIT", TXname, 0, TXCopy("SMEIT") );
-    TXInsertName( TeXlist, "SMEITP", TXname, 0, TXCopy("SMEIT Package") );
-    TXInsertName( TeXlist, "Solvers", TXname, 0, TXCopy("SLES") );
-    TXInsertName( TeXlist, "SolversP", TXname, 0, TXCopy("SLES Package") );
-    TXInsertName( TeXlist, "Tools", TXname, 0, TXCopy("PETSc") );
-    TXInsertName( TeXlist, "ToolsP", TXname, 0, TXCopy("PETSc Package") );
+    TXInsertName( myTeXlist, "Iter", TXname, 0, TXCopy("KSP") );
+    TXInsertName( myTeXlist, "SMEIT", TXname, 0, TXCopy("SMEIT") );
+    TXInsertName( myTeXlist, "SMEITP", TXname, 0, TXCopy("SMEIT Package") );
+    TXInsertName( myTeXlist, "Solvers", TXname, 0, TXCopy("SLES") );
+    TXInsertName( myTeXlist, "SolversP", TXname, 0, TXCopy("SLES Package") );
+    TXInsertName( myTeXlist, "Tools", TXname, 0, TXCopy("PETSc") );
+    TXInsertName( myTeXlist, "ToolsP", TXname, 0, TXCopy("PETSc Package") );
 
-    TXInsertName( TeXlist, "setmargin", TXnop, 1, (void *)0 );
-    TXInsertName( TeXlist, "esetmargin", TXnop, 0, (void *)0 );
+    TXInsertName( myTeXlist, "setmargin", TXnop, 1, (void *)0 );
+    TXInsertName( myTeXlist, "esetmargin", TXnop, 0, (void *)0 );
 
-    TXInsertName( TeXlist, "ib", TXasisGrouped, 1, (void *)0 );
-    TXInsertName( TeXlist, "iba", TXasisGrouped, 1, (void *)0 );
-    TXInsertName( TeXlist, "ibc", TXasisGrouped, 1, (void *)0 );
-    TXInsertName( TeXlist, "ibd", TXasisGrouped, 1, (void *)0 );
-    TXInsertName( TeXlist, "ibamount", TXasisGrouped, 1, (void *)0 );
-    TXInsertName( TeXlist, "ibcamount", TXasisGrouped, 1, (void *)0 );
-    TXInsertName( TeXlist, "ibaamount", TXasisGrouped, 1, (void *)0 );
-    TXInsertName( TeXlist, "ibdamount", TXasisGrouped, 1, (void *)0 );
+    TXInsertName( myTeXlist, "ib", TXasisGrouped, 1, (void *)0 );
+    TXInsertName( myTeXlist, "iba", TXasisGrouped, 1, (void *)0 );
+    TXInsertName( myTeXlist, "ibc", TXasisGrouped, 1, (void *)0 );
+    TXInsertName( myTeXlist, "ibd", TXasisGrouped, 1, (void *)0 );
+    TXInsertName( myTeXlist, "ibamount", TXasisGrouped, 1, (void *)0 );
+    TXInsertName( myTeXlist, "ibcamount", TXasisGrouped, 1, (void *)0 );
+    TXInsertName( myTeXlist, "ibaamount", TXasisGrouped, 1, (void *)0 );
+    TXInsertName( myTeXlist, "ibdamount", TXasisGrouped, 1, (void *)0 );
 
 /*
   \def\usemath{\catcode`\^=7 \catcode`\_=8}
   \def\closer{\setlength{\parskip}{0pt}}
   */
-    TXInsertName( TeXlist, "gb", TXnop, 0, (void *)0 );
+    TXInsertName( myTeXlist, "gb", TXnop, 0, (void *)0 );
 
 /* \def\lb{\hfil\break} */
 }
 
 
-void TXStyleEPSF( TeXlist, fin, fout )
-SRList *TeXlist;
-FILE *fin, *fout;
+void TXStyleEPSF( SRList *myTeXlist, FILE *fin, FILE *fout )
 {            
-    TXInsertName( TeXlist, "epsfxsize", TXdimen, 0, (void *)0 );
-    TXInsertName( TeXlist, "epsfysize", TXdimen, 0, (void *)0 );
-    TXInsertName( TeXlist, "epsfbox", TXepsfbox, 1, (void *)0 );
-    TXInsertName( TeXlist, "epsffile", TXepsfbox, 1, (void *)0 );
+    TXInsertName( myTeXlist, "epsfxsize", TXdimen, 0, (void *)0 );
+    TXInsertName( myTeXlist, "epsfysize", TXdimen, 0, (void *)0 );
+    TXInsertName( myTeXlist, "epsfbox", TXepsfbox, 1, (void *)0 );
+    TXInsertName( myTeXlist, "epsffile", TXepsfbox, 1, (void *)0 );
 }
 
-void TXStyleAnlhtext( TeXlist, fin, fout )
-SRList *TeXlist;
-FILE *fin, *fout;
+void TXStyleAnlhtext( SRList *myTeXlist, FILE *fin, FILE *fout )
 {            
-    TXInsertName( TeXlist, "animation", TXanimation, 3, (void *)0 );
-    TXInsertName( TeXlist, "more", TXmore, 1, (void *)0 );
+    TXInsertName( myTeXlist, "animation", TXanimation, 3, (void *)0 );
+    TXInsertName( myTeXlist, "more", TXmore, 1, (void *)0 );
 }
 
 /*
@@ -151,8 +140,7 @@ FILE *fin, *fout;
 static char handemail[256];
 static char handphone[256];
 static char handcontact[256];
-void TXmakeinfo( e )
-TeXEntry *e;
+void TXmakeinfo( TeXEntry *e )
 {
     SCPushToken( "{Further Information}" );
     e->ctx = (void *)1;
@@ -171,23 +159,19 @@ TeXEntry *e;
     }
 }
 
-void TXStyleANLHandpage( TeXlist, fin, fout )
-SRList *TeXlist;
-FILE *fin, *fout;
+void TXStyleANLHandpage( SRList *myTeXlist, FILE *fin, FILE *fout )
 {            
     handemail[0] = 0;
     handphone[0] = 0;
     handcontact[0] = 0;
-    TXInsertName( TeXlist, "contact", TXsavearg, 1, (void *)handcontact );
-    TXInsertName( TeXlist, "email", TXsavearg, 1, (void *)handemail );
-    TXInsertName( TeXlist, "phone", TXsavearg, 1, (void *)handphone );
-    TXInsertName( TeXlist, "makeinfo", TXmakeinfo, 0, (void *)0 );
+    TXInsertName( myTeXlist, "contact", TXsavearg, 1, (void *)handcontact );
+    TXInsertName( myTeXlist, "email", TXsavearg, 1, (void *)handemail );
+    TXInsertName( myTeXlist, "phone", TXsavearg, 1, (void *)handphone );
+    TXInsertName( myTeXlist, "makeinfo", TXmakeinfo, 0, (void *)0 );
 }
 
-void TXStylePsfig( TeXlist, fin, fout )
-SRList *TeXlist;
-FILE *fin, *fout;
+void TXStylePsfig( SRList *myTeXlist, FILE *fin, FILE *fout )
 {
     /* extern void TXpsfig(); */
-    TXInsertName( TeXlist, "psfig", TXpsfig, 1, (void *)0 );
+    TXInsertName( myTeXlist, "psfig", TXpsfig, 1, (void *)0 );
 }

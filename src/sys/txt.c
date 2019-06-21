@@ -335,8 +335,7 @@ while ((c = getc( fp )) != EOF && c != '\n') ;
     Returns:
     The final number of characters
 @*/
-int SYTxtTrimLine( s )
-char *s;
+int SYTxtTrimLine( char *s )
 {
 char *s1 = s;
 int  i;
@@ -346,7 +345,7 @@ if (s1 != s) {
     for (i=0; s1[i]; i++) s[i] = s1[i];
     s[i] = '\0';
     }
-i = strlen(s)-1;
+i = (int)strlen(s)-1;
 while (i > 0 && isspace(s[i])) i--;
 s[i+1] = '\0';
 return i+1;

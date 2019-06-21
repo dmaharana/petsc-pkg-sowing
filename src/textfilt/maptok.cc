@@ -43,7 +43,7 @@ void OutStreamMap::Setup( int in_maxlen )
 	    else if (isdigit(i)) breaktable[i] = BREAK_ALPHA;
 	    }
 	}
-    breaktable['_'] = BREAK_ALPHA;
+    breaktable[(unsigned char)'_'] = BREAK_ALPHA;
 }
 
 OutStreamMap::OutStreamMap( OutStream *outs, int in_maxlen )
@@ -209,7 +209,7 @@ int OutStreamMap::PutChar( const char c )
 /*
    Read a map file from the instream
  */
-int OutStreamMap::ReadMap( InStream *ins, int ignore_case, int ignoreRepl )
+int OutStreamMap::ReadMap( InStream *ins, int my_ignore_case, int ignoreRepl )
 {
     char    *name, *reptext, *url, *p, *lcname;
     char ch, sepchar;
@@ -264,7 +264,7 @@ int OutStreamMap::ReadMap( InStream *ins, int ignore_case, int ignoreRepl )
 	}
 	/* Install this name */
 	strcpy(lcname,name);
-	if (ignore_case) toLower(lcname);
+	if (my_ignore_case) toLower(lcname);
 	//if (debug) printf( "Inserting :%s:\n", lcname );
 	maptable->Insert( lcname, &entry );
 	info          = new MapData;
@@ -280,7 +280,7 @@ int OutStreamMap::ReadMap( InStream *ins, int ignore_case, int ignoreRepl )
 	entry->extra_data = (void *)info;
 	}
 
-    this->ignore_case = ignore_case;
+    this->ignore_case = my_ignore_case;
     delete[] name;
     delete[] lcname;
     delete[] reptext;
@@ -288,9 +288,9 @@ int OutStreamMap::ReadMap( InStream *ins, int ignore_case, int ignoreRepl )
 
     return 0;
 }
-int OutStreamMap::ReadMap( InStream *ins, int ignore_case )
+int OutStreamMap::ReadMap( InStream *ins, int my_ignore_case )
 {
-    return ReadMap( ins, ignore_case, 0 );
+    return ReadMap( ins, my_ignore_case, 0 );
 }
 int OutStreamMap::ReadMap( InStream *ins )
 {
@@ -349,7 +349,7 @@ void TextOutMap::Setup( int in_maxlen )
 	    else if (isdigit(i)) breaktable[i] = BREAK_ALPHA;
 	    }
 	}
-    breaktable['_'] = BREAK_ALPHA;
+    breaktable[(unsigned char)'_'] = BREAK_ALPHA;
 
     // 
     err		  = new ErrHandMsg();
@@ -371,7 +371,7 @@ void TextOutMap::Setup( int in_maxlen )
 // map output as they may have set for the input
 int TextOutMap::SetBreakChar( char c, int kind )
 {
-    breaktable[c] = kind;
+    breaktable[(unsigned char)c] = kind;
     return 0;
 }
 
@@ -541,7 +541,7 @@ int TextOutMap::PutToken( int nsp, const char *token )
     }
     return 0;
 }
-int TextOutMap::ReadMap( InStream *ins, int ignore_case, int ignoreRepl )
+int TextOutMap::ReadMap( InStream *ins, int my_ignore_case, int ignoreRepl )
 {
     char *name, *reptext, *url, *lcname, *p;
     char ch, sepchar;
@@ -600,7 +600,7 @@ int TextOutMap::ReadMap( InStream *ins, int ignore_case, int ignoreRepl )
 	
 	/* Install this name */
 	strcpy(lcname,name);
-	if (ignore_case) toLower(lcname);
+	if (my_ignore_case) toLower(lcname);
 	//if (debug) printf( "Inserting :%s:\n", lcname );
 	maptable->Insert( lcname, &entry );
 	info = new MapData;
@@ -620,7 +620,7 @@ int TextOutMap::ReadMap( InStream *ins, int ignore_case, int ignoreRepl )
 	}
     }
 
-    this->ignore_case = ignore_case;
+    this->ignore_case = my_ignore_case;
 
     delete[] name;
     delete[] lcname;
@@ -629,9 +629,9 @@ int TextOutMap::ReadMap( InStream *ins, int ignore_case, int ignoreRepl )
 
     return 0;
 }
-int TextOutMap::ReadMap( InStream *ins, int ignore_case )
+int TextOutMap::ReadMap( InStream *ins, int my_ignore_case )
 {
-    return ReadMap( ins, ignore_case, 0 );
+    return ReadMap( ins, my_ignore_case, 0 );
 }
 int TextOutMap::ReadMap( InStream *ins )
 {

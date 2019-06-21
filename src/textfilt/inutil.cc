@@ -1,6 +1,7 @@
 #include "tfilter.h"
 
 #include "instream.h"
+#include "inutil.h"
 
 /* 
    These are utilities that do NOT belong to a particular class.

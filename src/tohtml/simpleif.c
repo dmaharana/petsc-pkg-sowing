@@ -12,7 +12,7 @@ static char iftoken[MAX_TOKEN];
 void TXDoIf( TeXEntry * );
 void TXDoIfFalse( TeXEntry * );
 void TXDoIfTrue( TeXEntry * );
-void TeXskipUntil( char *([]), int );
+void TeXskipUntil( const char *([]), int );
 
 /* 
  *   Read a newif and define the name
@@ -43,7 +43,7 @@ static int truth[MAX_IF_STACK];
 void TXDoIf( TeXEntry *e )
 {
     int *def = (int *)(e->ctx);
-    char *(names[2]);
+    const char *(names[2]);
     names[0] = "else";
     names[1] = "fi";
     if (*def) {
@@ -77,7 +77,7 @@ void TXDoIfTrue( TeXEntry *e )
 
 void TXElse( TeXEntry *e )
 {
-    char *(names[1]);
+    const char *(names[1]);
     /* If in the true branch, then skip, else ignore */
     if (truth[if_sp]) {
 	/* Skip and ignore until \fi */
@@ -92,7 +92,7 @@ void TXFi( TeXEntry *e )
 	if_sp--;
 }
 
-void TeXskipUntil( char *(names[]), int n_names )
+void TeXskipUntil( const char *(names[]), int n_names )
 {
     int nsp, ch;
 

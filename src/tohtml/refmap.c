@@ -45,8 +45,7 @@ char *GetMapURL ( char ** );
 char *CpyString ( char * );
 int MapKind ( char * );
 
-void GetMapTagName( P, namep )
-char **P, *namep;
+void GetMapTagName( char **P, char *namep )
 {
     char *p = *P, c;
 
@@ -62,8 +61,7 @@ char **P, *namep;
 }
 	
 /* Get the name (%cname%c).  Return ptr to name (null if empty) */
-char *GetMapName( P )
-char **P;
+char *GetMapName( char **P )
 {
     char c, *p, *ptr;
 
@@ -82,8 +80,7 @@ char **P;
     return ptr;
 }
 
-char *GetMapURL( P )
-char **P;
+char *GetMapURL( char **P )
 {
     char *ptr = *P, *p;
 
@@ -93,8 +90,7 @@ char **P;
     return ptr;	
 }
 
-char *CpyString( str )
-char *str;
+char *CpyString( char *str )
 {
     char *p;
 	
@@ -106,8 +102,7 @@ char *str;
     return p;
 }
 
-int MapKind( kind )
-char *kind;
+int MapKind( char *kind )
 {
     if (strcmp( kind, "cite" ) == 0 ) return 1;
     if (strcmp( kind, "see" ) == 0 ) return 2;
@@ -118,8 +113,7 @@ char *kind;
     return -1;	
 }
 
-void RdRefMap( name )
-char *name;
+void RdRefMap( char *name )
 {
     FILE   *fp;
     LINK   *l;
@@ -166,11 +160,8 @@ char *name;
     fclose( fp );    
 }
 
-int RefMapLookup( tagtype, token, url, urltype, text )
-char *tagtype;
-char *token;
-char **url, **text;
-int  *urltype;
+int RefMapLookup( const char *tagtype, const char *token, char **url,
+		  int *urltype, char **text )
 {
     LINK   *l;
     MapRef *r;
