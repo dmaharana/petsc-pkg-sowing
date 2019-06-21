@@ -30,9 +30,12 @@ dnl If this is set and needed, add -DNEEDS_STDLIB_PROTOTYPES to optflags
 check_for_needs_stdlib_proto=0
 dnl
 dnl AC_ARG_ENABLE(strict,[
-dnl --enable-strict - turn on strict debugging when using gcc],
+dnl --enable-strict - turn on strict debugging when using gcc for C and C++],
 dnl optflags="$optflags -g -Dlint";check_for_needs_stdlib_proto=1;gcc_opts="-Wall -Wstrict-prototypes -Wmissing-prototypes")
-PAC_ARG_STRICT
+dnl PAC_ARG_STRICT
+AC_ARG_ENABLE(strict,
+AD_HELP_STRING([--enable-strict], [Turn on strict compilation testing when using GNU-compatible compilers]))
+
 AC_ARG_ENABLE(echo,[
 --enable-echo   - Turn on strong echoing],set -x)
 AC_SUBST(optflags)
@@ -55,12 +58,35 @@ AC_PROG_INSTALL
 PAC_PROG_CHECK_INSTALL_WORKS
 AC_CHECK_PROGS(AR,ar)
 AC_PROG_CC
+
 dnl C++ is needed for the newer textfilter programs
 dnl The autoconf 2.13 list of C++ compilers is very short.
 dnl We add to it here
 AC_CHECK_PROGS(CXX, $CCC c++ g++ gcc CC cxx cc++ cl xlC_r xlC pgCC, gcc)
 AC_PROG_CXX
 dnl
+echo "Enable strict is $enable_strict"
+if test "X$enable_strict" != "X" ; then
+    dnl saveCFLAGS="$CFLAGS"
+    PAC_CC_STRICT($enable_strict)
+    dnl PAC_ARG_STRICT
+    dnl # The above sets CFLAGS and CXXFLAGS.  For this packate, we want the values
+    dnl # in optflags
+    dnl optflags="$CFLAGS"
+    dnl CFLAGS=$saveCFLAGS
+    optflags="$pac_cc_strict_flags"
+
+    dnl saveCXXFLAGS="$CXXFLAGS"
+    dnl PAC_CXX_CHECK_COMPILER_OPTION([-Wall])
+    dnl PAC_ARG_STRICT_CXX
+    PAC_CXX_STRICT($enable_strict)
+    dnl # The above sets CFLAGS and CXXFLAGS.  For this packate, we want the values
+    dnl # in optflags
+    dnl optcxxflags="$CXXFLAGS"
+    dnl CXXFLAGS=$saveCXXFLAGS
+    optcxxflags="$pac_cxx_strict_flags"
+fi
+
 dnl Add gcc checking options if present
 if test -n "$gcc_opts" -a "$GCC" = "yes" ; then
     optflags="$optflags $gcc_opts"
@@ -246,6 +272,7 @@ AC_SUBST(expanded_bindir)
 
 COPTIONS="$optflags"
 AC_SUBST(COPTIONS)
+CXXOPTIONS="$optcxxflags"
 AC_SUBST(CXXOPTIONS)
 
 AC_CONFIG_FILES([Makefile Makerules src/Makefile src/sys/Makefile src/sys/testing/Makefile src/tohtml/Makefile src/tohtml/tohtmlpath.h src/tohtml/testing/Makefile bin/pstoxbm bin/pstogif bin/bib2html src/bfort/Makefile src/bfort/testing/Makefile src/textfilt/Makefile src/doctext/Makefile src/doctext/docpath.h src/doctext/test/Makefile src/mapnames/Makefile src/bib2html/Makefile docs/Makefile docs/bfort/Makefile docs/doctext/Makefile docs/install/Makefile docs/tohtml/Makefile include/patchlevel.h include/textfilt/textpath.h
