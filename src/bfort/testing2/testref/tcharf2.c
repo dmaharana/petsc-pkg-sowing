@@ -1,8 +1,8 @@
 /* tchar.c */
 /* Fortran interface file */
 /*
- * This file was generated automatically by bfort from the C source
- * file.
+ * This file was generated automatically by bfort from the C source file
+ * Major args: -ferr -anyname
  */
 /* Function prototypes */
 int Getstr(int nc, char *a);

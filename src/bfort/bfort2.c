@@ -190,7 +190,7 @@ int substTypeinDecl(const char *orig, const char *oldtype, const char *newtype,
 		    char **updated);
 
 /* Save the commandline in a normalized format */
-void appendCmdLine(const char *str);
+/* appendCmdLine prototype in bfort2.h */
 char *getCmdLine(void);
 void freeCmdLine(void);
 
@@ -300,17 +300,37 @@ int main(int argc, char *argv[])
     if (isMPI) appendCmdLine("-mpi");
 
     /* Permit changing the ifdef names for the -anyname option */
-    if (SYArgHasName(&argc, argv, 1, "-anyname")) nameMap = -1;
-    SYArgGetString(&argc, argv, 1, "-fcaps", FortranCaps, 256);
-    SYArgGetString(&argc, argv, 1, "-fuscore", FortranUscore, 256);
-    SYArgGetString(&argc, argv, 1, "-fduscore", FortranDblUscore, 256);
+    if (SYArgHasName(&argc, argv, 1, "-anyname")) {
+	nameMap = -1;
+	appendCmdLine("-anyname");
+    }
+    if (SYArgGetString(&argc, argv, 1, "-fcaps", FortranCaps, 256)) {
+	appendCmdLine("-fcaps");
+	appendCmdLine(FortranCaps);
+    }
+    if (SYArgGetString(&argc, argv, 1, "-fuscore", FortranUscore, 256)) {
+	appendCmdLine("-fuscore");
+	appendCmdLine(FortranUscore);
+    }
+    if (SYArgGetString(&argc, argv, 1, "-fduscore", FortranDblUscore, 256)) {
+	appendCmdLine("-fduscore");
+	appendCmdLine(FortranDblUscore);
+    }
 
     /* String support */
     /* FIXME: These are only partly implemented!! */
-    if (SYArgHasName(&argc, argv, 1, "-fstring")) stringStyle = STRING_LENEND;
-    if (SYArgHasName(&argc, argv, 1, "-fnostring")) stringStyle = STRING_ABORT;
-    if (SYArgHasName(&argc, argv, 1, "-fstring-asis"))
+    if (SYArgHasName(&argc, argv, 1, "-fstring")) {
+	stringStyle = STRING_LENEND;
+	appendCmdLine("-fstring");
+    }
+    if (SYArgHasName(&argc, argv, 1, "-fnostring")) {
+	stringStyle = STRING_ABORT;
+	appendCmdLine("-fnostring");
+    }
+    if (SYArgHasName(&argc, argv, 1, "-fstring-asis")) {
 	stringStyle = STRING_UNKNOWN;
+	appendCmdLine("-fstring-asis");
+    }
 
     /* Initialize the native pointer options */
     nativeptrInit(&argc, argv);
@@ -823,7 +843,8 @@ int GetSingleArg(FILE *fin, const char *routine, const char *filename,
     if (c == ')') {
 	/* Empty argument list */
 	ErrCnt++;
-	fprintf(stderr, "Empty argument list - (void) is preferred\n");
+	fprintf(stderr, "Empty argument list for %s - (void) is preferred\n",
+	    routine);
 	ERRABORT;
 	free(p);
 	free(t);
@@ -2038,6 +2059,7 @@ void nativeptrInit(int *argc_ptr, char **argv)
     if (SYArgHasName(argc_ptr, argv, 1, "-usenativeptr")) {
 	nativeUseInt = 0;
 	DBG("Set nativeUseInt to 0\n");
+	appendCmdLine("-usenativeptr");
     }
 }
 
@@ -2163,7 +2185,7 @@ void appendCmdLine(const char *str)
     strncpy(curptr, " ", 2);
     curptr++;
     strncpy(curptr, str, len+1);
-    curptr += len;
+    curptr += strlen(str);
 }
 
 char *getCmdLine(void)

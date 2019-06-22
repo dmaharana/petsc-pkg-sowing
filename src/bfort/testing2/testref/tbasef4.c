@@ -1,8 +1,8 @@
 /* tbase.c */
 /* Fortran interface file */
 /*
- * This file was generated automatically by bfort from the C source
- * file.
+ * This file was generated automatically by bfort from the C source file
+ * Major args: -ferr -anyname -fcaps USECAPS -fuscore USEUSCORE -fduscore USEDOUBLEUSCORE
  */
 #ifdef USECAPS
 #define funcf1_ FUNCF1

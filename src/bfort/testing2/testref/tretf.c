@@ -1,8 +1,8 @@
 /* tret.c */
 /* Fortran interface file */
 /*
- * This file was generated automatically by bfort from the C source
- * file.
+ * This file was generated automatically by bfort from the C source file
+ * Major args: -anyname
  */
 #ifdef FORTRANCAPS
 #define fa_ FA

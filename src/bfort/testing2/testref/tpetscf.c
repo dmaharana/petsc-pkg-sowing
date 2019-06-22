@@ -1,8 +1,8 @@
 /* tpetsc.c */
 /* Fortran interface file */
 /*
- * This file was generated automatically by bfort from the C source
- * file.
+ * This file was generated automatically by bfort from the C source file
+ * Major args: -ferr -ferrfuncret PETSC_EXTERN void PETSC_STDCALL -mnative -mapptr -ptrptrfix Petsc -ptr64 PETSC_USE_POINTER_CONVERSION -mpi -anyname -fcaps PETSC_HAVE_FORTRAN_CAPS -fuscore PETSC_HAVE_FORTRAN_UNDERSCORE -usenativeptr -f90mod-skip-header -shortargname -f90modfile tpetsc.f90
  */
 #include "petscksp.h"
 #ifdef PETSC_HAVE_FORTRAN_CAPS

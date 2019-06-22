@@ -1,8 +1,8 @@
 /* thead.h */
 /* Fortran interface file */
 /*
- * This file was generated automatically by bfort from the C source
- * file.
+ * This file was generated automatically by bfort from the C source file
+ * Major args: -ferr -anyname
  */
 #include "thead.h"
 #ifdef FORTRANCAPS
@@ -37,47 +37,47 @@ extern "C" {
 #endif
 void funcf1_(int *z)
 {
-  *z =  Funcf1();
+  *z = Funcf1();
 }
 void funcf2_(double *av, int *z)
 {
-  *z =  Funcf2(*av);
+  *z = Funcf2(*av);
 }
 void funcf3_(int *len, int *z)
 {
-  *z =  Funcf3(len);
+  *z = Funcf3(len);
 }
 void funcf4_(int *len1, double *a_v2, int *v1, double *a4, int *z)
 {
-  *z =  Funcf4(len1, a_v2, *v1, *a4);
+  *z = Funcf4(len1, a_v2, *v1, *a4);
 }
 void funcf5_(int *len, double a4[], int *z)
 {
-  *z =  Funcf5(len, a4);
+  *z = Funcf5(len, a4);
 }
 void funcf6_(void (*c)(int, long), int *z)
 {
-  *z =  Funcf6(c);
+  *z = Funcf6(c);
 }
 void funcf7_(void (*c2)(), int *z)
 {
-  *z =  Funcf7(c2);
+  *z = Funcf7(c2);
 }
 void funcf8_(const int f[], const int *a, int *b, const double const *p1, int *z)
 {
-  *z =  Funcf8(f, a, *b, p1);
+  *z = Funcf8(f, a, *b, p1);
 }
 void funcf9_(void *restrict carray, const int * restrict ptr_2, int *z)
 {
-  *z =  Funcf9(carray, ptr_2);
+  *z = Funcf9(carray, ptr_2);
 }
 void funcf10_(int *M, int *m, void *ptr, void *Ptr, int *z)
 {
-  *z =  Funcf10(*M, *m, ptr, Ptr);
+  *z = Funcf10(*M, *m, ptr, Ptr);
 }
 void funcf11_(const int aLongArrayName[], const int *alongArgumentName, double *anotherLongArgumentName, int *thisIsAnotherLongName, int *z)
 {
-  *z =  Funcf11(aLongArrayName, alongArgumentName, anotherLongArgumentName, thisIsAnotherLongName);
+  *z = Funcf11(aLongArrayName, alongArgumentName, anotherLongArgumentName, thisIsAnotherLongName);
 }
 #if defined(__cplusplus)
  }

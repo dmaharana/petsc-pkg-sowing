@@ -86,4 +86,6 @@ int f90OutputIfaces(func_t *fp);
 void Abort(const char *msg, const char *file, int line);
 int MPIU_Strncpy(char *, const char *, size_t);
 
+void appendCmdLine(const char *str);
+
 #endif

@@ -1,8 +1,8 @@
 /* thandle.c */
 /* Fortran interface file */
 /*
- * This file was generated automatically by bfort from the C source
- * file.
+ * This file was generated automatically by bfort from the C source file
+ * Major args: -mnative -mapptr -ptrptrfix Petsc -ptr64 PETSC_USE_POINTER_CONVERSION -anyname -usenativeptr -f90usemodule handledef -f90modfile thandle.f90
  */
 #include "petscksp.h"
 #include <stdlib.h>

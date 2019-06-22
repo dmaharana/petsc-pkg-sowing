@@ -49,19 +49,22 @@ int f90ModuleInit(int *argc_ptr, char **argv)
 	f90mod_skip_header =
 	    SYArgHasName(argc_ptr, argv, 1, "-f90mod-skip-header");
     }
-    /* If an f90modfile argument is provided, then enable the f90module.
-       Note that we do not remove it - we will get the value for this
-       option below. */
-    if (SYArgHasName(argc_ptr, argv, 0, "-f90modfile")) {
-	F90Module = 1;
+    if (f90mod_skip_header) {
+	appendCmdLine("-f90mod-skip-header");
     }
+
     useShortNames          = SYArgHasName(argc_ptr, argv, 1, "-shortargname");
+    if (useShortNames) {
+	appendCmdLine("-shortargname");
+    }
 
     /* This allows only one module to be added to the declaration of each
        interface */
     if (SYArgGetString(argc_ptr, argv, 1, "-f90usemodule", modnamestr,
 		       sizeof(modnamestr))) {
 	f90usemodule = modnamestr;
+	appendCmdLine("-f90usemodule");
+	appendCmdLine(modnamestr);
     }
 
     /* -shortargname overrides config file for the err arg name */
@@ -71,6 +74,13 @@ int f90ModuleInit(int *argc_ptr, char **argv)
     if ( (! errArgNameParm) && useShortNames)
 	errArgNameParm = "z";
 
+    /* If an f90modfile argument is provided, then enable the f90module.
+       Note that we do not remove it - we will get the value for this
+       option below. */
+    if (SYArgHasName(argc_ptr, argv, 0, "-f90modfile")) {
+	F90Module = 1;
+	appendCmdLine("-f90modfile");
+    }
     /* If there is a f90 module file, open it now and add the header */
     if (F90Module) {
 	char fmodfile[MAX_FILE_SIZE];
@@ -79,6 +89,11 @@ int f90ModuleInit(int *argc_ptr, char **argv)
 	    if (MPIU_Strncpy(fmodfile, "f90module.f90", sizeof(fmodfile))) {
 		ABORT("Unable to set the name of the Fortran 90 module file");
 	    }
+	    /* Append the default module name */
+	    appendCmdLine("f90module.f90");
+	}
+	else {
+	    appendCmdLine(fmodfile);
 	}
 
 	fmodout = fopen(fmodfile, "w");

@@ -1,8 +1,8 @@
 /* tbase.c */
 /* Fortran interface file */
 /*
- * This file was generated automatically by bfort from the C source
- * file.
+ * This file was generated automatically by bfort from the C source file
+ * Major args: -ferr -anyname
  */
 #ifdef FORTRANCAPS
 #define funcf1_ FUNCF1
