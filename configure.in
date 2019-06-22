@@ -65,25 +65,11 @@ dnl We add to it here
 AC_CHECK_PROGS(CXX, $CCC c++ g++ gcc CC cxx cc++ cl xlC_r xlC pgCC, gcc)
 AC_PROG_CXX
 dnl
-echo "Enable strict is $enable_strict"
 if test "X$enable_strict" != "X" ; then
-    dnl saveCFLAGS="$CFLAGS"
     PAC_CC_STRICT($enable_strict)
-    dnl PAC_ARG_STRICT
-    dnl # The above sets CFLAGS and CXXFLAGS.  For this packate, we want the values
-    dnl # in optflags
-    dnl optflags="$CFLAGS"
-    dnl CFLAGS=$saveCFLAGS
     optflags="$pac_cc_strict_flags"
 
-    dnl saveCXXFLAGS="$CXXFLAGS"
-    dnl PAC_CXX_CHECK_COMPILER_OPTION([-Wall])
-    dnl PAC_ARG_STRICT_CXX
     PAC_CXX_STRICT($enable_strict)
-    dnl # The above sets CFLAGS and CXXFLAGS.  For this packate, we want the values
-    dnl # in optflags
-    dnl optcxxflags="$CXXFLAGS"
-    dnl CXXFLAGS=$saveCXXFLAGS
     optcxxflags="$pac_cxx_strict_flags"
 fi
 
