@@ -35,7 +35,7 @@ MAN1_FILES         = tohtml.1 doctext.1 bfort.1
 DISTTARGSUBDIRS = src docs
 DISTSUBDIRS      = confdb share
 DISTFILES = Makefile.in Makerules.in configure configure.in \
-		README autogen.sh aclocal.m4
+		README autogen.sh aclocal.m4 RELEASE_NOTES
 DISTINCFILES = daytime.h getopts.h patchlevel.h.in \
 		rdconfig.h sowing.h sowingconfig.h.in \
 		sowingfile.h sowingtxt.h trspace.h

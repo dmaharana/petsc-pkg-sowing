@@ -1,0 +1,51 @@
+Release Notes for the Sowing package
+
+1.1.26: June 23, 2019
+
+ Added these release notes.
+ This version is an update from 1.1.25.  The major updates are:
+ doctext: Added an option to handled a single ". " command with the same
+   formatting as a list created with :+ ... -". Also allow "- " to define
+   a list of a single element.  This is to improve the formatting of manual
+   pages. The argument -oldstylearg will tell doctext to use the approach
+   from previous versions. With the new style of argument command, doctext
+   will issue a warning message for argument lists of more than one argument
+   that do not start with the "+" command.
+   doctext environment variables:
+      DOCTEXT_VERBOSE if set to yes or true will turn on verbose output
+      DOCTEXT_OLDSTYLEARG if set to yes or true will use the processing of
+      the "+", ". ", and "-" commands from previous versions of doctext
+ bfort: Added -o filename for the output filename. Use const to avoid CtoF
+   transformations (const data can't be changed in the called routine). Improved
+   error and warning messages. Better formatting for output interface files.
+   Better support for converting from and to Fortran strings, with options
+      -fstring      - Generate code to convert to/from Fortran character
+                      strings. Only lightly tested so far
+      -fnostring    - Do not generate interface files for routines with char*
+                      arguments
+      -fstring-asis - Close to the behavior in previous versions - just
+                      pass the pointer to the string from Fortran to the
+                      C routine.  This is usually incorrect, however.
+   The environment variable BFORT_STRINGHANDLING can be set to IGNORE to
+   get the effect of -fstring-asis.
+ bfort tests: There is a new and cleaner set of tests in testing2 ; this
+   is intended to become the new test set in the next release or so.
+ bfort2: New version of bfort that uses two passes to improve the readability
+   of the generated interfaces.  Build with make BFORTVERSION=new ; test in
+   bfort/testing2 with make BFORTVERSION=new testing . This version will
+   eventually replace bfort.
+ configure: Added an update to the enable-strict rules, using more recent
+   autoconf macros from MPICH.  Added C++ to the strict rules
+ make dist: Changed the make dist rules to explicitly select files, rather
+   than taking the current svn commited files (which led to the distributions
+   using different files in confdb than in the version used for development)
+   general code: Mostly clean compile with --enable-strict, except for tr.c ,
+   which is the memory allocator.
+ misc: Some cleanup of files, particularly space squashes. Preparations to
+   move from svn to git.
+
+1.1.25: September 27, 2016
+ bfort: partial update to remove support for non-ANSI-C prototypes, and a
+   partial add of support for transforming between C and Fortran character
+   strings
+ Misc: other changes and cleanup
