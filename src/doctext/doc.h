@@ -51,6 +51,10 @@ extern char NewlineString[3];
 // Used for debugging
 extern int verbose;
 
+// User for warning and error message control
+extern int warningEnable;
+extern int warningNoArgDesc;
+
 // Used for the rare case (especially in verbatim output) where we still need
 // to know the output format.
 typedef enum { FMT_UNKNOWN, FMT_NROFF, FMT_LATEX, FMT_HTML } outFormat_t;

@@ -10,7 +10,9 @@ Release Notes for the Sowing package
    pages. The argument -oldstylearg will tell doctext to use the approach
    from previous versions. With the new style of argument command, doctext
    will issue a warning message for argument lists of more than one argument
-   that do not start with the "+" command.
+   that do not start with the "+" command.  The the -Wargdesc option,
+   doctext will also warn about arguments that do not include a description;
+   these should use a different formatting choice.
    doctext environment variables:
       DOCTEXT_VERBOSE if set to yes or true will turn on verbose output
       DOCTEXT_OLDSTYLEARG if set to yes or true will use the processing of

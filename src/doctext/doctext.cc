@@ -34,6 +34,10 @@ char NewlineString[3];
 // Set true for debugging
 int verbose = 0;
 
+// User for warning and error message control
+int warningEnable = 1;
+int warningNoArgDesc = 0;
+
 // Keep track of the output format that we're using
 outFormat_t outFormat = FMT_UNKNOWN;
 
@@ -511,6 +515,14 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
 	    }
 	}
     textout->PutOp( "eop" );
+
+    // Sanity check
+    if (InArgList) {
+	fprintf(stderr,
+		"ERROR (%s) Incomplete argument list (probably + with no - in %s\n",
+		    GetCurrentInputFileName(), GetCurrentRoutinename());
+	InArgList = 0;
+    }
     return 0;
 }
 
@@ -777,6 +789,15 @@ int HandleArgs( CmdLine *cmd, const char **path, const char **extension,
   if (!cmd->HasArg( "-oldargstyle" )) OldArgList = 1;
   if (!cmd->HasArg( "-verbose" )) verbose = 1;
 
+  // Check for warning options
+  if (!cmd->HasArg( "-Wargdesc" )) warningNoArgDesc = 1;
+  if (!cmd->HasArg( "-Wnone" )) warningEnable = 0;
+
+  // If warnings disabled, turn them all off
+  if (!warningEnable) {
+      warningNoArgDesc = 0;
+  }
+
   return 0;
 }
 
@@ -792,9 +813,10 @@ Synopsis:
           [ -defn defnfile ] [ -dosnl ] [ -skipprefix name ]
           [ -ignore string ] [ -oldargstyle ]
           [ -heading string ] [ -basedir dirname ] filenames
+	  [ -Wargdesc ] [ -Wnone ]
 
 Input Parameters:
-.    -mpath path -   Sets the path where the man pages will be written
++    -mpath path -   Sets the path where the man pages will be written
 .    -ext n      -   Sets the extension (1-9,l, etc)
 .    -nolocation -   Don''t give the filename where the man page info was
 .    -I filename -   Filename contains the public includes needed by these
@@ -831,6 +853,9 @@ $          -index foo.cit -indexdir \"http://www.mcs.anl.gov/foo/man\"
 .    -dosnl - Generate DOS style files (return-newline instead of newline)
 .    filenames -      Names of the files from which documents are to be
                    extracted
+.    -Wargdesc - Warn about arguments with no description
+-    -Wnone  - Turn off warnings
+
 D*/
 void PrintHelp( void )
 {
@@ -843,6 +868,7 @@ doctext [ -mpath path ] [ -ext n ] [ -I filename ] [ -latex ]\n\
         [ -debug_paths ]\n\
         [ -ignore string ] [ -oldargstyle ]\n\
         [ -heading string ] [ -basedir dirname ] filenames\n\
+	[ -Wargdesc ] [ -Wnone ]\n\
 \n\
     -mpath path    Sets the path where the man pages will be written\n\
     -ext n         Sets the extension (1-9,l, etc)\n\
@@ -886,6 +912,8 @@ fprintf( stderr, "\
                    to define the output formats.  Use this if doctext \n\
                    complains that it cannot find files like html.def or\n\
                    nroff.def\n\
+    -Wargdesc - Warn about arguments with no description\n\
+    -Wnone  - Turn off warnings\n\
     filenames      Names of the files from which documents are to be\n\
                    extracted\n\
 \n\

@@ -88,7 +88,8 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 {
     char ch;
     int  at_first = 1;
-    int  last_was_backslash;
+    int  last_was_backslash=0;
+    int  sawhyphen=0;
     char argname[MAX_ARG_NAME+1], *p=argname;
 
     SkipWhite( ins );
@@ -112,8 +113,8 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
     if (arg_kind == ARGUMENT_BEGIN) {
 	if (InArgList) {
 	    fprintf(stderr,
-		    "WARNING (%s): '+' command seen within list of arguments\n",
-		    GetCurrentInputFileName());
+		    "WARNING (%s): '+' command seen within list of arguments for %s\n",
+		    GetCurrentInputFileName(), GetCurrentRoutinename());
 	}
 	else {
 	    textout->PutOp( "s_arg_list" );
@@ -132,8 +133,8 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 	if (!InArgList && !OldArgList) {
 	    if (LastCmdArg == ARGUMENT) {
 		fprintf(stderr,
-		"WARNING (%s): multiple '. ' commands without '+' to start list\n",
-			GetCurrentInputFileName());
+		"WARNING (%s): multiple '. ' commands without '+' to start list in %s\n",
+			GetCurrentInputFileName(), GetCurrentRoutinename());
 	    }
 	    textout->PutOp( "s_arg_list" );
 	    arg_kind = ARGUMENT_END;     // act as if this is a lone end-arg
@@ -149,11 +150,16 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 
 #endif
 
-    // Get the name
+    // Get the name. Detect the case of no hyphen - this is a name with
+    // no description
     last_was_backslash = 0;
+    sawhyphen          = 0;
     while ( !ins->GetChar( &ch ) ) {
 	if (ch == '\n' || (ch == '-' && !at_first && !last_was_backslash)) {
-	  *lastWasNl = 1; break; }
+	    *lastWasNl = 1;
+	    if (ch == '-') sawhyphen = 1;
+	    break;
+	}
 	if (last_was_backslash && ch != '-') {
 	  textout->PutChar( '\\' );
 	}
@@ -162,7 +168,7 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 	if (p - argname < MAX_ARG_NAME)
 	    *p++ = ch;
 	if (!last_was_backslash) {
-	  // We don't output the - (separator)
+	  // We don't output the backslash until we know if it is an escape
 	  textout->PutChar( ch );
 	}
 	at_first = 0;
@@ -174,6 +180,41 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
     // should generate and HTML anchor to use in the index.
     if (indexArgsPut(argname)) {
 	textout->PutOp("anchor", argname);
+    }
+
+    // If we did not see a hyphen, we have a choice:
+    //   There is no description - we need to end the item here
+    //   There is a following description on the next line.  In that
+    //   case, the first item must not be a command - . or + or -
+    if (!sawhyphen) {
+	char c1;
+	// Peek at the next character.  Continuation lines must not start
+	// with a command character or a blank line.
+	ins->GetChar(&c1);
+	ins->UngetChar(c1);
+	if (c1 == ARGUMENT || c1 == ARGUMENT_END || c1 == ARGUMENT_BEGIN ||
+	    c1 == '\n') {
+	    if (warningNoArgDesc) {
+		fprintf(stderr,
+		    "WARNING (%s): argument with no description in %s\n",
+		    GetCurrentInputFileName(), GetCurrentRoutinename());
+	    }
+	    if (InArgList) {
+		textout->PutOp( "e_arg_inlist" );
+	    }
+	    else {
+		textout->PutOp( "e_arg" );
+	    }
+	    if (c1 == '\n' && InArgList) arg_kind = ARGUMENT_END;
+
+	    // Handle end-of-list
+	    if (arg_kind == ARGUMENT_END) {
+		textout->PutOp( "e_arg_list" );
+		InArgList = 0;
+		indexArgsSet(0);    // See handling at the end of the routine
+	    }
+	    return 0;
+	}
     }
 
     if (InArgList) {
