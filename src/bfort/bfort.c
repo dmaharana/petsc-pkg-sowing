@@ -202,7 +202,7 @@ int stringCtoF(FILE *fout, int nargs, ARG_LIST args[]);
   bfort - program to extract short definitions for a Fortran to C interface
 
   Input:
-. filenames - Names the files from which lint definitions are to be extracted
++ filenames - Names the files from which lint definitions are to be extracted
 . -nomsgs   - Do not generate messages for routines that can not be converted
               to Fortran.
 . -nofort   - Generate messages for all routines/macros without a Fortran
@@ -243,7 +243,7 @@ int stringCtoF(FILE *fout, int nargs, ARG_LIST args[]);
   #endif
 .ve
   to the wrapper file.
-. -anyname   - Generate a single wrapper that can handle the three most common
+- -anyname   - Generate a single wrapper that can handle the three most common
                cases: trailing underscore, no underscore, and all caps.  The
                choice is based on whether
 .vb

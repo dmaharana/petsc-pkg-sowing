@@ -17,13 +17,13 @@ char NewlineString[3];
 doc2lt - program to extract short descriptions in various formats
 
 Input:
-. -html     - Use tabular format output in HTML
++ -html     - Use tabular format output in HTML
 . -mapref path - Use path as a `map` file; this contains mappings from
   names to links.  Useful mostly with '-html'.  Multiple '-mapref' files
   may be given.
 . -defn path - Use 'path' to redefine the output commands.  See the default
    definition files 'latex.def' and 'html.def' for examples.
-. filenames - Names the files from which documents are to be extracted
+- filenames - Names the files from which documents are to be extracted
 
 Notes:
 The default format is LaTeX.
