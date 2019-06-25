@@ -235,13 +235,21 @@ dnl Checks for system services.
 dnl
 dnl Autoconf doesn't expand certain values, expecting them to be used
 dnl in only shell scripts or Makefiles.
+dnl Even worse, it leaves some of them defined to NONE until the last
+dnl possible moment.
 dnl
 if test x$prefix != xNONE ; then
+    if test x$exec_prefix = xNONE ; then
+        exec_prefix='${prefix}'
+    fi
     eval expanded_datadir=$datadir
     eval expanded_bindir=$bindir
     eval expanded_datarootdir=$datarootdir
 else
     prefix=$ac_default_prefix
+    if test x$exec_prefix = xNONE ; then
+        exec_prefix='${prefix}'
+    fi
     eval expanded_datadir=$datadir
     eval expanded_bindir=$bindir
     eval expanded_datarootdir=$datarootdir
