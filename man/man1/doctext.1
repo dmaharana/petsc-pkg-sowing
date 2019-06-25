@@ -1,4 +1,4 @@
-.TH doctext 1 "6/17/2019" " " ""
+.TH doctext 1 "6/23/2019" " " ""
 .SH NAME
 doctext \-  Generate documentation pages from source files 
 .SH SYNOPSIS
@@ -8,8 +8,9 @@ doctext [ -mpath path ] [ -ext n ] [ -I filename ] [ -latex ]
 [ -jumpfile filename ] [ -outfile filename ]
 [ -mapref filename ] [ -nolocation ] [ -location ]
 [ -defn defnfile ] [ -dosnl ] [ -skipprefix name ]
-[ -ignore string ]
+[ -ignore string ] [ -oldargstyle ]
 [ -heading string ] [ -basedir dirname ] filenames
+[ -Wargdesc ] [ -Wnone ]
 .fi
 
 .SH INPUT PARAMETERS
@@ -93,6 +94,13 @@ Put the manpages in the indicated file
 .PD 1
 .PD 0
 .TP
+.B -oldargstyle    
+- Allow multiple '. ' for an argument list, instead of
+using '+  .... -' for argument lists with multiple
+entries.
+.PD 1
+.PD 0
+.TP
 .B -skipprefix name 
 - skip 'name' at the beginning of each line.  This
 may be used for Fortran or Shell sources
@@ -128,5 +136,16 @@ Uses directory in the Location: field
 - Names of the files from which documents are to be
 extracted
 .PD 1
+.PD 0
+.TP
+.B -Wargdesc 
+- Warn about arguments with no description
+.PD 1
+.PD 0
+.TP
+.B -Wnone  
+- Turn off warnings
+.PD 1
+
 .SH LOCATION
 doctext.cc
