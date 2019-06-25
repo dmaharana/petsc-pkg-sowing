@@ -28,7 +28,7 @@ FILES_USING_QUOTE = $(FILES_QUOTEFMT) $(FILES_NOQUOTEFMT)
 
 TESTFILES = tst.f tst2.c tdollar.h estest.h eopindex.def \
 	indent-html.def indent-latex.def indent-man.def tst.cit pubinc \
-	fhtml.def
+	fhtml.def oldst.c
 SOURCES = $(FILES) $(TESTFILES)
 DIST_COMMON = Makefile.in
 DISTSUBDIRS = testref defn
