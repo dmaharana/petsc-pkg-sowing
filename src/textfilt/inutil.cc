@@ -3,7 +3,7 @@
 #include "instream.h"
 #include "inutil.h"
 
-/* 
+/*
    These are utilities that do NOT belong to a particular class.
 
    I'm not sure why I want to do this; in Java I'd have to put them in
@@ -17,7 +17,7 @@
    abc[def]
 
    This matches abcd or abce or abcf.  The variable match is filled
-   in with the matching pattern.  Non-matching characters are 
+   in with the matching pattern.  Non-matching characters are
    discarded.
  */
 
@@ -41,7 +41,7 @@ int FindPattern( InStream *ins, const char *pattern, char *match )
 	    state  = MSTATE;
 	    break;
 
-	    case MCHAR: 
+	    case MCHAR:
 	    if (ins->GetChar( &ch )) return 1;
 	    if (ch == *curpat) {
 		*m++ = ch;
@@ -65,7 +65,7 @@ int FindPattern( InStream *ins, const char *pattern, char *match )
 		}
 	    else
 		state = MRESET;
-	    
+
 	    break;
 
 	    case MSTATE:
@@ -75,7 +75,7 @@ int FindPattern( InStream *ins, const char *pattern, char *match )
 	}
     *m++ = 0;
     return 0;
-    
+
 }
 
 int SkipWhite( InStream *ins )
@@ -96,7 +96,7 @@ int SkipLine( InStream *ins )
 }
 
 int SkipOver( InStream *ins, const char *str )
-{	
+{
 	char ch;
     while ( *str && !ins->GetChar( &ch ) && ch == *str++) ;
     return 0;

@@ -27,7 +27,7 @@ extern int free();
     trspace - Routines for tracing space usage
 
     Description:
-    trmalloc replaces malloc and trfree replaces free.  
+    trmalloc replaces malloc and trfree replaces free.
     These routines
     have the same syntax and semantics as the routines that they replace,
     In addition, there are routines to report statistics on the memory
@@ -40,7 +40,7 @@ extern int free();
     random trash (or fortuitous zeros).  What you get is fc (bytes);
     this will usually create a "bad" value.
 
-    As an aid in developing codes, a maximum memory threshold can 
+    As an aid in developing codes, a maximum memory threshold can
     be set with TrSetMaxMem.
  D*/
 
@@ -68,7 +68,7 @@ typedef struct _trSPACE {
     char            fname[TR_FNAME_LEN];
     int             freed_lineno;
     char            freed_fname[TR_FNAME_LEN];
-    unsigned long   cookie;        
+    unsigned long   cookie;
     struct _trSPACE *next, *prev;
     } TRSPACE;
 /* This union is used to insure that the block passed to the user is
@@ -101,14 +101,14 @@ static long    TRMaxMemId = 0;
 static long    TRMaxMemAllow = 0;
 
 /*+C
-   trinit - Setup the space package.  Only needed for 
+   trinit - Setup the space package.  Only needed for
    error messages and flags.
 +*/
 void trinit( int rank )
 {
     world_rank = rank;
 }
- 
+
 /*+C
     trmalloc - Malloc with tracing
 
@@ -131,13 +131,13 @@ void *trmalloc( unsigned int a, int lineno, char *fname )
 
     if (TRdebugLevel > 0) {
 	char buf[256];
-	sprintf( buf, "Invalid MALLOC arena detected at line %d in %s\n", 
+	sprintf( buf, "Invalid MALLOC arena detected at line %d in %s\n",
 		 lineno, fname );
 	if (trvalid( buf )) return 0;
     }
 
     nsize = a;
-    if (nsize & TR_ALIGN_MASK) 
+    if (nsize & TR_ALIGN_MASK)
 	nsize += (TR_ALIGN_BYTES - (nsize & TR_ALIGN_MASK));
     if ((long)(allocated + nsize) > TRMaxMemAllow && TRMaxMemAllow) {
 	/* Return a null when memory would be exhausted */
@@ -175,8 +175,8 @@ void *trmalloc( unsigned int a, int lineno, char *fname )
     }
     frags     ++;
 
-    if (TRlevel & TR_MALLOC) 
-	fprintf( stderr, "[%d] Allocating %d bytes at %lx in %s:%d\n", 
+    if (TRlevel & TR_MALLOC)
+	fprintf( stderr, "[%d] Allocating %d bytes at %lx in %s:%d\n",
 		 world_rank, a, (long)new, fname, lineno );
     return (void *)new;
 }
@@ -220,33 +220,33 @@ called in %s at line %d\n", world_rank, (long)a, file, line );
 	(sizeof(long) == 8 && ((long)nend & 0x7) != 0)) {
 	fprintf( stderr,
  "[%d] Block at address %lx is corrupted (invalid address or header)\n\
-called in %s at line %d\n", world_rank, (long)a + sizeof(TrSPACE), 
+called in %s at line %d\n", world_rank, (long)a + sizeof(TrSPACE),
 		 file, line );
 	return;
     }
     if (*nend != COOKIE_VALUE) {
 	if (*nend == ALREADY_FREED) {
-	    fprintf( stderr, 
-		     "[%d] Block [id=%d(%lu)] at address %lx was already freed\n", 
+	    fprintf( stderr,
+		     "[%d] Block [id=%d(%lu)] at address %lx was already freed\n",
 		     world_rank, head->id, head->size, (long)a + sizeof(TrSPACE) );
 	    head->fname[TR_FNAME_LEN-1]	  = 0;  /* Just in case */
 	    head->freed_fname[TR_FNAME_LEN-1] = 0;  /* Just in case */
-	    fprintf( stderr, 
-		     "[%d] Block freed in %s[%d]\n", world_rank, head->freed_fname, 
+	    fprintf( stderr,
+		     "[%d] Block freed in %s[%d]\n", world_rank, head->freed_fname,
 		     head->freed_lineno );
-	    fprintf( stderr, 
-		     "[%d] Block allocated at %s[%d]\n", 
+	    fprintf( stderr,
+		     "[%d] Block allocated at %s[%d]\n",
 		     world_rank, head->fname, head->lineno );
 	    return;
 	}
 	else {
 	    /* Damaged tail */
-	    fprintf( stderr, 
-		     "[%d] Block [id=%d(%lu)] at address %lx is corrupted (probably write past end)\n", 
+	    fprintf( stderr,
+		     "[%d] Block [id=%d(%lu)] at address %lx is corrupted (probably write past end)\n",
 		     world_rank, head->id, head->size, (long)a );
 	    head->fname[TR_FNAME_LEN-1]= 0;  /* Just in case */
-	    fprintf( stderr, 
-		     "[%d] Block allocated in %s[%d]\n", world_rank, 
+	    fprintf( stderr,
+		     "[%d] Block allocated in %s[%d]\n", world_rank,
 		     head->fname, head->lineno );
 	}
     }
@@ -267,16 +267,16 @@ called in %s at line %d\n", world_rank, (long)a + sizeof(TrSPACE),
     if (head->next)
 	head->next->prev = head->prev;
     if (TRlevel & TR_FREE)
-	fprintf( stderr, "[%d] Freeing %lu bytes at %lx in %s:%d\n", 
+	fprintf( stderr, "[%d] Freeing %lu bytes at %lx in %s:%d\n",
 		 world_rank, head->size, (long)a + sizeof(TrSPACE),
 		 file, line );
-    
-    /* 
+
+    /*
        Now, scrub the data (except possibly the first few ints) to
-       help catch access to already freed data 
+       help catch access to already freed data
      */
     nset = head->size -  2 * sizeof(int);
-    if (nset > 0) 
+    if (nset > 0)
 	memset( ahead + 2 * sizeof(int), 0xda, nset );
     free( a );
 }
@@ -290,7 +290,7 @@ called in %s at line %d\n", world_rank, (long)a + sizeof(TrSPACE),
 
    Return value:
    The number of errors detected.
-   
+
    Output Effect:
    Error messages are written to stdout.  These have the form of either
 
@@ -320,10 +320,10 @@ int trvalid( const char *str )
 	if (head->cookie != COOKIE_VALUE) {
 	    if (!errs) fprintf( stderr, "%s\n", str );
 	    errs++;
-	    fprintf( stderr, "[%d] Block at address %lx is corrupted\n", 
+	    fprintf( stderr, "[%d] Block at address %lx is corrupted\n",
 		     world_rank, (long)head );
 	    /* Must stop because if head is invalid, then the data in the
-	       head is probably also invalid, and using could lead to SEGV 
+	       head is probably also invalid, and using could lead to SEGV
 	       or BUS
 	    */
 	    return errs;
@@ -334,14 +334,14 @@ int trvalid( const char *str )
 	    if (!errs) fprintf( stderr, "%s\n", str );
 	    errs++;
 	    head->fname[TR_FNAME_LEN-1]= 0;  /* Just in case */
-	    fprintf( stderr, 
-		     "[%d] Block [id=%d(%lu)] at address %lx is corrupted (probably write past end)\n", 
+	    fprintf( stderr,
+		     "[%d] Block [id=%d(%lu)] at address %lx is corrupted (probably write past end)\n",
 		     world_rank, head->id, head->size, (long)a );
-	    fprintf( stderr, 
-		     "[%d] Block allocated in %s[%d]\n", 
+	    fprintf( stderr,
+		     "[%d] Block allocated in %s[%d]\n",
 		     world_rank, head->fname, head->lineno );
-	    fprintf( stderr, 
-		     "[%d] Expected %x, read %lx\n", 
+	    fprintf( stderr,
+		     "[%d] Expected %x, read %lx\n",
 		     world_rank, COOKIE_VALUE, nend[0] );
 	}
 	head = head->next;
@@ -351,7 +351,7 @@ int trvalid( const char *str )
 
 /*+C
    trspace - Return space statistics
-   
+
    Output parameters:
 .   space - number of bytes currently allocated
 .   frags - number of blocks currently allocated
@@ -379,24 +379,24 @@ void trdump( FILE *fp )
     if (fp == 0) fp = stderr;
     head = TRhead;
     while (head) {
-	fprintf( fp, "[%d] %lu at [%lx], id = ", 
+	fprintf( fp, "[%d] %lu at [%lx], id = ",
 		 world_rank, head->size, (long)head + sizeof(TrSPACE) );
 	if (head->id >= 0) {
 	    head->fname[TR_FNAME_LEN-1] = 0;
-	    fprintf( fp, "%d %s[%d]\n", 
+	    fprintf( fp, "%d %s[%d]\n",
 		     head->id, head->fname, head->lineno );
 	}
 	else {
 	    /* Decode the package values */
 	    head->fname[TR_FNAME_LEN-1] = 0;
 	    id = head->id;
-	    fprintf( fp, "%d %s[%d]\n", 
+	    fprintf( fp, "%d %s[%d]\n",
 		     id, head->fname, head->lineno );
 	}
 	head = head->next;
     }
 /*
-    fprintf( fp, "# [%d] The maximum space allocated was %ld bytes [%ld]\n", 
+    fprintf( fp, "# [%d] The maximum space allocated was %ld bytes [%ld]\n",
 	     world_rank, TRMaxMem, TRMaxMemId );
  */
 }
@@ -431,9 +431,9 @@ static int IntCompare( TRINFO *a, TRINFO *b )
 static FILE *TRFP;
 /*ARGSUSED*/
 static void PrintSum( TRINFO **a, VISIT order, int level )
-{ 
-    if (order == postorder || order == leaf) 
-	fprintf( TRFP, "[%d]%s[%d] has %d\n", 
+{
+    if (order == postorder || order == leaf)
+	fprintf( TRFP, "[%d]%s[%d] has %d\n",
 		 (*a)->id, (*a)->fname, (*a)->lineno, (*a)->size );
 }
 
@@ -464,7 +464,7 @@ while (head) {
 #if !defined(IRIX) && !defined(solaris) && !defined(HPUX) && !defined(rs6000)
     fnd    = (TRINFO **)tsearch( (char *) key, (char **) &root, IntCompare );
 #else
-    fnd    = (TRINFO **)tsearch( (void *) key, (void **) &root, 
+    fnd    = (TRINFO **)tsearch( (void *) key, (void **) &root,
 				 (int (*)())IntCompare );
 #endif
     if (*fnd == key) {
@@ -479,16 +479,16 @@ while (head) {
 TRFP = fp;
 twalk( (char *)root, (void (*)())PrintSum );
 /*
-fprintf( fp, "# [%d] The maximum space allocated was %d bytes [%d]\n", 
+fprintf( fp, "# [%d] The maximum space allocated was %d bytes [%d]\n",
 	 world_rank, TRMaxMem, TRMaxMemId );
 	 */
 }
 #else
 void trSummary( FILE *fp )
 {
-fprintf( fp, "# [%d] The maximum space allocated was %ld bytes [%ld]\n", 
+fprintf( fp, "# [%d] The maximum space allocated was %ld bytes [%ld]\n",
 	 world_rank, TRMaxMem, TRMaxMemId );
-}	
+}
 #endif
 
 /*+
@@ -501,7 +501,7 @@ void trid( int id )
 
 /*+C
   trlevel - Set the level of output to be used by the tracing routines
- 
+
   Input Parameters:
 . level = 0 - notracing
 . level = 1 - trace mallocs
@@ -588,7 +588,7 @@ return p;
 
     Returns:
     Double aligned pointer to requested storage, or null if not
-    available.  This implementation ALWAYS allocates new space and copies 
+    available.  This implementation ALWAYS allocates new space and copies
     the contents into the new space.
  +*/
 void *trrealloc( void *p, int size, int lineno, char *fname )
@@ -604,7 +604,7 @@ void *trrealloc( void *p, int size, int lineno, char *fname )
     if (head->cookie != COOKIE_VALUE) {
 	/* Damaged header */
 	fprintf( stderr, "[%d] Block at address %lx is corrupted; cannot realloc;\n\
-may be block not allocated with trmalloc or MALLOC\n", 
+may be block not allocated with trmalloc or MALLOC\n",
 		 world_rank, (long)pa );
 	return 0;
     }
@@ -661,13 +661,13 @@ char *trstrdup( const char *str, int lineno, const char *fname )
   allocating ANY space (space is being optimized here).
 
   We do this by first recursively sorting halves of the list and then
-  merging them.  
+  merging them.
  */
 /* Forward refs for these local routines */
 TRSPACE *trImerge(TRSPACE *, TRSPACE *);
 TRSPACE *trIsort(TRSPACE *, int);
 void trSortBlocks(void);
- 
+
 /* Merge two lists, returning the head of the merged list */
 TRSPACE *trImerge( TRSPACE *l1, TRSPACE *l2 )
 {
@@ -676,13 +676,13 @@ int     sign;
 while (l1 && l2) {
     sign = strcmp(l1->fname, l2->fname);
     if (sign > 0 || (sign == 0 && l1->lineno >= l2->lineno)) {
-	if (head) tail->next = l1; 
+	if (head) tail->next = l1;
 	else      head = tail = l1;
 	tail = l1;
 	l1   = l1->next;
 	}
     else {
-	if (head) tail->next = l2; 
+	if (head) tail->next = l2;
 	else      head = tail = l2;
 	tail = l2;
 	l2   = l2->next;
@@ -743,14 +743,14 @@ while (head) {
     cur     = head->next;
     nblocks = 1;
     nbytes  = (int)head->size;
-    while (cur && strcmp(cur->fname,head->fname) == 0 && 
+    while (cur && strcmp(cur->fname,head->fname) == 0 &&
 	   cur->lineno == head->lineno ) {
 	nblocks++;
 	nbytes += (int)cur->size;
 	cur    = cur->next;
 	}
-    fprintf( fp, "[%d] File %13s line %5d: %d bytes in %d allocation%c\n", 
-	     world_rank, head->fname, head->lineno, nbytes, nblocks, 
+    fprintf( fp, "[%d] File %13s line %5d: %d bytes in %d allocation%c\n",
+	     world_rank, head->fname, head->lineno, nbytes, nblocks,
 	     (nblocks > 1) ? 's' : ' ' );
     head = cur;
     }
@@ -767,7 +767,7 @@ void TrInit( void )
     char *p;
     char *v;
 
-    /* This is a special entry point that checks an environment variable 
+    /* This is a special entry point that checks an environment variable
        for the debug level.  This routine does not *need* to be called,
        but it can help */
 

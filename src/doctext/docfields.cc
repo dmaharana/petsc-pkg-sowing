@@ -1,6 +1,6 @@
 //
 // This file contains routine to remember the fields in a type, macro, struct,
-// or enum.  
+// or enum.
 //
 // Need:
 //  Create new list
@@ -8,7 +8,7 @@
 //  Return next entry in list as string.
 //
 // Should these read directly?
-// Do we want to use this general approach or do we want one for each 
+// Do we want to use this general approach or do we want one for each
 // type (struct, enum, function arg).
 
 #include "doc.h"
@@ -17,7 +17,7 @@
 #include <string.h>
 
 // DocField is a structure so that we can hide it :)
-typedef struct _DocField { 
+typedef struct _DocField {
   struct _DocField *next;
   char             *type_name;   // Type name (e.g., int
   char             *name;        // Name of variable
@@ -32,7 +32,7 @@ void *DocNewField( void *head, char *name, char *type )
     fprintf( stderr, "Unable to allocate new field\n" );
     exit(1);
   }
-  
+
   if (head) {
     DocField *p = (DocField *)head;
     while (p->next) p = p->next;

@@ -10,14 +10,14 @@
    This file handles creating a keyword table.  This WILL change as
    we add tools for the keyword interface.
 
-   Because of the nature of the processing, we need to remember the 
+   Because of the nature of the processing, we need to remember the
    name of the function being documented, and the filename where it
-   is being written.  These will be provide by parser for the man pages 
+   is being written.  These will be provide by parser for the man pages
    themselves.
  */
 static OutStream *keywordfile = 0;
 
-/* 
+/*
   Give the name of the file.  - stands for stdout.
  */
 int KeywordOpen( const char *name )
@@ -45,6 +45,6 @@ int KeywordOut( char *line )
     keywordfile->PutToken( 0, GetCurrentRoutinename() );
     keywordfile->PutToken( 1, GetCurrentFileName() );
     keywordfile->PutToken( 1, line );
-    
+
     return 0;
 }

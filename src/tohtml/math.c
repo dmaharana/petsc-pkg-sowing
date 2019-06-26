@@ -15,7 +15,7 @@
 
    In particular, this will allow us to process
         \begin{displaymath}...\end{displaymath}, since the effect of begin
-   is to get us started, and the \end will invoke a replacement that 
+   is to get us started, and the \end will invoke a replacement that
    places \] (or $$) on the input.
  */
 
@@ -58,7 +58,7 @@ void TXAddToken( const char *tok, char **outstrp, int *maxstrp )
 
 /*
  * Remove Convert \ in front of []{}(), remove {}, and process _^ for HTML
- * (if not HTML, won't be in this routine).  Note that it is recursive 
+ * (if not HTML, won't be in this routine).  Note that it is recursive
  * for things like a^{i_0}.
  *
  * instr is defined as EITHER null terminated or { ... }.  The flag
@@ -66,7 +66,7 @@ void TXAddToken( const char *tok, char **outstrp, int *maxstrp )
  * or a single character is seen (this matches TeX's argument processing when
  * this is used to process a math argument, such as to ^ or _).
  */
-void TXConvertMathString( char **instrp, char **outstrp, int *maxstrp, 
+void TXConvertMathString( char **instrp, char **outstrp, int *maxstrp,
 			  int matched_brace )
 {
     char *instr = *instrp, *outstr = *outstrp;
@@ -111,15 +111,15 @@ void TXConvertMathString( char **instrp, char **outstrp, int *maxstrp,
 		if (strcmp( tmpname, "ldots" ) == 0) {
 		    TXAddToken( "...", &outstr, &maxstr );
 		}
-		else if (strcmp( tmpname, "cdot" ) == 0) 
+		else if (strcmp( tmpname, "cdot" ) == 0)
 		    TXAddToken( "&#183;", &outstr, &maxstr );
-		else if (strcmp( tmpname, "cdots" ) == 0) 
+		else if (strcmp( tmpname, "cdots" ) == 0)
 		    TXAddToken( "&#183;&#183;&#183;", &outstr, &maxstr );
-		else if (strcmp( tmpname, "times" ) == 0) 
+		else if (strcmp( tmpname, "times" ) == 0)
 		    TXAddToken( "&#215;", &outstr, &maxstr );
 		else if (strcmp( tmpname, "circ" ) == 0)
 		    TXAddToken( "&#176;", &outstr, &maxstr );
-		else if (strcmp( tmpname, "_" ) == 0) 
+		else if (strcmp( tmpname, "_" ) == 0)
 		    TXAddToken( "_", &outstr, &maxstr );
 		/* or better is &sdot; once HTML 4 is accepted */
 		else if (strcmp( tmpname, "sf" ) == 0) {
@@ -134,7 +134,7 @@ void TXConvertMathString( char **instrp, char **outstrp, int *maxstrp,
 		    /* This shouldn't happen */
 		    p = tmpname;
 		    while (*p && maxstr > 0) {
-			*outstr++ = *p++; 
+			*outstr++ = *p++;
 			maxstr--;
 		    }
 		}
@@ -149,7 +149,7 @@ void TXConvertMathString( char **instrp, char **outstrp, int *maxstrp,
 	else if (*instr == '}') {
 	    instr++;
 	    bracecnt--;
-	    /* Handle pop from font (need a stack associated with the 
+	    /* Handle pop from font (need a stack associated with the
 	       bracecount) */
 	    if (fontstate[bracecnt] != fontstate[bracecnt+1]) {
 		/* Not done yet */
@@ -188,7 +188,7 @@ void TXConvertMathString( char **instrp, char **outstrp, int *maxstrp,
     *maxstrp = maxstr;
 }
 
-/* 
+/*
    Skip math-mode text, using EITHER $, \], or \) as the ending token.
    Name is the OPENING token.
 
@@ -213,11 +213,11 @@ void TeXskipMath( TeXEntry *e, char *name, int doout )
 	TXcaptionHandling( e );
     }
 
-    if (DebugCommands) 
+    if (DebugCommands)
 	fprintf( stdout, "Processing environment %s\n", name );
     while (1) {
 	while ( (ch = TeXReadToken( curtok, &nsp )) == EOF) {
-	    if (DebugCommands) 
+	    if (DebugCommands)
 		fprintf( stdout, "EOF in TeXskipEnv\n" );
 	    /* Special case for vtt */
 	    if (curfile == 0 && strcmp( name, "_vtt" ) == 0) {
@@ -259,7 +259,7 @@ void TeXskipMath( TeXEntry *e, char *name, int doout )
 /* Skip the newlines and the end of the environment */
     SCSetTranslate( oldtrans );
     SCSkipNewlines( fpin[curfile] );
-    if (DebugCommands) 
+    if (DebugCommands)
 	fprintf( stdout, "Done with environment %s\n", name );
 }
 
@@ -339,7 +339,7 @@ void TXProcessDollar( TeXEntry *e, int latexmath, int checkdollar )
 	    }
 	}
 
-	/* If the previous character was a \ (command char), use 
+	/* If the previous character was a \ (command char), use
   	   special processing for this character */
 	if (hasBackwack) {
 	    /* Check for \] or \) */
@@ -353,7 +353,7 @@ void TXProcessDollar( TeXEntry *e, int latexmath, int checkdollar )
 	    }
 	    if (strcmp( token, "label" ) == 0) {
 		/* Need to process a label command */
-		/* Note that a label here, particularly if !displaymode, is a 
+		/* Note that a label here, particularly if !displaymode, is a
 		   LATEX error */
 		TXlabel( e );
 		/* Add a dummy incase this is the only thing on a line */
@@ -380,22 +380,22 @@ void TXProcessDollar( TeXEntry *e, int latexmath, int checkdollar )
 	    /* Here we could handle \ldots and some others ... */
 	    if (strcmp( token, "ldots" ) == 0)
 		numDoableCommands++;
-	    else if (strcmp( token, "sf" ) == 0) 
+	    else if (strcmp( token, "sf" ) == 0)
 		numDoableCommands++;
-	    else if (strcmp( token, "tt" ) == 0) 
+	    else if (strcmp( token, "tt" ) == 0)
 		numDoableCommands++;
-	    else if (strcmp( token, "_" ) == 0) 
+	    else if (strcmp( token, "_" ) == 0)
 		numDoableCommands++;
-	    else if (strcmp( token, "cdot" ) == 0) 
+	    else if (strcmp( token, "cdot" ) == 0)
 		numDoableCommands++;
-	    else if (strcmp( token, "cdots" ) == 0) 
+	    else if (strcmp( token, "cdots" ) == 0)
 		numDoableCommands++;
-	    else if (strcmp( token, "times" ) == 0) 
+	    else if (strcmp( token, "times" ) == 0)
 		numDoableCommands++;
-	    else if (strcmp( token, "circ" ) == 0) 
+	    else if (strcmp( token, "circ" ) == 0)
 		numDoableCommands++;
 	    /*	    else if (strcmp( token, "{" ) == 0 ||
-		     strcmp( token, "}" ) == 0) 
+		     strcmp( token, "}" ) == 0)
 		     numDoableCommands++; */
 	} /* Check for commandchar (hasBackwhack) */
 	else if (ch == CommentChar) {
@@ -409,14 +409,14 @@ void TXProcessDollar( TeXEntry *e, int latexmath, int checkdollar )
 
 	/* Remember if the PREVIOUS character was a CommandChar */
 	hasBackwack = (ch == CommandChar);
-    
+
 	/* copy to a buffer */
 	/* decrement length left FIRST to avoid memory overwrites */
 	mathbufleft -= nsp;
 	mathbufleft -= strlen(token);
 	if (mathbufleft < 0) break;
 
-	for (i=0; i<nsp; i++) 
+	for (i=0; i<nsp; i++)
 	    strcat( mathbuf, " " );
 	strcat( mathbuf, token );
     }
@@ -443,10 +443,10 @@ void TXProcessDollar( TeXEntry *e, int latexmath, int checkdollar )
 	if (checkdollar) {
 	    if (displaymode)
 		strcat( mathbuf, "]" );
-	    else 
+	    else
 		strcat( mathbuf, ")" );
 	}
-	else 
+	else
 	    strcat( mathbuf, "end{displaymath}" );
 
 	if (Debug_math_mode) {
@@ -480,7 +480,7 @@ void TXProcessDollar( TeXEntry *e, int latexmath, int checkdollar )
 	}
 	/* TXStripCmds( mathbuf + 2, strout ); */
 	/* This routine also handles ^ and _ */
-	{ 
+	{
 	    char *mathbufp, *outstrp = strout;
 	    mathbufp = mathbuf;
 	    if (checkdollar) mathbufp += 2;

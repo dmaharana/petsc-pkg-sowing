@@ -5,7 +5,7 @@
 #include "cmdline.h"
 
 
-/* 
+/*
    This file contains routines for procssing the command line.
  */
 
@@ -17,13 +17,13 @@ CmdLine::CmdLine( int in_argc, char ** in_argv )
 }
 
 /*
-   SqueezeArg - Remove all null arguments from an arg vector; 
+   SqueezeArg - Remove all null arguments from an arg vector;
    update the number of arguments.
  */
 int CmdLine::SqueezeArg()
 {
     int i, j;
-    
+
     /* Compress out the eliminated args */
     j    = 0;
     i    = 0;
@@ -51,10 +51,10 @@ int CmdLine::FindArg( const char *name )
 int CmdLine::HasArg( const char *name )
 {
     int idx;
-    
+
     idx = FindArg( name );
     if (idx < 0) return 1;
-    
+
     argv[idx]   = 0;
     SqueezeArg( );
     return 0;
@@ -80,9 +80,9 @@ int CmdLine::GetArg( const char *name, int *val )
 	}
     else {
 	if ((int)strlen(p) > 1 && p[0] == '-' && p[1] >= 'A' && p[1] <= 'z') {
-	    fprintf( stderr, "Missing value for argument\n" );	
+	    fprintf( stderr, "Missing value for argument\n" );
 	    return 1;
-	    }	
+	    }
 	*val = atoi( p );
 	}
 
@@ -161,7 +161,7 @@ int CmdLine::GetList( const char *name, int nitem, int *vals )
 	}
     argv[idx]   = 0;
     SqueezeArg();
- 
+
     return 0;
 }
 

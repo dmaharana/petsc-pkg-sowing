@@ -38,16 +38,16 @@ void SYLastChangeToFile( const char *fname, char *date, struct tm *ltm )
 {
     struct stat buf;
     struct tm   *tim;
-    
+
     if (stat( fname, &buf ) == 0) {
 	tim = localtime( &(buf.st_mtime) );
 	if (ltm) *ltm = *tim;
-	if (date) 
-	    sprintf( date, "%d/%d/%d", 
+	if (date)
+	    sprintf( date, "%d/%d/%d",
 		    tim->tm_mon+1, tim->tm_mday, tim->tm_year+1900 );
 	}
     else {
-	/* Could not stat file */	
+	/* Could not stat file */
 	if (date)
 	    date[0] = '\0';
 	if (ltm) {
@@ -96,7 +96,7 @@ char *SYGetRealpath( const char *path, char *rpath )
        real paths.
        */
     strcpy( rpath, path );
-    
+
     /* We must exercise real care here, because readlink may NOT set
        N to 0 on failure (IRIX)! */
     N = strlen(rpath);
@@ -107,7 +107,7 @@ char *SYGetRealpath( const char *path, char *rpath )
 	n = readlink(tmp1,tmp3,MAXPATHLEN);
 	if (n > 0) {
 	    /* readlink does not automatically add 0 to string end */
-	    tmp3[n] = 0; 
+	    tmp3[n] = 0;
 	    if (tmp3[0] != '/') {
 		tmp2 = strchr(tmp1,'/');
 		m = strlen(tmp1) - strlen(tmp2);
@@ -124,7 +124,7 @@ char *SYGetRealpath( const char *path, char *rpath )
 		strncat(rpath,path+N,MAXPATHLEN - strlen(rpath));
 		return rpath;
 		}
-	    }  
+	    }
 	tmp2 = strchr(tmp1,'/');
 	if (tmp2) N = strlen(tmp1) - strlen(tmp2);
 	else N = strlen(tmp1);

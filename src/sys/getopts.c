@@ -86,9 +86,9 @@ if (((int)strlen(p) > 1) && p[0] == '0' && p[1] == 'x') {
     }
 else {
     if ((int)strlen(p) > 1 && p[0] == '-' && p[1] >= 'A' && p[1] <= 'z') {
-        fprintf( stderr, "Missing value for argument %s\n", name );	
+        fprintf( stderr, "Missing value for argument %s\n", name );
         return 0;
-        }	
+        }
     *val = atoi( p );
     }
 

@@ -4,9 +4,9 @@
 #include "textpath.h"
 #include <string.h>
 
-/* 
+/*
    This defines the LaTeX versions of the output.  Mostly, this setups up
-   the general engine and defines the PutChar routine (which handles the 
+   the general engine and defines the PutChar routine (which handles the
    special LaTeX cases)
  */
 
@@ -25,9 +25,9 @@ int TextOutTeX::Setup( )
     next         = 0;
     strcpy( newline_onoutput, "\n" );
     userops	 = new SrList( 127 );
-    ins		 = new InStreamFile( TEXTFILTER_PATH, 
+    ins		 = new InStreamFile( TEXTFILTER_PATH,
     				     "TEXTFILTER_PATH", "latex.def", "r" );
-    if (!ins->status) 				    
+    if (!ins->status)
         ReadCommands( ins );
     else
     	rc = 1;
@@ -77,7 +77,7 @@ int TextOutTeX::PutChar( const char ch )
 	case '}': rc = out->PutQuoted( 0, "\\}" ); break;
 	default: rc = out->PutChar( ch );
     }
-	if (rc) 
+	if (rc)
         	return err->ErrMsg( rc, "Error writing character" );
        	else return 0;
 }

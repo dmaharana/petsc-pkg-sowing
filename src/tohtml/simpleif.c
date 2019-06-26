@@ -14,7 +14,7 @@ void TXDoIfFalse( TeXEntry * );
 void TXDoIfTrue( TeXEntry * );
 void TeXskipUntil( const char *([]), int );
 
-/* 
+/*
  *   Read a newif and define the name
  */
 void TXNewif( TeXEntry *e )
@@ -49,7 +49,7 @@ void TXDoIf( TeXEntry *e )
     if (*def) {
 	/* True branch */
 	/* Tell \else or \if to be silent */
-	if (if_sp >= MAX_IF_STACK-1) 
+	if (if_sp >= MAX_IF_STACK-1)
 	    fprintf( stderr, "Too many TeX ifs\n" );
 	truth[++if_sp] = 1;
     }
@@ -99,7 +99,7 @@ void TeXskipUntil( const char *(names[]), int n_names )
     PUSHCURTOK;
     while (1) {
 	while ( (ch = TeXReadToken( curtok, &nsp )) == EOF) {
-	    if (DebugCommands) 
+	    if (DebugCommands)
 		fprintf( stdout, "EOF in TeXskipUntil\n" );
 	    TXPopFile();
 	}
@@ -125,7 +125,7 @@ void TeXskipUntil( const char *(names[]), int n_names )
     }
 }
 
-/* Add an easy way to process if commands that are defined in other packages 
+/* Add an easy way to process if commands that are defined in other packages
    TXAddPredefIf( ifname, istrue )
  */
 void TXAddPredefIf( const char *ifname, int isTrue )

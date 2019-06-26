@@ -113,7 +113,7 @@ int DocReadDescription( InStream *ins, char *matchstring,
 	  }
 	}
 	if (ch == '\n') {
-	    newline_cnt++ ; 
+	    newline_cnt++ ;
 	    if (newline_cnt == 1) {
 	      SkipLeadingString( ins, &ch );
 	      ins->UngetChar( ch );
@@ -122,7 +122,7 @@ int DocReadDescription( InStream *ins, char *matchstring,
 	}
 	else if (newline_cnt && isspace(ch)) {
 	    // Allow spaces in the newline field; don't output.
-	    continue; 
+	    continue;
 	}
 	else
 	    newline_cnt = 0;
@@ -149,11 +149,11 @@ int DocSkipToFuncSynopsis( InStream *ins, char *matchstring )
 	if (ch == matchstring[state]) {
 	    state--;
 	    }
-	else 
+	else
 	    state = b_state;
 	}
 
-    // Skip to the first non-blank character 
+    // Skip to the first non-blank character
     while (!ins->GetChar( &ch ) && isspace(ch)) ;
     ins->UngetChar( ch );
 
@@ -260,7 +260,7 @@ int DocSkipToMacroSynopsis( InStream *ins, char *matchstring )
 		if (ch == synopsis[sy_state-1]) sy_state++;
 		else sy_state = 0;
 		}
-	    }    
+	    }
 	}
 
     // Skip to the first non-blank character
@@ -299,20 +299,20 @@ int DocReadMacroSynopsis( InStream *ins, char *matchstring,
 	}
 
 	if (ch == '\n') {
-	    newline_cnt++ ; 
+	    newline_cnt++ ;
 	    SkipLeadingString( ins, &ch );
 	    ins->UngetChar( ch );
 	    ch = '\n';
 	}
 	else if (newline_cnt && isspace(ch)) {
 	    // Allow spaces in the newline field; don't output.
-	    continue; 
+	    continue;
 	    }
 	else {
 	    newline_cnt = 0;
 	}
 	if (newline_cnt == 2) break;
-	if (ch == '\n') 
+	if (ch == '\n')
 	  outs->PutToken( 0, NewlineString );
 	else
 	  outs->PutChar( ch );
@@ -322,7 +322,7 @@ int DocReadMacroSynopsis( InStream *ins, char *matchstring,
 }
 
 //
-// Read the definition and send to the out stream.  
+// Read the definition and send to the out stream.
 // Also strip any ignore tokens.
 // This handles
 // text { text including ; } name ;
@@ -962,19 +962,19 @@ int ReadAndOutputCalllist(InStream *ins, TextOut *outs)
 //
 // We'll start with an enum name.  That is simply
 //   name [ = int ]
-// We also asume that all setup (e.g., break characters) has already been 
+// We also asume that all setup (e.g., break characters) has already been
 // done.
-// We may also want a special outs that is effectively /dev/null (i.e., 
+// We may also want a special outs that is effectively /dev/null (i.e.,
 // don't write anything out).
-// How do we want to return the names?  
+// How do we want to return the names?
 // Do we want a special structure with head and tail pointers?
 //
 // More generally, I'd like to parse the descriptions and store them so
-// that they can be further processed, for example to check that all 
+// that they can be further processed, for example to check that all
 // arguments and fields are described or to list all possible enum values.
-// Once we have this information, doctext can also produce the Fortran 
+// Once we have this information, doctext can also produce the Fortran
 // and Lisp interfaces.
-typedef struct _EnumEntry { 
+typedef struct _EnumEntry {
   struct _EnumEntry *next;
   char   *name;
   char   *value;
@@ -1006,7 +1006,7 @@ void ReadEnumName( InStream *ins, OutStream *outs, EnumList *enumlist )
       if (enumint[0] == '\n') {
 	outs->PutToken( nsp, NewlineString );
       }
-      else 
+      else
 	break;
     };
 

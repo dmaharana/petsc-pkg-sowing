@@ -273,7 +273,7 @@ int f90ModuleOutput(FILE *fout, func_t *fp)
     }
     OutputFortranToken(fout, 0, "\n");
 
-    OutputFortranToken(fout, 6, "end");   /* 6 space to match function def */ 
+    OutputFortranToken(fout, 6, "end");   /* 6 space to match function def */
 
     if (useFerr) {
 	token = "subroutine";

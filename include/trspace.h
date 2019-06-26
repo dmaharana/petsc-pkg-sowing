@@ -12,10 +12,10 @@ extern void trpop( void );
 extern void trdumpGrouped( FILE * );
 extern void TrSetMaxMem( int );
 extern void TrInit( void );
-extern void *trmalloc (unsigned int, int, char *), 
+extern void *trmalloc (unsigned int, int, char *),
             trfree (void *, int, char *),
-            trspace (int *, int *), 
-            trdump (FILE *), 
+            trspace (int *, int *),
+            trdump (FILE *),
             *trcalloc (unsigned int, unsigned int, int, char * ),
             *trrealloc (void *, int, int, char * );
 extern char *trstrdup( const char *, int, const char * );

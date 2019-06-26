@@ -11,7 +11,7 @@ Rebuilding configure:
 
 setenv PATH /software/common/gnu/bin:$PATH
 autoscan
-.. check configure.scan 
+.. check configure.scan
 autoheader
 autoconf
 
@@ -26,6 +26,6 @@ Configuring for local use
 #setenv GS /usr/local/bin/gs   (no longer necessary)
 configure --datadir=/homes/gropp/data/share --prefix=/homes/gropp/bin/solaris \
   --bindir=/homes/gropp/bin/solaris
-make 
+make
 make install
 # Repeat for linux replacing solaris (after deleting config.cache!)

@@ -42,7 +42,7 @@ class TextOut {
     /* Text Registers */
     char      cmdreg[MAX_TEXT_REGNUM][MAX_TEXT_REGISTER];
 
-    // Basic control 
+    // Basic control
     virtual int SetDebug( int );
     virtual const char *SetMode( const char * );
     virtual int SetRegisterValue( int, const char * );
@@ -51,16 +51,16 @@ class TextOut {
     virtual int Flush();
     virtual void SetNewlineString( const char * );
 
-    // Error handler.  Default is abort.  
+    // Error handler.  Default is abort.
     ErrHand  *err;
 
-    // Get commands 
+    // Get commands
     virtual int ReadCommands( InStream * );
 
-    // Common command generator 
+    // Common command generator
     virtual int PutCommand( char *, char *, char *, char *, char *, int );
 
-    // Basic text 
+    // Basic text
     virtual int PutChar( const char );
     virtual int PutToken( int, const char * );
     virtual int PutQuoted( int, const char * );
@@ -85,7 +85,7 @@ class TextOut {
     };
 
 class TextOutHTML : public TextOut {
-    
+
     int Setup( );
 
     public:
@@ -97,7 +97,7 @@ class TextOutHTML : public TextOut {
     };
 
 class TextOutTeX : public TextOut {
-    
+
     int Setup( );
 
     public:
@@ -109,7 +109,7 @@ class TextOutTeX : public TextOut {
     };
 
 class TextOutNroff : public TextOut {
-    
+
     int Setup( );
 
     public:
@@ -125,5 +125,5 @@ class TextOutStrm : public TextOut {
     TextOutStrm( OutStream * );
     ~TextOutStrm();
     };
-    
+
 #endif

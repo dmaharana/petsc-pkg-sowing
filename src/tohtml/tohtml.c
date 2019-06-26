@@ -503,7 +503,7 @@ void WriteEndofTopic( FILE *fp )
     /* If there is text for the bottom, add a rule ... */
     if (DoNavNames && DoBottomNav)
 	fprintf( fp, "<hr>%s", NewLineString );
-}	
+}
 
 /* This translation needs to happen on output in HTML, if it hasn't
    already been processed */
@@ -638,7 +638,7 @@ void WriteString( FILE *fp, const char *str )
 		str++;
 		fputc( *str, fp );
 	    }
-		
+
 	}
 	else if (thischar == '\n') {
 	    fputc( ' ', fp );
@@ -755,7 +755,7 @@ void WriteSectionButtons( FILE *fout, const char *name, LINK *l )
 	if (DoContents) {
 	    /* extern char *ContentsLoc(); */
 	    char *cnts;
-	
+
 	    cnts = ContentsLoc();
 	    if (cnts) {
 		strcpy( ParentTitle, "Contents" );

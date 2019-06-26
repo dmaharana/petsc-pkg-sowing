@@ -11,8 +11,8 @@
 
 static char  dimentoken[MAX_TOKEN];
 
-/* Process things like \hskip 2in and \leftskip 2em 
- * Note that dimensions can be r-values as well as l-values, so 
+/* Process things like \hskip 2in and \leftskip 2em
+ * Note that dimensions can be r-values as well as l-values, so
  * try to catch those.
  */
 
@@ -51,14 +51,14 @@ int TXReadDimen( FILE *fin )
     if (!(strcmp( p, "in" ) == 0 ||
 	  strcmp( p, "pt" ) == 0 ||
 	  strcmp( p, "pc" ) == 0 ||
-	  strcmp( p, "cm" ) == 0 || 
+	  strcmp( p, "cm" ) == 0 ||
 	  strcmp( p, "em" ) == 0 ||
 	  strcmp( p, "ex" ) == 0 ||
 	  strcmp( dimentoken, "fil" ) == 0 ||
 	  strcmp( dimentoken, "fill" ) == 0 ||
 	  strcmp( dimentoken, "filll" ) == 0)) {
-	fprintf( ferr, 
-	    "Unrecognized dimension %s at %s line %d (might be r-value)\n", 
+	fprintf( ferr,
+	    "Unrecognized dimension %s at %s line %d (might be r-value)\n",
 		 dimentoken,
 		 InFName[curfile] ? InFName[curfile] : "", LineNo[curfile] );
 	/* Might be an r-value; push the token back */
@@ -82,7 +82,7 @@ void TXdimen( TeXEntry *e )
     ch = SCTxtFindNextANToken( fpin[curfile], dimentoken, MAX_TOKEN, &nsp );
     if (ch == EOF) return;
 
-    if (!(strcmp( dimentoken, "plus" ) == 0 || 
+    if (!(strcmp( dimentoken, "plus" ) == 0 ||
 	  strcmp( dimentoken, "minus" ) == 0)) {
 	SCPushToken( dimentoken );
 	return;
@@ -93,7 +93,7 @@ void TXdimen( TeXEntry *e )
     if (ch == EOF) return;
 
 /* Do it again, in case there is a plus and a minus */
-    if (!(strcmp( dimentoken, "plus" ) == 0 || 
+    if (!(strcmp( dimentoken, "plus" ) == 0 ||
 	  strcmp( dimentoken, "minus" ) == 0)) {
 	SCPushToken( dimentoken );
 	return;
@@ -135,7 +135,7 @@ void TXadvance( TeXEntry *e )
     if (ch == '\\') {
 	TeXReadMacroName( dimentoken );
 	ch = SCTxtFindNextANToken( fpin[curfile], dimentoken, MAX_TOKEN, &nsp );
-	if (strcmp( dimentoken, "by" ) != 0) 
+	if (strcmp( dimentoken, "by" ) != 0)
 	    SCPushToken( dimentoken );
 	TXReadDimen( fpin[curfile] );
     }

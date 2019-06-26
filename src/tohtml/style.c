@@ -11,13 +11,13 @@
 /*
 extern void TXcode(), TXdfn(), TXroutine(), TXfile(), TXcomment(),
             TXxref(), TXpxref(), TXcindex(), TXfindex(), TXprintindex(),
-            TXnop(), TXasis(), TXname(), TXdimen(), TXepsfbox(), 
+            TXnop(), TXasis(), TXname(), TXdimen(), TXepsfbox(),
             TXasisGrouped(), TXref(), TXanimation(), TXmore(), TXsavearg();
 extern void *TXcopy();
 */
-            
+
 void TXStyleLatexInfo( SRList *myTeXlist, FILE *fin, FILE *fout )
-{            
+{
     SCSetCommentChar( 0 );
 
     UsingLatexinfo = 1;
@@ -37,10 +37,10 @@ void TXStyleLatexInfo( SRList *myTeXlist, FILE *fin, FILE *fout )
     /* No comment character in TeXinfo style */
     SCSetCommentChar( (char) 0 );
     CommentChar = (char) 0;
-}    
+}
 
 void TXStyleFunclist( SRList *myTeXlist, FILE *fin, FILE *fout )
-{            
+{
     TXInsertName( myTeXlist, "CDfont", TXnop, 1, (void *)0 );
     TXInsertName( myTeXlist, "CDw", TXnop, 1, (void *)0 );
     TXInsertName( myTeXlist, "CDl", TXnop, 1, (void *)0 );
@@ -89,7 +89,7 @@ void TXStyleTpage( SRList *myTeXlist, FILE *fin, FILE *fout )
 }
 
 void TXStyleTools( SRList *myTeXlist, FILE *fin, FILE *fout )
-{            
+{
     TXInsertName( myTeXlist, "Iter", TXname, 0, TXCopy("KSP") );
     TXInsertName( myTeXlist, "SMEIT", TXname, 0, TXCopy("SMEIT") );
     TXInsertName( myTeXlist, "SMEITP", TXname, 0, TXCopy("SMEIT Package") );
@@ -121,7 +121,7 @@ void TXStyleTools( SRList *myTeXlist, FILE *fin, FILE *fout )
 
 
 void TXStyleEPSF( SRList *myTeXlist, FILE *fin, FILE *fout )
-{            
+{
     TXInsertName( myTeXlist, "epsfxsize", TXdimen, 0, (void *)0 );
     TXInsertName( myTeXlist, "epsfysize", TXdimen, 0, (void *)0 );
     TXInsertName( myTeXlist, "epsfbox", TXepsfbox, 1, (void *)0 );
@@ -129,7 +129,7 @@ void TXStyleEPSF( SRList *myTeXlist, FILE *fin, FILE *fout )
 }
 
 void TXStyleAnlhtext( SRList *myTeXlist, FILE *fin, FILE *fout )
-{            
+{
     TXInsertName( myTeXlist, "animation", TXanimation, 3, (void *)0 );
     TXInsertName( myTeXlist, "more", TXmore, 1, (void *)0 );
 }
@@ -160,7 +160,7 @@ void TXmakeinfo( TeXEntry *e )
 }
 
 void TXStyleANLHandpage( SRList *myTeXlist, FILE *fin, FILE *fout )
-{            
+{
     handemail[0] = 0;
     handphone[0] = 0;
     handcontact[0] = 0;

@@ -7,7 +7,7 @@
 #include "srlist.h"
 
 class OutStreamMap : public OutStream {
-    
+
  protected:
     char breaktable[256];
     char *activetok, *position, *lctok;
@@ -41,7 +41,7 @@ class OutStreamMap : public OutStream {
 // We also need a TextOut version
 class TextOutMap : public TextOut {
 
- protected:    
+ protected:
     char breaktable[256];
     char *activetok, *position,*lctok;
     int  curlen, maxlen;

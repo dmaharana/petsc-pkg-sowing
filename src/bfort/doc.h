@@ -39,7 +39,7 @@
 
 #ifdef FOO
 /* This structure contains the output routines; to add a new output format,
-   specify the routines for these output actions */    
+   specify the routines for these output actions */
 typedef struct {
     void    (*outbof)(),       /* Output beginning of file */
 	    (*outchar)(),      /* Output a character */
@@ -101,7 +101,7 @@ typedef struct {
 extern DocOutput  *CreateOutputLaTeX( ), *CreateOutputMan(),
 	          *CreateOutputHTML();
 
-#endif 
+#endif
 
 extern int DocGetChar ( FILE * );
 extern void DocUnGetChar ( char, FILE * );

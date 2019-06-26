@@ -15,7 +15,7 @@
 static char *InitCommands = 0;
 #define MAX_INIT_COMMANDS 2048
 
-/* Remove quotes from the string pointed at by p, moving them in place as 
+/* Remove quotes from the string pointed at by p, moving them in place as
    necessary */
 static void stripquote( char *p )
 {
@@ -29,7 +29,7 @@ static void stripquote( char *p )
     *p = 0;
 }
 
-/* 
+/*
    Convert a string that contains literal output quotes to the internal form
  */
 char *TXConvertQuotes( const char *value, char cmdchar )
@@ -55,13 +55,13 @@ char *TXConvertQuotes( const char *value, char cmdchar )
 	p++;
       }
     }
-    else 
+    else
       *def_p++ = *p++;
   }
   *def_p = 0;
   /* Sanity check */
   if (def_p - def > strlen(value)) {
-      fprintf( stderr, "Used %d characters but allocated %d\n", 
+      fprintf( stderr, "Used %d characters but allocated %d\n",
 	       (int)(def_p - def + 1), (int)strlen(value) + 1 );
       abort();
   }
@@ -78,7 +78,7 @@ void RdBaseDef( const char *infilename )
     char buf[200], *bufp, *name, *cmd, *value, *p;
     int  nargs;
 
-    if (!TeXlist) 
+    if (!TeXlist)
 	TeXlist = SRCreate();
 
     fp = fopen( infilename, "r" );
@@ -119,7 +119,7 @@ void RdBaseDef( const char *infilename )
 	if (*bufp == '\n') *bufp = 0;
 	if (*bufp) *bufp++ = 0;
 	/* Only invoke atoi if there is an actual integer present */
-	if (isdigit(*p)) 
+	if (isdigit(*p))
 	    nargs = atoi(p);
 
 	/* Get value */
@@ -131,7 +131,7 @@ void RdBaseDef( const char *infilename )
 
 	/* Skip null or blank lines */
 	if (cmd[0] == 0 || cmd[0] == ' ') continue;
-	
+
 	/* If name is in quotes, remote the quotes */
 	stripquote( name );
 
@@ -146,7 +146,7 @@ void RdBaseDef( const char *infilename )
 	}
 	else if (strcmp( cmd, "name" ) == 0) {
 	    stripquote( value );
-	    TXInsertName( TeXlist, name, TXname, nargs, 
+	    TXInsertName( TeXlist, name, TXname, nargs,
 			  (void *)TXCopy(value) );
 	}
 	else if (strcmp( cmd, "asis" ) == 0) {
@@ -154,7 +154,7 @@ void RdBaseDef( const char *infilename )
 	}
 	else if (strcmp( cmd, "raw" ) == 0) {
 	    stripquote( value );
-	    TXInsertName( TeXlist, name, TXraw, nargs, 
+	    TXInsertName( TeXlist, name, TXraw, nargs,
 			  (void *)TXCopy(value) );
 	}
 	else if (strcmp( cmd, "hdef" ) == 0) {
@@ -163,7 +163,7 @@ void RdBaseDef( const char *infilename )
 	  /* We need to be careful with these - they should not be
 	     used in generating LaTeX source files when creating
 	     gif images */
-	  TXInsertName( TeXlist, name, TXDoUser, nargs, 
+	  TXInsertName( TeXlist, name, TXDoUser, nargs,
 		TXCreateDefn( nargs, TXConvertQuotes( value, '\'' ), 1 ) );
 	}
 	else if (strcmp( cmd, "begin-env" ) == 0) {

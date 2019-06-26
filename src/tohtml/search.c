@@ -10,7 +10,7 @@
    together.
 
    2/11/97
-   If there are multiple links with the same name but different levels, 
+   If there are multiple links with the same name but different levels,
    we need to keep them straight.
  */
 
@@ -22,8 +22,8 @@ typedef struct _RTFNode {
     int    level;
     } RTFNode;
 #endif
-#define SR_ENTRY_SIZE 30    
-    
+#define SR_ENTRY_SIZE 30
+
 /* #define DEBUG */
 
 /* Forward defs */
@@ -67,12 +67,12 @@ void SRDestroy( SRList *lctx )
 	}
     }
     FREE( lctx->HASH );
-    FREE( lctx );    
+    FREE( lctx );
 }
 
 /* This needs to return a pointer to the link, OR have a routine to call
    to manage the private data area */
-LINK *SRLookup( SRList *lctx, const char *topicname, char *entryname, 
+LINK *SRLookup( SRList *lctx, const char *topicname, char *entryname,
 		int *number )
 {
     LINK *cur;
@@ -89,7 +89,7 @@ LINK *SRLookup( SRList *lctx, const char *topicname, char *entryname,
     while (p > pcopy && *p == ' ') p--;
     p[1] = 0;
 
-/* First, see if the name is known */	
+/* First, see if the name is known */
     cur = lctx->HASH[SRHashFcn( lctx, pcopy )];
 #ifdef DEBUG
     fprintf( stderr, "Looking for topicname |%s|\n", pcopy );
@@ -121,9 +121,9 @@ LINK *SRLookup( SRList *lctx, const char *topicname, char *entryname,
 
 /* This needs to return a pointer to the link, OR have a routine to call
    to manage the private data area.
-   In order to allow us to pass CONSTANTS in topicname, we need to 
+   In order to allow us to pass CONSTANTS in topicname, we need to
    make a copy of it (so that we can elimiinate any potential blanks
-   in the name) 
+   in the name)
  */
 LINK *SRInsert( SRList *lctx, const char *topicname, char *entryname, int *number )
 {
@@ -140,7 +140,7 @@ LINK *SRInsert( SRList *lctx, const char *topicname, char *entryname, int *numbe
     while (p > pcopy && *p == ' ') p--;
     p[1] = 0;
 
-/* First, see if the name is known */	
+/* First, see if the name is known */
     prev = 0;
     hidx = SRHashFcn( lctx, pcopy );
     cur  = lctx->HASH[hidx];
@@ -172,13 +172,13 @@ LINK *SRInsert( SRList *lctx, const char *topicname, char *entryname, int *numbe
     }
 #ifdef DEBUG
     fprintf( stderr, "Did not find topic; inserting...\n" );
-#endif    
+#endif
     new = (LINK *)MALLOC( sizeof(LINK) );
     if (!new) {
 	fprintf( stderr, "Out of memory in symbol table\n" );
 	exit(1);
     }
-    new->refcount = 0;    
+    new->refcount = 0;
     new->topicname = MALLOC( strlen(pcopy) + 1 );
     if (!new->topicname) {
 	fprintf( stderr, "Out of memory in symbol table\n" );
@@ -190,8 +190,8 @@ LINK *SRInsert( SRList *lctx, const char *topicname, char *entryname, int *numbe
 	fprintf( stderr, "Out of memory in symbol table\n" );
 	exit(1);
     }
-    *number = lctx->NodeNumber;    
-    new->number = lctx->NodeNumber;    
+    *number = lctx->NodeNumber;
+    new->number = lctx->NodeNumber;
     sprintf( new->entryname, "Node" ); /* %d, lctx->NodeNumber ); */
     lctx->NodeNumber += 1;
     if (entryname)
@@ -201,7 +201,7 @@ LINK *SRInsert( SRList *lctx, const char *topicname, char *entryname, int *numbe
 #ifdef DEBUG
 	fprintf( stderr, "Inserting %s ahead of %s\n",
 		 new->topicname, cur->topicname );
-#endif   
+#endif
 	new->prev = cur->prev;
 	if (cur->prev) {
 	    cur->prev->next = new;
@@ -212,7 +212,7 @@ LINK *SRInsert( SRList *lctx, const char *topicname, char *entryname, int *numbe
     }
     else {
 	if (!lctx->HASH[hidx]) {
-#ifdef DEBUG    	
+#ifdef DEBUG
 	    fprintf( stderr, "Initial insertion....\n" );
 #endif
 	    lctx->HASH[hidx] = new;
@@ -222,17 +222,17 @@ LINK *SRInsert( SRList *lctx, const char *topicname, char *entryname, int *numbe
 	    /* Insert at end */
 #ifdef DEBUG
 	    fprintf( stderr, "Inserting at end...\n" );
-#endif    	
+#endif
 	    prev->next = new;
 	    new->prev  = prev;
 	    new->next  = 0;
         }
     }
-    return new;    
+    return new;
 }
 
 /* This is just SRInsert without the lookup */
-LINK *SRInsertAllowDuplicates( SRList *lctx, const char *topicname, 
+LINK *SRInsertAllowDuplicates( SRList *lctx, const char *topicname,
 			       char *entryname, int *number )
 {
     LINK *cur, *new, *prev;
@@ -283,13 +283,13 @@ LINK *SRInsertAllowDuplicates( SRList *lctx, const char *topicname,
     }
 #ifdef DEBUG
     fprintf( stderr, "Did not find topic; inserting...\n" );
-#endif    
+#endif
     new = (LINK *)MALLOC( sizeof(LINK) );
     if (!new) {
 	fprintf( stderr, "Out of memory in symbol table\n" );
 	exit(1);
     }
-    new->refcount = 0;    
+    new->refcount = 0;
     new->topicname = MALLOC( strlen(pcopy) + 1 );
     if (!new->topicname) {
 	fprintf( stderr, "Out of memory in symbol table\n" );
@@ -301,8 +301,8 @@ LINK *SRInsertAllowDuplicates( SRList *lctx, const char *topicname,
 	fprintf( stderr, "Out of memory in symbol table\n" );
 	exit(1);
     }
-    *number = lctx->NodeNumber;    
-    new->number = lctx->NodeNumber;    
+    *number = lctx->NodeNumber;
+    new->number = lctx->NodeNumber;
     sprintf( new->entryname, "Node" ); /* %d, lctx->NodeNumber ); */
     lctx->NodeNumber += 1;
     if (entryname)
@@ -312,7 +312,7 @@ LINK *SRInsertAllowDuplicates( SRList *lctx, const char *topicname,
 #ifdef DEBUG
 	fprintf( stderr, "Inserting %s ahead of %s\n",
 		 new->topicname, cur->topicname );
-#endif   
+#endif
 	new->prev = cur->prev;
 	if (cur->prev) {
 	    cur->prev->next = new;
@@ -323,7 +323,7 @@ LINK *SRInsertAllowDuplicates( SRList *lctx, const char *topicname,
     }
     else {
 	if (!lctx->HASH[hidx]) {
-#ifdef DEBUG    	
+#ifdef DEBUG
 	    fprintf( stderr, "Initial insertion....\n" );
 #endif
 	    lctx->HASH[hidx] = new;
@@ -333,13 +333,13 @@ LINK *SRInsertAllowDuplicates( SRList *lctx, const char *topicname,
 	    /* Insert at end */
 #ifdef DEBUG
 	    fprintf( stderr, "Inserting at end...\n" );
-#endif    	
+#endif
 	    prev->next = new;
 	    new->prev        = prev;
 	    new->next        = 0;
         }
     }
-    return new;    
+    return new;
 }
 
 
@@ -351,11 +351,11 @@ void SRDump( SRList *lctx, FILE *fp )
 
     for (i=0; i<lctx->hashsize; i++) {
 	cur = lctx->HASH[i];
-    
+
 	while (cur) {
 	    if (cur->refcount < 2) {
 		fprintf( fp, "Entry |%s| only ref'ed once\n", cur->topicname );
-	    }	
+	    }
 	    cur = cur->next;
 	}
     }

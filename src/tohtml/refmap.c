@@ -18,7 +18,7 @@
     text is the text to be used to label the link
 
     icon is the name of an icon file to use (may be null)
-    
+
     The rest is a standard URL (see html documentation)
  */
 
@@ -49,17 +49,17 @@ void GetMapTagName( char **P, char *namep )
 {
     char *p = *P, c;
 
-    while (*p && *p != ':') 
+    while (*p && *p != ':')
 	*namep++ = *p++;
     p++;
     c = *p++;
     while (*p && *p != c) {
 	*namep++ = *p++;
     }
-    *namep++ = 0;    
-    *P = p + 1;    
+    *namep++ = 0;
+    *P = p + 1;
 }
-	
+
 /* Get the name (%cname%c).  Return ptr to name (null if empty) */
 char *GetMapName( char **P )
 {
@@ -87,13 +87,13 @@ char *GetMapURL( char **P )
     p = ptr;
     while (*p && *p != '\n') p++;
     if (*p) *p = 0;   /* Remove trailing newline */
-    return ptr;	
+    return ptr;
 }
 
 char *CpyString( char *str )
 {
     char *p;
-	
+
     if (!str) return 0;
 
     p = (char *)MALLOC( strlen( str ) + 1 );   CHKPTRN(p);
@@ -110,7 +110,7 @@ int MapKind( char *kind )
     if (strcmp( kind, "demo" ) == 0 ) return 4;
     if (strcmp( kind, "manual" ) == 0 ) return 5;
     if (strcmp( kind, "active" ) == 0 ) return 6;
-    return -1;	
+    return -1;
 }
 
 void RdRefMap( char *name )
@@ -125,23 +125,23 @@ void RdRefMap( char *name )
     if (!fp) {
 	fprintf( stderr, "Could not open %s\n", name );
 	return;
-    }    
+    }
 
     if (!refmap) refmap = SRCreate();
-    
+
     while (1) {
 	if (!fgets( sbuf, 256, fp )) break;
 	p       = sbuf;
 	if (p[0] == ';' || p[0] == '\n') continue;
-/*    
+/*
       tagtype:%cname%ckind%ctext%c%cicon%cscheme://host.domain[.port]/path/filename
       */
 	GetMapTagName( &p, namep ); if (DebugMap) printf( "name=%s\n", namep );
-	text    = GetMapName( &p ); 
-	if (text && DebugMap) 
+	text    = GetMapName( &p );
+	if (text && DebugMap)
 	    printf( "text=%s\n", text );
-	icon    = GetMapName( &p ); 
-	if (icon && DebugMap) 
+	icon    = GetMapName( &p );
+	if (icon && DebugMap)
 	    printf( "icon=%s\n", icon );
 	kind    = GetMapName( &p ); if (DebugMap) printf( "kind=%s\n", kind );
 	url     = GetMapURL( &p );  if (DebugMap) printf( "url = %s\n", url );
@@ -157,7 +157,7 @@ void RdRefMap( char *name )
 	c->text  = CpyString( text );
 	c->icon  = CpyString( icon );
     }
-    fclose( fp );    
+    fclose( fp );
 }
 
 int RefMapLookup( const char *tagtype, const char *token, char **url,

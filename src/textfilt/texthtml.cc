@@ -4,9 +4,9 @@
 #include "textpath.h"
 #include <string.h>
 
-/* 
+/*
    This defines the HTML versions of the output.  Mostly, this setups up
-   the general engine and defines the PutChar routine (which handles the 
+   the general engine and defines the PutChar routine (which handles the
    special HTML cases)
  */
 
@@ -56,7 +56,7 @@ int TextOutHTML::PutChar( const char ch )
     case '&': out->PutQuoted( 0, "&amp;" ); break;
     default: out->PutChar( ch );
     }
-    if (ch) 
+    if (ch)
       UpdateNL( ch == '\n' );
     return 0;
 }

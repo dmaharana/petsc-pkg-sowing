@@ -12,7 +12,7 @@ typedef struct {
     char *fname;
     int  seqnum;
     } LABEL;
-    
+
 SRList *labelctx = 0;
 
 
@@ -36,7 +36,7 @@ void InsertLabel( int seqnum, char *buffer, char *fname )
     buffer = p+1;
     *p = 0;
 
-/* 
+/*
    fprintf( stdout, "inserting |%s| into label list (node %s)\n", name, buffer );
    */
     l = SRInsert( labelctx, name, entrylevel, &dummy );
@@ -48,7 +48,7 @@ void InsertLabel( int seqnum, char *buffer, char *fname )
     ll->fname    = (char *)MALLOC( strlen(fname) + 1 );   CHKPTR(ll->fname);
     strcpy( ll->fname, fname );
 }
-	
+
 char *LabelLookup( char *name, int *seqnum, char *fname )
 {
     LINK *l;
@@ -67,7 +67,7 @@ char *LabelLookup( char *name, int *seqnum, char *fname )
     strcpy( fname, ll->fname );
     return ll->nodename;
 }
-	
+
 /* Replace any tabs or newlines with a single blank */
 void ReplaceWhite( char *str )
 {

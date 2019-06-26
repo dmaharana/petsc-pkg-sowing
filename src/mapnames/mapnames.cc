@@ -69,7 +69,7 @@ int main( int argc, char **argv )
     int       ignore_case = 0;
     int       ignoreRepl = 0;
 
-    /* Allow stdin and stdout as input, output files (so that this can be a 
+    /* Allow stdin and stdout as input, output files (so that this can be a
        filter) */
     cmd = new CmdLine( argc, argv );
 
@@ -102,7 +102,7 @@ int main( int argc, char **argv )
     ins  = new InStreamFile( );
     ins->SetBreakChar( '\n', BREAK_OTHER );
     ins->SetBreakChar( '\t', BREAK_OTHER );
-    
+
     //outs = new OutStreamFile( "ccc", "w" );
 #define MAX_FNAME 1025
     char fname[MAX_FNAME];
@@ -118,7 +118,7 @@ int main( int argc, char **argv )
     if (!cmd->HasArg( "-html" )) {
 	textout    = new TextOutHTML( outs );
 	//	if (!extension) extension = "html";
-	//incommands = new InStreamFile( 
+	//incommands = new InStreamFile(
 	//	      DOCTEXT_PATH, "DOCTEXT_PATH", "html.def", "r" );
 	}
     if (!textout) {
@@ -147,7 +147,7 @@ int main( int argc, char **argv )
 	fprintf( stderr, "Could not read map file %s\n", mappath );
 	perror( "Reason:" );
       }
-      else 
+      else
 	  map->ReadMap( mapins, ignore_case, ignoreRepl );
       delete mapins;
       if (debug) printf( "done with reading map %s\n", mappath );
@@ -194,7 +194,7 @@ int main( int argc, char **argv )
 	  }
 	  //printf( "\nLeaving html input\n" );
 	  if (token[0] != '>') break;
-        } 
+        }
         else {
 	    map->PutToken( nsp, token );
         }
@@ -211,9 +211,9 @@ int main( int argc, char **argv )
     return 0;
 }
 
-/* 
-   The following lets us output LaTeX instead of HTML 
- */ 
+/*
+   The following lets us output LaTeX instead of HTML
+ */
 
 typedef struct {
     char *repname;

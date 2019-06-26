@@ -656,7 +656,7 @@ void TeXMustGetArg( FILE *fin, char *token, int maxtoken,
 void TXnop( TeXEntry *e )
 {
   int i;
-	
+
   /* Tex command that has no effect in RTF file */
   if (DebugCommands)
     fprintf( stdout, "Skipping %d arguments for %s\n", e->nargs, e->name );
@@ -703,7 +703,7 @@ void TXraw( TeXEntry *e )
 {
     if (!InDocument) return;
     TeXoutcmd( fpout, (char *)(e->ctx) );
-}	
+}
 
 void TXcomment( TeXEntry *e )
 {
@@ -799,7 +799,7 @@ void TXtoday( TeXEntry *e )
 /* For ref to work, we need to install the \label defines in a label table */
 void TXref( TeXEntry *e )
 {
-    int  refnumber = 0;	
+    int  refnumber = 0;
     char *refname;
     char fname[256];
     char lfname[256];
@@ -886,7 +886,7 @@ void TXhref( TeXEntry *e )
     char lfname[256];
     char *topicfile;
 
-    if (!InDocument) return;	
+    if (!InDocument) return;
     strcpy( CmdName, "href" );
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
@@ -912,7 +912,7 @@ void TXhref( TeXEntry *e )
     }
     POPCURTOK;
     CmdName[0] = 0;
-}	
+}
 
 void TXmore( TeXEntry *e )
 {
@@ -945,7 +945,7 @@ void PopCommentChar( void )
 void TXcode( TeXEntry *e )
 {
 /* output in "code" font */
-    if (!InDocument) return;	
+    if (!InDocument) return;
     strcpy( CmdName, "code" );
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
@@ -965,7 +965,7 @@ void TXcode( TeXEntry *e )
 void TXroutine( TeXEntry *e )
 {
 /* output in "code" font */
-    if (!InDocument) return;	
+    if (!InDocument) return;
     strcpy( CmdName, "routine" );
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
@@ -983,7 +983,7 @@ void TXroutine( TeXEntry *e )
 void TXdfn( TeXEntry *e )
 {
 /* output in "definition" font */
-    if (!InDocument) return;	
+    if (!InDocument) return;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
@@ -998,7 +998,7 @@ void TXdfn( TeXEntry *e )
 void TXvar( TeXEntry *e )
 {
 /* output in "var" font */
-    if (!InDocument) return;	
+    if (!InDocument) return;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
@@ -1013,7 +1013,7 @@ void TXvar( TeXEntry *e )
 void TXfile( TeXEntry *e )
 {
 /* output in "file" font */
-    if (!InDocument) return;	
+    if (!InDocument) return;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
@@ -1679,7 +1679,7 @@ void TeXskipEnv( TeXEntry *e, const char *name, int flag )
     fflush( fpout );
     if (DebugCommands)
 	fprintf( stdout, "Processing environment %s (skipenv)\n", name );
-    AmSkipping = !flag;	
+    AmSkipping = !flag;
     PUSHCURTOK;
     while (1) {
 	while ( (ch =
@@ -1752,7 +1752,7 @@ void TeXskipEnv( TeXEntry *e, const char *name, int flag )
 		last_was_nl  = 0;
 		TeXoutsp( fout, nsp );
 		TeXReadMacroName( curtok );
-	
+
 		if (strcmp( curtok, "end" ) == 0) {
 		    if (DebugCommands)
 			fprintf( stdout, "Getting argument for end{}\n" );
@@ -1910,7 +1910,7 @@ void TeXskipRaw( TeXEntry *e, char *name, int doout )
 	else if (ch == CommandChar) {
 	    if (doout)
 		TeXoutsp( fout, nsp );
-	
+
 	    if (strcmp( curtok, "\\end" ) == 0) {
 		if (DebugCommands)
 		    fprintf( stdout, "Getting argument for end{}\n" );
@@ -2062,7 +2062,7 @@ void TeXitemize( TeXEntry *e )
     itemizelevel--;
     lSp--;
     TXWriteStartNewLine( fpout );
-}	
+}
 
 void TeXenumerate( TeXEntry *e )
 {
@@ -2081,7 +2081,7 @@ void TeXenumerate( TeXEntry *e )
     lSp--;
 /* Note that the begin/end enumerate generates a newline already */
 /* TXWriteStartNewLine( fpout ); */
-}	
+}
 
 void TeXdescription( TeXEntry *e )
 {
@@ -2123,8 +2123,8 @@ void TeXDoList( TeXEntry *e, char *itemtext, char *itemcommands )
     itemizelevel--;
     lSp--;
     TXWriteStartNewLine( fpout );
-}	
-	
+}
+
 void TeXsmall( TeXEntry *e )
 {
     TeXskipEnv( e, "small", 1 );
@@ -2461,7 +2461,7 @@ void TXbegin( TeXEntry *e )
 	FREE( p );
     }
     POPCURTOK;
-} 	
+}
 
 void TXend( TeXEntry *e )
 {
@@ -2543,7 +2543,7 @@ void TXitem( TeXEntry *e )
       if (curtok[0]) {
 	SCPushToken( curtok );
       }
-      else {	
+      else {
 	/* p1 is the itemtext, which is the text used if there is no optional
 	   argument */
 	if (lstack[lSp].p1)
@@ -3586,14 +3586,14 @@ void TXInit( FILE *fin, FILE *fout )
     /* Initialize the name of the error output file */
     GetBaseName( latex_errname );
     strcat( latex_errname, ".ler" );
-}	
+}
 
 void TeXProcessCommand( char *token, FILE *fin, FILE *fout )
 {
-    LINK     *l;	
+    LINK     *l;
     TeXEntry *e;
     int      i;
-	
+
     if (DebugCommands)
 	fprintf( stdout, "Handling Command %s\n", token );
     l  = SRLookup( TeXlist, token, token, &i );
@@ -3712,7 +3712,7 @@ void ProcessLatexFile( int argc, char **argv, FILE *fin, FILE *fout )
 	    bloc[BraceCount++].lineno = LineNo[curfile];
 	    /* fprintf( fout, "**+%d[%d]**",
 	       LineNo[curfile], BraceCount ); */
-#ifdef FOO    	
+#ifdef FOO
 	    push stack (font, spacing parameters);
 #endif
 	}
@@ -3720,7 +3720,7 @@ void ProcessLatexFile( int argc, char **argv, FILE *fin, FILE *fout )
 	    BraceCount--;
 	    /* fprintf( fout, "**-%d[%d]**",
 	       LineNo[curfile], BraceCount ); */
-#ifdef FOO    	
+#ifdef FOO
 	    pop stack;
 #endif
 	}

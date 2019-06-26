@@ -3,7 +3,7 @@
 
 struct _SrEntry {
     char            *name;
-    void            *extra_data; 
+    void            *extra_data;
     struct _SrEntry *next;
     };
 typedef struct _SrEntry SrEntry;

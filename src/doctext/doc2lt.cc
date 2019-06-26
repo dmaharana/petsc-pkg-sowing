@@ -29,9 +29,9 @@ Notes:
 The default format is LaTeX.
 
 The alternate definition file 'htmltable.def' creates a Netscape-style table
-for HTML. 
+for HTML.
 
-Author: 
+Author:
 William Gropp
 D*/
 
@@ -50,7 +50,7 @@ int main( int argc, char ** argv )
 
     // Output to stdout
     outs       = new OutStreamFile();
-    
+
     // Check for mapping files; there should be a routine to do this
     // Also, should do this ONLY for -html form (Map streams currently
     // only for HTML).
@@ -62,7 +62,7 @@ int main( int argc, char ** argv )
 	if (mapins->status) {
 	    fprintf( stderr, "Could not read map file %s\n", path );
 	    }
-	else 
+	else
 	    map->ReadMap( mapins, 0 );
 	delete mapins;
 	}
@@ -72,12 +72,12 @@ int main( int argc, char ** argv )
     // Check for output format
     if (!cmd->HasArg( "-html" )) {
 	textout    = new TextOutHTML( outs );
-	incommands = new InStreamFile( 
+	incommands = new InStreamFile(
 		      DOCTEXT_PATH, "DOCTEXT_PATH", "html.def", "r" );
 	}
     else {
 	textout    = new TextOutTeX( outs );
-	incommands = new InStreamFile( 
+	incommands = new InStreamFile(
 		      DOCTEXT_PATH, "DOCTEXT_PATH", "latex.def", "r" );
 	}
     textout->SetDebug( 0 );
@@ -90,7 +90,7 @@ int main( int argc, char ** argv )
 	if (incommands->status) {
 	    fprintf( stderr, "Could not open definition file %s\n", path );
 	    }
-	else 
+	else
 	    textout->ReadCommands( incommands );
 	incommands->Close();
 	}
@@ -126,17 +126,17 @@ int main( int argc, char ** argv )
    (1) Get the description
    (2) Get the synopsis
 
-   The description is of the form 
+   The description is of the form
    [space]*<name>[space]*[-]*[text,including\n]\n\n
    That is, two consequtive newlines end the description.
-   
-   The synopsis depends on the form.  For routines, it is read by 
+
+   The synopsis depends on the form.  For routines, it is read by
    reaching the end of the comment and then reading until the first {.
    For macros, we search for a "Synopsis:" line, then read until
    two newlines.
  */
 
-/* 
+/*
    The actual format, for LaTeX, is something like
 
    \k{routinename}{\CoDe{synopsis}\DeFn{definition}
@@ -147,7 +147,7 @@ int main( int argc, char ** argv )
 
    with no synopsis.
 
-   We can do this by using memory buffer outstreams, and then 
+   We can do this by using memory buffer outstreams, and then
    calling the output routines.
  */
 int DocOutRoutine( InStream *ins, TextOut *text, char *matchstring )
@@ -162,7 +162,7 @@ int DocOutRoutine( InStream *ins, TextOut *text, char *matchstring )
 
     if (DocReadName( ins, routinename, 128 )) return 1;
     if (DocReadDescription( ins, matchstring, textout, 0, &at_end )) return 1;
-    if (!at_end) 
+    if (!at_end)
       if (DocSkipToFuncSynopsis( ins, matchstring )) return 1;
 
     outsynop = new OutStreamBuf( 16000 );
@@ -180,7 +180,7 @@ int DocOutRoutine( InStream *ins, TextOut *text, char *matchstring )
     delete outsynop;
     delete textout;
     delete toutsynop;
-    
+
     return 0;
 }
 
@@ -212,7 +212,7 @@ int DocOutMacro( InStream *ins, TextOut *text, char *matchstring )
     delete outdesc;
     delete outsynop;
     delete textout;
-    
+
     return 0;
 }
 

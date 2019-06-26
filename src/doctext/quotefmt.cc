@@ -16,7 +16,7 @@ TextOutQFmt::TextOutQFmt( TextOut *in_outs )
     last_tt	 = 0;
     last_em	 = 0;
     next	 = in_outs;
-    
+
     lfont	 = 0;
     nl		 = 0;
     last_was_nl	 = 0;
@@ -42,7 +42,7 @@ int TextOutQFmt::PutChar( const char ch )
 		return next->PutChar( ch );
 	    }
 	    else {
-		if (tt_cnt++ == 0) 
+		if (tt_cnt++ == 0)
 		    next->PutOp( "tt" );
 		else {
 		    next->PutOp( "rm" );
@@ -61,7 +61,7 @@ int TextOutQFmt::PutChar( const char ch )
 		return next->PutChar( ch );
 	    }
 	    else {
-		if (em_cnt++ == 0) 
+		if (em_cnt++ == 0)
 		    next->PutOp( "em" );
 		else {
 		    next->PutOp( "rm" );
@@ -75,7 +75,7 @@ int TextOutQFmt::PutChar( const char ch )
 	}
     }
     // Allow PutChar( 0 ) to flush
-    if (ch) 
+    if (ch)
         return next->PutChar( ch );
     return 0;
 }
@@ -86,7 +86,7 @@ int TextOutQFmt::PutOp( const char *command )
     PutChar( 0 );
     if (strcmp( command, "eop" ) == 0) {
 	 if (tt_cnt != 0)
-	     fprintf( stderr, "Unclosed tt quote in %s\n", 
+	     fprintf( stderr, "Unclosed tt quote in %s\n",
 		      GetCurrentFileName() );
 	 if (em_cnt != 0)
 	     fprintf( stderr, "Unclosed em quote in %s\n",
@@ -101,7 +101,7 @@ int TextOutQFmt::PutOp( const char *command, char *s1, char *s2, int i1 )
   return next->PutOp( command, s1, s2, i1 );
 }
 
-int TextOutQFmt::PutOp( const char *command, char *s1, char *s2, char *s3, 
+int TextOutQFmt::PutOp( const char *command, char *s1, char *s2, char *s3,
 			char *s4 )
 {
   return next->PutOp( command, s1, s2, s3, s4 );

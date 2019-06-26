@@ -10,7 +10,7 @@ extern int InstreamDebugPaths( int );
 
 /*
  * InStream is the base class.  The derived classes for different kinds
- * of InStreams 
+ * of InStreams
  */
 class InStream {
     private:
@@ -43,7 +43,7 @@ class InStream {
     };
 
 /*
- * Derived classes.  
+ * Derived classes.
  */
 #include <stdio.h>
 class InStreamFile : public InStream {
@@ -62,9 +62,9 @@ class InStreamFile : public InStream {
     InStreamFile( );
     int GetChar( char * );
     int UngetChar( char );
-    int UngetToken( char * ); 
+    int UngetToken( char * );
     int GetLoc( long * );
-    int SetLoc( long ); 
+    int SetLoc( long );
     int GetSourceName( char *, int, int * );
     int GetLineNum( void );
     int Close( void );

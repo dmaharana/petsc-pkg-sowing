@@ -6,9 +6,9 @@
 #include "sowingconfig.h"
 #endif
 
-/* 
-   Include prototypes for the basic functions that some compilation systems, 
-   such as Gnu gcc under SunOS, do not provide(!) 
+/*
+   Include prototypes for the basic functions that some compilation systems,
+   such as Gnu gcc under SunOS, do not provide(!)
  */
 #ifdef NEEDS_STDLIB_PROTOTYPES
 #include "protofix.h"
@@ -16,7 +16,7 @@
 
 #include <stdio.h>
 
-#include <stdlib.h> 
+#include <stdlib.h>
 /* Include the definitions from configure */
 #if !defined(WIN32)
 #include "sowingconfig.h"

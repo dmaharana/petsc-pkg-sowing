@@ -98,7 +98,7 @@ void TXoutAccent( TeXEntry *e )
     case '.':
 	if (circs[letter]) { TeXoutcmd( fpout, circs[letter] ); return; }
 	break;
-	
+
     case '`':
 	if (graves[letter]) { TeXoutcmd( fpout, graves[letter] ); return; }
 	break;

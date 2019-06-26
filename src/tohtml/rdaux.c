@@ -8,7 +8,7 @@ static FILE *fpaux = 0;
 static char fname[1024];
 static int debugContents = 0;
 
-/* 
+/*
     This file contains code for reading an aux file and inserting it into
     the search space
 
@@ -100,7 +100,7 @@ void OpenWRAuxFile( void )
 	fputs( "TEXAUX\n", fpaux );
 #if 0
 	/* This is a hack.  If, after reading the previous AUX file, we noticed
-	   an out-of-range entry, we add a special command to set the initial 
+	   an out-of-range entry, we add a special command to set the initial
 	   root */
 	if (FirstLevel > RootLevel) {
 	    fprintf( fpaux, "0#node1.htm %d Top\n", RootLevel-1 );
@@ -115,14 +115,14 @@ void RewindAuxFile( void )
 }
 
 /*
- * Read the hux (aux) file.  This file has lines of the form 
+ * Read the hux (aux) file.  This file has lines of the form
  *   number#file level title
- * i.e., 
+ * i.e.,
  *   27#node27.htm 3 A Section title
  * or
  *   -1#node27.htm 4 label-name A Subsection title
- * 
- * A -1 indicates that the item occurs with a file at a given anchor 
+ *
+ * A -1 indicates that the item occurs with a file at a given anchor
  *    (label-name)
  *
  * The purpose of this code is to build a rooted tree of the sections.
@@ -132,14 +132,14 @@ void RewindAuxFile( void )
  *       i) the same as the previous level (a sibling)
  *       ii) one greater than the previous level (a child)
  *       iii) less than the previous level (a sibling of some previous level)
- * However, some files are not well formed - for example, a level may be 
- * more than one greater than the previous level.  There are several 
+ * However, some files are not well formed - for example, a level may be
+ * more than one greater than the previous level.  There are several
  * ways to handle that case. More below
  *
- * To ensure that there is a unique root, all levels are incremented by 1, 
+ * To ensure that there is a unique root, all levels are incremented by 1,
  * and the "rlevel" stores this value.  If there is no root yet, then
  * a root at level 0 is created.
- */ 
+ */
 void RdAuxFile( SRList *topicctx )
 {
     int         err;
@@ -159,7 +159,7 @@ void RdAuxFile( SRList *topicctx )
     if (SafeStrncpy( entrylevel, "Document", sizeof(entrylevel) )) {
 	TeXAbort( "RdAuxFile", "Problem setting Document name" );
     }
-    if (!fpaux) return;	
+    if (!fpaux) return;
     fgets( buffer, sizeof(buffer), fpaux );
     if (strcmp( buffer, "TEXAUX\n" ) != 0) {
 	/* Invalid aux file */
@@ -178,7 +178,7 @@ void RdAuxFile( SRList *topicctx )
 		     buffer );
 	    break;
 	}
-	/* labels and bib entries are intermixed within the aux file with 
+	/* labels and bib entries are intermixed within the aux file with
 	   the chapter/section structure */
 	if (seqnum == -1) {
 	    InsertLabel( level, buffer, lfname );
@@ -192,7 +192,7 @@ void RdAuxFile( SRList *topicctx )
 		buffer[strlen(buffer)-1] = 0;
 	    /* We must NOT do a lookup when we insert this into the
 	       table, because if we have multiple items, they must be
-	       inserted separately.  Thus, if a value already exists, 
+	       inserted separately.  Thus, if a value already exists,
 	       we still create a new one.
 	       */
 	    l = SRInsertAllowDuplicates( topicctx, buffer, entrylevel, &dummy );
@@ -215,13 +215,13 @@ void RdAuxFile( SRList *topicctx )
 	    if (rlevel < RootLevel) {
 		int i;
 		fprintf( stderr, "AUX file contains out-of-order elements\n" );
-		fprintf( stderr, "rlevel = %d, RootLevel = %d\n", 
+		fprintf( stderr, "rlevel = %d, RootLevel = %d\n",
 			 rlevel, RootLevel );
 		fprintf( stderr, "Line: %s\n", buffer );
 		/* Update the root.  Create one if there isn't one already */
 		if (!root) {
 		    Contents    *cr;
-		    if (debugContents) 
+		    if (debugContents)
 			fprintf( stderr, "Creating a new root\n" );
 		    cr = NewContents( rlevel, lfname );
 		    l->priv     = 0;
@@ -251,13 +251,13 @@ void RdAuxFile( SRList *topicctx )
 	    }
 	    /* FIXME: This originally had a level != 0 here.  Why?  */
 	    if (!FirstNodeSeen && level != 0) {
-		/* This code attempts to determine the "top level" 
+		/* This code attempts to determine the "top level"
 		   by using the first value seen.  If there are higher
 		   (lower-numbered) levels, then this will give an
-		   incorrect result.  To guard against that, we check 
+		   incorrect result.  To guard against that, we check
 		   against the root level*/
 		if (debugContents) {
-		    fprintf( stderr, "Setting first node to level %d\n", 
+		    fprintf( stderr, "Setting first node to level %d\n",
 			     level );
 		}
 		FirstNode     = level;
@@ -306,7 +306,7 @@ void RdAuxFile( SRList *topicctx )
 		if (parents[rlevel-1]) {
 		    /* ??? is this code correct? */
 		    if (parents[rlevel-1]->Child) {
-			if (lastchild[rlevel-1]) 
+			if (lastchild[rlevel-1])
 			    lastchild[rlevel-1]->Sibling = c;
 		    }
 		    else
@@ -323,7 +323,7 @@ void RdAuxFile( SRList *topicctx )
 			parents[rlevel-1]->Child = c;
 		    else {
 			if (lastchild[rlevel-1]) {
-			    lastchild[rlevel-1]->Sibling = c; 
+			    lastchild[rlevel-1]->Sibling = c;
 			}
 		    }
 		}
@@ -334,14 +334,14 @@ void RdAuxFile( SRList *topicctx )
 		fprintf( stderr, "Section %s not properly nested\n", buffer );
 	    }
 	    CurLevel = rlevel;
-/*	printf( "adding node at %d, parents[%d] = %d\n", level, CurLevel, 
+/*	printf( "adding node at %d, parents[%d] = %d\n", level, CurLevel,
 	parents[CurLevel-1] );
 	*/
 	    c->Parent = (CurLevel > FirstNode) ? parents[CurLevel-1] : 0;
 /* 	printf( "c->Parent = %d\n", c->Parent ); */
 	    lastnode = c;
         }
-    }    
+    }
 }
 
 void WRtoauxfile( int seqnum, char *lfname, int level, char *text )
@@ -352,7 +352,7 @@ void WRtoauxfile( int seqnum, char *lfname, int level, char *text )
 }
 
 /* Write a label to the aux file */
-void WriteLabeltoauxfile( int seqnum, char *lfname, char *labelname, 
+void WriteLabeltoauxfile( int seqnum, char *lfname, char *labelname,
 			  char *nodename )
 {
     if (!fpaux) return;
@@ -365,7 +365,7 @@ void WriteBibtoauxfile( int seqnum, char *labelname, char *nodename )
     if (!fpaux) return;
     fprintf( fpaux, "-2# %d %s %s\n", seqnum, labelname, nodename );
 }
-	
+
 
 /* Write FROM the aux file, using all names of the given level.
    Write as a "jump" table */
@@ -388,7 +388,7 @@ void WRfromauxfile( FILE *fout, int level )
 	    if (buffer[strlen(buffer)-1] == '\n')
 		buffer[strlen(buffer)-1] = 0;
 	    if (lfname[0])
-		sprintf( fullname, "%s#Node", 
+		sprintf( fullname, "%s#Node",
 			 (lfname[0] == '#') ? lfname + 1 : lfname );
 	    else {
 		if (SafeStrncpy( fullname, "Node", sizeof(fullname) )) {
@@ -398,12 +398,12 @@ void WRfromauxfile( FILE *fout, int level )
 	    WritePointerText( fout, buffer, fullname, seqnum );
 	    WritePar( fout );
         }
-    }    
+    }
 
 }
 
 /*
-  For debugging, this routine follows the tree of Contents and prints 
+  For debugging, this routine follows the tree of Contents and prints
   them out.
  */
 void PrintContents( FILE *fp, Contents *r )
@@ -412,7 +412,7 @@ void PrintContents( FILE *fp, Contents *r )
     static char indentString[100];
 
     if (!r) { r = root; indent = 0; }
-    
+
     indent = r->level;
     for (i=0; i<indent; i++) {
 	indentString[i] = ' ';
@@ -438,7 +438,7 @@ void PrintAllContents(FILE *fp)
     PrintContents(fp, 0);
 }
 
-/* A debugging routine to print just the siblings, not the children 
+/* A debugging routine to print just the siblings, not the children
    of the siblings */
 static void PrintSiblings( FILE *, Contents * );
 
@@ -450,7 +450,7 @@ static void PrintSiblings( FILE *fp, Contents *r )
 	fprintf( fp, "\t%d:%s\n", r->level, r->name ? r->name : "NULL" );
 	r = r->Sibling;
     }
-    if (maxcount == 0) 
+    if (maxcount == 0)
 	fprintf( fp, "\t**exceeded max sibling count\n" );
 }
 /* Get the NUMBER of childen of the given node */
@@ -476,8 +476,8 @@ int  NumChildren( LINK *l )
     return cnt;
 }
 
-/* Write a menu for the SIBLINGS and their CHILDREN of a given contents 
-   pointer 
+/* Write a menu for the SIBLINGS and their CHILDREN of a given contents
+   pointer
  */
 #ifndef MAX_CONTENTS_ENTRIES
 #define MAX_CONTENTS_ENTRIES 2048
@@ -485,7 +485,7 @@ int  NumChildren( LINK *l )
 static int elementCount = 0;
 void WriteSiblings( FILE *fout, Contents *r, int depth )
 {
-    if (!r) return;	
+    if (!r) return;
 
     if (debugContents) {
 	PrintSiblings( stderr, r );
@@ -493,7 +493,7 @@ void WriteSiblings( FILE *fout, Contents *r, int depth )
     TXbmenu( fout );
     while (r) {
 	if (debugContents) {
-	    fprintf( stderr, "Push sibling entry %s (level %d)\n", 
+	    fprintf( stderr, "Push sibling entry %s (level %d)\n",
 		     r->name, r->level );
 	}
 	if (r->level <= depth) {
@@ -502,7 +502,7 @@ void WriteSiblings( FILE *fout, Contents *r, int depth )
 		char fullname[1024];
 		elementCount ++;
 		if (elementCount > MAX_CONTENTS_ENTRIES) {
-		    fprintf( stderr, "Too many contents elements (%d)\n", 
+		    fprintf( stderr, "Too many contents elements (%d)\n",
 			     elementCount );
 		    exit(1);
 		}
@@ -521,20 +521,20 @@ void WriteSiblings( FILE *fout, Contents *r, int depth )
         }
 	r = r->Sibling;
     }
-    TXemenu( fout );    
-}    	    
+    TXemenu( fout );
+}
 
 /* Write a menu for the CHILDREN of a given contents pointer */
 void WriteSubChildren( FILE *fout, Contents *r, int depth )
 {
-    if (!r || !r->Child) return;	
+    if (!r || !r->Child) return;
     r = r->Child;
     if (debugContents) {
-	fprintf( stderr, "Push entry %s (level %d)\n", 
+	fprintf( stderr, "Push entry %s (level %d)\n",
 		 r->name, r->level );
     }
     WriteSiblings( fout, r, depth );
-}    	    
+}
 
 /* Given a link from SRLookup, write pointer text for the immediate children
    (if depth == -1) or children to level depth (depth >= 0) or ALL children
@@ -551,7 +551,7 @@ void WriteChildren( FILE *fout, LINK *l, int depth )
 	}
 	elementCount = 0;
 	/* Note that the root *can* now have siblings - in the case where
-	   the document has parts.  However, in this case we must first 
+	   the document has parts.  However, in this case we must first
 	   write out the siblings */
 	/* if (r->Sibling) fprintf( stderr, "Root can't have siblings!\n" ); */
 	if (r->Sibling) {
@@ -565,7 +565,7 @@ void WriteChildren( FILE *fout, LINK *l, int depth )
 	return;
     }
 
-    WriteSubChildren( fout, r, depth );    
+    WriteSubChildren( fout, r, depth );
 }
 
 /* Look up name; if found, return the name in context-ref of the PARENT.  */
@@ -618,10 +618,10 @@ void WriteChildren( FILE *fout, LINK *l, int depth )
     return 1;
 }
 
-/* 
+/*
  * This routine can be used to move sequentially through the list of sections.
  * Note that some link are placeholders and have no "self".  In that case,
- * we take in order: 
+ * we take in order:
  *   The next sibling
  *   The next child
  */
@@ -677,7 +677,7 @@ char *TopicFilename( LINK *l )
 /* Create and safely initialize a contents element.
    Generally initialized with null/zero elements
  */
-static Contents *NewContents( int level, const char *lfname ) 
+static Contents *NewContents( int level, const char *lfname )
 {
     Contents *c;
     c             = NEW(Contents);   CHKPTRN(c);
@@ -693,8 +693,8 @@ static Contents *NewContents( int level, const char *lfname )
     /* File where found */
     c->fname      = (char *)MALLOC( strlen( lfname ) + 1 );
     CHKPTRN(c->fname);
-    if (SafeStrncpy( c->fname, 
-		     (lfname[0] == '#') ? lfname + 1 : lfname, 
+    if (SafeStrncpy( c->fname,
+		     (lfname[0] == '#') ? lfname + 1 : lfname,
 		     strlen(lfname) + 1 )) {
 	TeXAbort( "NewContents", "filename too long" );
     }

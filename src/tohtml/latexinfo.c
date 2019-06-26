@@ -9,11 +9,11 @@ extern SRList *topicctx;
 extern LaTeXStack lstack[];
 extern int lSp;
 
-/* 
-   This file contains the latexinfo commands 
+/*
+   This file contains the latexinfo commands
  */
 
-/* latexinfo defines xref and pxref which use the section names rather 
+/* latexinfo defines xref and pxref which use the section names rather
    than labels.  */
 void TXxref( TeXEntry *e )
 {
@@ -22,11 +22,11 @@ void TXxref( TeXEntry *e )
     char lfname[256];
     char *topicfile;
 
-    if (!InDocument) return;	
+    if (!InDocument) return;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
+    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
 	TeXAbort( "TXxref", e->name );
     ReplaceWhite( curtok );
     RefedSection = SRLookup( topicctx, curtok, (char *)0, &dummy );
@@ -37,13 +37,13 @@ void TXxref( TeXEntry *e )
     }
     TeXoutstr( fpout, "See section " );
     topicfile =  TopicFilename( RefedSection );
-    if (topicfile) 
+    if (topicfile)
 	sprintf( lfname, "%s#Node", topicfile );
     else
 	strcpy( lfname, "Node" );
     WritePointerText( fpout, curtok, lfname, RefedSection->number );
     POPCURTOK;
-}	
+}
 
 void TXpxref( TeXEntry *e )
 {
@@ -52,11 +52,11 @@ void TXpxref( TeXEntry *e )
     char lfname[256];
     char *topicfile;
 
-    if (!InDocument) return;	
+    if (!InDocument) return;
     if (DebugCommands)
 	fprintf( stdout, "Getting argument for %s\n", e->name );
     PUSHCURTOK;
-    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
+    if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
 	TeXAbort( "TXpxref", e->name );
     ReplaceWhite( curtok );
     RefedSection = SRLookup( topicctx, curtok, (char *)0, &dummy );
@@ -73,7 +73,7 @@ void TXpxref( TeXEntry *e )
 	strcpy( lfname, "Node" );
     WritePointerText( fpout, curtok, lfname, RefedSection->number );
     POPCURTOK;
-}	
+}
 
 /* This processes the LatexInfo "example" environment */
 void TeXexample( TeXEntry *e )
@@ -99,22 +99,22 @@ void TeXexample( TeXEntry *e )
     TXegroup( e );
     TXpreformated( fpout, 0 );
     lSp--;
-}   
+}
 
 void TeXiftex( TeXEntry *e )
 {
-/* Skip code until find an \end{iftex} */	
+/* Skip code until find an \end{iftex} */
     TeXskipEnv( e, "iftex", 0 );
-}   
+}
 
 void TeXtex( TeXEntry *e )
 {
-/* Skip code until find an \end{tex} */	
+/* Skip code until find an \end{tex} */
     TeXskipEnv( e, "tex", 0 );
-}   
+}
 
 void TeXmenu( TeXEntry *e )
 {
     TeXskipEnv( e, "menu", 0 );
-}	
+}
 

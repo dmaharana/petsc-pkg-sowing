@@ -7,7 +7,7 @@
 
 /*
  * OutStream is the base class.  The derived classes for different kinds
- * of OutStreams 
+ * of OutStreams
  */
 class OutStream {
 //    /* Private data for stream */
@@ -33,7 +33,7 @@ class OutStream {
     };
 
 /*
- * Derived classes.  
+ * Derived classes.
  * WARNING: You'd think that deriving a class from another with public would
  * allow you to import the public functions from the base class without having
  * to redeclare them.  You'd be wrong... .  Note that you DO get the variables!

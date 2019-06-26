@@ -3,8 +3,8 @@
 
 /*
     Note:
-    On a CM5, the system call that this routine uses (uname) is provided but 
-    causes a fatal error.  
+    On a CM5, the system call that this routine uses (uname) is provided but
+    causes a fatal error.
  */
 #define HAS_UNAME
 #if defined(MSDOS) || defined(intelnx) || defined(fx2800) || defined(cm5) || \
@@ -32,7 +32,7 @@
      Input Parameter:
      slen - length of string buffer
      Output Parameter:
-.    str - string area to contain architecture name.  Should be at least 
+.    str - string area to contain architecture name.  Should be at least
            10 characters long.
 @*/
 void SYGetArchType( char *str, int slen )
@@ -46,15 +46,15 @@ void SYGetArchType( char *str, int slen )
 /* Here is special code for each variety */
 #if defined(solaris)
     strncpy(str,"solaris",7);
-#elif defined(sun4) 
-    if (strncmp( str, "sun4", 4 ) == 0) 
+#elif defined(sun4)
+    if (strncmp( str, "sun4", 4 ) == 0)
 	str[4] = 0;   /* Remove any trailing version, such as "sun4c" */
     else if (strncmp( str, "tp_s1", 5 ) == 0)
 	strcpy( str, "sun4" );   /* Tadpole (SPARC notebook) */
 
 #elif defined(IRIX)
     if (strcmp( "IRIX", un.sysname ) != 0)
-	strcpy( str, "Unknown/IRIX" );  
+	strcpy( str, "Unknown/IRIX" );
     else
 	strcpy( str, "IRIX" );
 

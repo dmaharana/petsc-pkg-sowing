@@ -1,14 +1,14 @@
 #ifndef CMDLINE
 #define CMDLINE
 
-/* 
+/*
    This is a class for accessing the command line.  Eventually, we may
-   add other methods, for example, a table driven approach that 
+   add other methods, for example, a table driven approach that
    reads all arguments and stores them in a table.  That's why the
    functions are virtual.
  */
 class CmdLine {
-    
+
     int SqueezeArg( );
 
     public:

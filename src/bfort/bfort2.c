@@ -1871,7 +1871,7 @@ void copyFileFD(FILE *fd, FILE *fout)
  *
  * An alternative, used by PETSc, is to define types (possibly using
  * macro replacement), and using a ToPointer routine that takes the
- * address of the pointer directly. 
+ * address of the pointer directly.
  */
 
 

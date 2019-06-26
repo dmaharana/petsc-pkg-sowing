@@ -28,8 +28,8 @@ for (nchar=0; nchar<maxlen; nchar++) {
     buffer[nchar] = c = getc( fp );
     if (c == EOF || c == '\n') break;
     }
-if (c == '\n') nchar++;    
-buffer[nchar] = 0;    
+if (c == '\n') nchar++;
+buffer[nchar] = 0;
 if (nchar == 0 && c == EOF) nchar = -1;
 /* fputs( buffer, stderr ); fflush( stderr ); */
 return nchar;
@@ -60,4 +60,4 @@ int i;
 for (i=0; i<len; i++)
     if (buffer[i] != ' ' && buffer[i] != '\n') return 0;
 return 1;
-}	
+}

@@ -38,8 +38,8 @@ for (nchar=0; nchar<maxlen; nchar++) {
     buffer[nchar] = c = getc( fp );
     if (c == EOF || c == '\n') break;
     }
-if (c == '\n') nchar++;    
-buffer[nchar] = 0;    
+if (c == '\n') nchar++;
+buffer[nchar] = 0;
 if (nchar == 0 && c == EOF) nchar = -1;
 /* fputs( buffer, stderr ); fflush( stderr ); */
 return nchar;
@@ -56,7 +56,7 @@ return nchar;
     Notes:
     This may be used instead of SYTxtGetLine if blank lines are to be
     ignored.
-@*/    
+@*/
 int SYTxtSkipBlankLines( fp, buffer, maxlen )
 FILE *fp;
 char *buffer;
@@ -81,7 +81,7 @@ int i;
 for (i=0; i<len; i++)
     if (buffer[i] != ' ' && buffer[i] != '\n') return 0;
 return 1;
-}	
+}
 
 /* Find the next space delimited token; put the text into token.
    The number of leading spaces is kept in nsp */
@@ -212,7 +212,7 @@ return fc;
 .   nsp   - number of preceeding blanks (my be null)
 
     Returns:
-    First character in token or -1 for EOF. 
+    First character in token or -1 for EOF.
 
     Notes:
     This differs from SYTxtFindNextANToken in that alpha-numeric tokens
@@ -269,8 +269,8 @@ return fc;
 .   fp - File pointer
 
     Returns:
-    The number of spaces skiped    
-@*/   
+    The number of spaces skiped
+@*/
 int SYTxtSkipWhite( fp )
 FILE *fp;
 {
@@ -302,9 +302,9 @@ char *str;
 int c;
 
 while ( *str && (c = getc( fp )) != EOF) {
-    if (c != *str) { 
+    if (c != *str) {
 	ungetc( (char)c, fp );
-	break; 
+	break;
 	}
     str++;
     }
@@ -315,7 +315,7 @@ return (*str == 0);
     SYTxtDiscardToEndOfLine - Discards text until the end-of-line is read
 
     Input Parameter:
-.   fp - File pointer    
+.   fp - File pointer
 @*/
 void SYTxtDiscardToEndOfLine( fp )
 FILE *fp;
@@ -326,7 +326,7 @@ while ((c = getc( fp )) != EOF && c != '\n') ;
 }
 
 /*@C
-    SYTxtTrimLine - Copies a string  over itself, removing LEADING and 
+    SYTxtTrimLine - Copies a string  over itself, removing LEADING and
                     TRAILING blanks.
 
     Input Parameters:

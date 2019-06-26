@@ -5,9 +5,9 @@
 #include <ctype.h>
 #include <string.h>
 
-/* 
+/*
    This defines the Nroff versions of the output.  Mostly, this setups up
-   the general engine and defines the PutChar routine (which handles the 
+   the general engine and defines the PutChar routine (which handles the
    special Nroff cases)
  */
 
@@ -25,12 +25,12 @@ int TextOutNroff::Setup( )
     next         = 0;
     strcpy( newline_onoutput, "\n" );
     userops	 = new SrList( 127 );
-    ins		 = new InStreamFile( TEXTFILTER_PATH, 
+    ins		 = new InStreamFile( TEXTFILTER_PATH,
 				     "TEXTFILTER_PATH", "nroff.def", "r" );
     if (!ins->status)
         ReadCommands( ins );
-    else 
-        rc = err->ErrMsg( ins->status, "Error reading nroff.def in path " 
+    else
+        rc = err->ErrMsg( ins->status, "Error reading nroff.def in path "
 	  TEXTFILTER_PATH " or  TEXTFILTER_PATH environment variable" );
     delete ins;
     return rc;
@@ -58,7 +58,7 @@ int TextOutNroff::PutChar( const char ch )
     switch (ch) {
         case '\\': out->PutQuoted( 0, "\\\\" ); break;
         case '\n': lnl = 1; out->PutChar( ch ); break;
-        case '.' : 
+        case '.' :
 	  if (last_was_nl) {
 	    // This is a mess.  We must change the command character
 	    // and then change it back.
@@ -67,12 +67,12 @@ int TextOutNroff::PutChar( const char ch )
 	    out->PutToken( 0, "\\&.\n" );
 	    lnl = 1;
 	  }
-	  else 
+	  else
 	    out->PutChar( ch );
 	  break;
-	default: out->PutChar( ch ); 
+	default: out->PutChar( ch );
 	}
-    if (ch) 
+    if (ch)
       UpdateNL( lnl );
     return 0;
 }

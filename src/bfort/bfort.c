@@ -1968,7 +1968,7 @@ void OutputUniversalName( FILE *fout, char *routine )
 	     FortranDblUscore, basename, basename,
 	     FortranUscore, basename, nouscorename,
 	     basename, basename,
-	
+
 	     FortranCaps, basename, capsname,
 	     FortranDblUscore, basename, basename,
 	     FortranUscore, basename, nouscorename );
@@ -1993,7 +1993,7 @@ void OutputUniversalName( FILE *fout, char *routine )
 	     FortranCaps, basename, capsname,
 	     FortranUscore, FortranDblUscore, basename, nouscorename,
 	     basename, basename,
-	
+
 	     FortranCaps, basename, capsname,
 	     FortranUscore, FortranDblUscore, basename, nouscorename );
 	}

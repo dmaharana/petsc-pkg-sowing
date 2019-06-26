@@ -63,7 +63,7 @@ int InStream::getQuote(char c, int maxlen, char *token)
  * 1 space (blank space; skipped and number of chars returned in nsp)
  * 2 alpha
  * 3 digit
- * 
+ *
  * Note that 0 and 1 are handled specially.
  * Also, user may define their own values; tokens will consist of all character
  * of the same class.
@@ -86,13 +86,13 @@ int InStream::ResetTables()
     return 0;
 }
 
-/* 
+/*
    The base stream doesn't know how to do much; mostly, it just passes
    the buck
  */
 int InStream::GetChar( char *c )
 {
-    if (next) 
+    if (next)
 	return next->GetChar( c );
     else
 	return 1;
@@ -203,7 +203,7 @@ int InStream::GetLine( char *line, int maxlen )
 
 int InStream::UngetChar( char c )
 {
-    if (next) 
+    if (next)
 	return next->UngetChar( c );
     else
 	return 1;
@@ -212,7 +212,7 @@ int InStream::UngetChar( char c )
 int InStream::UngetToken( char *token )
 {
     int i;
-    for (i=(int)strlen(token)-1; i>=0; i--) 
+    for (i=(int)strlen(token)-1; i>=0; i--)
       UngetChar( token[i] );
     return 0;
 }
@@ -256,7 +256,7 @@ int InStream::SetQuoteChars( char schar, char echar )
 int InStream::SkipLine( void )
 {
     char ch;
-    while (!GetChar( &ch )) 
+    while (!GetChar( &ch ))
 	if (ch == '\n') break;
     return 0;
 }
@@ -265,13 +265,13 @@ int InStream::GetLineNum( void )
 {
     if (next)
 	return next->GetLineNum();
-    else 
+    else
 	return 0;
 }
 
 int InStream::GetSourceName( char *filename, int maxlen, int *linecnt )
 {
-    if (next) 
+    if (next)
 	return next->GetSourceName( filename, maxlen, linecnt );
     else {
 	filename[0] = 0;
@@ -311,7 +311,7 @@ InStream::~InStream( )
    Try to open envpath/name, then pathlist/name, then name.
    pathlist and envpath contain : separated directories
  */
-InStreamFile::InStreamFile( const char *pathlist, const char *envpath, 
+InStreamFile::InStreamFile( const char *pathlist, const char *envpath,
 			    const char *name, const char *mode )
 {
     char *pname = 0, *p;
@@ -322,20 +322,20 @@ InStreamFile::InStreamFile( const char *pathlist, const char *envpath,
     fname     = 0;
     plists[0] = 0;
     plists[1] = (char *)pathlist;
-    if (envpath) 
+    if (envpath)
 	plists[0] = getenv( envpath );
 
     if (show_paths) {
       printf( "Looking in default path %s,\n\
 environment variable %s (%s)\n\
-for %s with mode %s\n", 
-	      pathlist, envpath, plists[0] ? plists[0] : "<empty>", 
+for %s with mode %s\n",
+	      pathlist, envpath, plists[0] ? plists[0] : "<empty>",
 	      name, mode );
     }
     fp = 0;
     for (i=0; !fp && i<2; i++) {
 	pname = plists[i];
-	// Find directory 
+	// Find directory
 	while (pname && *pname) {
 	    p = pname;
 	    // Create path
@@ -343,7 +343,7 @@ for %s with mode %s\n",
 	    while (*p && *p != PATH_SEP) *fptr++ = *p++;
  	    if (*p == PATH_SEP) p++;
 	    if (fptr == fullpath) continue;
-	    if (fptr[-1] != DIR_SEP) *fptr++ = DIR_SEP; 
+	    if (fptr[-1] != DIR_SEP) *fptr++ = DIR_SEP;
 	    *fptr = 0;
 	    strcat( fptr, name );
 	    fp = fopen( fullpath, mode );
@@ -374,7 +374,7 @@ for %s with mode %s\n",
       // Should be errno
       status = -1;
     }
-    else 
+    else
       status = 0;
     next       = 0;
     linecnt    = 0;
@@ -389,7 +389,7 @@ InStreamFile::InStreamFile( const char *path, const char *mode )
 {
     fname = 0;
     fp	  = fopen( path, mode );
-    if (!fp) 
+    if (!fp)
 	// Should be errno
 	status = -1;
     else {
@@ -444,7 +444,7 @@ int InStreamFile::GetChar( char *c )
 	if (ch2 != '\n') {
 	    ungetc( ch2, fp );
 	}
-	else 
+	else
 	    ch = ch2;
     }
 
@@ -462,11 +462,11 @@ int InStreamFile::GetChar( char *c )
 
 int InStreamFile::UngetChar( char c )
 {
-    // Only one character pushback is guaranteed.  Linux has a bug in 
+    // Only one character pushback is guaranteed.  Linux has a bug in
     // that exceeding the pushback causes erroneous behavior without
     // an error being reported.
     if (didunget) {
-	fprintf( stderr, 
+	fprintf( stderr,
 		 "Warning: multiple unget in InStreamFile::UngetChar\n" );
     }
     ungetc( c, fp );

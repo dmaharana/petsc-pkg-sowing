@@ -18,7 +18,7 @@ int OutStream::PutToken( int nsp, const char *token )
 
 int OutStream::PutQuoted( int nsp, const char *token )
 {
-  if (debug_flag && token && *token) 
+  if (debug_flag && token && *token)
     printf( "(Generic)%s::PutQuoted %s\n", MyName(), token );
   return PutToken( nsp, token );
 }
@@ -55,13 +55,13 @@ int OutStream::Close( )
 {
     if (next)
 	return next->Close();
-    else 
+    else
 	return 0;
 }
 
 OutStream::~OutStream()
 {
-    if (next) 
+    if (next)
 	next->~OutStream();
 }
 
@@ -138,7 +138,7 @@ const char *OutStreamFile::MyName( void )
   return "OutStreamFile";
 }
 
-/* 
+/*
  * Character buffer.  Still need to decide how to extract data.
  *                    This version will automatically extend the space,
  *                    doubling each time.
@@ -174,7 +174,7 @@ int OutStreamBuf::PutChar( const char ch )
     *position++ = ch;
     curlen++;
 
-    return 0;    
+    return 0;
 }
 
 OutStreamBuf::~OutStreamBuf( )

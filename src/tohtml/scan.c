@@ -18,11 +18,11 @@
     Another complication is that TeX doesn't REALLY have a comment character.
     It actually has an ACTIVE character that causes a flush to EOL.  This
     character is active almost everywhere, but not after a \ or in certain
-    commands (eg, \verb or \code).  So we really don't want to have a 
+    commands (eg, \verb or \code).  So we really don't want to have a
     commentchar for TeX.
  */
 
-#define MAX_LBUFFER 15000 
+#define MAX_LBUFFER 15000
 static char lbuffer[MAX_LBUFFER+2];
 static int  lp  = -1;
 static int  DebugScan = 0;
@@ -48,9 +48,9 @@ int (*SCSetTranslate( int (*f)( char *, int ) ))( char *, int )
     return old;
 }
 
-/* 
-   This is a TeX/LaTeX thing.  TeX allows completely arbitrary changes of 
-   character types; for now, we only support changing the '@' character 
+/*
+   This is a TeX/LaTeX thing.  TeX allows completely arbitrary changes of
+   character types; for now, we only support changing the '@' character
    because this is a common operation
  */
 void SCSetAtLetter( int flag )
@@ -95,11 +95,11 @@ void SCInitChartype( void )
 }
 
 /* This is a version of SYTxtFindNextAToken that first looks in lbuffer */
-/* Note that we have stricter rules.  Tokens are either ALL digits, 
+/* Note that we have stricter rules.  Tokens are either ALL digits,
    ALL letters, or single characters.
 
    Depending on the value of isatletter, the character '@' make be considered
-   a letter 
+   a letter
 
    A second complication is that if an 'output' token is pushed back, we
    need to return it.  They are marked as TOK_START ... TOK_END .
@@ -160,7 +160,7 @@ int SCTxtFindNextANToken( FILE *fp, char *token, int maxtoken, int *nsp )
 	    if (c == EOF) break;
 	}
 	/* Add the end-of-token */
-	if (maxtoken) 
+	if (maxtoken)
 	    *token++ = c;
     }
 
@@ -187,31 +187,31 @@ int SCTxtGetChar( FILE *fp )
 	    token[1] = 0;
 	    c = SCTranslate( token, 10 );
 	    /* If there are more characters, return them to the pile */
-	    if (token[1]) 
+	    if (token[1])
 		SCPushToken( token + 1 );
 	}
 	if (c == commentchar) {
-	    if (DebugCommands) 
+	    if (DebugCommands)
 		fprintf( stdout, "Discarding to end of line\n" );
 	    SYTxtDiscardToEndOfLine( fp );
 	    c = '\n';
         }
 	if (DebugScan) {
-	    if (c == EOF) 
+	    if (c == EOF)
 		fprintf( OUTFILE, "Returning EOF\n" );
 	    else {
 		if (isprint(c)) {
 		    fprintf( OUTFILE, "Returning char %c\n", c );
 		}
 		else if (iscntrl(c)) {
-		    if (c == '\r') 
+		    if (c == '\r')
 			fprintf( OUTFILE, "Returning char \\r\n" );
 		    else if (c == '\n')
 			fprintf( OUTFILE, "Returning char \\n\n" );
 		    else
 			fprintf( OUTFILE, "Returning char ^%c\n", c + 0100 );
 		}
-		else 
+		else
 		    fprintf( OUTFILE, "Returning char 0x%x\n", c );
 	    }
 	}
@@ -222,7 +222,7 @@ int SCTxtGetChar( FILE *fp )
 /*  Note that a comment char can NEVER be pushed back, so we don't need
     to check for it here */
     fc = c = lbuffer[lp--];
-    if (DebugScan) 
+    if (DebugScan)
 	fprintf( OUTFILE, "Returning pushed-back char %c\n", c );
     return fc;
 }
@@ -232,21 +232,21 @@ void OverlapCopy( char *s, int n )
 {
     int len = (int)strlen(s), i;
 
-    for (i=1; i<=len; i++) 
+    for (i=1; i<=len; i++)
 	s[len+n-i] = s[len-i];
     s[len+n] = 0;
 }
 
-/* 
+/*
    Append is like push, except that the token is added at the BACK of the list.
-   This is appropriate for use by TeXoutstr when it needs to write 
+   This is appropriate for use by TeXoutstr when it needs to write
    to the input buffer
  */
 void SCAppendToken( char *token )
 {
     int len, i, j;
     if (DebugScan)
-	fprintf( OUTFILE, "Appending %s [pos=%d]\n", token, lp ); 
+	fprintf( OUTFILE, "Appending %s [pos=%d]\n", token, lp );
 
     len = (int)strlen(token);
     if (lp + len >= MAX_LBUFFER) {
@@ -262,14 +262,14 @@ void SCAppendToken( char *token )
 	lbuffer[j++] = token[i];
 }
 
-/* 
+/*
  */
 void SCPushToken( const char *token )
 {
     int len, i;
 
     if (DebugScan)
-	fprintf( OUTFILE, "Pushing back %s [pos=%d]\n", token, lp ); 
+	fprintf( OUTFILE, "Pushing back %s [pos=%d]\n", token, lp );
 
     len = (int)strlen(token);
     for (i=len-1; i>=0 && lp < MAX_LBUFFER; i--)
@@ -279,7 +279,7 @@ void SCPushToken( const char *token )
 	exit(1);
     }
     lbuffer[lp+1] = 0;
-}    
+}
 
 /* This pushes a token, surrounded by TOK_START ... TOK_END */
 void SCPushCommand( const char *token )
@@ -287,7 +287,7 @@ void SCPushCommand( const char *token )
     int len, i;
 
     if (DebugScan)
-	fprintf( OUTFILE, "Pushing back %s [pos=%d]\n", token, lp ); 
+	fprintf( OUTFILE, "Pushing back %s [pos=%d]\n", token, lp );
 
     len = (int)strlen(token);
     lbuffer[++lp] = TOK_END;
@@ -299,12 +299,12 @@ void SCPushCommand( const char *token )
 	exit(1);
     }
     lbuffer[lp+1] = 0;
-}    
+}
 
 void SCPushChar( char ch )
 {
     if (DebugScan)
-	fprintf( OUTFILE, "Pushing back %c\n", ch ); 
+	fprintf( OUTFILE, "Pushing back %c\n", ch );
 /* If we have started reading, then we push this character back where it
    can be rescanned (at the current read location */
     if (lp == MAX_LBUFFER) {
@@ -313,14 +313,14 @@ void SCPushChar( char ch )
     }
     lbuffer[++lp] = ch;
     lbuffer[lp+1] = 0;
-}    
+}
 
 void SCSetCommentChar( char c )
 {
-    if (DebugCommands) fprintf( stdout, "Setting comment char %c\n", 
+    if (DebugCommands) fprintf( stdout, "Setting comment char %c\n",
 				(c > 20) ? c : 'x');
     commentchar = c;
-}	
+}
 
 
 /* Skip whitespace and newlines until a non-newline is found. */
@@ -345,7 +345,7 @@ void SCSkipNewlines( FILE *fp )
 	c = SYTxtGetChar( fp );
 	if (c == EOF) return;
 	if (c == commentchar) {
-	    if (DebugCommands) 
+	    if (DebugCommands)
 		fprintf( stdout, "Discarding to end of line\n" );
 	    SYTxtDiscardToEndOfLine( fp );
 	    c = '\n';
@@ -363,8 +363,8 @@ char SCGetCommentChar( void )
     return commentchar;
 }
 
-/* Skip whitespace to the first newline and then skip spaces and newlines 
-   until a nonblank is found.  Push back the spaces before the first nonblank 
+/* Skip whitespace to the first newline and then skip spaces and newlines
+   until a nonblank is found.  Push back the spaces before the first nonblank
    character */
 void SCSkipNewlines2( FILE *fp )
 {
@@ -389,7 +389,7 @@ void SCSkipNewlines2( FILE *fp )
 	c = SYTxtGetChar( fp );
 	if (c == EOF) return;
 	if (c == commentchar) {
-	    if (DebugCommands) 
+	    if (DebugCommands)
 		fprintf( stdout, "Discarding to end of line\n" );
 	    SYTxtDiscardToEndOfLine( fp );
 	    c = '\n';

@@ -6,7 +6,7 @@
 #include "textout.h"
 #include "docutil.h"
 #include <string.h>
- 
+
 #define MAX_TEXT_BLOCK 16380
 typedef struct _NameBlock {
     char *name;
@@ -23,7 +23,7 @@ static NameBlock *head  = 0;
  */
 int CheckForEndOfBlock( InStream *ins )
 {
-char c1, c2;	
+char c1, c2;
 
 ins->GetChar( &c1 );
 if (c1 == '*') {
@@ -41,7 +41,7 @@ else {
     ins->UngetChar( c1 );
     }
 
-return 0;    
+return 0;
 }
 
 int SaveName( InStream *ins, char *name )
@@ -49,17 +49,17 @@ int SaveName( InStream *ins, char *name )
   NameBlock *newblock;
   char c;
   int  cnt;
-  
+
   newblock = new NameBlock;
-  
+
   newblock->name = new char[strlen(name) + 1];
   strcpy(newblock->name, name );
-  
+
   newblock->next = head;
   head = newblock;
 
   newblock->replacement_text = new char[MAX_TEXT_BLOCK];
-  
+
   cnt = 0;
   while (cnt < MAX_TEXT_BLOCK && (!ins->GetChar( &c ))) {
     /* Look for N * / */
@@ -74,7 +74,7 @@ int SaveName( InStream *ins, char *name )
   /* Could trim storage here ... */
   return 0;
 }
-    
+
 int IncludeNameBlock( InStream *ins, char *name )
 {
   NameBlock *b;

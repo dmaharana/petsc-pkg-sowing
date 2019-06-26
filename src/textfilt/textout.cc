@@ -10,11 +10,11 @@
  * grouped (e.g., {\tt ...} or <TT> ... </TT>) and ungrouped (e.g., \n.I ...).
  * It also handles newline interpretation, ensuring that the "correct"
  * number of newlines is generated.
- * 
+ *
  * A command consists of a string with some special characters.  These are:
  * %% just a %
  * %1 Insert string s1
- * %2 Insert string s2 etc 
+ * %2 Insert string s2 etc
  * %i Insert integer i1 (but see note on definitions)
  * %n Insert newline ONLY if not AT a newline.
  * %N=".." Replace newlines with this string (%N revert to original behavior)
@@ -25,7 +25,7 @@
  * %e="..." Define end-font-string.  Max of 32 characters
  * %u1, %u2, etc.  Just like %1, but upper case the string.
  * %r1, %r2, etc.  The values of registers defined with %a or SetOutRegister
- * %rq1, etc. is like %r1, but the output is quoted (so that filters further 
+ * %rq1, etc. is like %r1, but the output is quoted (so that filters further
  * downstream do not try to process the data)
  * %a1="..." define register 1.  Ditto for a2, etc.
  * %m="..." Define mode.  This is used for text systems that have special
@@ -42,11 +42,11 @@
 
 /* This the structure that holds the information about a command -
    Not used for now */
-typedef struct { 
+typedef struct {
     char *cmdstring;
     } CmdInfo;
 
-/* Names are matched as 
+/* Names are matched as
    cmdname-i1 (if i1 != TEXT_I_IGNORE)
       then
    cmdname
@@ -69,12 +69,12 @@ int TextOut::HasOp( const char *cmdname )
     SrEntry *entry;
 
     PutChar( 0 );
-    if (!userops && next) 
+    if (!userops && next)
         return next->HasOp( cmdname );
     return MatchCommand( cmdname, TEXT_I_IGNORE, &entry );
 }
 
-// 
+//
 // All of the PutOp commands use PutChar( 0 ) to flush any local buffers
 //
 int TextOut::PutOp( const char *cmdname, char *s1, char *s2, int i1 )
@@ -82,26 +82,26 @@ int TextOut::PutOp( const char *cmdname, char *s1, char *s2, int i1 )
     SrEntry *entry;
 
     PutChar( 0 );
-    if (!userops && next) 
+    if (!userops && next)
         return next->PutOp( cmdname, s1, s2, i1 );
     if (MatchCommand( cmdname, i1, &entry )) {
 	/* Did not find, so do nothing */
 	return PutOpError( cmdname, (char *)0 );
 	}
     else {
-	PutCommand( (char *)entry->extra_data, s1, s2, (char *)0, (char *)0, 
+	PutCommand( (char *)entry->extra_data, s1, s2, (char *)0, (char *)0,
 		    i1 );
 	}
     return 0;
 }
 
-int TextOut::PutOp( const char *cmdname, 
+int TextOut::PutOp( const char *cmdname,
 		    char *s1, char *s2, char *s3, char *s4 )
 {
     SrEntry *entry;
 
     PutChar( 0 );
-    if (!userops && next) 
+    if (!userops && next)
         return next->PutOp( cmdname, s1, s2, s3, s4 );
     if (userops->Lookup( cmdname, &entry )) {
 	/* Did not find, so do nothing */
@@ -118,14 +118,14 @@ int TextOut::PutOp( const char *cmdname, char *s1 )
     SrEntry *entry;
 
     PutChar( 0 );
-    if (!userops && next) 
+    if (!userops && next)
         return next->PutOp( cmdname, s1 );
     if (userops->Lookup( cmdname, &entry )) {
 	/* Did not find, so do nothing */
 	return PutOpError( cmdname, (char *)0 );
 	}
     else {
-	PutCommand( (char *)entry->extra_data, s1, (char *)0, (char *)0, 
+	PutCommand( (char *)entry->extra_data, s1, (char *)0, (char *)0,
 		    (char *)0, 0 );
 	}
     return 0;
@@ -136,14 +136,14 @@ int TextOut::PutOp( const char *cmdname )
     SrEntry *entry;
 
     PutChar( 0 );
-    if (!userops && next) 
+    if (!userops && next)
         return next->PutOp( cmdname );
     if (userops->Lookup( cmdname, &entry )) {
 	/* Did not find, so do nothing */
 	return PutOpError( cmdname, (char *)0 );
 	}
     else {
-	PutCommand( (char *)entry->extra_data, (char *)0, (char *)0, 
+	PutCommand( (char *)entry->extra_data, (char *)0, (char *)0,
 		    (char *)0, (char *)0, 0 );
 	}
     return 0;
@@ -154,14 +154,14 @@ int TextOut::PutOp( const char *cmdname, char *s1, int i1 )
     SrEntry *entry;
 
     PutChar( 0 );
-    if (!userops && next) 
+    if (!userops && next)
         return next->PutOp( cmdname, s1, i1 );
     if (MatchCommand( cmdname, i1, &entry )) {
 	/* Did not find, so do nothing */
 	return PutOpError( cmdname, (char *)0 );
 	}
     else {
-	PutCommand( (char *)entry->extra_data, s1, (char *)0, (char *)0, 
+	PutCommand( (char *)entry->extra_data, s1, (char *)0, (char *)0,
 		    (char *)0, i1 );
 	}
     return 0;
@@ -172,7 +172,7 @@ int TextOut::PutOp( const char *cmdname, char *s1, int i1 )
 int TextOut::PutOpError( const char *cmdname, const char *msg )
 {
 	if (msg) fprintf( stderr, "%s\n", msg);
-	else 
+	else
 		fprintf( stderr, "Did not find definition for command %s\n", cmdname );
 	return 1;
 }
@@ -231,28 +231,28 @@ int TextOut::OutString( const char *string )
       if (debug_flag) printf( "TextOut::Outstring to next TextOut\n" );
       return next->OutString( string );
     }
-    
+
     if (debug_flag)
       printf( "TextOut::Outstring to related Outstream %s\n", out->MyName() );
 #ifdef FOO
-    if (!nl) 
+    if (!nl)
 	rc = out->PutToken( 0, string );
     else {
 	while (!rc && (ch = *string++)) {
-	    if (ch == '\n') 
+	    if (ch == '\n')
 		rc = out->PutQuoted( 0, nl );
-	    else 
+	    else
 		rc = out->PutChar( ch );
 	    }
 	}
 #else
-    if (!nl) 
+    if (!nl)
 	rc = PutToken( 0, string );
     else {
 	while (!rc && (ch = *string++)) {
-	    if (ch == '\n') 
+	    if (ch == '\n')
 		rc = PutQuoted( 0, nl );
-	    else 
+	    else
 		rc = PutChar( ch );
 	    }
 	}
@@ -271,15 +271,15 @@ int TextOut::OutStringUC( const char *string )
     	return next->OutStringUC( string );
     if (!nl) {
       while (*string) {
-	rc = out->PutChar( toupper( *string ) ); 
+	rc = out->PutChar( toupper( *string ) );
 	string++;
       }
     }
     else {
 	while (!rc && (ch = *string++)) {
-	    if (ch == '\n') 
+	    if (ch == '\n')
 		rc = out->PutQuoted( 0, nl );
-	    else 
+	    else
 		rc = out->PutChar( toupper( ch ) );
 	    }
 	}
@@ -287,10 +287,10 @@ int TextOut::OutStringUC( const char *string )
 	else   return 0;
 }
 
-/* 
+/*
  * This COULD use varargs or arg matching
  */
-int TextOut::PutCommand( char *cmdstring, 
+int TextOut::PutCommand( char *cmdstring,
 			 char *s1, char *s2, char *s3, char *s4, int i1 )
 {
     char ch, ch2;
@@ -299,7 +299,7 @@ int TextOut::PutCommand( char *cmdstring,
 
     if (!cmdstring) return 1;
 
-    if (debug_flag) 
+    if (debug_flag)
 	printf( "Processing command string %s\n", cmdstring );
     /* Interpret and replace string */
     while ((ch = *cmdstring++)) {
@@ -317,17 +317,17 @@ int TextOut::PutCommand( char *cmdstring,
                 case '2': OutString( s2 ); break;
                 case '3': OutString( s3 ); break;
                 case '4': OutString( s4 ); break;
-  	        case 'a': 
+  	        case 'a':
 		  /* Get the register number and string value */
 		  ch2 = *cmdstring++;
 		  regnum = ch2 - '0';
 		  if (regnum < 0 || regnum >= MAX_TEXT_REGNUM) return 1;
-		  cmdstring = GetDQtext( cmdstring, cmdreg[regnum], 
+		  cmdstring = GetDQtext( cmdstring, cmdreg[regnum],
 					 MAX_TEXT_REGISTER );
 		  //printf( "stng=%s\n", cmdreg[regnum] );
 		  /* if cmdstring == 0, an error was found */
 		  if (!cmdstring) return 1;
-		  
+
 		  break;
 	        case 'r':
 	          /* Get the register number and output the value in that
@@ -335,18 +335,18 @@ int TextOut::PutCommand( char *cmdstring,
 		  ch2 = *cmdstring++;
 		  r_quoted = (ch2 == 'q');
 		  if (r_quoted) ch2 = *cmdstring++;
-		  //if (debug_flag & r_quoted) 
+		  //if (debug_flag & r_quoted)
 		  //  printf( "quoted output\n" );
 		  regnum = ch2 - '0';
 		  if (regnum < 0 || regnum >= MAX_TEXT_REGNUM) return 1;
 		  //printf( "stng_out%d=%s\n", regnum, cmdreg[regnum] );
-		  if (r_quoted) 
+		  if (r_quoted)
 		    out->PutQuoted( 0, cmdreg[regnum] );
 		  else
 		    out->PutToken( 0, cmdreg[regnum] );
 		  break;
 
-   	        case 'e': 
+   	        case 'e':
 		  /* Get replacement string; (="...") set lfont */
 		  cmdstring = GetDQtext( cmdstring, font_str, 32 );
 		  /* if cmdstring == 0, an error was found */
@@ -357,16 +357,16 @@ int TextOut::PutCommand( char *cmdstring,
 			  lfont = 0;
 			  break;
 	        case 'i': out->PutInt( i1 ); break;
-   	        case 'm': 
+   	        case 'm':
 		  /* Get mode string; (="...") set mode */
 		  cmdstring = GetDQtext( cmdstring, mode_str, 32 );
 		  /* if cmdstring == 0, an error was found */
 		  if (!cmdstring) return 1;
-		  // An empty mode_str give a null mode (simplifies binary 
+		  // An empty mode_str give a null mode (simplifies binary
 		  // modes)
-		  if (*mode_str) 
+		  if (*mode_str)
 		    mode = mode_str;
-		  else 
+		  else
 		    mode = 0;
 		  break;
 	        case 'n': if (!l_was_nl) {
@@ -374,18 +374,18 @@ int TextOut::PutCommand( char *cmdstring,
 			     UpdateNL( 1 );
 		             }
 		    break;
- 	        case 'N': 
+ 	        case 'N':
 		    if (*cmdstring == '=') {
 			cmdstring = GetDQtext( cmdstring, newline_str, 32 );
 			if (!cmdstring) return 1;
 			nl = newline_str;
 			}
-		    else 
+		    else
 			nl = 0;
 		    break;
-		    
-		case 'p': 
-			  if (l_was_par == 0) 
+
+		case 'p':
+			  if (l_was_par == 0)
 			      PutOp( "end_par" );
 			  last_was_par = 1;
 			  break;
@@ -406,15 +406,15 @@ int TextOut::PutCommand( char *cmdstring,
 	else {
 	    if (nl && ch == '\n') {
 		out->PutToken( 0, nl );
-		} 
+		}
 	    else {
 		out->PutChar( ch );
 		}
-	    if (ch) 
+	    if (ch)
 	      UpdateNL( ch == '\n' );
 	    last_was_par = 0;
 	    }
-	}	
+	}
     return 0;
 }
 
@@ -423,7 +423,7 @@ int TextOut::PutChar( const char ch )
 {
   if (debug_flag && ch) printf( "Generic TextOut::PutChar of %c\n", ch );
     /* This really needs to remember newlines in last_was_nl */
-    if (ch) 
+    if (ch)
       UpdateNL( ch == '\n' );
     if (next) return next->PutChar( ch );
     else      return out->PutChar( ch );
@@ -446,7 +446,7 @@ int TextOut::PutTokenRaw( int nsp, const char *token )
 
 int TextOut::PutQuoted( int nsp, const char *token )
 {
-  if (debug_flag && token && *token) 
+  if (debug_flag && token && *token)
     printf( "Generic puttoken for %s\n", token );
   if (token && *token) UpdateNL( 0 );
   if (next) return next->PutQuoted( nsp, token );
@@ -504,7 +504,7 @@ int TextOut::UpdateNL( int in_last_was_nl )
    continue to the next line.
 
    Note that the user can define ANY commands; they are added to the table.
-   
+
    Note that command-names can have the form
    foo-3
    This will match a command name of foo and an integer value of 3.  This
@@ -627,9 +627,9 @@ int TextOut::Debug( int flag )
   return old_flag;
 }
 
-/* 
+/*
    It is sometimes useful to define an output stream that is really a textout
-   object.  
+   object.
  */
 TextOutStrm::TextOutStrm( OutStream * outs )
 {

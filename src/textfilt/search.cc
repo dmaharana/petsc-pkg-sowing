@@ -3,7 +3,7 @@
 #include "srlist.h"
 #include <string.h>
 
-/* 
+/*
  * This is a VERY simple search system, based on hashed lists.
  * Experts or people with time on their hands can write something better.
  * This is good enough, however, for most of what we need here.
@@ -26,7 +26,7 @@ SrList::SrList( int h_size )
 
     hash_size = h_size;
     table     = new SrEntry*[hash_size];
-    for (i=0; i<hash_size; i++) 
+    for (i=0; i<hash_size; i++)
 	table[i] = 0;
 }
 
@@ -36,7 +36,7 @@ SrList::SrList( )
 
     hash_size = 511;
     table     = new SrEntry*[hash_size];
-    for (i=0; i<hash_size; i++) 
+    for (i=0; i<hash_size; i++)
 	table[i] = 0;
 }
 
@@ -106,7 +106,7 @@ int SrList::Delete( const char *name )
 {
     int i;
     SrEntry *p, *n;
-    
+
     i = HashFn( name );
     p = table[i];
     n = 0;
@@ -128,7 +128,7 @@ int SrList::Walk( int (*fcn)( const char *, SrEntry * ) )
 {
     int i;
     SrEntry *p;
-    
+
     for (i=0; i<hash_size; i++) {
 	p = table[i];
 	while (p) {

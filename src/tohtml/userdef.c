@@ -2,7 +2,7 @@
 /*
    This file contains routines to process user defined commands
 
-   TeX uses a template macro processor; this means that we must be prepared 
+   TeX uses a template macro processor; this means that we must be prepared
    to skip over text in the macro definition.
  */
 
@@ -76,7 +76,7 @@ void TXDoUser( TeXEntry *e )
 	    template += 2;
 	}
 	if (DebugDef) printf( "Reading arg %d\n", j );
-	rc = TeXGetGenArg( fpin[curfile], ltoken, MAX_TOKEN, 
+	rc = TeXGetGenArg( fpin[curfile], ltoken, MAX_TOKEN,
 			   LbraceChar, RbraceChar, 0 );
 	if (rc == -1) {
 	    TeXAbort( "TXDoUser", e->name );
@@ -100,7 +100,7 @@ void TXDoUser( TeXEntry *e )
 	if (p > pstart && p[-1] == ArgChar) {
 	    argn = p[0] - '1';
 	    if (argn >= 0 && argn < nargs) {
-		if (DebugDef) printf( "Pushing %s back in def eval(1)\n", 
+		if (DebugDef) printf( "Pushing %s back in def eval(1)\n",
 				      args[argn] );
 		SCPushToken( args[argn] );
 		p--;
@@ -162,7 +162,7 @@ void TXAddUserDef( SRList *lTeXlist, TeXEntry *e )
 	    != EOF ) {
 	if (ch == LbraceChar) break;
 	if (ch == ArgChar) nargs++;
-	for (i=0; i<nsp; i++) 
+	for (i=0; i<nsp; i++)
 	    strncat( template_buf, " ", 100 );
 	strncat( template_buf, mytoken, 100 );
     }
@@ -193,8 +193,8 @@ void TXAddUserDef( SRList *lTeXlist, TeXEntry *e )
 	def = NEW(Definition);  CHKPTR(def);
 	def->nargs = nargs;
 	if (DebugDef) {
-	    printf( "User provided defintion of %s is:\n\ttemplate = %s\n\tdef = %s\n", 
-		    name+1, *template_buf ? template_buf : "<null>", 
+	    printf( "User provided defintion of %s is:\n\ttemplate = %s\n\tdef = %s\n",
+		    name+1, *template_buf ? template_buf : "<null>",
 		    *mydef ? mydef : "<null>" );
         }
 	def->replacement_text = STRDUP( mydef );
@@ -209,7 +209,7 @@ void TXAddUserDef( SRList *lTeXlist, TeXEntry *e )
     FREE( mydef );
 }
 
-/* 
+/*
    This is for \renewcommand and \newcommand; these have a different format
    than \def but need to have the same effect.  Their format is
 
@@ -224,7 +224,7 @@ void TXDoNewCommand( SRList *lTeXlist, TeXEntry *e )
     Definition *def;
     char       lname[40];
 
-/* We can't use GetArg to get the arg, because we need to skip over the 
+/* We can't use GetArg to get the arg, because we need to skip over the
    \ in the name.  Fortunately, the argument MUST be a simple name */
     ch = SCTxtGetChar( fpin[curfile] );
     if (ch != LbraceChar) {
@@ -239,7 +239,7 @@ void TXDoNewCommand( SRList *lTeXlist, TeXEntry *e )
 	for (j=0; j<nsp; j++) *p++ = ' ';
 	if (ch == LbraceChar) nbrace++;
 	else if (ch == RbraceChar) nbrace--;
-	if (nbrace == 0) { 
+	if (nbrace == 0) {
 	    *p = 0;
 	    break;
 	}
@@ -255,8 +255,8 @@ void TXDoNewCommand( SRList *lTeXlist, TeXEntry *e )
 	printf( "Defining %s with newcommand or renewcommand\n", name );
     }
  */
-    nargs = TeXGetGenArg( fpin[curfile], ltoken, MAX_TOKEN, '[', ']', 1 );	
-    if (nargs == -1) 
+    nargs = TeXGetGenArg( fpin[curfile], ltoken, MAX_TOKEN, '[', ']', 1 );
+    if (nargs == -1)
 	TeXAbort( "TXDoUser", e->name );
     if (nargs) {
 	nargs = atoi( ltoken );
@@ -264,7 +264,7 @@ void TXDoNewCommand( SRList *lTeXlist, TeXEntry *e )
 /* We get the definition without processing it */
     nbrace = 0;
     ch = SCTxtFindNextANToken( fpin[curfile], ltoken, MAX_TOKEN, &nsp );
-    if (ch == LbraceChar) 
+    if (ch == LbraceChar)
 	nbrace++;
     else {
 	SCPushToken( ltoken );
@@ -329,7 +329,7 @@ void TXDoNewLength( SRList *lTeXlist, TeXEntry *e )
     Definition *def;
     static char null_string[1] = {0};
 
-/* We can't use GetArg to get the arg, because we need to skip over the 
+/* We can't use GetArg to get the arg, because we need to skip over the
    \ in the name.  Fortunately, the argument MUST be a simple name */
     ch = SCTxtGetChar( fpin[curfile] );
     if (ch != LbraceChar) {
@@ -369,7 +369,7 @@ void TXlet( TeXEntry *e )
     int        nsp, i, ch;
     TeXEntry   *old;
     LINK       *l;
-    
+
     mytoken    = (char *)MALLOC( MAX_TOKEN ); CHKPTR(mytoken);
 
     /* Read command */
@@ -380,10 +380,10 @@ void TXlet( TeXEntry *e )
 	FREE( mytoken );
 	return;
     }
-    
+
     /* Read oldvalue */
     ch = TeXReadToken( mytoken, &nsp );
-    if (ch == '=') 
+    if (ch == '=')
 	ch = TeXReadToken( mytoken, &nsp );
 
     /* Insert newcommand into list with old meaning */
@@ -397,7 +397,7 @@ void TXlet( TeXEntry *e )
 	TXInsertName( TeXlist, name + 1, TXnop, 0, (void *)0 );
     }
     FREE( mytoken );
-    
+
     return;
 }
 
@@ -405,9 +405,9 @@ void TXlet( TeXEntry *e )
    Dump user-definitions in TeX format.  Use this (a) for debugging and (b)
    for generating LaTeX img files
 
-   If the name contains an @, bracket with 
+   If the name contains an @, bracket with
    \makeatletter ... \makeatother
-   
+
    We must be careful to remove the quoting characters.
 
    We also need the option to skip definitions that provide TeX->HTML
@@ -433,19 +433,19 @@ void TXDumpUserDefs( FILE *fout, int include_hdef )
 		    if ( d->kind != TX_TEXCMD ) {
 			TeXAbort( "DumpUserDefs", "definition kind" );
 		    }
-		    if (strchr( cur->topicname, '@' )) 
+		    if (strchr( cur->topicname, '@' ))
 			fprintf( fout, "\\makeatletter\n" );
 		    fprintf( fout, "\\def\\%s", cur->topicname );
-		    if (d->input_template) 
+		    if (d->input_template)
 			WriteString( fout, d->input_template );
 		    else {
-			for (j=0; j<d->nargs; j++) 
+			for (j=0; j<d->nargs; j++)
 			    fprintf( fout, "#%d", j + 1 );
 		    }
 		    fputs( "{", fout );
 		    WriteString( fout, d->replacement_text );
 		    fputs( "}\n", fout );
-		    if (strchr( cur->topicname, '@' )) 
+		    if (strchr( cur->topicname, '@' ))
 			fprintf( fout, "\\makeatother\n" );
 		}
 	    }
@@ -510,7 +510,7 @@ int TXIsReplaceFile( const char *fname, char *newname )
 }
 
 #ifdef FOO
-/* 
+/*
    Add a definition that may include commands (e.g., may contain raw html)
  */
 void TXAddUserDefn( char *name, int nargs, char *value, char cmdchar )
@@ -534,7 +534,7 @@ void TXAddUserDefn( char *name, int nargs, char *value, char cmdchar )
 	in_cmd = ! in_cmd;
       }
     }
-    else 
+    else
       *def_p++ = *p++;
   }
   *def_p = 0;

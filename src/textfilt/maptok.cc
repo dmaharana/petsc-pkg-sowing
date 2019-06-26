@@ -108,13 +108,13 @@ void OutStreamMap::toLower(char *s)
 int OutStreamMap::PutToken( int nsp, const char *token )
 {
     SrEntry *entry;
-    
-    /* 
+
+    /*
        First, tokenize the output and check each token.  Special case:
        if we reach the end of the string without a "break" character, we must
        delay processing until we get the break character, since the token may
-       be incomplete (for example, MPI_Send may be delivered to this 
-       routine as MPI, then _, then Send. 
+       be incomplete (for example, MPI_Send may be delivered to this
+       routine as MPI, then _, then Send.
      */
 
     /* Spaces are a delimiter.  Try to flush activetok, and rerun PutToken */
@@ -247,7 +247,7 @@ int OutStreamMap::ReadMap( InStream *ins, int my_ignore_case, int ignoreRepl )
 	}
 	ins->GetChar( &ch );
 	p = reptext; ln = 0;
-	while (!ins->GetChar( &ch ) && ch != sepchar && 
+	while (!ins->GetChar( &ch ) && ch != sepchar &&
 	       ++ln < MAX_REPNAME_LEN) *p++ = ch;
 	if (ch != sepchar) {
 	  fprintf( stderr, "Replacement name too long in map\n" );
@@ -351,7 +351,7 @@ void TextOutMap::Setup( int in_maxlen )
 	}
     breaktable[(unsigned char)'_'] = BREAK_ALPHA;
 
-    // 
+    //
     err		  = new ErrHandMsg();
     lfont	  = 0;
     nl		  = 0;
@@ -367,7 +367,7 @@ void TextOutMap::Setup( int in_maxlen )
     debug	  = 0;
 }
 
-// Allow the user to apply the same control to the tokenization in the 
+// Allow the user to apply the same control to the tokenization in the
 // map output as they may have set for the input
 int TextOutMap::SetBreakChar( char c, int kind )
 {
@@ -408,7 +408,7 @@ int TextOutMap::PutNewline( void )
 {
   int rc;
   UpdateNL( 1 );
-  if (*newline_onoutput) 
+  if (*newline_onoutput)
     rc = PutToken( 0, newline_onoutput );
   else
     rc = PutToken( 0, "\n" );
@@ -438,12 +438,12 @@ int TextOutMap::PutToken( int nsp, const char *token )
     SrEntry *entry;
 
     if (debug && token) printf( "Mapping token |%s|\n", token );
-    /* 
+    /*
        First, tokenize the output and check each token.  Special case:
        if we reach the end of the string without a "break" character, we must
        delay processing until we get the break character, since the token may
-       be incomplete (for example, MPI_Send may be delivered to this 
-       routine as MPI, then _, then Send. 
+       be incomplete (for example, MPI_Send may be delivered to this
+       routine as MPI, then _, then Send.
      */
 
     /* Spaces are a delimiter.  Try to flush activetok, and rerun PutToken */
@@ -564,14 +564,14 @@ int TextOutMap::ReadMap( InStream *ins, int my_ignore_case, int ignoreRepl )
 	    }
 	/* Read file line.  One format is
 	   tagtype:%cname%c%crepname%c%c%c%cskip%cURL
-	   
+
 	   where %c is any character, but the same character must be used
 	   in all places (on a line-bu-line basis).
          */
 	while (!ins->GetChar( &ch ) && ch != ':' && ch != '\n') ;
 	ins->GetChar( &sepchar );
 	p = name; ln = 0;
-	while (!ins->GetChar( &ch ) && ch != sepchar && ++ln < MAX_NAME_LEN) 
+	while (!ins->GetChar( &ch ) && ch != sepchar && ++ln < MAX_NAME_LEN)
 	  *p++ = ch;
 	if (ch != sepchar) {
 	  fprintf( stderr, "Name too long in map\n" );
@@ -580,7 +580,7 @@ int TextOutMap::ReadMap( InStream *ins, int my_ignore_case, int ignoreRepl )
 	*p = 0;
 	ins->GetChar( &ch );
 	p = reptext; ln = 0;
-	while (!ins->GetChar( &ch ) && ch != sepchar && 
+	while (!ins->GetChar( &ch ) && ch != sepchar &&
 	       ++ln < MAX_REPNAME_LEN) *p++ = ch;
 	if (ch != sepchar) {
 	  fprintf( stderr, "Replacement name too long in map\n" );
@@ -590,14 +590,14 @@ int TextOutMap::ReadMap( InStream *ins, int my_ignore_case, int ignoreRepl )
 	while (!ins->GetChar( &ch ) && ch == sepchar) ;
 	while (!ins->GetChar( &ch ) && ch != sepchar) ;
 	p = url; ln = 0;
-	while (!ins->GetChar( &ch ) && ch != '\n' && ++ln < MAX_URL_LEN) 
+	while (!ins->GetChar( &ch ) && ch != '\n' && ++ln < MAX_URL_LEN)
 	  *p++ = ch;
 	if (ch != '\n') {
 	  fprintf( stderr, "URL too long in map\n" );
 	  return 1;
 	}
 	*p = 0;
-	
+
 	/* Install this name */
 	strcpy(lcname,name);
 	if (my_ignore_case) toLower(lcname);
@@ -615,7 +615,7 @@ int TextOutMap::ReadMap( InStream *ins, int my_ignore_case, int ignoreRepl )
 	strcpy( info->url, url );
 	entry->extra_data = (void *)info;
 	if (debug) {
-	    printf( "Installing %s with url=%s, text=%s\n", 
+	    printf( "Installing %s with url=%s, text=%s\n",
 		    name, url, reptext );
 	}
     }

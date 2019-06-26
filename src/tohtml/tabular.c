@@ -8,40 +8,40 @@
     This file provides simple handling of tabular environments.
 
     There are two versions. The first, oldest version simply processes
-    an entire tabular enviroment, attempting to build a single table 
+    an entire tabular enviroment, attempting to build a single table
     using a preformatted environment.  This was designed for HTML version 1,
-    along with Microsoft RTF, neither of which provided any native support 
+    along with Microsoft RTF, neither of which provided any native support
     for tables.
 
     In the second version (under construction), we allow the use of
     HTML table tags.  HTML tables aren't as flexible as TeX tables, so this
-    may not always do what you want.  But for many tables, it is superior to 
+    may not always do what you want.  But for many tables, it is superior to
     using GIF images created from the TeX.
 
     The algorithm (designed for LaTeX) is:
 
-    Read tabular; get l, r, c, |, or p commands.  Generate a description of 
-    the row (struct HTabRow { int ncols; align_t *align ; }), and add 
-    the tabular environment to the environment stack.  The current column 
+    Read tabular; get l, r, c, |, or p commands.  Generate a description of
+    the row (struct HTabRow { int ncols; align_t *align ; }), and add
+    the tabular environment to the environment stack.  The current column
     number is set to 0 (0-origin indexing).
 
     Each alignment character (& by default) finishes the previous column
     and begins the next; the corresponding HTabRow is read to generate the
-    relevant HTML.  A \cr or \\ command finishes a column and row, and begins 
-    the next row.  An \end{tabular} ends finishes a column and row, and 
+    relevant HTML.  A \cr or \\ command finishes a column and row, and begins
+    the next row.  An \end{tabular} ends finishes a column and row, and
     pops the tabular environment.
  */
 /* extern int (*SCSetTranslate ())(); */
 
 #define MAX_CELLS 50
-typedef enum { TAB_LEFT, TAB_RIGHT, TAB_CENTER, TAB_PARAGRAPH, TAB_VBAR } 
+typedef enum { TAB_LEFT, TAB_RIGHT, TAB_CENTER, TAB_PARAGRAPH, TAB_VBAR }
         align_t;
 
 typedef struct _TabularRow {
-    struct _TabularRow *next;	
+    struct _TabularRow *next;
     char               **cell;
     } TabularRow;
-    
+
 struct {
     int ncols,                /* Number of columns */
         nrows,                /* Number of rows */
@@ -77,7 +77,7 @@ void TeXGetTabularDefn( void )
     hrow = (HTabularRow *)MALLOC( sizeof(HTabularRow) );  CHKPTR(hrow);
 
     /* Initialize coltypes as TAB_LEFT by default */
-    for (i=0; i<MAX_CELLS; i++) 
+    for (i=0; i<MAX_CELLS; i++)
 	hrow->coltype[i] = TAB_LEFT;
 
     ncell = 0;
@@ -88,7 +88,7 @@ void TeXGetTabularDefn( void )
 	case 'l': hrow->coltype[ncell++] = TAB_LEFT; break;
 	case 'r': hrow->coltype[ncell++] = TAB_RIGHT; break;
 	case 'c': hrow->coltype[ncell++] = TAB_CENTER; break;
-	case 'p': hrow->coltype[ncell++] = TAB_PARAGRAPH; 
+	case 'p': hrow->coltype[ncell++] = TAB_PARAGRAPH;
 	    /* Skip size argument for now for paragraph */
 	    if (p[1] == '{') {
 		p++;
@@ -123,7 +123,7 @@ void TeXGetTabularDefn( void )
 
   Use code similar to "skipenv", since we need to process commands that
   we may see.
- */    
+ */
 void TeXtabular( TeXEntry *e )
 {
     int  i, j, nsp, ch, lastInArg;
@@ -135,7 +135,7 @@ void TeXtabular( TeXEntry *e )
 
     lastInArg = InArg;
     InArg     = 1;
-    
+
     TeXGetTabularDefn();
     /* Horrible temp hack */
     ncell = Ncell;
@@ -147,7 +147,7 @@ void TeXtabular( TeXEntry *e )
     }
 
 /* Needs to change for non-html output */
-    savef = SCSetTranslate( (int (*)( char *, int ))0 ); 
+    savef = SCSetTranslate( (int (*)( char *, int ))0 );
                             /*  SCHTMLTranslateTables ); */
 
     p     = curcell;
@@ -158,7 +158,7 @@ void TeXtabular( TeXEntry *e )
     row->next = 0;
     for (i=0; i<Table.ncols; i++) row->cell[i] = 0;
     while (1) {
-	while ( (ch = 
+	while ( (ch =
 		 SCTxtFindNextANToken( fpin[curfile], ltoken, MAX_TOKEN, &nsp )) == EOF)
 	    TXPopFile();
 	if (ch == -1) break;
@@ -173,7 +173,7 @@ void TeXtabular( TeXEntry *e )
 	    }
 	    row->cell[ncell] = (char *)MALLOC( strlen(curcell) + 1 );
 	    strcpy( row->cell[ncell], curcell );
-	    if ((int)strlen(curcell) > Table.colwid[ncell]) 
+	    if ((int)strlen(curcell) > Table.colwid[ncell])
 		Table.colwid[ncell] = (int)strlen(curcell);
 	    ncell++;
 	    curcell[0] = 0;
@@ -182,9 +182,9 @@ void TeXtabular( TeXEntry *e )
 	else if (ltoken[0] == '\\') {
 	    /* TeX command */
 	    for (i=0; i<nsp; i++) *p++ = ' ';
-	    while ( (ch = 
-		     SCTxtFindNextANToken( fpin[curfile], ltoken, MAX_TOKEN, &nsp )) 
-		    == EOF) 
+	    while ( (ch =
+		     SCTxtFindNextANToken( fpin[curfile], ltoken, MAX_TOKEN, &nsp ))
+		    == EOF)
 		TXPopFile();
 	    if (nsp > 0) {
 		/* Command was really \ ltoken */
@@ -196,7 +196,7 @@ void TeXtabular( TeXEntry *e )
 	    else if (strcmp( ltoken, "end" ) == 0) {
 		TeXGetArg( fpin[curfile], ltoken, MAX_TOKEN );
 		if (strcmp( ltoken, "tabular" ) != 0) {
-		    fprintf( ferr, 
+		    fprintf( ferr,
 			     "%s does not match tabular\n", ltoken );
 	        }
 		else
@@ -215,7 +215,7 @@ void TeXtabular( TeXEntry *e )
 		row->cell[ncell] = (char *)MALLOC( strlen(curcell) + 1 );
 		*p = 0;
 		strcpy( row->cell[ncell], curcell );
-		if ((int)strlen(curcell) > Table.colwid[ncell]) 
+		if ((int)strlen(curcell) > Table.colwid[ncell])
 		    Table.colwid[ncell] = (int)strlen(curcell);
 		ncell = 0;
 		p     = curcell;
@@ -244,7 +244,7 @@ void TeXtabular( TeXEntry *e )
 		TXbgroup( e );
 	    else if (ch == '}')
 		TXegroup( e );
-	    else { 
+	    else {
 		i    = 0;
 		while (ltoken[i]) *p++ = ltoken[i++];
 		*p = 0;
@@ -259,11 +259,11 @@ void TeXtabular( TeXEntry *e )
     row   = Table.Rows;
     while (row) {
 	for (i=0; i<Table.ncols; i++) {
-	    if (row->cell[i]) 
+	    if (row->cell[i])
 		WriteString( fout, row->cell[i] );
 	    /* By using = in the length test, we get an extra space */
 	    for (j=row->cell[i]?(int)strlen(row->cell[i]):0;
-		 j<=Table.colwid[i]; j++) 
+		 j<=Table.colwid[i]; j++)
 		fputc( ' ', fout );
 	    if (row->cell[i]) {
 		FREE( row->cell[i] );
@@ -364,12 +364,12 @@ void TXmulticolumn( TeXEntry *e )
     if (lstack[lSp].env == TXTABULAR) {
 	hrow = (HTabularRow *)(lstack[lSp].extra_data);
 	PUSHCURTOK;
-	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
+	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
 	    TeXAbort( "TXmulticolumn", e->name );
 	/* Find column count */
 	colcount = atoi( curtok );
 
-	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1) 
+	if (TeXGetArg( fpin[curfile], curtok, MAX_TOKEN ) == -1)
 	    TeXAbort( "TXmulticolumn", e->name );
 	/* Find alignment type.  Skip over | */
 	reqalign_p = curtok;
@@ -378,12 +378,12 @@ void TXmulticolumn( TeXEntry *e )
 	case 'l': align_str = "\"LEFT\"";   break;
 	case 'r': align_str = "\"RIGHT\"";  break;
 	case 'c': align_str = "\"CENTER\""; break;
-	case '\0': 
+	case '\0':
 	    fprintf( ferr, "Missing multicolumn alignment (%s) in %s, line %d\n",
 		     curtok, InFName[curfile] ? InFName[curfile] : "", LineNo[curfile] );
 	    align_str = "\"CENTER\"";
 	    break;
-	default:  
+	default:
 	    fprintf( ferr, "Unrecognized multicolumn alignment %c in %s, line %d\n",
 		     curtok[0], InFName[curfile] ? InFName[curfile] : "", LineNo[curfile] );
 	  align_str = "\"CENTER\""; break;

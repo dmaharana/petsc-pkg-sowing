@@ -7,7 +7,7 @@ int ErrHand::ErrMsg( int code, const char *msg )
 {
   return code;
 }
-	
+
 ErrHand::~ErrHand( )
 {
 }

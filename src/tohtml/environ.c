@@ -262,7 +262,7 @@ void RunLatex( const char *envname, const char *string, const char *name,
     E.ctx	 = 0;
     E.nargs	 = 0;
 
-#ifndef __MSDOS__	
+#ifndef __MSDOS__
 /* Write out header (documentstyle, header) */
     if (runagain) {
 	sprintf( fname, "%s.tex", name );

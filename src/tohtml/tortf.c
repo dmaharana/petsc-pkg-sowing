@@ -42,7 +42,7 @@ void (*process)() = ProcessInfoFile;
 int DestIsHtml     = 0;
 
 if (argc < 2) {
-    fprintf( stderr, "%s [-latex] [-order] [-basedef=filename] filename\n", 
+    fprintf( stderr, "%s [-latex] [-order] [-basedef=filename] filename\n",
 	     argv[0] );
     return 1;
     }
@@ -66,8 +66,8 @@ if (strcmp( argv[0], "-order") == 0) {
     }
 else {
     will want to read order file here
-    }    
- */    
+    }
+ */
 endpagefilename[0] = 0;
 SYArgGetString( &argc, argv, 1, "-endpage", endpagefilename, 256 );
 
@@ -99,7 +99,7 @@ if (!fpin || !fpout) {
     exit(1);
     }
 
-OpenAuxFile( auxfilename );    
+OpenAuxFile( auxfilename );
 
 /* Process the input file */
 ProcessFile( argc, argv, fpin, fpout, process );
@@ -181,7 +181,7 @@ int  number, level;
 {
 fprintf( fp, "#{\\footnote %s%d}\n", entrylevel, number );
 fprintf( fp, "${\\footnote %s}\n", name );
-if (keywords) 
+if (keywords)
     fprintf( fp, "K{\\footnote %s}\n", keywords );
 /* The + footnote puts topics into a specific order, allowing them to
    be read with the browse buttons.  Another approach would be to simply
@@ -240,8 +240,8 @@ int  refnumber;
 {
 fprintf( fp, "{\\uldb %s}{\\v %s%d}\n",
          text, reftopic, refnumber );
-}    
-    
+}
+
 /*
     Write out the end of a topic
  */
@@ -249,7 +249,7 @@ int WriteEndofTopic( fp )
 FILE *fp;
 {
 fprintf( fp, "\\page\n" );
-}	
+}
 
 void WriteLargeFont( fp )
 FILE *fp;
@@ -277,7 +277,7 @@ fprintf( fp, "\\pard\\plain\n" );
    Then (recursively)
        remember the current position
        read forward, looking for additional sections
-       
+
            Sections at the same level have
                WritePointerText
            Sections at a higher level terminate the search
@@ -285,7 +285,7 @@ fprintf( fp, "\\pard\\plain\n" );
        Finally, WriteEndofTopic
 
      In an info file, we don't need to do this because the file has already
-     been processed.  See ProcessInfoFile().       
+     been processed.  See ProcessInfoFile().
  */
 ProcessFile( argc, argv, fpin, fpout, process )
 int  argc;
@@ -348,7 +348,7 @@ int WriteStartNewLine( fp )
 FILE *fp;
 {
 fputs( "\\line\n", fp );
-}	
+}
 
 
 /* This handles escaping of special characters.  These are {}\ .
@@ -397,7 +397,7 @@ while (*p) {
     	fputs( "\\\\", fp );
     	str = p + 1;
         }
-    p++;        
+    p++;
     }
 if (*str) {
     if (str[strlen(str)-1] == '\n') {
@@ -406,7 +406,7 @@ if (*str) {
     	fputs( buffer, fp );
     	fputs( " \n", fp );
         }
-    else 
+    else
         fputs( str, fp );
     }
 #endif
@@ -457,7 +457,7 @@ char *context;
 fprintf( fp,
 "!{\\footnote ChangeButtonBinding(\"btn_Up\", \"JumpId(`',`%s')\")}\n",
    context );
-}   
+}
 
 int WritePar( fp )
 FILE *fp;
@@ -566,7 +566,7 @@ if (!eofpage) {
 	return;
     }
 rewind( eofpage );
-while ((c = getc( eofpage )) != EOF) 
+while ((c = getc( eofpage )) != EOF)
     putc( c, fpout );
 }
 
@@ -579,7 +579,7 @@ if (!bofpage) {
     if (beginpagefilename[0]) {
 	bofpage = fopen( beginpagefilename, "r" );
 	if (!bofpage) {
-	    fprintf( stderr, "Could not open beginpage %s\n", 
+	    fprintf( stderr, "Could not open beginpage %s\n",
 		     beginpagefilename );
 	    return;
 	    }
@@ -588,7 +588,7 @@ if (!bofpage) {
 	return;
     }
 rewind( bofpage );
-while ((c = getc( bofpage )) != EOF) 
+while ((c = getc( bofpage )) != EOF)
     putc( c, fpout );
 }
 int WriteHeadPage( fpout )

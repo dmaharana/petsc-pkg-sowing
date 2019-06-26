@@ -7,7 +7,7 @@
 #if defined(NEEDS_STDLIB_PROTOTYPES) || !defined(PROTOFIX_INCLUDED)
 #define PROTOFIX_INCLUDED
 #include <stdio.h>
-/* 
+/*
    Some gcc installations have out-of-date include files and need these
    definitions to handle the "missing" prototypes.  This is NOT
    autodetected, but is provided and can be selected by using a switch

@@ -119,7 +119,7 @@ if (fullpath[0] == '~') {
 	*p = 0; p++;
 	pwde = getpwnam( name );
 	if (!pwde) return;
-	
+
 	strcpy( tmppath, pwde->pw_dir );
 	ln = strlen( tmppath );
 	if (tmppath[ln-1] != '/') strcat( tmppath+ln-1, "/" );
@@ -139,7 +139,7 @@ if (strncmp( fullpath, "/tmp_mnt/", 9 ) == 0) {
 void SYGetFullPath( const char *path, char *fullpath, int flen )
 {
   strcpy( fullpath, path );
-}	
+}
 #endif
 
 /*@
@@ -1033,7 +1033,7 @@ if (stat( fname, &buf ) == 0) {
 	         tim->tm_mon+1, tim->tm_mday, tim->tm_year+1900 );
     }
 else {
-    /* Could not stat file */	
+    /* Could not stat file */
     if (date)
         date[0] = '\0';
     if (ltm) {
@@ -1222,7 +1222,7 @@ if (stat( fname, &buf ) == 0) {
 	         tim->tm_mon+1, tim->tm_mday, tim->tm_year+1900 );
     }
 else {
-    /* Could not stat file */	
+    /* Could not stat file */
     if (date)
         date[0] = '\0';
     if (ltm) {

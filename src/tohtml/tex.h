@@ -12,7 +12,7 @@
 #include "tohtmlpath.h"
 
 typedef struct _TeXEntry {
-    void (*action)( struct _TeXEntry * );     
+    void (*action)( struct _TeXEntry * );
                           /* Action to perform for entry */
     void  *ctx;           /* Context to pass to action */
     int  nargs;           /* Number of arguments to TeX command */
@@ -21,16 +21,16 @@ typedef struct _TeXEntry {
 
 /* The latex stack */
 typedef enum { TXITEMIZE, TXDESCRIPTION, TXEXAMPLE, TXVERBATIM, TXENUMERATE,
-	       TXLIST, TXTABULAR } 
+	       TXLIST, TXTABULAR }
         EnvType;
 typedef struct {
     EnvType env;
     int    num;            /* relative number of an item in this
 			      environment (needed for enumerate) */
-    void    (*newline)( FILE *);   
+    void    (*newline)( FILE *);
                            /* routine to call for new-line handling */
     char   *p1, *p2;       /* Pointers to text for use by the environment
-                              (some have code and replacement text; 
+                              (some have code and replacement text;
 			      principly a user-defined list environment */
     /* These are currently unused */
     char   *label_node_name; /* Name of the node */
@@ -41,7 +41,7 @@ typedef struct {
     void   *extra_data;
     } LaTeXStack;
 
-#define MAX_TEX_STACK 20    
+#define MAX_TEX_STACK 20
 extern LaTeXStack lstack[MAX_TEX_STACK];
 extern int    lSp;
 
@@ -57,10 +57,10 @@ extern char splitdir[256];/* directory for output files */
 extern char userpath[1024];  /* Path to search for package definitions */
 
 extern char ImageExt[4];     /* Choose the image type.  Used as both the
-			        image name and the file extension.  
+			        image name and the file extension.
 			        Currently either xbm or gif */
 
-extern char latex_errname[300];  /* File name used for errors in 
+extern char latex_errname[300];  /* File name used for errors in
 				    generating latex or graphics files */
 
 #define MAX_IMAGE_FILE_BASE 256
@@ -76,7 +76,7 @@ extern char *(InFName[10]); /* Names of files currently open */
 extern int BraceCount;
 extern char CmdName[65];   /* Used to hold a command name for error reporting */
 
-extern int InArg;         /* Set to 1 if in TXGenGetArg; tells the 
+extern int InArg;         /* Set to 1 if in TXGenGetArg; tells the
 			     output routines to write into ArgBuffer
 			     instead */
 extern char *ArgBuffer;
@@ -93,7 +93,7 @@ extern char *documentcmd;
 extern int DoGaudy;       /* If true, generate more colorful output */
 
 /* These control the format of a citation name.  We should probably use
-   a definition for @cite, but this is easier to toss in... 
+   a definition for @cite, but this is easier to toss in...
  */
 extern char *CitePrefix;
 extern char *CiteSuffix;
@@ -107,7 +107,7 @@ extern int LatexMath;
 /* Simple Math (math mode with no TeX commands done in italics */
 extern int SimpleMath;
 /* Number of the generated image file */
-extern int imageno;     
+extern int imageno;
 /* Set LatexAgain to 0 if you want to use the old img files */
 extern int LatexAgain;
 
@@ -124,14 +124,14 @@ extern char NewLineString[4];
 /* Table, Figure, and Equation numbering.
 
    Note that what we really need is for each environment TYPE to have
-   a counter, so that user-defined environment will work properly.  
-   What we have here works for the simple cases 
+   a counter, so that user-defined environment will work properly.
+   What we have here works for the simple cases
  */
 extern int TableNumber, FigureNumber, EquationNumber;
 
 /* The kind of the environment.  This assumes that they are NOT nested;
    this is ok for tables, equations, and figures (well, not quite, as
-   a table or figure might have an equation) 
+   a table or figure might have an equation)
  */
 #define ENV_NONE     0
 #define ENV_TABLE    1
@@ -188,7 +188,7 @@ extern int  toknum;
     if (toknum < 0) TeXAbort("POPCURTOK", "Tokens popped too high");}
 
 /* Token management */
-/* In order to protect 'output' tokens from re-evaluation, they are protected 
+/* In order to protect 'output' tokens from re-evaluation, they are protected
    with non-printing ASCII characters. */
 /* #define TOK_TEST */
 #ifdef TOK_TEST
@@ -272,7 +272,7 @@ extern void RdRefMap ( char * );
 extern int RefMapLookup ( const char *, const char *, char **, int *, char ** );
 
 /* scan.c */
-extern int (*SCSetTranslate ( int (*)(char *,int) )) 
+extern int (*SCSetTranslate ( int (*)(char *,int) ))
               ( char *, int );
 extern void SCSetDebug ( int );
 extern void SCSetAtLetter ( int );
