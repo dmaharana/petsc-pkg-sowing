@@ -35,6 +35,7 @@ extern char LeadingString[10];
 
 // Indicate if we're in an argument list or not
 extern int InArgList;
+extern int CntArgList;
 
 // Use to enable the old-style argument processing (allowing multiple ". "
 // commands

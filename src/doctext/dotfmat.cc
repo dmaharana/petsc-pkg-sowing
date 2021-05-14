@@ -104,6 +104,7 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
     case ARGUMENT_END:
       if (InArgList)
 	textout->PutOp( "s_arg_inlist" );
+        CntArgList++;
       else
 	textout->PutOp( "s_arg" );
       break;
@@ -121,6 +122,7 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 	    InArgList =1 ;
 	}
 	textout->PutOp("s_arg_inlist");
+        CntArgList++;
     }
     else if (arg_kind == ARGUMENT_END) {
 	if (!InArgList) {
@@ -128,6 +130,7 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 	    InArgList = 1;
 	}
 	textout->PutOp( "s_arg_inlist" );
+        CntArgList++;
     }
     else if (arg_kind == ARGUMENT) {
 	if (!InArgList && !OldArgList) {
@@ -142,6 +145,7 @@ int ProcessArgFmt( char arg_kind, InStream *ins, TextOut *textout,
 	}
 	if (InArgList) {
 	    textout->PutOp( "s_arg_inlist" );
+            CntArgList++;
 	}
 	else {
 	    textout->PutOp( "s_arg" );

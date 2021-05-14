@@ -43,11 +43,15 @@ outFormat_t outFormat = FMT_UNKNOWN;
 
 // Indicate if we're in an argument list or not
 int InArgList = 0;
+int CntArgList = 0;
+
 // Indicate if we want the old style argument processing
 int OldArgList = 0;
 // Remember the last command that was seen.  0 for no command (newline,
 // regular text, etc.)
 int LastCmdArg = 0;
+
+char prevlineBuffer[MAX_LINE];
 
 // Forward references
 int OutputManPage( InStream *ins, TextOut *outs, char *name, char *level,
@@ -523,6 +527,10 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
 		    GetCurrentInputFileName(), GetCurrentRoutinename());
 	InArgList = 0;
     }
+    if (CntArgList == 1 && !strcmp(prevlineBuffer,"+Output Parameters")) {
+      fprintf(stderr,"ERROR Uses Output Parameters but has one parameter, %s %s\n",GetCurrentInputFileName(), GetCurrentRoutinename());
+    }
+    CntArgList = 0;
     return 0;
 }
 
@@ -580,6 +588,27 @@ int OutputText( InStream *ins, char *matchstring,
 		 ch == ARGUMENT_END) {
 	    ProcessDotFmt( ch, ins, textout, &lastWasNl );
 	    LastCmdArg = ch;
+            if (ch == ARGUMENT_END) {
+                if (!strcmp(lineBuffer,"+Input Parameter") && (CntArgList > 1)) {
+                    fprintf(stderr,"ERROR Uses Input Parameter but has multiple parameters, %s %s\n",filename,name);
+                }
+                if (!strcmp(lineBuffer,"+Output Parameter") && (CntArgList > 1)) {
+                    fprintf(stderr,"ERROR Uses Output Parameter but has multiple parameters, %s %s\n",filename,name);
+                }
+                CntArgList = 0;
+            }
+            if (ch == ARGUMENT_BEGIN) {
+                if (CntArgList > 1) {
+                    if (!strcmp(prevlineBuffer,"+Input Parameters")) {
+                        fprintf(stderr,"ERROR Uses Input Parameters but has one parameter, %s %s\n",filename,name);
+                    }
+                    if (!strcmp(prevlineBuffer,"+Output Parameters")) {
+                        fprintf(stderr,"ERROR Uses Output Parameters but has one parameter, %s %s\n",filename,name);
+                    }
+                }
+                CntArgList = 1;
+            }
+            strcpy(prevlineBuffer,lineBuffer);
 	}
 	else if (ch == '\n') {
 	    if (lastWasNl) textout->PutOp( "end_par" );
