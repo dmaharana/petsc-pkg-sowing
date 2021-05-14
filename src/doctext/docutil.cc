@@ -160,6 +160,7 @@ int DocSkipToFuncSynopsis( InStream *ins, char *matchstring )
     return 0;
 }
 
+int numcomma = -2;
 //
 // Read the synopsis and send to the out stream.  Remove "register"
 // if is appears.
@@ -172,7 +173,9 @@ int DocReadFuncSynopsis( InStream *ins, TextOut /*OutStream */ *outs)
     int  findingForm = 1;
     int  exitOnSemicolon = 0;
     int  parenCount = 0;
+    int  justentered = 0, voidfirst = 0;
 
+    numcomma = -2;
     // Must handle newline as non-space
     pushBreakchars(ins);
     if (debugBreakStack) {
@@ -197,9 +200,11 @@ int DocReadFuncSynopsis( InStream *ins, TextOut /*OutStream */ *outs)
       else if (!skipIgnore(token, ins)) {
 	// Check for parenthesis to determine whether we're in
 	// prototype form
-	if (token[0] == '(') parenCount++;
+        if (!strcmp(token,"void") && justentered) voidfirst = 1; else justentered = 0;
+	if (token[0] == '(') {if (++parenCount == 1) justentered = 1;if (numcomma == -2) numcomma = 0;}
 	else if (token[0] == ')') {
 	  if (parenCount == 1) {
+            if (voidfirst) numcomma = -1;
 	    if (findingForm) {
 	      // if the NEXT char is a ;, we have a terminal prototype
 	      exitOnSemicolon = 1;
@@ -208,6 +213,7 @@ int DocReadFuncSynopsis( InStream *ins, TextOut /*OutStream */ *outs)
 	  }
 	  parenCount --;
 	}
+        if (parenCount == 1 && token[0] == ',') {numcomma++;}
 	outToken(nsp, token, outs);
       }
     }
@@ -215,7 +221,6 @@ int DocReadFuncSynopsis( InStream *ins, TextOut /*OutStream */ *outs)
     if (debugBreakStack) {
 	fprintf(stderr, "Pop in DocReadFuncSynopsis\n");
     }
-
     return 0;
 }
 

@@ -51,7 +51,9 @@ int OldArgList = 0;
 // regular text, etc.)
 int LastCmdArg = 0;
 
-char prevlineBuffer[MAX_LINE];
+char prevlineBuffer[MAX_LINE],currentlineBuffer[MAX_LINE];
+extern int numcomma;
+int  numparameters = 0;
 
 // Forward references
 int OutputManPage( InStream *ins, TextOut *outs, char *name, char *level,
@@ -59,7 +61,7 @@ int OutputManPage( InStream *ins, TextOut *outs, char *name, char *level,
 		   const char *heading, const char *locdir,
 		   char *matchhstring, int one_per_file );
 int OutputText( InStream *ins, char *matchstring,
-		TextOut *textout, char *name, char *level,
+		TextOut *textout, char *name, char *level,const char *locdir,
 	        const char *filename, char kind, char *date,
 	        const char *heading );
 void MakeFileName( const char *path, char *routine, char *lextension,
@@ -355,6 +357,7 @@ in the distribution, where ... is the path to the sowing directory\n\
 	    OutputManPage( ins, textout, routine, lextension, infilename,
 			   kind, date, heading, locdir, matchstring,
 			   one_per_file );
+            numcomma = -2;
 	    if (!baseoutfile) {
 	        textout->PutOp( "eof" );
 	    	textout->Flush();
@@ -394,6 +397,7 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
     int  at_end;
 
     LastCmdArg = 0;
+    numparameters = 0;
 
     // Output the initial information
     textout->PutOp( "bop" );
@@ -503,7 +507,7 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
     // Finally, output the rest of the text
     if (!at_end)
       OutputText( ins, matchstring,
-		  textout, name, level, filename, kind, date, heading );
+		  textout, name, level, locdir,filename, kind, date, heading );
 
     /* Now add the filename where the routine or description is located */
     if (filename && GiveLocation) {
@@ -523,12 +527,20 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
     // Sanity check
     if (InArgList) {
 	fprintf(stderr,
-		"ERROR (%s) Incomplete argument list (probably + with no - in %s\n",
-		    GetCurrentInputFileName(), GetCurrentRoutinename());
+		"ERROR (%s) Incomplete argument list (probably + with no - in %s\n",GetCurrentRoutinename(),GetCurrentInputFileName());
 	InArgList = 0;
     }
     if (CntArgList == 1 && !strcmp(prevlineBuffer,"+Output Parameters")) {
-      fprintf(stderr,"ERROR Uses Output Parameters but has one parameter, %s %s\n",GetCurrentInputFileName(), GetCurrentRoutinename());
+        fprintf(stderr,"ERROR Uses Output Parameters but has one output parameter, %s() %s%s\n", GetCurrentRoutinename(),locdir,GetCurrentInputFileName());
+    }
+    if (!strcmp(currentlineBuffer,"+Inpput Parameters") || !strcmp(currentlineBuffer,"+Inpput Parameter")) {
+        numparameters = CntArgList;
+    }
+    if (!strcmp(currentlineBuffer,"+Output Parameters") || !strcmp(currentlineBuffer,"+Output Parameter")) {
+        numparameters += CntArgList;
+        if (numcomma >= 0 && numparameters != numcomma+1) {
+            fprintf(stderr,"ERROR Input and output parameter counts %d does not match number of parameters %d in %s() %s%s\n",numparameters,numcomma+1,GetCurrentRoutinename(),locdir,GetCurrentInputFileName());
+        }
     }
     CntArgList = 0;
     return 0;
@@ -557,15 +569,16 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
     This is the "LeadingString" value, it may be null.
  */
 int OutputText( InStream *ins, char *matchstring,
-		TextOut *textout, char *name, char *level,
+		TextOut *textout, char *name, char *level,const char *locdir,
 	        const char *filename, char kind, char *date,
 	        const char *heading )
 {
     char ch;
-    char lineBuffer[MAX_LINE], *lp;
+    char *lp;
     int  lastWasNl=1;
     int  doing_synopsis = 0;
     int  at_end, ln;
+    char lineBuffer[MAX_LINE];
 
     /* Note that the NAME field can't use a font changes */
     lineBuffer[0] = '+';   /* Sentinal on lineBuffer */
@@ -586,27 +599,42 @@ int OutputText( InStream *ins, char *matchstring,
 	}
 	else if (ch == ARGUMENT || ch == ARGUMENT_BEGIN ||
 		 ch == ARGUMENT_END) {
-	    ProcessDotFmt( ch, ins, textout, &lastWasNl );
+            ProcessDotFmt( ch, ins, textout, &lastWasNl );
 	    LastCmdArg = ch;
             if (ch == ARGUMENT_END) {
                 if (!strcmp(lineBuffer,"+Input Parameter") && (CntArgList > 1)) {
-                    fprintf(stderr,"ERROR Uses Input Parameter but has multiple parameters, %s %s\n",filename,name);
+                    fprintf(stderr,"ERROR Uses Input Parameter but has multiple input parameters in %s() %s%s\n",name,locdir,filename);
                 }
                 if (!strcmp(lineBuffer,"+Output Parameter") && (CntArgList > 1)) {
-                    fprintf(stderr,"ERROR Uses Output Parameter but has multiple parameters, %s %s\n",filename,name);
+                    fprintf(stderr,"ERROR Uses Output Parameter but has multiple input parameters in %s() %s%s\n",name,locdir,filename);
+                }
+                if (!strcmp(lineBuffer,"+Input Parameter") || !strcmp(lineBuffer,"+Input Parameters")) {numparameters = CntArgList;}
+                if (!strcmp(lineBuffer,"+Output Parameter") || !strcmp(lineBuffer,"+Output Parameters")) {
+                    numparameters += CntArgList;
+                    if (numcomma >= 0 && numparameters != numcomma+1) {
+                        fprintf(stderr,"ERROR Input and output parameter counts %d does not match number of parameters %d in %s() %s%s\n",numparameters,numcomma+1,name,locdir,filename);
+                    }
                 }
                 CntArgList = 0;
             }
             if (ch == ARGUMENT_BEGIN) {
                 if (CntArgList > 1) {
+                    if (!strcmp(prevlineBuffer,"+Input Parameter") || !strcmp(prevlineBuffer,"+Input Parameters")) {
+                        numparameters = CntArgList - 1;
+                    }
+                }
+                if (CntArgList == 2) {
                     if (!strcmp(prevlineBuffer,"+Input Parameters")) {
-                        fprintf(stderr,"ERROR Uses Input Parameters but has one parameter, %s %s\n",filename,name);
+                        fprintf(stderr,"ERROR Uses Input Parameters but has one input parameter, %s %s%s\n",filename,locdir,name);
                     }
                     if (!strcmp(prevlineBuffer,"+Output Parameters")) {
-                        fprintf(stderr,"ERROR Uses Output Parameters but has one parameter, %s %s\n",filename,name);
+                        fprintf(stderr,"ERROR Uses Output Parameters but has one input parameter, %s %s%s\n",filename,locdir,name);
                     }
                 }
                 CntArgList = 1;
+            }
+            if (ch == ARGUMENT) {
+                  strcpy(currentlineBuffer,lineBuffer);
             }
             strcpy(prevlineBuffer,lineBuffer);
 	}
