@@ -108,7 +108,7 @@ static const char *f90headerName = "f90header";
 static int useShortNames = 0;
 
 /* Catch serious problems */
-#define MAX_ERR 100
+static int MAX_ERR = 100;
 static int ErrCnt = 0;
 
 /* Debugging for development */
@@ -385,6 +385,8 @@ int main( int argc, char **argv )
     SYArgGetString( &argc, argv, 1, "-ptr64", Pointer64Bits, 256 );
     SYArgGetString( &argc, argv, 1, "-pmpi", BuildProfiling, 256 );
     if (SYArgHasName( &argc, argv, 1, "-noprofile" )) DoProfileNames = 0;
+
+    if (SYArgHasName( &argc, argv, 1, "-on_error_abort" )) MAX_ERR = 0;
 
     /* String support */
     if (SYArgHasName(&argc, argv, 1, "-fstring"))   stringStyle = STRING_LENEND;
@@ -2566,6 +2568,7 @@ fprintf(stderr, "\
 \t-pmpi name\tReplace MPI_BUILD_PROFILING\n\
 \t-noprofile\tTurn off the generation of the profiling version\n\
 -mnative  - Multiple indirects are native datatypes (no coercion)\n\
+-on_error_abort  - End with nonzero error code when the first error is detected in the formatted comments\n\
 -voidisptr - Consider \"void *\" as a pointer to a structure." );
 }
 
