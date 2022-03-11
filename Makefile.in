@@ -22,11 +22,11 @@ DATA_FILES = $(DATA_FILES_TOHTML) $(DATA_FILES_DOCTEXT) $(DATA_FILES_BFORT)
 # share/* -> datadir/*
 DATA_FILES_TOHTML  = pstoppm.ps basedefs.txt blueball.gif greenball.gif \
 	purpleball.gif redball.gif yellowball.gif next.gif up.gif previous.gif \
-	html.def latex.def nroff.def refman.def refman.sty \
+	html.def latex.def nroff.def myst.def refman.def refman.sty \
 	next.xbm up.xbm previous.xbm
 DATA_FILES_DOCTEXT = doctext/html.def doctext/htmlcolor.def \
 	doctext/htmltabl.def doctext/htmlargtbl.def doctext/latex.def \
-	doctext/latexargtbl.def doctext/nroff.def
+	doctext/latexargtbl.def doctext/nroff.def doctext/myst.def
 DATA_FILES_BFORT   = bfort-base.txt bfort-mpi.txt bfort-petsc.txt
 MAN1_FILES         = tohtml.1 doctext.1 bfort.1
 

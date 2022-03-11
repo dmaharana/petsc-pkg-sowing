@@ -126,4 +126,16 @@ class TextOutStrm : public TextOut {
     ~TextOutStrm();
     };
 
+class TextOutMyST : public TextOut {
+
+    int Setup( );
+
+    public:
+    TextOutMyST( OutStream * );
+    TextOutMyST( );
+    int PutChar( const char );
+    int PutToken( int, const char * );
+    int PutTokenRaw(int, const char *);
+    };
+
 #endif

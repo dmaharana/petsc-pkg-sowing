@@ -15,10 +15,10 @@ INCLUDES = -I${top_srcdir}/include/textfilt -I${top_srcdir}/include -I../../incl
 LIBS = ../../lib/libtfilter.a
 
 CSOURCES = cmdline.cc file.cc instream.cc outstream.cc search.cc maptok.cc \
-	   textout.cc texthtml.cc textnroff.cc texttex.cc \
+	   textout.cc texthtml.cc textnroff.cc texttex.cc textmyst.cc \
 	   inutil.cc errhand.cc
 COBJECTS = cmdline.o file.o instream.o outstream.o search.o maptok.o \
-	   textout.o texthtml.o textnroff.o texttex.o \
+	   textout.o texthtml.o textnroff.o texttex.o textmyst.o \
 	   inutil.o errhand.o
 INCLUDE  = ../include/tfilter.h
 
@@ -69,6 +69,10 @@ textout.o: textout.cc ../../include/textfilt/textout.h \
  ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
  ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h
 texttex.o: texttex.cc ../../include/textfilt/textout.h \
+ ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
+ ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
+ ../../include/textfilt/textpath.h
+textmyst.o: textmyst.cc ../../include/textfilt/textout.h \
  ../../include/textfilt/outstream.h ../../include/textfilt/instream.h \
  ../../include/textfilt/srlist.h ../../include/textfilt/errhand.h \
  ../../include/textfilt/textpath.h

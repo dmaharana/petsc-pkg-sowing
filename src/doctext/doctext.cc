@@ -138,6 +138,13 @@ int main( int argc, char ** argv )
 	incommands = new InStreamFile(
 		      DOCTEXT_PATH, "DOCTEXT_PATH", "latex.def", "r" );
 	}
+    else if (!cmd->HasArg( "-myst" )) {
+	outFormat  = FMT_MYST;
+	textout    = new TextOutMyST( );
+	if (!extension) extension = "md";
+	incommands = new InStreamFile(
+		      DOCTEXT_PATH, "DOCTEXT_PATH", "myst.def", "r" );
+	}
     else {
 	outFormat  = FMT_NROFF;
         cmd->HasArg( "-man" );    // allow -man as an option
@@ -883,7 +890,8 @@ int HandleArgs( CmdLine *cmd, const char **path, const char **extension,
 
 Synopsis:
   doctext [ -mpath path ] [ -ext n ] [ -I filename ] [ -latex ]
-          [ -html ] [ -index filename ] [ -indexdir filename ]
+          [ -html ] [ -myst ]
+          [ -index filename ] [ -indexdir filename ]
           [ -jumpfile filename ] [ -outfile filename ]
           [ -mapref filename ] [ -nolocation ] [ -location ]
           [ -defn defnfile ] [ -dosnl ] [ -skipprefix name ]
@@ -899,6 +907,7 @@ Input Parameters:
                    routines
 .    -latex      -   Generate latex output rather than man format files
 .    -html       -   Generate html (WWW) output rather than man format files
+.    -myst       -   Generate MyST (myst) output rather than man format files
 .    -man        -   Generate man (nroff) output (default)
 .    -index filename - Generate a index file appropriate for tohtml
                     (for generating WWW files)
@@ -937,7 +946,8 @@ void PrintHelp( void )
 {
 fprintf( stderr, "\
 doctext [ -mpath path ] [ -ext n ] [ -I filename ] [ -latex ]\n\
-        [ -html ] [ -index filename ] [ -indexdir filename ]\n\
+        [ -html ] [ -myst ] \n\
+        [ -index filename ] [ -indexdir filename ]\n\
         [ -jumpfile filename ] [ -outfile filename ] \n\
         [ -mapref filename ] [ -nolocation ] [ -location ]\n\
         [ -defn defnfile ] [ -dosnl ] [ -skipprefix name ]\n\
@@ -953,6 +963,7 @@ doctext [ -mpath path ] [ -ext n ] [ -I filename ] [ -latex ]\n\
                    routines\n\
     -latex         Generate latex output rather than man format files\n\
     -html          Generate html (WWW) output rather than man format files\n\
+    -myst          Generate Myst (myst) output rather than man format files\n\
     -index filename Generate a index file appropriate for tohtml\n\
                     (for generating WWW files)\n" );
 fprintf( stderr, "\

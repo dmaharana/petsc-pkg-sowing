@@ -93,6 +93,8 @@ runtests: Makefile
 	(export DOCTEXT_PATH=$(DEFNDIR) ; \
 	    $(DOCTEXT) -oldargstyle -html -defn htmlargtbl.def \
 		-date "2/10/2000" $(FILES_OLDSTYLE) )
+	(export DOCTEXT_PATH=$(DEFNDIR) ; \
+	   $(DOCTEXT) -myst -defn $(FILES) )
 
 # This test is not part of the default tests, in part because it generates
 # large number of output files, and in part because the original reason
