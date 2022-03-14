@@ -533,8 +533,14 @@ int OutputManPage( InStream *ins, TextOut *textout, char *name, char *level,
     if (CntArgList == 1 && !strcmp(prevlineBuffer,"+Output Parameters")) {
         fprintf(stderr,"ERROR Uses Output Parameters but has one output parameter, %s() %s%s\n", GetCurrentRoutinename(),locdir,GetCurrentInputFileName());
     }
-    if (!strcmp(currentlineBuffer,"+Inpput Parameters") || !strcmp(currentlineBuffer,"+Inpput Parameter")) {
+    if (CntArgList == 1 && !strcmp(prevlineBuffer,"+Input/Output Parameters")) {
+        fprintf(stderr,"ERROR Uses Input/Output Parameters but has one input/output parameter, %s() %s%s\n", GetCurrentRoutinename(),locdir,GetCurrentInputFileName());
+    }
+    if (!strcmp(currentlineBuffer,"+Input Parameters") || !strcmp(currentlineBuffer,"+Input Parameter")) {
         numparameters = CntArgList;
+    }
+    if (!strcmp(currentlineBuffer,"+Input/Output Parameters") || !strcmp(currentlineBuffer,"+Input/Output Parameter")) {
+        numparameters += CntArgList;
     }
     if (!strcmp(currentlineBuffer,"+Output Parameters") || !strcmp(currentlineBuffer,"+Output Parameter")) {
         numparameters += CntArgList;
@@ -606,9 +612,13 @@ int OutputText( InStream *ins, char *matchstring,
                     fprintf(stderr,"ERROR Uses Input Parameter but has multiple input parameters in %s() %s%s\n",name,locdir,filename);
                 }
                 if (!strcmp(lineBuffer,"+Output Parameter") && (CntArgList > 1)) {
-                    fprintf(stderr,"ERROR Uses Output Parameter but has multiple input parameters in %s() %s%s\n",name,locdir,filename);
+                    fprintf(stderr,"ERROR Uses Output Parameter but has multiple output parameters in %s() %s%s\n",name,locdir,filename);
+                }
+                if (!strcmp(lineBuffer,"+Input/Output Parameter") && (CntArgList > 1)) {
+                    fprintf(stderr,"ERROR Uses Input/Output Parameter but has multiple input/output parameters in %s() %s%s\n",name,locdir,filename);
                 }
                 if (!strcmp(lineBuffer,"+Input Parameter") || !strcmp(lineBuffer,"+Input Parameters")) {numparameters = CntArgList;}
+                if (!strcmp(lineBuffer,"+Input/Output Parameter") || !strcmp(lineBuffer,"+Input/Output Parameters")) {numparameters += CntArgList;}
                 if (!strcmp(lineBuffer,"+Output Parameter") || !strcmp(lineBuffer,"+Output Parameters")) {
                     numparameters += CntArgList;
                     if (numcomma >= 0 && numparameters != numcomma+1) {
@@ -622,13 +632,22 @@ int OutputText( InStream *ins, char *matchstring,
                     if (!strcmp(prevlineBuffer,"+Input Parameter") || !strcmp(prevlineBuffer,"+Input Parameters")) {
                         numparameters = CntArgList - 1;
                     }
+                    if (!strcmp(prevlineBuffer,"+Input/Output Parameter") || !strcmp(prevlineBuffer,"+Input/Output Parameters")) {
+                        numparameters += CntArgList - 1;
+                    }
+                    if (!strcmp(prevlineBuffer,"+Output Parameter") || !strcmp(prevlineBuffer,"+Output Parameters")) {
+                        numparameters += CntArgList - 1;
+                    }
                 }
                 if (CntArgList == 2) {
                     if (!strcmp(prevlineBuffer,"+Input Parameters")) {
                         fprintf(stderr,"ERROR Uses Input Parameters but has one input parameter, %s %s%s\n",filename,locdir,name);
                     }
+                    if (!strcmp(prevlineBuffer,"+Input/Output Parameters")) {
+                        fprintf(stderr,"ERROR Uses Input/Output Parameters but has one input/output parameter, %s %s%s\n",filename,locdir,name);
+                    }
                     if (!strcmp(prevlineBuffer,"+Output Parameters")) {
-                        fprintf(stderr,"ERROR Uses Output Parameters but has one input parameter, %s %s%s\n",filename,locdir,name);
+                        fprintf(stderr,"ERROR Uses Output Parameters but has one output parameter, %s %s%s\n",filename,locdir,name);
                     }
                 }
                 CntArgList = 1;
