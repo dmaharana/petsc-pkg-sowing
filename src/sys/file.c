@@ -45,10 +45,10 @@ extern char *getenv();
 extern char *getenv();
 #endif
 
-#if defined(__MSDOS__) || defined(WIN32)
+#if ((defined(__MSDOS__) || defined(WIN32)) && !defined(__MINGW32__))
 typedef unsigned short u_short;
 #endif
-#if (defined(intelnx) && !defined(intelparagon)) || defined(__MSDOS__) || defined(WIN32)
+#if (defined(intelnx) && !defined(intelparagon)) || ((defined(__MSDOS__) || defined(WIN32)) && !defined(__MINGW32__))
 typedef u_short uid_t;
 typedef u_short gid_t;
 #endif
@@ -193,7 +193,7 @@ void SYGetUserName( char *name, int nlen )
 strncpy( name, "Unknown", nlen );
 }
 #endif /* !HAVE_PWD_H */
-#if !defined(__MSDOS__) && !defined(WIN32) && (!defined(intelnx) || defined(paragon))
+#if ((!defined(__MSDOS__) && !defined(WIN32)) || defined(__MINGW32__)) && (!defined(intelnx) || defined(paragon))
 
 #if defined(HAVE_UNAME)
 #include <sys/utsname.h>
@@ -321,7 +321,7 @@ strncpy( name, "Unknown", nlen );
 }
 #endif
 
-#if !defined(__MSDOS__) && !defined(WIN32)
+#if (!defined(__MSDOS__) && !defined(WIN32)) || defined(__MINGW32__)
 int SYiTestFile( const char *, char, uid_t, gid_t );
 
 /*+
@@ -397,8 +397,13 @@ int SYiFileExists( const char *fname, char mode )
     if (!fname) return 0;
 
     if (!set_ids) {
+#if !defined(__MINGW32__)
 	uid = getuid();
 	gid = getgid();
+#else
+	uid = 0;
+	gid = 0;
+#endif
 	set_ids = 1;
     }
 
@@ -751,7 +756,7 @@ void SYGetwd( char *path, int len )
 {
 #if defined(tc2000) || (defined(sun4) && !defined(solaris))
     getwd( path );
-#elif defined(__MSDOS__) || defined(WIN32)
+#elif (defined(__MSDOS__) || defined(WIN32)) && !defined(__MINGW32__)
 /* path[0] = 'A' + (_getdrive() - 1);
 path[1] = ':';
 _getcwd( path + 2, len - 2 );
@@ -766,7 +771,7 @@ _getcwd( path + 2, len - 2 );
 #endif
 }
 
-#if !defined(__MSDOS__) && !defined(WIN32)
+#if (!defined(__MSDOS__) && !defined(WIN32)) || defined(__MINGW32__)
 #include <sys/param.h>
 #endif
 #ifndef MAXPATHLEN
@@ -961,7 +966,7 @@ int SYIsDirectory( const char *fname )
     stmode = statbuf.st_mode;
     return S_ISDIR(stmode);
 }
-#ifndef __MSDOS__
+#if !defined(__MSDOS__) || defined(__MINGW32__)
 
 #include <fcntl.h>
 
@@ -996,7 +1001,11 @@ while (*p) {
     *pn = 0;
     err = stat( dirname, &statbuf );
     if (err != 0) {
-	err = mkdir( dirname, fmode );
+	err = mkdir( dirname
+#if !defined(__MINGW32__)
+			, fmode
+#endif
+				);
 	if (err < 0) {
 	    fprintf( stderr, "Failed to make directory %s", dirname );
 	    return;
@@ -1063,7 +1072,7 @@ int SYFileNewer( char *newfile, char *oldfile )
 
 /* Experimentation on the SP-1 at ANL shows that fcntl does not work under
    AIX */
-#if !defined(rs6000) && !defined(intelnx)
+#if !defined(rs6000) && !defined(intelnx) && !defined(__MINGW32__)
 #define FCNTL_WORKS
 #include <fcntl.h>
 #endif

@@ -1095,7 +1095,7 @@ void CopyImgFiles( const char *destfilename )
 {
     char pgm[256];
 
-#ifdef __MSDOS__
+#if defined(__MSDOS__) && !defined(__MINGW32__)
     char c1 = destfilename[strlen(destfilename)-1];
 
     if (c1 == '\\')
