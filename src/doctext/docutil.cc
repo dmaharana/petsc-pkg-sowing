@@ -416,7 +416,7 @@ int DocReadDefineDefinition( InStream *ins, TextOut *outs )
 // the use of macros for either names or values, which we have seen
 // in use by PETSc.
 //
-// [typedef] enum { NAME [=VALUE] (,NAME [=VALUE])* } name [,name]*;
+// [typedef] enum [ATTR] { NAME [=VALUE] (,NAME [=VALUE])* } name [,name]*;
 //
 // where NAME and VALUE may either be a simple alpha-numeric token OR
 // a macro reference:
@@ -464,16 +464,25 @@ int DocReadEnumDefinition(InStream *ins, TextOut *outs)
 	GetANTokenSkipComments(ins, outs, maxlen, token, &nsp);
     }
 
-    // Look for {, skipping any comments.
+    // Look for {, skipping any comments (or attributes)
     if (token[0] != '{') {
-	fprintf(stderr, "Expected { to start enum definition, saw %s\n",
-		token);
-	popBreakchars(ins);   // Restore break table
-	return 1;
+        int  num_attempts = 0;
+        char backup_token[sizeof(token)];
+
+        // save token for the error message, since we are about to overwrite it
+        memcpy(backup_token, token, sizeof(token));
+        do {
+            GetANTokenSkipComments(ins, outs, maxlen, token, &nsp);
+            // a back door in case of malformed text
+            if (++num_attempts > 100) {
+                fprintf(stderr, "Expected { to start enum definition, saw %s\n",
+                        backup_token);
+                popBreakchars(ins);   // Restore break table
+                return 1;
+            }
+        } while (token[0] != '{');
     }
-    else {
-	outs->PutToken(nsp, token);
-    }
+    outs->PutToken(nsp, token);
 
     // process an enum list:
     //  NAME ( CALLLIST ) ( = EXPR )
